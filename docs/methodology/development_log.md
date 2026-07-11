@@ -1372,3 +1372,100 @@ entrypoint is built (Steps 9–11) rather than patched ahead of that
 decision. Next: Step 9, Database Layer.
 
 ---
+
+## Phase 4 Step 9 — Database Layer — Implementation & Validation
+
+Scoped to exactly the two tables the frozen architecture's "Database model
+overview" specifies -- `retrieval_sessions` and `retrieved_evidence` --
+not the deferred `patients`/`studies`/`study_images`/`reports`/broader
+`sessions` cache.
+
+**Built**: `backend/app/core/config.py` (`Settings`, pydantic-settings,
+`.env`-backed); `backend/app/database/base.py` (SQLAlchemy 2.0
+`DeclarativeBase`, engine, `sessionmaker`); `backend/app/models/
+retrieval_session.py` and `retrieved_evidence.py` (typed `Mapped[]`/
+`mapped_column()` ORM models, `sqlalchemy.Uuid` for the dialect-agnostic
+primary/foreign keys, bidirectional `relationship()`). SQLAlchemy was not
+previously a dependency anywhere in the repo -- flagged and confirmed
+before adding `sqlalchemy>=2.0` rather than assumed.
+
+**Verification highlight 1 -- config parity is asserted, not eyeballed.**
+`CHROMA_PERSIST_PATH` and `CHROMA_COLLECTION_NAME` must default to
+exactly what `chroma_store.py` already hardcodes, so nothing changes
+behavior once Step 11 wires `Settings` in. Rather than visually comparing
+the two files, a runtime assertion imported both defaults and compared
+them directly:
+```
+Settings.CHROMA_PERSIST_PATH: C:\...\archive\ml\outputs\retrieval\chroma_db
+CHROMA_PERSIST_PATH matches chroma_store.py DEFAULT_PERSIST_PATH exactly: CONFIRMED
+```
+
+**Verification highlight 2 -- the FK constraint test is proven meaningful
+via a negative control.** SQLite does not enforce `FOREIGN KEY`
+constraints by default, per connection -- so `database/base.py` installs a
+`PRAGMA foreign_keys=ON` connect-listener. Before trusting the constraint
+test, a second, bare SQLite engine was built *without* that listener and
+the same orphaned insert was attempted against it: the commit succeeded
+silently (`row count: 1`, no error), confirming the pragma is genuinely
+load-bearing rather than the constraint check passing for an unrelated
+reason.
+
+**Real test output** (`backend/tests/integration/test_database_layer.py`,
+real SQLite file at `backend/dev.db`, tables dropped at teardown so
+repeated runs don't accumulate rows):
+```
+test_insert_and_query_relationship_both_directions PASSED
+test_foreign_key_constraint_rejects_unknown_session_id PASSED
+2 passed in 0.26s
+```
+Full suite (Steps 1–9 combined, unit + integration): **15 passed in 9.37s**.
+
+Not wired into `RetrievalService` or any frozen code yet -- models exist
+and are verified in isolation only, per the frozen development order
+(wiring happens at Step 11, the FastAPI skeleton).
+
+### How to Write This in Your Thesis
+
+*Methodology chapter, "Session Persistence Layer" subsection:*
+
+> A minimal relational persistence layer was introduced to record an audit
+> trail of retrieval activity, scoped deliberately to the two tables
+> required at this stage -- one row per retrieval request and one row per
+> piece of returned evidence, linked by foreign key -- rather than
+> anticipating schema needs for functionality (patient records, report
+> storage) not yet built. The object-relational models were implemented
+> using SQLAlchemy's typed declarative style, with a dialect-agnostic
+> identifier type chosen so that the eventual migration from a local
+> SQLite development database to a production Postgres instance requires
+> no schema changes. Two properties were verified empirically rather than
+> assumed: that the vector-store connection configuration newly centralized
+> in an application settings object was byte-for-byte identical to the
+> configuration it was intended to replace, confirmed via a direct runtime
+> comparison; and that referential integrity between the two tables was
+> genuinely enforced, confirmed via a negative control in which the same
+> constraint-violating insert was repeated against a database connection
+> deliberately configured without the enforcement mechanism, and shown to
+> succeed silently -- demonstrating that the positive test result on the
+> real configuration was not coincidental.
+
+---
+
+## Phase 4 Steps 1–9 (RetrievalService + LabelVotingService + Database Layer) — COMPLETE
+
+Retrieval, voting, and persistence foundations are all implemented, tested,
+and (through Step 8) frozen: `RetrievedCase` entity gap fixed (Step 1);
+`ChromaResultMapper`/`ChromaVectorStore` verified against the real
+`iu_cxr_biomedclip_v1_train` collection (Step 2); `ImageValidator`,
+`SimilaritySearchPolicy`, `RetrievalService` (Step 3, frozen Step 6);
+`LabelVotingService` implementing the frozen weighted-voting formula,
+generalized to a ranked `list[VotedLabel]` (Step 7, frozen Step 8);
+`Settings`, SQLAlchemy `Base`/engine/session factory, and the
+`retrieval_sessions`/`retrieved_evidence` ORM models, verified in
+isolation with a real SQLite database (Step 9). 15/15 tests passing — 9
+unit (fakes/hand-calculated), 6 integration (real BiomedCLIP + real
+ChromaDB + real SQLite). Deferred, open items carried forward unchanged:
+the `shared/` import CWD fragility, and Step 9's models are not yet wired
+into `RetrievalService` or any frozen code -- both intentionally left for
+the Steps 10-11 entrypoint work. Next: Step 10, Alembic migrations.
+
+---

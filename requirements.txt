@@ -18,3 +18,8 @@ chromadb>=0.4
 
 # Phase 4 — backend/tests/ (unit + integration)
 pytest>=7.4
+
+# Phase 4 Step 9 — database layer (SQLAlchemy 2.0 typed ORM, SQLite for now;
+# pydantic-settings was already a transitive dep via chromadb, now direct)
+sqlalchemy>=2.0
+pydantic-settings>=2.0
