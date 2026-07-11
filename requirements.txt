@@ -15,3 +15,6 @@ pillow>=10.0
 # exact numpy kNN for metric correctness). Needed starting Phase 3 (retrieval
 # indexing) since ml/retrieval/build_chroma_index.py writes into it directly:
 chromadb>=0.4
+
+# Phase 4 — backend/tests/ (unit + integration)
+pytest>=7.4

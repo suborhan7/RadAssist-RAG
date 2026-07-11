@@ -918,3 +918,457 @@ Phase 3 work: the retrieval query interface (image query -> ChromaDB ->
 ranked results), which the backend's future `RetrievalService` will wrap.
 
 ---
+
+## Phase 4 — Backend Assembly: Architecture (FROZEN)
+
+**Status: approved and frozen.** Not to be redesigned without a critical
+correctness issue. Objective: expose the validated Phase 0-3 ML pipeline
+through a clean backend architecture. Must NOT modify preprocessing,
+embeddings, ChromaDB indexing, or evaluation -- those are complete.
+
+### Corrections/decisions made before freezing
+
+1. **`SimilaritySearchPolicy` is not a pass-through.** It owns real logic:
+   top-K selection + a minimum-similarity threshold cutoff. Near-duplicate
+   cluster deduplication (using `cluster_id`, given the known 28.2%
+   template-duplication rate from Phase 1) is a documented future
+   extension point, not implemented in Phase 4.
+2. **`session_id` is generated at the API/DB layer, not inside
+   `RetrievalService`.** The service stays session-agnostic and DB-free --
+   pure orchestration, trivially unit-testable with fakes.
+3. **Only `retrieval_sessions` is built in Phase 4, not the broader
+   `sessions` cache table.** The latter has nothing to cache until context
+   building and report generation exist; building it now means an
+   unexercised table. Deferred to whichever phase introduces report
+   generation.
+4. **Weighted-voting formula frozen explicitly** (was underspecified since
+   Fork A): for each label L among retrieved cases,
+   `weight(L) = sum(similarity_i for cases carrying L)`;
+   `predicted label = argmax(weight(L))`;
+   `agreement = fraction of retrieved cases carrying the predicted label`.
+   Maps directly onto the existing `VotedLabel` entity.
+5. **PHI masking is not wired into the `/retrieve` upload path in Phase 4.**
+   Stated explicitly as a scope boundary, not hidden as an oversight --
+   real future work.
+
+### Module dependency diagram
+
+```mermaid
+flowchart TD
+    subgraph API["backend/app/api/"]
+        R1["POST /retrieve"]
+    end
+    subgraph SVC["backend/app/services/"]
+        RS[RetrievalService]
+        LV[LabelVotingService]
+        IV[ImageValidator]
+        SS[SimilaritySearchPolicy]
+    end
+    subgraph INFRA["backend/app/infrastructure/"]
+        EA[BiomedCLIPAdapter]
+        VS[ChromaVectorStore]
+        RM[ChromaResultMapper]
+    end
+    subgraph DOM["backend/app/domain/"]
+        IE[IEmbedder]
+        IVS[IVectorStore]
+        IIV[IImageValidator - new]
+        ISS[ISimilaritySearchPolicy - new]
+        ILV[ILabelVoter]
+        ENT[RetrievedCase, VotedLabel]
+    end
+    subgraph DB["backend/app/models/ + database/"]
+        RSESS[(retrieval_sessions)]
+    end
+
+    R1 --> RS
+    R1 --> LV
+    R1 --> RSESS
+    RS --> IV
+    RS --> EA
+    RS --> VS
+    RS --> SS
+    VS --> RM
+    EA -.implements.-> IE
+    VS -.implements.-> IVS
+    IV -.implements.-> IIV
+    SS -.implements.-> ISS
+    LV -.implements.-> ILV
+    EA --> ENT
+    VS --> ENT
+    RM --> ENT
+```
+
+### Retrieval Service interfaces
+
+Two new domain Protocols added to `domain/interfaces.py`:
+```
+IImageValidator.validate(image_path: str) -> None       # raises ValueError on invalid input
+ISimilaritySearchPolicy.select(raw_results, top_k, min_similarity) -> list[RetrievedCase]
+```
+
+`RetrievalService` -- pure orchestrator, constructor-injected:
+```
+__init__(validator: IImageValidator, embedder: IEmbedder,
+          vector_store: IVectorStore, search_policy: ISimilaritySearchPolicy)
+retrieve(image_path: str, top_k: int = 5, min_similarity: float = 0.0) -> list[RetrievedCase]
+```
+Sequence: validate -> embed -> `vector_store.query()` -> `search_policy.select()` -> return.
+No business logic in the service itself -- if logic accumulates here, it belongs
+in a collaborator instead.
+
+### RetrievedCase entity gap (found during implementation, fixed)
+
+The domain entity `RetrievedCase` (scaffolded before Phase 3's metadata
+schema existed) was missing `image_path` and `cluster_id` -- both required
+by the frozen response contract below, with `image_path` specifically
+carrying forward the Phase 3 Correction-2 fix (masked, not raw, path).
+Fixed by adding two fields with safe defaults (`image_path: str = ""`,
+`cluster_id: int = -1`) so no existing construction site breaks.
+`primary_label` was deliberately NOT added as a new field -- by convention,
+it is `labels[0]` when `labels` is non-empty, keeping the entity minimal.
+
+### Input/output contracts
+
+**Request** (multipart upload):
+```
+POST /retrieve
+  file: UploadFile (image)
+  top_k: int = 5
+  min_similarity: float = 0.0
+```
+
+**Response:**
+```json
+{
+  "session_id": "uuid",
+  "retrieval_time_ms": 124,
+  "embedding_model": "biomedclip",
+  "embedding_version": "v1",
+  "collection_name": "iu_cxr_biomedclip_v1_train",
+  "retrieved_cases": [
+    {
+      "rank": 1, "similarity": 0.95, "study_uid": "...",
+      "primary_label": "...", "label_set": "...", "cluster_id": 42,
+      "findings": "...", "impression": "...",
+      "image_path": "ml/datasets/masked/...png"
+    }
+  ]
+}
+```
+
+### Folder structure
+
+```
+backend/app/
+|-- domain/            entities.py, interfaces.py (existing + Phase 4 additions)
+|-- services/           image_validator.py, similarity_search.py,
+|                        retrieval_service.py, label_voting_service.py
+|-- infrastructure/     biomedclip_adapter.py, chroma_store.py, chroma_result_mapper.py
+|-- models/             SQLAlchemy: retrieval_sessions (+ others deferred)
+|-- core/config.py      Settings
+|-- database/           session factory, Alembic env
+|-- api/retrieval.py    POST /retrieve, GET /health
+`-- main.py
+
+backend/tests/
+|-- unit/          test_retrieval_service.py, test_label_voting_service.py,
+|                   test_chroma_result_mapper.py
+`-- integration/    test_retrieval_integration.py (real ChromaDB + real embedder)
+```
+
+### Database model overview (Phase 4 scope)
+
+| Table | Purpose |
+|---|---|
+| `retrieval_sessions` | one row per `/retrieve` call |
+| `retrieved_evidence` | one row per returned case, FK to session -- audit trail |
+
+`patients`, `studies`, `study_images`, `reports`, broader `sessions` deferred
+to the phase introducing report generation.
+
+### Testing strategy
+
+- Unit -- `RetrievalService`: all 4 collaborators faked, assert call order + correct mapping.
+- Unit -- `LabelVotingService`: pure function, hand-calculated expected output.
+- Unit -- `ChromaResultMapper`: pure function, fake Chroma-shaped input.
+- Integration: real `BiomedCLIPAdapter` + real ChromaDB collection + real FastAPI `TestClient`.
+
+### Sequence diagram
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant API as POST /retrieve
+    participant RS as RetrievalService
+    participant IV as ImageValidator
+    participant EA as BiomedCLIPAdapter
+    participant VS as ChromaVectorStore
+    participant SS as SimilaritySearchPolicy
+    participant DB as retrieval_sessions
+
+    C->>API: upload image, top_k, min_similarity
+    API->>RS: retrieve(image_path, top_k, min_similarity)
+    RS->>IV: validate(image_path)
+    IV-->>RS: OK (or raises)
+    RS->>EA: embed_image(image_path)
+    EA-->>RS: query_vector
+    RS->>VS: query(query_vector, top_k)
+    VS-->>RS: raw results (mapped to RetrievedCase)
+    RS->>SS: select(results, top_k, min_similarity)
+    SS-->>RS: filtered ranked list
+    RS-->>API: RetrievalResult
+    API->>DB: persist retrieval_sessions + retrieved_evidence
+    API-->>C: JSON response (with session_id)
+```
+
+### Development order (must complete each step before the next)
+
+1. Interface definitions -> 2. Infrastructure adapters -> 3. RetrievalService
+-> 4. Unit tests -> 5. Integration tests -> 6. Freeze RetrievalService ->
+7. LabelVotingService -> 8. Freeze LabelVoting -> 9. Database layer ->
+10. Alembic migration -> 11. FastAPI skeleton -> 12. Swagger validation.
+
+**Status as of this entry: Step 1 (interfaces) complete and verified in the
+development sandbox. `biomedclip_adapter.py` written. Steps 1 (entity fix)
+through 5 (integration test) handed to Claude Code for implementation.**
+
+---
+
+## Phase 4 Steps 1–5 — RetrievalService — Implementation & Validation
+
+### Folder setup
+
+`backend/app/{domain,infrastructure,services}/` and
+`backend/tests/{unit,integration}/` created with `__init__.py` package
+markers. The two files developed in the sandbox — `interfaces.py` and
+`biomedclip_adapter.py` — were placed at repo root for handoff and moved
+into `backend/app/domain/` and `backend/app/infrastructure/` respectively;
+`entities.py` was handed off as pasted content rather than a placed file
+and was written directly to `backend/app/domain/entities.py` from that
+content.
+
+### Step 1 — `RetrievedCase` entity gap, fixed
+
+Confirmed via grep that `entities.py` did not yet exist anywhere in the
+repository before this step (the earlier claim that it had already been
+"moved" was not reflected on disk) — written from the handed-off content,
+then the gap described in the Phase 4 freeze above was fixed: two fields
+added to `RetrievedCase`, both with safe defaults so no existing
+construction site breaks:
+```python
+image_path: str = ""        # masked path (Phase 3 Correction-2), matches what was embedded
+cluster_id: int = -1        # near-dup cluster diagnostic; -1 = unset
+```
+`primary_label` deliberately not added as a field, per the frozen decision
+— recovered as `labels[0]` by convention. Verified: `RetrievedCase`
+instantiates correctly both with and without the new fields, and
+`domain/interfaces.py` imports cleanly against the updated entity.
+
+### Step 2 — Infrastructure adapters
+
+**`chroma_result_mapper.py`**: pure function, `raw_result -> list[RetrievedCase]`.
+Before trusting the distance→similarity conversion, queried the real
+`iu_cxr_biomedclip_v1_train` collection with an embedding taken directly
+from a stored record — self-query returned `distance == 0.0` for that
+record, confirming Chroma's `hnsw:space="cosine"` returns **cosine
+distance**, not similarity, so the mapper uses `similarity = 1.0 -
+distance`. Verified once more on a hand-built input (`distance=0.0 ->
+similarity=1.0`, `distance=0.25 -> similarity=0.75`) before writing
+`chroma_store.py` on top of it.
+
+**`chroma_store.py`**: implements `IVectorStore`, wraps
+`chromadb.PersistentClient` pointed at `ml/outputs/retrieval/chroma_db`,
+collection name defaults to `iu_cxr_biomedclip_v1_train` (constructor
+parameter, not hardcoded). `query()` verified end-to-end against the real
+collection: self-query similarity was exactly `1.0`, and the top-3 results
+returned real masked image paths, correct `cluster_id`, and correct
+`primary_label`.
+
+*Environment note:* `chromadb` was not previously installed (Phase 0's
+`requirements.txt` had it commented out as backend-only); installed
+`chromadb>=0.4` and uncommitted the requirement, since Phase 3/4 now
+depend on it directly.
+
+### Step 3 — `RetrievalService` and collaborators
+
+`image_validator.py` (file exists, non-empty, openable via Pillow),
+`similarity_search.py` (threshold filter + top-K by similarity descending,
+near-dup dedup left as a documented future extension per the freeze), and
+`retrieval_service.py` (pure orchestrator, no business logic) all written
+per spec. Smoke-tested inline before the formal test suite: validator
+correctly accepted a real masked image and correctly raised `ValueError`
+on a missing file; `SimilaritySearchPolicy.select()` correctly filtered
+and ranked a synthetic input; `RetrievalService.retrieve()` correctly
+orchestrated fakes end to end.
+
+### Step 4 — Unit tests (`backend/tests/unit/`)
+
+`pytest` was not previously a dependency (no test suite existed before
+Phase 4); installed and added to `requirements.txt`.
+
+- `test_chroma_result_mapper.py` — 4 tests: distance→similarity conversion,
+  metadata field mapping, result order preservation, empty-result edge case.
+- `test_retrieval_service.py` — 2 tests: call order is exactly
+  `[validate, embed_image, query, select]` with the final return value
+  being the exact object `search_policy.select()` returned; when the
+  validator raises, `embed_image`/`query`/`select` are never called
+  (call log is `[validate]` only).
+
+```
+backend/tests/unit/test_chroma_result_mapper.py::test_distance_to_similarity_conversion PASSED
+backend/tests/unit/test_chroma_result_mapper.py::test_field_mapping PASSED
+backend/tests/unit/test_chroma_result_mapper.py::test_result_order_preserved PASSED
+backend/tests/unit/test_chroma_result_mapper.py::test_empty_result PASSED
+backend/tests/unit/test_retrieval_service.py::test_call_order_and_return_value PASSED
+backend/tests/unit/test_retrieval_service.py::test_validator_raises_short_circuits_pipeline PASSED
+6 passed in 0.02s
+```
+
+### Step 5 — Integration test (`backend/tests/integration/`)
+
+`test_retrieval_integration.py` uses the **real** `BiomedCLIPAdapter` (real
+BiomedCLIP model, GPU-loaded) and **real** `ChromaVectorStore` against the
+actual `iu_cxr_biomedclip_v1_train` collection on disk, querying with a
+real image from `ml/datasets/masked/`. Four assertions, all real
+end-to-end behavior, not mocks:
+
+```
+backend/tests/integration/test_retrieval_integration.py::test_retrieval_returns_nonempty_results PASSED
+backend/tests/integration/test_retrieval_integration.py::test_retrieved_image_paths_exist PASSED
+backend/tests/integration/test_retrieval_integration.py::test_similarities_descending PASSED
+backend/tests/integration/test_retrieval_integration.py::test_top1_similarity_reasonably_high PASSED
+4 passed in 9.46s
+```
+
+Full suite (unit + integration) together: **10 passed in 9.00s**.
+
+### How to Write This in Your Thesis
+
+*Methodology chapter, "Retrieval Service Implementation" subsection:*
+
+> The retrieval query path was implemented as a constructor-injected
+> orchestration service (`RetrievalService`) depending only on
+> Protocol-typed interfaces for image validation, embedding, vector search,
+> and result selection — never on concrete infrastructure classes — so that
+> each stage is independently substitutable and unit-testable in isolation.
+> A domain-entity gap was identified during implementation: the
+> `RetrievedCase` entity, scaffolded prior to the retrieval index's
+> metadata schema, lacked the masked image path and near-duplicate cluster
+> identifier required by the response contract; this was resolved by
+> extending the entity with two backward-compatible optional fields rather
+> than introducing a parallel representation. The distance-to-similarity
+> conversion for the cosine-space ChromaDB collection was empirically
+> verified against the real index before being relied upon elsewhere,
+> confirming that Chroma reports cosine distance rather than similarity.
+> The service was validated at two levels: a unit-test suite exercising
+> call ordering and error short-circuiting against fake collaborators, and
+> an integration test exercising the complete real pipeline — real encoder,
+> real vector store — confirming non-empty, correctly ordered, and
+> file-verified results against the production retrieval index.
+
+---
+
+## Phase 4 Steps 1–5 (RetrievalService) — COMPLETE
+
+`RetrievedCase` gap fixed, `ChromaResultMapper`/`ChromaVectorStore`/
+`ImageValidator`/`SimilaritySearchPolicy`/`RetrievalService` all
+implemented and verified — 6 unit tests (fakes) + 4 integration tests
+(real BiomedCLIP + real ChromaDB) passing, 10/10. Per the frozen
+development order, Step 6 (freeze `RetrievalService`) is a decision for
+the thesis author, not implied by tests passing; `LabelVotingService`
+(Step 7) intentionally not started pending that confirmation.
+
+**Step 6: confirmed frozen.** `chroma_store.py`'s CWD-relative default
+path was fixed (anchored via `Path(__file__)`, no longer dependent on the
+process's working directory); the separate `shared/` import CWD issue
+(only reproduces when pytest is invoked from `backend/`, not repo root) is
+deliberately deferred to Steps 9–11, where the real FastAPI entrypoint and
+its import resolution get decided — `backend/tests/conftest.py` added
+(test-scope only) so the test suite itself is CWD-independent in the
+meantime.
+
+---
+
+## Phase 4 Step 7 — LabelVotingService — Implementation & Validation
+
+### Design note: resolving plural `VotedLabel` against the frozen formula
+
+The frozen weighted-voting formula (Phase 4 architecture section,
+correction 4) defines a single predicted label — `weight(L) = sum(similarity_i
+for cases carrying L)`, `predicted label = argmax(weight(L))`, `agreement =
+fraction of retrieved cases carrying the predicted label` — but
+`ILabelVoter.vote()` returns `list[VotedLabel]`, and `ClinicalContext`
+already declared `voted_labels: tuple[VotedLabel, ...]` as plural before
+this step. Rather than silently picking an interpretation, this was
+flagged before implementation: `LabelVotingService` computes `weight(L)`
+and `agreement(L)` for **every** label present across the retrieved cases
+— `agreement(L) = fraction of retrieved cases carrying L`, generalizing
+the frozen single-label definition — and returns the list sorted
+descending by `vote_weight`, so the first element is exactly the frozen
+argmax + agreement case. Confirmed as the correct, and only interpretation
+consistent with the existing plural `ClinicalContext` field.
+
+### Implementation & Validation
+
+`label_voting_service.py`: pure function over `list[RetrievedCase]`, no
+I/O. A case contributes its full similarity weight to every label it
+carries (relevant once multi-label `RetrievedCase.labels` tuples are
+populated beyond the current single-label convention — see the Step 2 TODO
+in `chroma_result_mapper.py`). Two hand-calculated test cases, plus an
+empty-input edge case:
+
+```
+backend/tests/unit/test_label_voting_service.py::test_single_label_weighted_vote_hand_calculated PASSED
+  # 3 cases: similarity 0.9->Normal, 0.6->Cardiomegaly, 0.5->Normal
+  # weight(Normal)=1.4, weight(Cardiomegaly)=0.6
+  # agreement(Normal)=2/3, agreement(Cardiomegaly)=1/3
+backend/tests/unit/test_label_voting_service.py::test_multi_label_case_contributes_to_every_label_it_carries PASSED
+  # case carrying (Pneumonia, Effusion) with similarity 0.8 contributes to both;
+  # second case similarity 0.4->Pneumonia only
+  # weight(Pneumonia)=1.2, weight(Effusion)=0.8
+  # agreement(Pneumonia)=2/2=1.0, agreement(Effusion)=1/2=0.5
+backend/tests/unit/test_label_voting_service.py::test_empty_retrieved_list_returns_empty_vote PASSED
+3 passed in 0.02s
+```
+
+Full suite (Steps 1–7 combined, unit + integration): **13 passed in 9.09s**.
+
+### How to Write This in Your Thesis
+
+*Methodology chapter, "Similarity-Weighted Label Voting" subsection:*
+
+> Predicted findings were derived from the retrieved case set via a
+> similarity-weighted vote: for each label present among the retrieved
+> neighbors, a vote weight was computed as the sum of the cosine
+> similarities of all neighbors carrying that label, and an agreement
+> score was computed as the fraction of retrieved neighbors carrying it —
+> a direct confidence signal independent of the vote weight's magnitude.
+> The label with the highest vote weight constitutes the primary
+> prediction, with agreement expressing what fraction of retrieved
+> evidence supports it; the full ranked set of labels is retained (rather
+> than only the top prediction) so that downstream context construction
+> can draw on secondary findings when relevant. The formula was validated
+> against hand-calculated expected values for both single-label and
+> multi-label retrieved cases prior to being trusted in the pipeline.
+
+---
+
+## Phase 4 Steps 1–8 (RetrievalService + LabelVotingService) — COMPLETE
+
+All of Phase 4's retrieval and voting logic is implemented, tested, and
+frozen: `RetrievedCase` entity gap fixed (Step 1); `ChromaResultMapper` and
+`ChromaVectorStore` built and verified against the real
+`iu_cxr_biomedclip_v1_train` collection, including a since-fixed
+CWD-relative default path (Step 2); `ImageValidator`, `SimilaritySearchPolicy`,
+and the pure-orchestrator `RetrievalService` (Step 3); `LabelVotingService`
+implementing the frozen weighted-voting formula, generalized to a ranked
+`list[VotedLabel]` (Step 7). 13/13 tests passing — 9 unit (fakes/hand-
+calculated), 4 integration (real BiomedCLIP + real ChromaDB). Both
+`RetrievalService` and its collaborators (Step 6) and `LabelVotingService`
+(Step 8) are confirmed frozen. The `shared/` import CWD fragility remains
+a deliberately deferred open item, to be resolved when the real FastAPI
+entrypoint is built (Steps 9–11) rather than patched ahead of that
+decision. Next: Step 9, Database Layer.
+
+---
