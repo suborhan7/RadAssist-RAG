@@ -1,0 +1,46 @@
+# =============================================================================
+# Python
+# =============================================================================
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+
+# =============================================================================
+# ML datasets & outputs -- large, regeneratable from raw source + scripts.
+# Never commit images, embeddings, or masked outputs to git.
+# =============================================================================
+ml/datasets/raw/
+ml/datasets/masked/
+ml/outputs/embeddings/
+ml/outputs/embeddings_smoke/
+ml/outputs/logs/
+outputs_smoke/
+
+# Metadata/splits CSVs are regeneratable but small and useful to keep for
+# reference -- uncomment the next two lines if you'd rather exclude them too:
+# ml/datasets/metadata/
+# ml/datasets/splits/
+
+# =============================================================================
+# Evaluation outputs -- keep small summary tables (gate_decision_table.csv,
+# encoder_comparison_*.csv), exclude large per-query dumps.
+# =============================================================================
+ml/outputs/evaluation/per_query/
+
+# =============================================================================
+# Environment / secrets
+# =============================================================================
+.env
+.env.local
+*.key
+
+# =============================================================================
+# OS / editor
+# =============================================================================
+.DS_Store
+Thumbs.db
+.vscode/settings.json

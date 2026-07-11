@@ -1,0 +1,29 @@
+# =============================================================================
+# phase0_config_smoke.yaml  --  Plumbing test only. NOT for real results.
+# =============================================================================
+
+paths:
+  reports_csv: "ml/datasets/raw/indiana_reports.csv"
+  projections_csv: "ml/datasets/raw/indiana_projections.csv"
+  label_mapping: "ml/config/label_mapping.yaml"
+  image_root: "ml/datasets/raw/images/images_normalized"
+  metadata_dir: "ml/datasets/metadata"
+  splits_dir: "ml/datasets/splits"
+  out_dir: "ml/outputs/evaluation_smoke"
+  embeddings_dir: "ml/outputs/embeddings_smoke"
+
+split:
+  ratios: {train: 0.70, val: 0.15, test: 0.15}
+  seed: 42
+  near_dup_threshold: 0.90
+  exclude_flagged: true
+
+eval:
+  frontal_only: true
+  k_values: [1, 3, 5, 10]
+  random_baseline_seeds: 3
+  encoders:
+    - "random"
+    - "densenet121"
+    # add "clip_generic" then "biomedclip" once pathing is confirmed
+  ndcg_gain: "linear"

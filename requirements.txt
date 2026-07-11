@@ -1,0 +1,16 @@
+# Phase 0 — steps 1 & 2 (label building + splitting), CPU-only, no downloads
+pandas>=2.0
+numpy>=1.24
+scipy>=1.10
+scikit-learn>=1.3
+pyyaml>=6.0
+
+# Phase 0 — step 3 (encoder bake-off), needs GPU + model downloads
+torch>=2.1
+torchvision>=0.16
+open_clip_torch>=2.24
+pillow>=10.0
+
+# Used by the production system (not required for the Phase 0 eval, which uses
+# exact numpy kNN for metric correctness):
+# chromadb>=0.4

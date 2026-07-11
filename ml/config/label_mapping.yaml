@@ -1,0 +1,148 @@
+# =============================================================================
+# label_mapping.yaml  --  Curated finding taxonomy for the IU/Indiana dataset
+# =============================================================================
+# REVIEW THIS FILE WITH A CLINICALLY-INFORMED READER BEFORE FREEZING.
+# This is the single input the whole Phase 0 pipeline keys off. The code is
+# agnostic to its contents: change the taxonomy here, re-run, nothing else moves.
+#
+# Semantics:
+#   - Each raw `Problems` term maps to exactly one target class (or is dropped).
+#   - A study's label set = the union of target classes its terms map to.
+#   - Bare anatomy / administrative terms are DROPPED (they are sites, not findings).
+#   - Terms not listed anywhere and not dropped fall through to `other_class`
+#     and are LOGGED, so you can refine the tail after the first run.
+# =============================================================================
+
+normal_class: "Normal"
+other_class: "Other Abnormality"
+
+# Studies carrying any of these terms are flagged (excluded from eval if configured).
+exclude_flags:
+  - "Technical Quality of Image Unsatisfactory"
+
+# If `normal_class` co-occurs with any abnormal class, drop Normal (indexing artifact).
+enforce_normal_exclusive: true
+
+# Curated finding classes -> list of raw `Problems` terms mapped into each.
+classes:
+  Lung Opacity:
+    - "Opacity"
+    - "Airspace Disease"
+    - "Infiltrate"
+    - "Consolidation"
+    - "Density"
+  Cardiomegaly:
+    - "Cardiomegaly"
+  Calcinosis/Atherosclerosis:
+    - "Calcinosis"
+    - "Atherosclerosis"
+  Atelectasis:
+    - "Pulmonary Atelectasis"
+    - "Volume Loss"
+  Granuloma:
+    - "Calcified Granuloma"
+    - "Granuloma"
+    - "Granulomatous Disease"
+  Scarring:
+    - "Cicatrix"
+  Pleural Effusion:
+    - "Pleural Effusion"
+  Degenerative/Bone:
+    - "Osteophyte"
+    - "Spondylosis"
+    - "Scoliosis"
+    - "Kyphosis"
+    - "Arthritis"
+    - "Fractures, Bone"
+    - "Bone Diseases, Metabolic"
+    - "Sclerosis"
+    - "Hyperostosis, Diffuse Idiopathic Skeletal"
+    - "Dislocations"
+    - "Osteoporosis"
+    - "Expansile Bone Lesions"
+    - "Pectus Carinatum"
+    - "Funnel Chest"
+  Emphysema/COPD:
+    - "Emphysema"
+    - "Pulmonary Emphysema"
+    - "Pulmonary Disease, Chronic Obstructive"
+    - "Lung, Hyperlucent"
+    - "Bullous Emphysema"
+  Edema/Congestion:
+    - "Pulmonary Edema"
+    - "Pulmonary Congestion"
+    - "Heart Failure"
+  Nodule/Mass:
+    - "Nodule"
+    - "Mass"
+  Pneumonia:
+    - "Pneumonia"
+  Pneumothorax:
+    - "Pneumothorax"
+    - "Hydropneumothorax"
+    - "Hemopneumothorax"
+  Fibrosis/Interstitial:
+    - "Pulmonary Fibrosis"
+    - "Lung Diseases, Interstitial"
+    - "Fibrosis"
+  Hernia/Diaphragm:
+    - "Hernia, Hiatal"
+    - "Hernia, Diaphragmatic"
+    - "Diaphragmatic Eventration"
+  Support Devices:
+    - "Catheters, Indwelling"
+    - "Surgical Instruments"
+    - "Implanted Medical Device"
+    - "Tube, Inserted"
+    - "Stents"
+    - "Foreign Bodies"
+    - "Sutures"
+    - "Medical Device"
+    - "Spinal Fusion"
+    - "Breast Implants"
+    - "Contrast Media"
+
+# Bare anatomy / administrative / non-finding terms -> dropped entirely.
+drop_terms:
+  - "Lung"
+  - "Thoracic Vertebrae"
+  - "Thoracic vertebrae"
+  - "Spine"
+  - "Aorta"
+  - "Aorta, Thoracic"
+  - "Diaphragm"
+  - "Markings"
+  - "Costophrenic Angle"
+  - "Cardiac Shadow"
+  - "Mediastinum"
+  - "Shoulder"
+  - "Epicardial Fat"
+  - "Pulmonary Artery"
+  - "Lumbar Vertebrae"
+  - "Cervical Vertebrae"
+  - "Heart"
+  - "Heart Atria"
+  - "Heart Ventricles"
+  - "No Indexing"
+  - "Nipple Shadow"
+  - "Sulcus"
+  - "Adipose Tissue"
+  - "Ribs"
+  - "Bone and Bones"
+  - "Pleura"
+  - "Humerus"
+  - "Abdomen"
+  - "Lymph Nodes"
+  - "Lymph nodes"
+  - "Trachea"
+  - "Trachea, Carina"
+  - "Thorax"
+  - "Blood Vessels"
+  - "Deformity"     # vague modifier
+  - "Thickening"    # vague modifier
+  - "Lucency"       # vague modifier
+  - "Shift"         # vague modifier
+# Everything genuinely pathological but rare/miscellaneous (e.g. Sarcoidosis,
+# Pericardial Effusion, Bronchiectasis, Tuberculosis, Cavitation, Cysts,
+# Aortic Aneurysm, Pneumoperitoneum, Mastectomy, ...) is intentionally NOT listed
+# and will fall through to `other_class`, and be logged for your review.

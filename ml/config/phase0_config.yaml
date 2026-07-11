@@ -1,0 +1,34 @@
+# =============================================================================
+# phase0_config.yaml  --  Run parameters (paths updated for frozen repo structure)
+# =============================================================================
+
+paths:
+  reports_csv: "ml/datasets/raw/indiana_reports.csv"
+  projections_csv: "ml/datasets/raw/indiana_projections.csv"
+  label_mapping: "ml/config/label_mapping.yaml"
+  image_root: "ml/datasets/raw/images/images_normalized"
+  metadata_dir: "ml/datasets/metadata"
+  splits_dir: "ml/datasets/splits"
+  out_dir: "ml/outputs/evaluation"       # kept as `out_dir` for script back-compat;
+                                          # points at evaluation output specifically now
+  embeddings_dir: "ml/outputs/embeddings"
+
+split:
+  ratios:
+    train: 0.70
+    val:   0.15
+    test:  0.15
+  seed: 42
+  near_dup_threshold: 0.90
+  exclude_flagged: true
+
+eval:
+  frontal_only: true
+  k_values: [1, 3, 5, 10]
+  random_baseline_seeds: 5
+  encoders:
+    - "biomedclip"
+    - "clip_generic"
+    - "densenet121"
+    - "random"
+  ndcg_gain: "linear"

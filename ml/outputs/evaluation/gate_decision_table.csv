@@ -1,0 +1,5 @@
+gate,encoder_a,encoder_b,metric,delta,ci_lower,ci_upper,ci_excludes_zero,direction
+Gate 1,biomedclip,random,recall@5,0.0716,0.0204,0.1236,True,A>B
+Gate 1,biomedclip,random,ndcg@10,0.0726,0.051,0.0952,True,A>B
+Gate 2,biomedclip,clip_generic,recall@5,0.0639,-0.0065,0.1336,False,A>B
+Gate 2,biomedclip,clip_generic,ndcg@10,0.0604,0.0394,0.0817,True,A>B
