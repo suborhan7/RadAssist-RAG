@@ -18,6 +18,7 @@ ml/datasets/masked/
 ml/outputs/embeddings/
 ml/outputs/embeddings_smoke/
 ml/outputs/logs/
+ml/outputs/retrieval/chroma_db/
 outputs_smoke/
 
 # Metadata/splits CSVs are regeneratable but small and useful to keep for

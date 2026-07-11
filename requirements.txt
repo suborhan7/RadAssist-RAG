@@ -12,5 +12,6 @@ open_clip_torch>=2.24
 pillow>=10.0
 
 # Used by the production system (not required for the Phase 0 eval, which uses
-# exact numpy kNN for metric correctness):
-# chromadb>=0.4
+# exact numpy kNN for metric correctness). Needed starting Phase 3 (retrieval
+# indexing) since ml/retrieval/build_chroma_index.py writes into it directly:
+chromadb>=0.4

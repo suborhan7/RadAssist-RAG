@@ -642,3 +642,279 @@ Phase 3 (Retrieval Pipeline / ChromaDB indexing).
 
 ---
 
+## Phase 3 — Retrieval Pipeline: Architecture (FROZEN)
+
+**Status: approved and frozen.** Not to be redesigned without a critical
+correctness issue.
+
+### Corrections made to the initial proposal before freezing
+
+1. **No new `SplitManager` module.** `master_metadata.csv` (Phase 1, frozen)
+   already carries the `split` column. Introducing a split-decision module
+   would mean re-touching frozen Phase 1 output. Instead: a new,
+   Phase-3-owned `prepare_train_metadata.py` filters the existing frozen
+   file — satisfies single-responsibility (the Indexer never decides split
+   membership) without redesigning anything upstream.
+2. **`image_path` in ChromaDB metadata must be the masked path, not raw.**
+   Phase 2 embeddings were computed from `masked_image_path`. Pointing
+   metadata at raw images would mean any future explainability feature
+   displays a different image than the one actually embedded — a silent
+   correctness bug.
+3. **`indexed_at` is a distinct field from `master_metadata`'s own
+   `created_at`** — the former is when a record enters ChromaDB, the latter
+   is when the study record was first generated; conflating them loses
+   information.
+
+### Architecture
+
+```
+master_metadata.csv (Phase 1, frozen)
+        |
+        v
+prepare_train_metadata.py   [NEW, Phase 3]
+        |  filters: split=='train' AND has_frontal AND embedding_cached
+        v
+train_metadata.csv
+        |
+        |         biomedclip_image_train.npy
+        |         biomedclip_image_train_uids.npy   (Phase 2, frozen)
+        |                    |
+        v                    v
+        build_chroma_index.py   [NEW, Phase 3]
+                    |
+                    v
+              Validation gate (hard-fail, DB untouched if fail)
+                    |
+                    v
+         Delete old collection -> Create new (cosine space) -> Batch upsert
+                    |
+                    v
+         Persistent ChromaDB collection + index_summary.json + log
+```
+
+### Module responsibilities
+
+| Module | Responsibility | Must NOT do |
+|---|---|---|
+| `prepare_train_metadata.py` | Read `master_metadata.csv`, filter to indexable train rows, write `train_metadata.csv` | Touch embeddings, touch ChromaDB, decide split logic |
+| `build_chroma_index.py` | Load `train_metadata.csv` + embedding cache, validate, create/populate collection, write summary + log | Generate embeddings, re-derive split membership, proceed past a validation failure |
+
+### Folder structure
+
+```
+ml/retrieval/
+├── prepare_train_metadata.py
+└── build_chroma_index.py
+
+ml/datasets/metadata/
+└── train_metadata.csv            # derived, same home as other *_metadata.csv files
+
+ml/outputs/retrieval/
+├── chroma_db/                    # ChromaDB persistent store (gitignored)
+└── index_summary.json
+
+ml/outputs/logs/
+└── chroma_indexing_{timestamp}.log
+```
+
+**`.gitignore` addition required**: `ml/outputs/retrieval/chroma_db/` (large, regeneratable binary store).
+
+### ChromaDB metadata schema
+
+| Field | Source | Notes |
+|---|---|---|
+| `study_uid` | `master_metadata.study_uid` | Chroma document ID |
+| `patient_uid` | `master_metadata.patient_uid` | synthetic; future longitudinal-demo linkage |
+| `image_path` | `master_metadata.masked_image_path` | masked, matches what was embedded |
+| `projection` | fixed `"Frontal"` | frontal-only per frozen decision |
+| `primary_label` | `master_metadata.primary_label` | |
+| `label_set` | `master_metadata.label_set` | semicolon-joined |
+| `is_normal` | computed | cheap boolean filter |
+| `findings` | `master_metadata.findings_clean` | direct explainability use, no second join |
+| `impression` | `master_metadata.impression_clean` | |
+| `dataset` | fixed `"IU_XRay"` | supports future multi-dataset collections |
+| `embedding_model` | `master_metadata.embedding_model` | `"biomedclip"` |
+| `embedding_version` | `master_metadata.embedding_version` | `"v1"` |
+| `split` | fixed `"train"` | defense-in-depth, redundant with collection name |
+| `cluster_id` | `master_metadata.cluster_id` | near-dup diagnostic at retrieval time |
+| `indexed_at` | generated at index time | distinct from metadata's `created_at` |
+
+### Collection naming
+
+`{dataset}_{embedding_model}_{embedding_version}_{split}` -> e.g.
+`iu_cxr_biomedclip_v1_train`. Must satisfy ChromaDB's real naming
+constraints (alphanumeric/underscore/hyphen, start/end alphanumeric,
+3-63 chars) -- a hard runtime error if violated, not a style preference.
+
+### Validation strategy (hard-fail, checked before any DB mutation)
+
+- Every row has `split == 'train'` (defense-in-depth leakage guard)
+- Set-equality between metadata uids and embedding-cache uids (exact
+  mismatch list on failure, not just a count)
+- No duplicate `study_uid`
+- No missing/null `masked_image_path`, `primary_label`, `study_uid`
+- Embedding array: correct dimension (512), all finite, unit-norm, zero
+  degenerate vectors (re-running Phase 2's health check at index time)
+- Collection name passes naming-constraint check
+- Post-insertion: `collection.count()` exactly equals validated input count
+
+### Index summary (`index_summary.json`)
+
+Fields: `collection_name`, `dataset`, `embedding_model`, `embedding_version`,
+`pipeline_version`, `split`, `source_row_count`, `num_indexed`,
+`failed_records`, `duplicate_count`, `embedding_dimension`,
+`class_distribution`, `distinct_neardup_clusters_represented`,
+`validation_passed`, `warnings`, `execution_time_sec`, `timestamp`.
+
+### Sequence diagram
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant P as prepare_train_metadata.py
+    participant I as build_chroma_index.py
+    participant MM as master_metadata.csv
+    participant EMB as embedding cache (.npy)
+    participant CH as ChromaDB
+
+    U->>P: run
+    P->>MM: read
+    P->>P: filter split=='train' & has_frontal & embedding_cached
+    P->>P: write train_metadata.csv
+
+    U->>I: run --dry-run
+    I->>I: read train_metadata.csv + embedding cache
+    I->>I: run full validation
+    I-->>U: print report only, DB untouched
+
+    U->>I: run (real)
+    I->>I: read + validate (same checks)
+    alt validation fails
+        I-->>U: abort, write log, exit non-zero, old collection untouched
+    else validation passes
+        I->>CH: delete existing collection (if present)
+        I->>CH: create_collection(name, hnsw:space="cosine")
+        loop batches
+            I->>CH: upsert(ids, embeddings, metadatas)
+        end
+        I->>CH: collection.count()
+        I->>I: verify count == expected
+        I->>I: write index_summary.json + log
+        I-->>U: print summary
+    end
+```
+
+### Architecture diagram
+
+```mermaid
+flowchart TD
+    A[master_metadata.csv<br/>Phase 1, frozen] --> B[prepare_train_metadata.py]
+    B --> C[train_metadata.csv]
+    D[biomedclip_image_train.npy<br/>+ _uids.npy<br/>Phase 2, frozen] --> E[build_chroma_index.py]
+    C --> E
+    E --> F{Validation}
+    F -->|fail| G[Abort - old collection untouched]
+    F -->|pass| H[Delete old collection if exists]
+    H --> I[Create collection<br/>cosine space]
+    I --> J[Batch upsert]
+    J --> K[Post-insert count check]
+    K --> L[(ChromaDB store<br/>ml/outputs/retrieval/chroma_db/)]
+    K --> M[index_summary.json]
+    E --> N[chroma_indexing log]
+```
+
+### Key implementation decisions carried into code
+
+- Validate entirely in-memory **before** deleting the old collection (a
+  mid-run failure must never leave zero working collections).
+- `--dry-run` flag: runs every validation check, prints would-be summary,
+  never touches ChromaDB.
+- Explicit `hnsw:space: "cosine"` on collection creation -- ChromaDB
+  defaults to L2 otherwise; for unit-normalized vectors L2 and cosine
+  produce identical rankings mathematically, but leaving this implicit is a
+  classic RAG bug source if normalization assumptions ever change.
+  Stated explicitly, not left implicit.
+- Local `PersistentClient` (embedded, file-backed) -- no separate DB server
+  process, appropriate for a local thesis deployment.
+- Whole pipeline safely re-runnable end to end (idempotent), consistent
+  with every prior module.
+
+### Implementation & Validation
+
+**`prepare_train_metadata.py`** (`ml/retrieval/`): tested against synthetic
+fixtures covering every filter branch (not-train, no-frontal, no-cached-
+embedding) and a missing-masked-path edge case (correctly triggers a
+warning). Real run: 3,851 source rows -> 2,462 filtered (1,288 dropped as
+not-train, 101 dropped as no-frontal, 0 dropped for missing embeddings --
+confirming Phase 2 completed cleanly).
+
+**`build_chroma_index.py`** (`ml/retrieval/`): all 6 validation checks
+individually proven, via a mocked ChromaDB client, to both pass clean data
+and correctly catch their target failure (non-train leakage row, uid
+mismatch between metadata and embedding cache, duplicate uids, NaN-
+corrupted embeddings, wrong embedding dimension, invalid collection name).
+Orchestration logic proven against the mock: uid alignment is correct even
+when the embedding cache array order differs from the metadata row order
+(embeddings and metadata both independently verified to land on the correct
+uid); a validation failure leaves a pre-existing collection completely
+untouched, confirming the "validate before delete" safety property holds in
+practice, not just in the sequence diagram.
+
+Real ChromaDB installation was not testable in the development sandbox (no
+network access); the mocked-client tests above cover all logic up to the
+real `chromadb.PersistentClient` API calls themselves, which were verified
+on the actual workstation (see results below).
+
+**Results (real run, RTX 4070 Ti SUPER):**
+- Dry run: validation passed, 0 warnings, 0 errors, would index 2,462 records.
+- Real run: deleted (no prior collection existed), created, indexed all
+  2,462 records in **1.03 seconds**, post-insert `collection.count()`
+  verified exact match.
+- Post-hoc query test: `collection.count()` = 2,462 confirmed independently;
+  sample records returned correct uids, labels, and **masked** image paths
+  (not raw), confirming the Correction 2 fix (image_path must be the masked
+  path) is functioning correctly in the real index.
+
+**Class distribution indexed** (train split, matches Phase 1's known split
+exactly): Normal 918, Other Abnormality 301, Degenerative/Bone 162,
+Granuloma 131, Cardiomegaly 110, Support Devices 109,
+Calcinosis/Atherosclerosis 100, Atelectasis 97, Scarring 91, Emphysema/COPD
+77, Nodule/Mass 70, Pleural Effusion 66, Lung Opacity 61, Edema/Congestion
+57, Hernia/Diaphragm 49, Pneumonia 25, Fibrosis/Interstitial 21,
+Pneumothorax 17.
+
+### How to Write This in Your Thesis
+
+*Methodology chapter, "Retrieval Index Construction" subsection:*
+
+> The retrieval knowledge base was constructed as a persistent ChromaDB
+> collection, built exclusively from the training split's cached image
+> embeddings, consistent with the leakage-prevention protocol established
+> during dataset splitting. Indexing followed a two-stage pipeline enforcing
+> strict separation of responsibilities: a metadata-preparation stage
+> filtered the canonical study metadata to the subset of train-split studies
+> with both an available frontal image and a successfully cached embedding,
+> and a separate indexing stage performed exhaustive validation — checking
+> for split-membership leakage, embedding/metadata identifier mismatches,
+> duplicate records, missing required fields, and embedding numerical health
+> (finite values, correct dimensionality, unit normalization) — entirely
+> in-memory before any modification to the persistent database. This
+> ordering guarantees that a validation failure never leaves the system
+> without a working retrieval index. All 2,462 eligible training studies
+> were successfully indexed in 1.03 seconds, with post-insertion record
+> counts verified to exactly match the validated input, and a subsequent
+> independent query confirmed both correct record counts and correct
+> retrieval of privacy-masked (rather than raw) image paths.
+
+---
+
+## Phase 3 core (Retrieval Indexing) — COMPLETE
+
+`prepare_train_metadata.py` and `build_chroma_index.py` both implemented,
+tested (mocked-client unit tests + real end-to-end run), and validated on
+real data. Persistent, queryable, leakage-safe ChromaDB collection
+(`iu_cxr_biomedclip_v1_train`, 2,462 records) confirmed working. Remaining
+Phase 3 work: the retrieval query interface (image query -> ChromaDB ->
+ranked results), which the backend's future `RetrievalService` will wrap.
+
+---
