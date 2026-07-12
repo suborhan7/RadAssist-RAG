@@ -73,12 +73,52 @@ class VotedLabel:
 
 
 @dataclass(frozen=True)
+class RetrievalStats:
+    num_cases: int
+    num_cases_after_dedup: int
+    num_near_duplicates_collapsed: int
+    mean_similarity: float
+    min_similarity: float
+    max_similarity: float
+    num_unique_labels: int
+    num_clusters_represented: int
+
+
+@dataclass(frozen=True)
+class RetrievalMetadata:
+    collection_name: str
+    embedding_model: str
+    embedding_version: str
+    retrieved_at: str   # ISO 8601, caller-supplied
+
+
+@dataclass(frozen=True)
+class LabelEvidencePartition:
+    label: str
+    vote_weight: float
+    agreement: float
+    supporting_cases: tuple[RetrievedCase, ...]
+    contradictory_cases: tuple[RetrievedCase, ...]
+
+
+@dataclass(frozen=True)
+class EvidenceSummary:
+    top_retrieved_case: Optional[RetrievedCase]
+    findings_evidence: tuple[str, ...]
+    impressions_evidence: tuple[str, ...]
+    retrieval_stats: RetrievalStats
+    retrieval_metadata: Optional[RetrievalMetadata]
+    label_evidence: tuple[LabelEvidencePartition, ...]
+
+
+@dataclass(frozen=True)
 class ClinicalContext:
     """ContextBuilderService output: aggregated evidence handed to PromptBuilderService."""
     retrieved_cases: tuple[RetrievedCase, ...]
     voted_labels: tuple[VotedLabel, ...]
     questionnaire_answers: dict[str, str] = field(default_factory=dict)
     clinical_notes: str = ""
+    evidence_summary: Optional[EvidenceSummary] = None
 
 
 @dataclass

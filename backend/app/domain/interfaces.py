@@ -13,6 +13,7 @@ from app.domain.entities import (
     ClinicalContext,
     Report,
     ReportContent,
+    RetrievalMetadata,
     RetrievedCase,
     Study,
     VotedLabel,
@@ -68,8 +69,9 @@ class IContextBuilder(Protocol):
         self,
         retrieved: list[RetrievedCase],
         voted_labels: list[VotedLabel],
-        questionnaire_answers: dict[str, str],
-        clinical_notes: str,
+        questionnaire_answers: dict[str, str] = ...,
+        clinical_notes: str = ...,
+        retrieval_metadata: RetrievalMetadata | None = ...,
     ) -> ClinicalContext: ...
 
 
