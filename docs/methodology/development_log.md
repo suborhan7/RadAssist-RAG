@@ -1469,3 +1469,152 @@ into `RetrievalService` or any frozen code -- both intentionally left for
 the Steps 10-11 entrypoint work. Next: Step 10, Alembic migrations.
 
 ---
+
+## Phase 4 Step 10 — Alembic Migrations — Implementation & Validation
+
+Step 10 also resolved the `shared/` import CWD fragility deferred at Steps
+6/8, rather than patching it a second time -- Alembic's `env.py` needed a
+real import strategy regardless, making this the natural point to settle
+it.
+
+### Package-separation decision
+
+Two options were on the table: (a) `shared/` becomes its own tiny
+installable package, with `backend/` depending on it as a sibling editable
+install; or (b) `backend/pyproject.toml`'s package discovery reaches across
+to the repo-root `shared/` directory via a `package_dir` mapping outside
+its own project tree. Option (a) was chosen. Reasoning: a `package_dir`
+entry pointing at a sibling directory (`{"shared": "../shared"}`) works,
+but is a less standard, more surprising monorepo pattern than each
+subproject owning its own minimal `pyproject.toml` -- fewer ways for a
+future setuptools version to change this behavior silently. The one trap
+avoided in `shared/pyproject.toml`: plain flat-layout auto-discovery would
+have made the installed top-level package `embeddings` rather than
+`shared.embeddings`, silently breaking every existing `from
+shared.embeddings...` import, including `ml/`'s own `sys.path.insert(0,
+str(data_root))` pattern. Fixed with an explicit self-referential
+`package-dir = {"shared" = "."}` remap -- zero files moved, `ml/`'s
+existing imports untouched. This preserves `shared/`'s status as the
+deliberate, one-off `ml/`-`backend/` boundary exception (see the Phase 0
+architecture notes) rather than folding it into `backend/`'s own package.
+
+### Verification 1 -- editable installs work from a location outside the repo entirely
+
+Before trusting the fix, both packages were imported from `/tmp` -- not
+just a different directory inside the repo, but outside it altogether,
+with zero `sys.path` manipulation:
+```
+shared.embeddings import OK from /tmp (no repo dir in cwd at all)
+app.domain import OK from /tmp
+```
+`backend/tests/conftest.py` (the Step 8 sys.path shim) was then deleted as
+genuinely redundant, not just simplified.
+
+### Verification 2 -- three-CWD test suite run (real proof the issue is gone, not moved)
+
+```
+repo root:        15 passed in 9.68s
+backend/:         15 passed in 9.37s
+backend/tests/:    15 passed in 9.45s
+```
+Identical pass count from all three; the fix generalizes rather than
+happening to work from one launch directory.
+
+### Alembic setup
+
+`backend/alembic/` + `backend/alembic.ini` initialized. `env.py` imports
+`app.models` (registers `RetrievalSession`/`RetrievedEvidence` on `Base`'s
+mapper registry for autogenerate), sets `target_metadata = Base.metadata`,
+and pulls `sqlalchemy.url` from `Settings.DATABASE_URL` at runtime --
+`alembic.ini`'s own `sqlalchemy.url` is left blank with a comment
+explaining why, so the connection string is defined in exactly one place.
+
+**Migration file read in full before running anything** (per the
+project's standing rule): confirmed both tables, all columns with the
+types Step 9 specified, the `retrieved_evidence.session_id` foreign key
+constraint, the index, and a `downgrade()` that reverses everything in
+correct dependency order (index and child table dropped before the
+parent):
+```python
+op.create_table('retrieval_sessions', id: Uuid PK, query_image_path, top_k,
+                 min_similarity, num_results, retrieval_time_ms,
+                 created_at DEFAULT CURRENT_TIMESTAMP)
+op.create_table('retrieved_evidence', id: Uuid PK,
+                 session_id: Uuid FK->retrieval_sessions.id,
+                 study_uid, rank, similarity)
+op.create_index('ix_retrieved_evidence_session_id', 'retrieved_evidence', ['session_id'])
+```
+
+### Fresh-database verification
+
+`alembic upgrade head` run against `backend/alembic_verify.db` -- a file
+never touched by Step 9's manual `create_all` script, to prove the
+migration itself creates the schema correctly, independent of the earlier
+manual verification (deleted afterward as a throwaway artifact). Real
+`sqlite3`/`PRAGMA` inspection of the resulting schema:
+```
+Tables: [('alembic_version',), ('retrieval_sessions',), ('retrieved_evidence',)]
+FOREIGN KEY(session_id) REFERENCES retrieval_sessions (id)
+ix_retrieved_evidence_session_id  CREATE INDEX ... ON retrieved_evidence (session_id)
+```
+
+### Downgrade/upgrade reversibility
+
+```
+downgrade base -> Tables: [('alembic_version',)]                                   # both dropped
+upgrade head   -> Tables: [alembic_version, retrieval_sessions, retrieved_evidence] # restored
+                  FK still intact: [(0, 0, 'retrieval_sessions', 'session_id', 'id', ...)]
+```
+Confirms the migration is genuinely reversible and re-runnable, not
+one-directional.
+
+Full suite after this step: **15 passed** (unchanged from Step 9 -- this
+step touched packaging and migrations, not application logic).
+
+### How to Write This in Your Thesis
+
+*Methodology chapter, "Schema Migration and Package Structure" subsection:*
+
+> Database schema evolution was managed through Alembic, configured to
+> derive both its target schema and its connection string from the
+> application's own object-relational models and settings object rather
+> than maintaining a second, independently-hardcoded copy of either --
+> eliminating a class of drift where a migration could silently diverge
+> from the models it was meant to describe. Prior to execution, the
+> autogenerated migration was manually inspected against the intended
+> schema rather than trusted uncritically, and its correctness was verified
+> empirically in two ways: by applying it to a database file with no prior
+> history and directly inspecting the resulting schema and foreign-key
+> constraints, and by exercising a full downgrade-then-upgrade cycle to
+> confirm the migration was reversible rather than one-directional. This
+> step also resolved a previously-deferred packaging inconsistency: the
+> project's shared model-embedding component, which by design is imported
+> by both the offline research pipeline and the backend service to
+> guarantee they occupy an identical vector space, was packaged as an
+> independently installable component depended upon by the backend, rather
+> than being absorbed into the backend's own package -- preserving its
+> role as a deliberate, singular exception to the boundary between the
+> research and backend codebases, and eliminating a working-directory
+> dependency that had previously required a test-only path-manipulation
+> workaround.
+
+---
+
+## Phase 4 Steps 1–10 (RetrievalService + LabelVotingService + Database Layer + Migrations) — COMPLETE
+
+Retrieval, voting, persistence, and schema migration are all implemented,
+tested, and (through Step 8) frozen. Steps 1-9 unchanged from the prior
+banner. Step 10 adds: `shared/` and `backend/` both editable-installed as
+independent local packages (`shared/pyproject.toml`, `backend/pyproject.toml`),
+resolving the Step 6/8-deferred `shared/` import CWD fragility -- proven via
+imports from outside the repo entirely and an identical-result three-CWD
+test run, not assumed fixed; `backend/tests/conftest.py` deleted as
+redundant; Alembic initialized and configured to read schema and connection
+string from the application's own models/settings (no duplicated
+connection string); the initial migration manually reviewed before
+execution, applied to a genuinely fresh database with the resulting schema
+independently inspected, and proven reversible via a downgrade/upgrade
+cycle. 15/15 tests passing throughout -- this step touched packaging and
+migration tooling, not application logic. Next: Step 11, FastAPI skeleton.
+
+---

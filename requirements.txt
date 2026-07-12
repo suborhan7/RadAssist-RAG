@@ -23,3 +23,13 @@ pytest>=7.4
 # pydantic-settings was already a transitive dep via chromadb, now direct)
 sqlalchemy>=2.0
 pydantic-settings>=2.0
+
+# Phase 4 Step 10 — Alembic migrations
+alembic>=1.13
+
+# shared/ and backend/ are editable-installed as local packages so
+# `from shared.embeddings...` and `from app...` resolve regardless of the
+# process's CWD -- replaces the sys.path hacks/conftest.py shim used
+# through Step 9. Run from repo root: pip install -r requirements.txt
+-e ./shared
+-e ./backend
