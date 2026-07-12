@@ -2744,5 +2744,523 @@ LLM Orchestrator that will actually call `build_generation_prompt`/
 `build_retry_prompt` against a real model (Phase 7), and the transport/
 structural response validation that will trigger the retry path in
 practice.
+---
+
+## Phase 7 — LLM Orchestrator: Architecture (FROZEN)
+
+**Status: approved and frozen.** Not to be redesigned without a critical
+correctness issue. First phase touching a non-deterministic external
+system (a real LLM), and the first phase where "same input -> byte-
+identical output" cannot be claimed or tested the same way as every prior
+phase -- this limitation is stated explicitly below rather than glossed
+over.
+
+### Objective
+
+Orchestrate: build prompt (via frozen Phase 6 `PromptBuilder`) -> call the
+LLM -> structurally validate the response -> retry with a correction
+prompt on failure -> return a structurally-valid `ReportContent` draft, or
+raise a specific exception when a retry budget is exhausted. Zero prompt
+composition (Phase 6's responsibility), zero semantic/clinical judgment
+(Phase 8's responsibility), zero persistence, zero business logic of its
+own -- pure sequencing of injected collaborators, same discipline as
+`RetrievalService` (Phase 4).
+
+### Decisions frozen
+
+1. **Model**: Ollama, `llama3.1:8b-instruct-q4_K_M` as the configured
+   default. Treated as a tunable config value, not an architectural
+   commitment -- switching models later is a config change, not an
+   interface change.
+2. **No persistence in this phase.** `ReportContent` is returned to the
+   caller; the `reports` table and all persistence logic are deferred to
+   Phase 8, once a fully validated, formatted report exists to save.
+3. **No new API endpoint in this phase.** Validated at the service layer
+   directly (unit + integration tests). The real generation endpoint
+   arrives in Phase 8 once the full draft -> semantic-validate -> format
+   chain exists to expose.
+4. **Two independent retry budgets, two distinct exceptions** -- transport
+   failure (Ollama unreachable/timeout) and content failure (malformed/
+   incomplete JSON) are different problems and must not share one retry
+   count: retrying a content-correction prompt against an unreachable
+   server is nonsensical. `LLMTransportError` on transport-budget
+   exhaustion; `LLMGenerationValidationError` (carrying the last raw
+   response and last validation errors) on content-budget exhaustion.
+5. **`temperature=0.0` as the default**, to minimize (not eliminate)
+   output variance. Explicitly documented limitation: true determinism
+   cannot be guaranteed for an LLM call even at temperature 0, due to
+   well-understood floating-point non-associativity effects in batched
+   inference. Stated plainly in the thesis as an understood, accounted-for
+   boundary of the deterministic-by-design discipline that has held since
+   Phase 5, not an oversight.
+6. **`StructuralValidator` validates structure only**: valid JSON, all 7
+   `ReportContent` fields present, all string-typed. Does **not** reject
+   empty-string field values -- content quality/completeness is explicitly
+   Phase 8's Response Validator's responsibility, not this phase's.
+7. **`IStructuralValidator` is its own Protocol**, separate from
+   `ILLMOrchestrator` -- mirrors the `ImageValidator`/`SimilaritySearchPolicy`
+   split from Phase 4, enabling the orchestrator's retry-*loop* logic to be
+   unit-tested against a fake validator (always-pass/always-fail)
+   independently of the real JSON-parsing edge cases, which get their own
+   focused test file.
+8. **Markdown code-fence handling: lenient, bounded.** If a response is
+   wrapped in a well-known fence pattern (e.g. ` ```json ... ``` `), strip
+   it, then parse strictly. No fuzzy extraction beyond that single
+   stripping step -- an unparseable-after-stripping response is a genuine
+   content-validation failure, triggering the normal retry path.
+9. **Phase 7's responsibility is strictly**: call `PromptBuilder`, call
+   Ollama, structurally validate, manage retries, return `ReportContent`.
+   Explicitly excludes: business logic, diagnosis, report formatting,
+   semantic validation, persistence, API responsibility.
+
+### Interfaces (new)
+
+```python
+class ILLMOrchestrator(Protocol):
+    def generate_draft(self, context: ClinicalContext, language: str) -> ReportContent: ...
+
+class IStructuralValidator(Protocol):
+    def validate(self, raw_response: str) -> tuple[bool, ReportContent | None, list[str]]:
+        """Returns (is_valid, parsed_content_or_None, validation_errors)."""
+        ...
+```
+
+`ILLMClient` (frozen since early domain scaffolding) is unchanged --
+`complete(prompt: str) -> str` remains sufficient; `OllamaClient` owns its
+own model/timeout/temperature configuration internally, constructor-
+injected from `Settings`, same pattern as every other infrastructure
+adapter. Smaller footprint on frozen files than Phase 5 or 6 required.
+
+### Exceptions (new, `backend/app/services/exceptions.py`)
+
+```python
+class LLMTransportError(Exception):
+    """Ollama unreachable or timed out after the transport retry budget."""
+
+class LLMGenerationValidationError(Exception):
+    """Content retry budget exhausted; structural validation never passed."""
+    def __init__(self, last_raw_response: str, last_validation_errors: list[str]): ...
+```
+
+### Folder structure
+
+```
+backend/app/
+|-- domain/
+|   `-- interfaces.py          (+ ILLMOrchestrator, + IStructuralValidator)
+|-- services/
+|   |-- structural_validator.py
+|   |-- llm_orchestrator.py
+|   `-- exceptions.py
+|-- infrastructure/
+|   `-- ollama_client.py       (implements ILLMClient)
+`-- core/config.py              (+ OLLAMA_BASE_URL, OLLAMA_MODEL, OLLAMA_TIMEOUT_SECONDS,
+                                    LLM_CONTENT_RETRY_COUNT, LLM_TRANSPORT_RETRY_COUNT, LLM_TEMPERATURE)
+
+backend/tests/
+|-- unit/
+|   |-- test_structural_validator.py   (pure JSON/shape checks, no LLM)
+|   `-- test_llm_orchestrator.py       (fake PromptBuilder + fake ILLMClient + fake StructuralValidator)
+`-- integration/
+    `-- test_llm_orchestrator_integration.py   (real Ollama call; structural assertions ONLY, never exact content)
+```
+
+### Data contracts
+
+**Input:** `ClinicalContext`, `language: str`.
+**Output:** `ReportContent` -- all 7 fields present and string-typed;
+content quality/non-emptiness explicitly not guaranteed by this phase.
+**Failure:** raises `LLMTransportError` or `LLMGenerationValidationError`,
+never returns a partially-valid object.
+
+### Sequence diagram
+
+```mermaid
+sequenceDiagram
+    participant O as LLMOrchestrator (Phase 7)
+    participant PB as PromptBuilder (frozen, Phase 6)
+    participant LLM as OllamaClient
+    participant SV as StructuralValidator
+
+    O->>PB: build_generation_prompt(context, language)
+    PB-->>O: prompt
+    loop up to LLM_TRANSPORT_RETRY_COUNT+1 times
+        O->>LLM: complete(prompt)
+        alt timeout/connection error
+            LLM-->>O: raises transport error
+        else success
+            LLM-->>O: raw_response
+        end
+    end
+    Note over O: transport budget exhausted -> raise LLMTransportError
+
+    loop up to LLM_CONTENT_RETRY_COUNT+1 times
+        O->>SV: validate(raw_response)
+        alt valid
+            SV-->>O: (True, ReportContent, [])
+            O-->>O: return ReportContent
+        else invalid
+            SV-->>O: (False, None, validation_errors)
+            O->>PB: build_retry_prompt(context, language, raw_response, validation_errors)
+            PB-->>O: retry_prompt
+            O->>LLM: complete(retry_prompt)
+            LLM-->>O: raw_response (new attempt)
+        end
+    end
+    Note over O: content budget exhausted -> raise LLMGenerationValidationError
+```
+
+### Dependency diagram
+
+```mermaid
+flowchart TD
+    subgraph SVC["backend/app/services/"]
+        PB[PromptBuilder - frozen, Phase 6]
+        SV[StructuralValidator - NEW]
+        O[LLMOrchestrator - NEW]
+    end
+    subgraph INFRA["backend/app/infrastructure/"]
+        OC[OllamaClient - NEW]
+    end
+    subgraph DOM["backend/app/domain/"]
+        ILO[ILLMOrchestrator]
+        ISV[IStructuralValidator]
+        ILC[ILLMClient - frozen]
+        ENT[ClinicalContext, ReportContent - frozen]
+    end
+
+    O --> PB
+    O --> OC
+    O --> SV
+    O -.implements.-> ILO
+    SV -.implements.-> ISV
+    OC -.implements.-> ILC
+    O --> ENT
+```
+
+### Determinism rules (revised for this phase's real constraint)
+
+`StructuralValidator` and the retry-*loop mechanics* remain fully
+deterministic and are tested as such (fakes, canned responses, byte-for-
+byte assertions). The LLM call itself is explicitly NOT claimed
+deterministic -- `temperature=0.0` minimizes variance but does not
+guarantee identical output run-to-run.
+
+### Unit testing strategy
+
+**`StructuralValidator`**: valid complete JSON passes; missing key fails
+with a specific error message identifying which key; wrong-typed value
+fails; JSON wrapped in a known markdown fence is stripped then parsed
+successfully; JSON that remains unparseable after stripping fails as a
+genuine content error (not a crash); empty-string field values PASS
+(explicitly not this validator's concern).
+
+**`LLMOrchestrator`** (fake `PromptBuilder`, fake `ILLMClient`, fake
+`StructuralValidator`): success-on-first-attempt path; success-after-N-
+retries path; content-budget-exhausted raises `LLMGenerationValidationError`
+carrying the correct last-response/errors; transport-budget-exhausted
+raises `LLMTransportError`; confirms `build_retry_prompt` (not
+`build_generation_prompt`) is called on retry attempts, with the actual
+validation errors from the immediately preceding failed attempt, not
+stale ones from an earlier attempt.
+
+### Integration testing strategy
+
+Real `OllamaClient` + real `PromptBuilder` + a real `ClinicalContext`
+(built via the real, frozen `ContextBuilder`) -> real
+`LLMOrchestrator.generate_draft()`. Assert STRUCTURAL properties only:
+returns a `ReportContent`, all 7 fields present and are strings. Does NOT
+assert exact content -- asserting against non-deterministic output would
+be the wrong thing to lock a test to.
+
+### Risks
+
+1. The `OLLAMA_TIMEOUT_SECONDS` default is an unmeasured starting guess
+   against real local hardware; expect tuning after the first real
+   integration run, as a config change, not an architecture change.
+2. This is the first phase whose thesis section states a limitation
+   (non-determinism) rather than a guarantee -- written to read as
+   understood and accounted for, not as an unaddressed gap.
+3. `IStructuralValidator`'s lenient-fence-stripping behavior is a stated,
+   bounded exception to strict parsing -- must not silently expand into
+   broader fuzzy-parsing tolerance over time without a deliberate,
+   flagged decision to do so.
+
+---
+
+## Phase 7 — LLM Orchestrator — Implementation & Validation
+
+Implemented step by step against the frozen architecture above, with real
+execution and explicit confirmation gating each step, same discipline as
+Phases 4-6. First phase touching a real, non-deterministic external
+system (a local Ollama model), and the first phase whose integration test
+output cannot be asserted byte-for-byte.
+
+### Step 1 — Config + domain layer
+
+Added `OLLAMA_BASE_URL`, `OLLAMA_MODEL`, `OLLAMA_TIMEOUT_SECONDS`,
+`LLM_CONTENT_RETRY_COUNT`, `LLM_TRANSPORT_RETRY_COUNT`, `LLM_TEMPERATURE`
+to `Settings`; `ILLMOrchestrator` and `IStructuralValidator` to
+`interfaces.py`; `LLMTransportError`/`LLMGenerationValidationError` to the
+new `app/services/exceptions.py`, the latter storing `last_raw_response`/
+`last_validation_errors` as real attributes with a message that surfaces
+the validation errors directly rather than requiring a caller to know to
+inspect an attribute. Grepped for existing implementers/callers of the new
+interfaces/exceptions first -- none existed, purely additive. Regression
+check: all 50 pre-existing Phase 4/5/6 tests re-run unchanged and passing.
+
+### Step 2 — `StructuralValidator` (`app/services/structural_validator.py`)
+
+Structure-only validation: well-known markdown-fence stripping (bounded,
+single step) -> strict JSON parse -> all 7 `ReportContent` fields (read
+from `dataclasses.fields(ReportContent)`, same discipline as Phase 6's
+schema test) present and string-typed. Two behaviors verified with real,
+explicit assertions rather than left as assumed-correct: empty-string
+field values explicitly PASS (Phase 8's Response Validator's concern, not
+this validator's), and a response wrapped in a fence but still unparseable
+JSON *after* stripping correctly falls through to a genuine content
+validation failure rather than crashing or silently passing.
+
+### Step 3 — `OllamaClient` (`app/infrastructure/ollama_client.py`)
+
+Thin `ILLMClient` adapter over Ollama's `POST /api/generate` (non-
+streaming), all four tunables (`base_url`/`model`/`timeout_seconds`/
+`temperature`) defaulting from `Settings`. `httpx.HTTPError` (covering
+connection errors, timeouts, and non-2xx status via `raise_for_status()`)
+is caught and re-raised as `LLMTransportError` -- one exception type for
+every way the transport layer can fail to produce a usable response.
+`httpx` promoted from a transitive-only dependency to an explicit
+`requirements.txt` line, same precedent as Step 11's `fastapi`/`uvicorn`
+promotion in Phase 4.
+
+**Real-hardware gap found before writing any code**: the frozen spec's
+default model, `llama3.1:8b-instruct-q4_K_M`, was not pulled on this
+machine (`ollama list` showed only `llama3:8b` available). Confirmed with
+the user rather than assumed; resolved by changing `Settings.OLLAMA_MODEL`'s
+default to `llama3:8b` -- a config-value swap to what's actually available
+locally, not an architecture change, exactly matching the frozen spec's
+own framing of the model choice as tunable config, not an architectural
+commitment. Documented in `config.py` at the point of change.
+
+Verified directly against the real, running local Ollama instance (not
+just unit-testable in isolation): a real `complete()` call returned `'OK'`
+for a trivial prompt, and a deliberately unreachable port correctly raised
+`LLMTransportError` rather than hanging or raising something the
+orchestrator couldn't distinguish from success.
+
+### Step 4 — `LLMOrchestrator` (`app/services/llm_orchestrator.py`)
+
+Pure sequencing over three injected collaborators, two independent retry
+budgets, per the frozen sequence diagram: build the initial prompt once,
+call the LLM, structurally validate, retry with `build_retry_prompt` on
+content failure using the *current* attempt's raw response/errors, return
+on success, raise `LLMGenerationValidationError` (carrying the last raw
+response/errors) on content-budget exhaustion or `LLMTransportError` on
+transport-budget exhaustion.
+
+**Real gap found and fixed during this step, before Step 5's tests were
+written around the old, narrower behavior -- the same "matches the design
+on paper" vs. "correct in practice" distinction Phase 6's float-precision
+catch illustrated:** the first working version wrapped the transport-retry
+budget around only the very first `complete()` call, exactly as the
+frozen sequence diagram literally drew it. Flagged as a real gap, not a
+style nit, by re-reading the diagram against the actual failure semantics
+it was meant to express: a transport failure (Ollama unreachable/timed
+out) is the same category of problem regardless of *when* in the sequence
+it happens, so a call made during a content-retry attempt was getting zero
+transport protection purely as an artifact of where it appeared in the
+method, not because that failure mode is somehow less real on a retry.
+Fixed by refactoring to a single internal helper,
+`_call_llm_with_transport_retry(prompt)`, that owns the full "call the
+LLM, retry up to `LLM_TRANSPORT_RETRY_COUNT` times on transport failure,
+raise `LLMTransportError` if exhausted" behavior, used at every real call
+site -- the initial call and every content-retry's call -- so each
+invocation gets its own fresh transport-retry budget, fully independent of
+the content-retry budget and of how many content-retries have already
+happened. The frozen architecture doc's sequence diagram itself contained
+this gap (confirmed with the user, who traced it to their own diagramming
+error, not an implementation deviation) and is to be corrected to match.
+
+Verified with five hand-run scenarios against fakes before any formal test
+was written: (A) success after 2 content retries, using deliberately
+*different* error messages per attempt to prove `build_retry_prompt`
+receives the immediately-preceding attempt's errors, never stale ones from
+an earlier attempt; (B) content-budget exhaustion raising
+`LLMGenerationValidationError` with the correct last response/errors; (C)
+transport-budget exhaustion raising `LLMTransportError` with the same
+prompt resent unchanged across retries; (D) a transport hiccup on the
+*first* call recovering before content validation ever runs; (E, added
+specifically to prove the fix) a transport failure occurring on a
+*content-retry's* call correctly retried at the transport level using the
+same retry prompt, recovering, rather than raising immediately as the
+pre-fix version would have. All five, plus an explicit standalone
+assertion that `build_generation_prompt` is called exactly once across
+multiple retries, were then formalized as named tests in Step 5.
+
+### Step 5 — Unit tests
+
+`test_structural_validator.py` (8 tests): valid JSON, missing key, wrong
+type, both fence forms (`` ```json `` and bare `` ``` ``), fenced-but-
+still-invalid, unfenced-unparseable, and empty-string-fields-explicitly-
+pass. `test_llm_orchestrator.py` (7 tests): the five scenarios above as
+named tests plus a first-attempt-success baseline and the standalone
+call-count-exactly-once test. Real output:
+
+```
+backend\tests\unit\test_structural_validator.py::test_valid_complete_json_passes PASSED
+backend\tests\unit\test_structural_validator.py::test_missing_key_fails_with_specific_error PASSED
+backend\tests\unit\test_structural_validator.py::test_wrong_typed_value_fails_with_specific_error PASSED
+backend\tests\unit\test_structural_validator.py::test_fenced_json_with_language_tag_strips_and_parses PASSED
+backend\tests\unit\test_structural_validator.py::test_fenced_json_without_language_tag_strips_and_parses PASSED
+backend\tests\unit\test_structural_validator.py::test_fenced_but_still_invalid_json_fails_as_content_error_not_crash PASSED
+backend\tests\unit\test_structural_validator.py::test_unparseable_json_without_fence_fails_as_content_error_not_crash PASSED
+backend\tests\unit\test_structural_validator.py::test_empty_string_field_values_explicitly_pass PASSED
+backend\tests\unit\test_llm_orchestrator.py::test_success_on_first_attempt PASSED
+backend\tests\unit\test_llm_orchestrator.py::test_scenario_a_success_after_n_content_retries_uses_current_not_stale_errors PASSED
+backend\tests\unit\test_llm_orchestrator.py::test_scenario_b_content_budget_exhausted_raises_with_last_response_and_errors PASSED
+backend\tests\unit\test_llm_orchestrator.py::test_scenario_c_transport_budget_exhausted_raises_llm_transport_error PASSED
+backend\tests\unit\test_llm_orchestrator.py::test_scenario_d_transport_retry_recovers_before_content_validation PASSED
+backend\tests\unit\test_llm_orchestrator.py::test_scenario_e_transport_failure_during_content_retry_gets_its_own_budget PASSED
+backend\tests\unit\test_llm_orchestrator.py::test_build_generation_prompt_called_exactly_once_across_multiple_retries PASSED
+15 passed in 0.04s
+```
+
+### Step 6 — Integration test (`test_llm_orchestrator_integration.py`)
+
+Real `RetrievalService` + `LabelVotingService` + `ContextBuilder` (the
+frozen Phase 4/5 pipeline, against a real masked image) building a real
+`ClinicalContext`, fed into a real `PromptBuilder` + real `OllamaClient` +
+real `StructuralValidator`, driving a real `LLMOrchestrator.generate_draft()`
+-- no fakes anywhere in this path. Asserts structural properties only
+(returns a `ReportContent`, all 7 fields present and string-typed), per
+the frozen spec's explicit instruction not to assert exact content against
+non-deterministic output.
+
+```
+backend\tests\integration\test_llm_orchestrator_integration.py::test_llm_orchestrator_generates_structurally_valid_report PASSED
+1 passed, 1 warning in 15.18s
+```
+
+`generate_draft()`'s own wall-clock time: **5.95s**, against
+`OLLAMA_TIMEOUT_SECONDS=120` -- roughly 20x headroom on this hardware for
+a single clean call with zero retries. No evidence yet that the default
+needs tuning either direction; Risk #1 above remains open pending a run
+that actually exercises retries or heavier load.
+
+The real generated `ReportContent`, verbatim, model `llama3:8b`,
+`temperature=0.0`, from the single real run above -- **presented as one
+genuine, valid example of the pipeline working, not as a reproducible
+fixture**: per this phase's own frozen Decision 5 and Determinism rules,
+an LLM call is explicitly not guaranteed to produce identical output on a
+future run even at temperature 0.0, so this exact text should not be
+expected to recur and must never be asserted against in a test:
+
+```
+--- examination ---
+Chest X-ray
+--- clinical_history ---
+Unknown
+--- technique ---
+Posteroanterior (PA) view
+--- findings ---
+Increased opacity within the right upper lobe with possible mass and associated area of atelectasis or focal consolidation. Opacity in the left midlung overlying the posterior left 5th rib may represent focal airspace disease.
+--- impression ---
+Increased opacity in the right upper lobe with possible mass and associated atelectasis or focal consolidation, possibly representing a focal consolidation or mass lesion. Recommend chest CT for further evaluation.
+--- recommendation ---
+Chest CT
+--- disclaimer ---
+Clinical uncertainty due to low agreement score (0.60)
+```
+
+Worth stating plainly, not just noting the test passed: this output is
+concrete evidence that Phase 6's confidence-framing and grounding
+instructions are actually being followed by the model, not merely
+producing well-formed JSON that happens to read plausibly. The
+`disclaimer` field cites the real, specific agreement score (0.60) from
+this run's actual `VotedLabel.agreement` value rather than generic
+boilerplate, and `clinical_history: "Unknown"` is an honest admission of
+absent information rather than a fabricated history -- exactly the
+grounding behavior Phase 6's prompt was designed to elicit, now observed
+working end to end against a real model for the first time.
+
+### Full regression (Phase 4 + Phase 5 + Phase 6 + Phase 7 combined)
+
+Run after every step and one final time at the close of Step 7:
+
+```
+======================= 66 passed, 5 warnings in 29.15s =======================
+```
+
+24 Phase 4 + 14 Phase 5 (13 unit + 1 integration) + 12 Phase 6 unit + 16
+Phase 7 (15 unit + 1 integration), all green, zero regressions.
+
+### How to Write This in Your Thesis
+
+*Methodology chapter, "LLM Orchestrator Implementation" subsection:*
+
+> The LLM Orchestrator was implemented and validated in seven steps,
+> culminating in the first real, end-to-end execution of the full
+> retrieval -> voting -> context-building -> prompt-construction ->
+> generation pipeline against a genuine local language model. Two
+> implementation-level issues were caught and corrected before they could
+> be locked in by their respective test suites, continuing the pattern
+> established in Phase 6: the initial retry-orchestration logic protected
+> against transport failure (the LLM being unreachable or timing out) only
+> for the very first call in a generation attempt, an artifact of
+> following the architecture's sequence diagram literally rather than
+> re-deriving the failure semantics it was meant to express. Since a
+> transport failure is the same category of problem irrespective of which
+> call in the sequence it occurs on, this was corrected to apply the
+> transport-retry budget uniformly to every real call the orchestrator
+> makes, and a dedicated regression scenario was added specifically to
+> prove a transport failure occurring mid-retry now recovers rather than
+> failing immediately. This phase also required addressing, rather than
+> deferring, a property no earlier phase in this pipeline had to contend
+> with: genuine non-determinism. Every phase through Prompt Builder
+> produced output that was a pure, reproducible function of its inputs,
+> verified by byte-identical regression tests; a real language model call,
+> even configured at temperature zero, does not carry that same guarantee,
+> owing to well-understood floating-point non-associativity effects in
+> batched inference. This limitation was treated as an anticipated,
+> designed-for boundary rather than a discovered flaw -- the architecture
+> was frozen with this constraint already stated, the integration test was
+> written from the outset to assert only structural properties (a
+> complete, correctly-typed report object) rather than exact wording, and
+> the one real generated report captured during validation is presented
+> in this thesis as a single illustrative example of the pipeline
+> functioning correctly, not as a reproducible artifact. That example is,
+> nonetheless, informative on its own merits: the model's response
+> demonstrably incorporated the retrieval-derived confidence signal (citing
+> the actual agreement score rather than a generic caveat) and declined to
+> fabricate clinical history it had not been given, both concrete evidence
+> that the grounding and uncertainty-framing instructions constructed in
+> the Prompt Builder phase were substantively followed, not merely
+> satisfied at the level of output formatting.
+
+---
+
+## Phase 7 (LLM Orchestrator) — COMPLETE
+
+All seven steps of the frozen development order (config + domain layer ->
+`StructuralValidator` -> `OllamaClient` -> `LLMOrchestrator` -> unit tests
+-> integration test -> full regression) are built, tested with real
+execution at every step -- including a real local Ollama model, not a
+fake -- and confirmed by the user before proceeding at each gate, same
+discipline as Phases 4-6. Two real implementation-level gaps were caught
+and fixed before being locked in by tests, not discovered afterward: the
+`OLLAMA_MODEL` config default (changed to the model actually pulled on
+this machine, `llama3:8b`, documented as a config change) and the
+transport-retry budget scope (widened from "only the first call" to
+"every real call," with the frozen architecture doc's sequence diagram
+itself acknowledged as the source of the gap). No new API endpoint, no
+persistence, per the frozen scope -- both arrive in Phase 8 once a fully
+validated, formatted report exists to save and expose. Full backend test
+suite: **66/66 passing** (24 Phase 4 + 14 Phase 5 + 12 Phase 6 + 16 Phase
+7). This phase's thesis treatment states its one real limitation --
+LLM output non-determinism, even at `temperature=0.0` -- directly and
+plainly, as an anticipated and designed-for boundary of the pipeline, not
+an unaddressed gap. Not yet built (explicitly out of Phase 7 scope):
+Phase 8's semantic/clinical Response Validator, Hospital Report Formatter,
+persistence, and the real generation API endpoint.
 
 ---

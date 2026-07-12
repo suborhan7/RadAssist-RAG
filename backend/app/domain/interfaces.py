@@ -97,6 +97,24 @@ class ILLMClient(Protocol):
 
 
 @runtime_checkable
+class IStructuralValidator(Protocol):
+    """Phase 7: validates that a raw LLM response is well-formed JSON matching
+    ReportContent's shape. Infrastructure: app/services/structural_validator.py"""
+
+    def validate(self, raw_response: str) -> tuple[bool, ReportContent | None, list[str]]:
+        """Returns (is_valid, parsed_content_or_None, validation_errors)."""
+        ...
+
+
+@runtime_checkable
+class ILLMOrchestrator(Protocol):
+    """Phase 7: orchestrates PromptBuilder + ILLMClient + IStructuralValidator
+    with two independent retry budgets. Infrastructure: app/services/llm_orchestrator.py"""
+
+    def generate_draft(self, context: ClinicalContext, language: str) -> ReportContent: ...
+
+
+@runtime_checkable
 class IStudyRepository(Protocol):
     def get(self, study_id: str) -> Study | None: ...
     def save(self, study: Study) -> None: ...

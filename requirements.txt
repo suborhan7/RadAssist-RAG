@@ -35,6 +35,12 @@ fastapi>=0.110
 uvicorn>=0.30
 python-multipart>=0.0.9
 
+# Phase 7 — LLM Orchestrator (ollama_client.py calls Ollama's HTTP API
+# directly with httpx; promoted from transitive-via-chromadb to a direct
+# dependency now that backend code actually imports it, same reasoning as
+# Step 11's fastapi/uvicorn promotion above)
+httpx>=0.27
+
 # shared/ and backend/ are editable-installed as local packages so
 # `from shared.embeddings...` and `from app...` resolve regardless of the
 # process's CWD -- replaces the sys.path hacks/conftest.py shim used
