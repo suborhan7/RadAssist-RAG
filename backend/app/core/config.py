@@ -27,6 +27,13 @@ _BACKEND_DIR = Path(__file__).resolve().parents[2]
 DEFAULT_CHROMA_PERSIST_PATH = str(_REPO_ROOT / "ml" / "outputs" / "retrieval" / "chroma_db")
 # Matches chroma_store.py's DEFAULT_COLLECTION_NAME exactly.
 DEFAULT_CHROMA_COLLECTION_NAME = "iu_cxr_biomedclip_v1_train"
+# The embedding_model/embedding_version components of DEFAULT_CHROMA_COLLECTION_NAME
+# above (see build_collection_name() in ml/retrieval/build_chroma_index.py, called
+# with ("iu_cxr", "biomedclip", "v1", "train") when the real collection was built).
+# Declared here, not re-hardcoded at the API layer, so the frozen response
+# contract's embedding_model/embedding_version fields have exactly one source.
+DEFAULT_CHROMA_EMBEDDING_MODEL = "biomedclip"
+DEFAULT_CHROMA_EMBEDDING_VERSION = "v1"
 # SQLite for now (Step 9 scope) -- Postgres is a deployment decision for later.
 DEFAULT_DATABASE_URL = f"sqlite:///{_BACKEND_DIR / 'dev.db'}"
 
@@ -37,6 +44,8 @@ class Settings(BaseSettings):
     DATABASE_URL: str = DEFAULT_DATABASE_URL
     CHROMA_PERSIST_PATH: str = DEFAULT_CHROMA_PERSIST_PATH
     CHROMA_COLLECTION_NAME: str = DEFAULT_CHROMA_COLLECTION_NAME
+    CHROMA_EMBEDDING_MODEL: str = DEFAULT_CHROMA_EMBEDDING_MODEL
+    CHROMA_EMBEDDING_VERSION: str = DEFAULT_CHROMA_EMBEDDING_VERSION
 
 
 settings = Settings()

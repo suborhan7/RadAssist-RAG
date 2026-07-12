@@ -27,6 +27,14 @@ pydantic-settings>=2.0
 # Phase 4 Step 10 — Alembic migrations
 alembic>=1.13
 
+# Phase 4 Step 11 — FastAPI skeleton (httpx was already a transitive dep
+# via chromadb; fastapi/uvicorn/python-multipart are now direct -- uvicorn
+# is what actually serves this app, not something that should depend on
+# chromadb happening to still pull it in)
+fastapi>=0.110
+uvicorn>=0.30
+python-multipart>=0.0.9
+
 # shared/ and backend/ are editable-installed as local packages so
 # `from shared.embeddings...` and `from app...` resolve regardless of the
 # process's CWD -- replaces the sys.path hacks/conftest.py shim used

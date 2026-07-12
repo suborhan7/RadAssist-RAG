@@ -1618,3 +1618,166 @@ cycle. 15/15 tests passing throughout -- this step touched packaging and
 migration tooling, not application logic. Next: Step 11, FastAPI skeleton.
 
 ---
+
+## Phase 4 Step 11 — FastAPI Skeleton — Implementation & Validation
+
+The first true end-to-end slice of the backend: a real HTTP request now
+flows through validation, embedding, vector search, label voting, and
+persistence, and back out as a response.
+
+### Contract extension (flagged and approved before implementation)
+
+The frozen response contract (Phase 4 architecture section) predates
+`LabelVotingService` (Step 7) and had no field for its output. Approved
+extension: a `voted_labels` array (`label`, `vote_weight`, `agreement`,
+mirroring `VotedLabel` exactly), populated by calling
+`LabelVotingService.vote(retrieved_cases)` after retrieval, before the
+response is built. Nothing else in the frozen contract changed.
+
+### Two contract-field gaps, sourced without touching frozen code
+
+- **`embedding_model`/`embedding_version`**: not available anywhere as
+  named values (only embedded as substrings inside `collection_name`, e.g.
+  `"biomedclip"`/`"v1"` inside `"iu_cxr_biomedclip_v1_train"`, confirmed
+  against the literal arguments `build_collection_name("iu_cxr",
+  "biomedclip", "v1", "train")` in `ml/retrieval/build_chroma_index.py`).
+  Added `CHROMA_EMBEDDING_MODEL`/`CHROMA_EMBEDDING_VERSION` to `Settings`
+  (not one of the five frozen classes) with a runtime assertion that
+  reconstructing the collection name from them exactly matches
+  `CHROMA_COLLECTION_NAME`, the same parity-proof pattern used for
+  `CHROMA_PERSIST_PATH` at Step 9:
+  ```
+  reconstructed: iu_cxr_biomedclip_v1_train
+  actual CHROMA_COLLECTION_NAME: iu_cxr_biomedclip_v1_train
+  PARITY CONFIRMED
+  ```
+- **`label_set`**: `RetrievedCase` has no field for it at all --
+  `chroma_result_mapper.py`'s multi-label parsing was explicitly deferred
+  as a TODO at Step 2, so only a single-label `labels` tuple is available.
+  The response serializes `label_set` as `";".join(case.labels)`, which is
+  currently degenerate (identical to `primary_label`) until that Step 2
+  TODO is addressed. Flagged rather than silently presented as full
+  multi-label data -- not a Step 11 regression, an inherited gap.
+
+### Build
+
+`backend/app/main.py`: `lifespan` context manager constructs
+`BiomedCLIPAdapter` (loads the model), `ChromaVectorStore`,
+`ImageValidator`, `SimilaritySearchPolicy` exactly once at startup, wires
+them into `RetrievalService`, and stores both `RetrievalService` and a
+`LabelVotingService` on `app.state`. `backend/app/api/retrieval.py`:
+`GET /health` (liveness only), `POST /retrieve` (multipart upload -> temp
+file -> `RetrievalService.retrieve()` -> `LabelVotingService.vote()` ->
+single-transaction DB persistence -> response). `RetrievalService`,
+`LabelVotingService`, `ChromaVectorStore`, `ImageValidator`,
+`SimilaritySearchPolicy` were not modified.
+
+### Thin-route audit (every line of `POST /retrieve`, as requested)
+
+| Lines | Content | Category |
+|---|---|---|
+| 113-118 | Parameter signature (`file`, `top_k`, `min_similarity`, `db`) | Validate (FastAPI's own typing) |
+| 123-124 | `request.app.state.retrieval_service` / `.label_voting_service` | Does not cleanly fit -- DI attribute access, zero logic |
+| 126 | `with _saved_upload(file) as temp_path:` | Does not cleanly fit -- request I/O plumbing, factored into a helper, flagged rather than inlined |
+| 127, 133 | `start = time.perf_counter()` / elapsed-time arithmetic | Does not cleanly fit -- timing instrumentation, no reasoning about data |
+| 129-131 | `retrieval_service.retrieve(...)` + `except ValueError -> HTTPException(422)` | Call service (the 422 translation is explicitly spec'd behavior, not inferred logic) |
+| 132 | `label_voting_service.vote(retrieved_cases)` | Call service |
+| 135 | `session_id = uuid.uuid4()` | Call service / persistence-prep (explicitly the one place session_id is created, per the frozen rule) |
+| 136-153 | Construct `RetrievalSession`/`RetrievedEvidence` rows, `db.add()`/`db.add_all()` | Call service, in the broad sense -- the frozen sequence diagram shows the API layer talking directly to the DB (no repository abstraction specified for Phase 4); the `enumerate(..., start=1)` rank derivation is positional bookkeeping, not reasoning about label/similarity values |
+| 154-158 | `db.commit()` / `except Exception: db.rollback(); raise` | Call service (explicitly spec'd: commit once, rollback and re-raise on failure) |
+| 160 | `return _build_response(...)` | Serialize response |
+
+No line examines or branches on label values, recomputes similarity, or
+retries anything -- the class of violation the three-way split is meant to
+catch is genuinely absent. The lines that don't cleanly fit the three
+named categories are structural glue (DI lookup, timing, temp-file I/O),
+not business/medical logic, and are called out explicitly rather than
+asserted compliant by default.
+
+### Validation -- all real execution, real BiomedCLIP model, real ChromaDB collection
+
+```
+test_health_returns_ok                                            PASSED
+test_retrieve_with_real_image_returns_full_contract                PASSED
+test_db_rows_match_successful_response                             PASSED
+test_retrieve_with_corrupt_file_returns_422_and_no_db_rows          PASSED
+test_model_loaded_once_requests_much_faster_than_startup            PASSED
+test_transaction_atomicity_on_persistence_failure                  PASSED
+6 passed in 9.80s
+```
+
+**Model-reload proof** (timing-based): lifespan startup (real model load)
+took 8.397s; both subsequent `/retrieve` requests took ~0.1s each --
+roughly 1% of load time, not a comparable duration, confirming the model
+is loaded exactly once and reused.
+```
+[model-reload check] lifespan startup (model load): 8.397s, request 1: 0.094s, request 2: 0.097s
+```
+
+**Atomicity proof**: not a trivial short-circuit. `Session.commit` was
+monkeypatched to call the real `flush()` (genuinely sending the pending
+INSERT statements within the still-open transaction) before raising --
+simulating a failure between "rows sent to the DB" and "transaction
+finalized" (e.g. a late constraint violation or dropped connection),
+which is strictly harder to roll back cleanly than a failure before any
+SQL executes. Row counts across both tables were identical before and
+after the simulated failure.
+
+Full suite (Steps 1-11 combined): **21 passed** (15 prior + 6 new) from
+repo root.
+
+### How to Write This in Your Thesis
+
+*Methodology chapter, "API Layer and End-to-End Validation" subsection:*
+
+> The retrieval pipeline was exposed through a single HTTP endpoint
+> designed to contain no domain logic of its own: the route function's
+> only responsibilities are framework-level request validation, delegating
+> to the already-validated service layer, and serializing already-computed
+> results, with expensive resources -- most importantly the vision-language
+> encoder -- constructed exactly once at application startup rather than
+> per request. This separation was verified rather than assumed by two
+> targeted tests: a timing comparison showing that individual requests
+> complete in roughly one-hundredth the time taken to load the encoder at
+> startup, demonstrating the model is not reconstructed per request; and a
+> simulated mid-transaction persistence failure, in which the pending
+> database writes were deliberately flushed to the database connection
+> before the failure was injected -- a strictly stronger test than failing
+> before any write occurs -- confirming that a session record and its
+> associated evidence records are committed as a single atomic unit with
+> no partial state possible. A minor extension to the previously frozen
+> response contract was identified and approved prior to implementation:
+> the similarity-weighted label vote, computed after retrieval and before
+> response construction, was added as an additional field rather than
+> retrofitted into the retrieved-case representation, keeping per-case
+> evidence and aggregate label predictions as clearly separate concerns in
+> the API surface.
+
+---
+
+## Phase 4 Steps 1–11 (RetrievalService + LabelVotingService + Database Layer + Migrations + FastAPI Skeleton) — COMPLETE
+
+The first true end-to-end backend slice is live: `POST /retrieve` accepts a
+real image upload and returns validated, persisted, evidence-backed
+predictions. Steps 1-10 unchanged from the prior banner. Step 11 adds:
+`backend/app/main.py` (lifespan-managed singletons -- the BiomedCLIP model
+loads exactly once, not per request) and `backend/app/api/retrieval.py`
+(`GET /health`, `POST /retrieve`), built entirely on top of the frozen
+Steps 1-8 services without modifying any of them. A `voted_labels` field
+was added to the frozen response contract (flagged and approved before
+implementation) to surface `LabelVotingService`'s output, which the
+original contract predated. Two contract-field gaps (`embedding_model`/
+`embedding_version`, `label_set`) were sourced without touching frozen
+code -- the former added to `Settings` with a verified parity assertion,
+the latter flagged as a currently-degenerate value inherited from a
+still-open Step 2 TODO, not a new regression. The route function was
+audited line-by-line against a strict validate/call-service/serialize
+split; no line contains data-dependent branching, similarity
+recomputation, or retry logic. 21/21 tests passing (15 prior + 6 new),
+including a timing-based proof the model loads once and a transaction-
+atomicity proof strong enough to survive a failure injected after rows
+are flushed to the database but before the transaction commits. Next:
+Step 12, Swagger validation (the final step of the frozen Phase 4
+development order).
+
+---
