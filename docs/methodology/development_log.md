@@ -1781,3 +1781,102 @@ Step 12, Swagger validation (the final step of the frozen Phase 4
 development order).
 
 ---
+
+## Phase 4 Step 12 — Swagger Validation — Implementation & Validation
+
+The final step of the frozen Phase 4 development order. Checked, rather
+than assumed, that the auto-generated OpenAPI schema actually matches the
+real contract -- not just that `/docs` returns 200.
+
+### Initial finding: request side accurate, response side under-specified
+
+`GET /docs` (200, `text/html`) and `GET /openapi.json` (200, valid schema)
+both worked immediately, and both endpoints appeared. The request side of
+`POST /retrieve` was already fully accurate against the frozen contract --
+`file` (required, binary), `top_k` (integer, default 5), `min_similarity`
+(number, default 0.0) -- and `422` correctly referenced the standard
+`HTTPValidationError` schema. But both routes returned a bare `-> dict`
+rather than a typed Pydantic model, so FastAPI could not introspect field
+names or types for the response: the generated schema for both `/health`
+and `/retrieve` was simply `{"additionalProperties": true, "type":
+"object"}` -- not incorrect, but undocumented. Anyone reading `/docs` to
+understand what `/retrieve` actually returns would see nothing useful.
+Flagged rather than treated as passing, since "matches the actual
+contract" was the explicit bar for this step.
+
+### Fix: typed response models
+
+Added `backend/app/api/schemas.py` -- `HealthResponse`,
+`RetrievedCaseResponse`, `VotedLabelResponse`, `RetrieveResponse` --
+Pydantic DTOs living at the API boundary, deliberately kept out of
+`app/domain/entities.py` (which stays framework-free by design; see that
+file's own docstring). `_build_response()` in `retrieval.py` now
+constructs a `RetrieveResponse` directly instead of a dict literal, and
+both routes declare `response_model=`. This is a genuine code change, not
+just a verification step -- confirmed with the user before making it,
+since Step 12 was originally scoped as "just open `/docs` and confirm."
+
+### Verification
+
+Post-fix, the OpenAPI schema documents every field of both response
+types, field-for-field against the frozen contract:
+```
+RetrieveResponse required: session_id, retrieval_time_ms, embedding_model,
+  embedding_version, collection_name, retrieved_cases, voted_labels
+RetrievedCaseResponse required: rank, similarity, study_uid, primary_label,
+  label_set, cluster_id, findings, impression, image_path
+```
+`/docs` and `/openapi.json` re-verified working (200 for both, `paths:
+['/health', '/retrieve']`) after the change. Full suite re-run: **21
+passed** -- the response-model change did not alter any response content,
+only its declared schema, so no test assertions needed to change.
+
+### How to Write This in Your Thesis
+
+*Methodology chapter, "API Documentation Validation" subsection:*
+
+> The automatically generated OpenAPI schema was checked against the
+> intended API contract rather than assumed correct from a successful
+> build. This check surfaced a real gap: because the route handlers
+> initially returned untyped dictionaries, the generated schema documented
+> the request shape precisely but described every response as an
+> unconstrained object, providing no field-level documentation despite the
+> contract being well-defined internally. The fix -- introducing explicit
+> response schema classes at the API boundary, kept separate from the
+> underlying domain model to preserve the latter's independence from any
+> web framework -- brought the generated documentation into exact
+> agreement with the contract, with no change to the runtime behavior or
+> content of any response. This illustrates a general point relevant to
+> reproducibility: an API "working" in the sense of returning correct data
+> is a distinct property from that API being correctly self-documenting,
+> and the latter was not guaranteed by the former in this framework's
+> default configuration.
+
+---
+
+## Phase 4 — Backend Assembly — COMPLETE (all 12 steps)
+
+Every step of the frozen development order (interface definitions ->
+infrastructure adapters -> RetrievalService -> unit tests -> integration
+tests -> freeze RetrievalService -> LabelVotingService -> freeze
+LabelVoting -> database layer -> Alembic migration -> FastAPI skeleton ->
+Swagger validation) is implemented, tested with real execution at every
+step, and frozen where the process called for freezing. The validated
+Phase 0-3 ML pipeline is now reachable through a working HTTP API:
+`POST /retrieve` accepts a real image, runs it through the frozen
+BiomedCLIP-backed retrieval and similarity-weighted voting pipeline,
+persists a full audit trail atomically, and returns a response whose
+generated OpenAPI documentation was checked -- and, where it fell short,
+fixed -- to match the contract exactly. Two real gaps surfaced and
+resolved along the way rather than papered over: the Step 6/8-deferred
+`shared/` import CWD fragility (Step 10, editable local packages) and the
+under-specified response schema (Step 12, typed Pydantic response
+models). One inherited gap remains open and documented rather than
+silently masked: `label_set` is degenerate pending `chroma_result_mapper.py`'s
+still-open Step 2 multi-label TODO. Full test suite: 21/21 passing.
+Not yet built (explicitly out of Phase 4 scope per the frozen
+architecture): `patients`/`studies`/`reports`/the broader `sessions`
+cache table, PHI masking on the upload path, and report generation --
+all deferred to whichever future phase introduces them.
+
+---

@@ -27,6 +27,7 @@ from contextlib import contextmanager
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
 from sqlalchemy.orm import Session
 
+from app.api.schemas import HealthResponse, RetrievedCaseResponse, RetrieveResponse, VotedLabelResponse
 from app.core.config import settings
 from app.database.base import SessionLocal
 from app.domain.entities import RetrievedCase, VotedLabel
@@ -66,7 +67,7 @@ def _build_response(
     retrieval_time_ms: int,
     retrieved_cases: list[RetrievedCase],
     voted_labels: list[VotedLabel],
-) -> dict:
+) -> RetrieveResponse:
     """Serializes already-computed results into the frozen response
     contract (development_log.md, Phase 4 "Input/output contracts") plus
     the voted_labels extension. primary_label is labels[0] by convention
@@ -75,48 +76,48 @@ def _build_response(
     chroma_result_mapper.py's multi-label parsing is a still-open TODO
     from Step 2 -- not something this step can fix without touching that
     frozen file."""
-    return {
-        "session_id": str(session_id),
-        "retrieval_time_ms": retrieval_time_ms,
-        "embedding_model": settings.CHROMA_EMBEDDING_MODEL,
-        "embedding_version": settings.CHROMA_EMBEDDING_VERSION,
-        "collection_name": settings.CHROMA_COLLECTION_NAME,
-        "retrieved_cases": [
-            {
-                "rank": rank,
-                "similarity": case.similarity,
-                "study_uid": case.source_uid,
-                "primary_label": case.labels[0] if case.labels else "",
-                "label_set": ";".join(case.labels),
-                "cluster_id": case.cluster_id,
-                "findings": case.findings,
-                "impression": case.impression,
-                "image_path": case.image_path,
-            }
+    return RetrieveResponse(
+        session_id=str(session_id),
+        retrieval_time_ms=retrieval_time_ms,
+        embedding_model=settings.CHROMA_EMBEDDING_MODEL,
+        embedding_version=settings.CHROMA_EMBEDDING_VERSION,
+        collection_name=settings.CHROMA_COLLECTION_NAME,
+        retrieved_cases=[
+            RetrievedCaseResponse(
+                rank=rank,
+                similarity=case.similarity,
+                study_uid=case.source_uid,
+                primary_label=case.labels[0] if case.labels else "",
+                label_set=";".join(case.labels),
+                cluster_id=case.cluster_id,
+                findings=case.findings,
+                impression=case.impression,
+                image_path=case.image_path,
+            )
             for rank, case in enumerate(retrieved_cases, start=1)
         ],
-        "voted_labels": [
-            {"label": v.label, "vote_weight": v.vote_weight, "agreement": v.agreement}
+        voted_labels=[
+            VotedLabelResponse(label=v.label, vote_weight=v.vote_weight, agreement=v.agreement)
             for v in voted_labels
         ],
-    }
+    )
 
 
-@router.get("/health")
-def health() -> dict:
+@router.get("/health", response_model=HealthResponse)
+def health() -> HealthResponse:
     """Liveness only -- no DB/Chroma reachability check (a documented
     future improvement, not required now)."""
-    return {"status": "ok"}
+    return HealthResponse(status="ok")
 
 
-@router.post("/retrieve")
+@router.post("/retrieve", response_model=RetrieveResponse)
 def retrieve(
     request: Request,
     file: UploadFile = File(...),
     top_k: int = Form(5),
     min_similarity: float = Form(0.0),
     db: Session = Depends(get_db),
-) -> dict:
+) -> RetrieveResponse:
     """retrieval_time_ms covers only RetrievalService.retrieve() +
     LabelVotingService.vote() -- the ML pipeline itself. It excludes the
     upload file-save I/O (before) and DB persistence (after)."""
