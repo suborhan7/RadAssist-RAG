@@ -2337,3 +2337,412 @@ frozen architecture): the questionnaire-enrichment mechanism, multimodal
 frontal+lateral support, and Differential Diagnosis's multi-label loop
 over the now-generic `_partition_for_label` helper -- all deferred to
 whichever future phase introduces them.
+---
+
+## Phase 6 — Prompt Builder: Architecture (FROZEN)
+
+**Status: approved and frozen.** Not to be redesigned without a critical
+correctness issue. Phase ordering revised from the original roadmap:
+Prompt Builder and LLM Orchestrator now precede Clinical Questionnaire,
+Explainability Chat, and Longitudinal History -- rationale: since
+`ClinicalContext.questionnaire_answers`/`clinical_notes` were already made
+optional in Phase 5, Questionnaire is no longer a blocker for producing a
+complete report, and proving the full generation pipeline works end-to-end
+is higher priority than adding more input surfaces to an unproven pipeline.
+Revised order: Phase 6 (Prompt Builder) -> Phase 7 (LLM Orchestrator) ->
+Phase 8 (Response Validator + Hospital Report Formatter) -> Phase 9
+(Clinical Questionnaire) -> Phase 10 (Explainability Chat) -> Phase 11
+(Longitudinal History) -> Phase 12 (Frontend).
+
+### Objective
+
+Transform a `ClinicalContext` (Phase 5's output) into a deterministic
+prompt string for a specific language. Pure text construction only -- no
+LLM calls, no response parsing, no report formatting, no clinical judgment.
+
+### Gaps identified and resolved before freezing
+
+1. **Scope narrowed from `IPromptBuilder`'s three pre-existing methods to
+   one.** `build_generation_prompt` is implemented in Phase 6.
+   `build_explanation_prompt` remains an unimplemented placeholder for
+   Phase 10. `build_translation_prompt` is not implemented -- bilingual
+   output is produced by the LLM generating directly in the target
+   language via a `language` parameter on `build_generation_prompt`, not
+   via a separate translation pass (avoids translation-quality loss and an
+   extra LLM call/failure point).
+2. **Retry/correction prompt ownership resolved in favor of Prompt
+   Builder, not LLM Orchestrator.** The originally proposed Phase 7 scope
+   ("response validation" as an LLM Orchestrator responsibility) would have
+   put prompt-text composition inside a module whose own stated boundary
+   is "no prompt construction" -- a direct contradiction if retry-prompt
+   text were composed ad hoc there. Resolved by adding
+   `build_retry_prompt(context, language, previous_response,
+   validation_errors) -> str` to `IPromptBuilder` now. Prompt Builder owns
+   ALL prompt text, including corrections; Phase 7's LLM Orchestrator only
+   calls it and manages retry-loop timing/count -- pure orchestration, zero
+   prompt composition, consistent with its own stated boundary.
+3. **No timestamps/wall-clock dependence in generation prompts,** for
+   determinism and testability. Report date-stamping is Phase 8's concern
+   at formatting time, not something the LLM needs during generation.
+4. **Mandatory prompt content specified explicitly, not left to
+   implementation discretion:** ground only on retrieved evidence, do not
+   invent information absent from evidence, use `VotedLabel.agreement` to
+   express appropriate uncertainty (not false certainty), output strictly
+   JSON with no markdown/code-block wrapping, JSON schema exactly matching
+   `ReportContent`'s seven fields (`examination`, `clinical_history`,
+   `technique`, `findings`, `impression`, `recommendation`, `disclaimer`).
+5. **Response Validator (user's addition, adopted) reconciled against
+   Phase 7's stated "response validation" responsibility** -- these
+   overlapped as originally described and needed an explicit split to
+   avoid redundant or, worse, entirely-skipped checks: Phase 7's LLM
+   Orchestrator performs only TRANSPORT/STRUCTURAL validation (syntactically
+   valid JSON, required keys present, triggers retry via Prompt Builder on
+   failure). Phase 8's Response Validator performs SEMANTIC/CLINICAL
+   validation on an already structurally-valid object: missing sections,
+   evidence-consistency checks, and a hallucination heuristic. The
+   hallucination heuristic is explicitly scoped as deterministic
+   term-overlap between the LLM's output text and known evidence labels --
+   stated honestly as a limited, documented signal (same honesty
+   convention as the Phase 0 label-overlap relevance proxy: 89%
+   precision/49% recall, a conservative lower bound, not a solved
+   problem), not a guarantee of hallucination-free output. True semantic
+   hallucination detection is an open research problem outside this
+   phase's scope.
+
+### Interface (final)
+
+```python
+class IPromptBuilder(Protocol):
+    def build_generation_prompt(self, context: ClinicalContext, language: str) -> str: ...
+    def build_retry_prompt(
+        self, context: ClinicalContext, language: str,
+        previous_response: str, validation_errors: list[str],
+    ) -> str: ...
+    def build_explanation_prompt(self, report: Report, question: str) -> str: ...   # unimplemented, Phase 10
+    def build_translation_prompt(self, content: ReportContent, target_language: str) -> str: ...  # unimplemented
+```
+
+### Data contracts
+
+**Input:** `ClinicalContext` (with `evidence_summary` populated, per
+Phase 5), `language: str` (`"en"`/`"bn"`, matching the frozen `Language`
+enum). Retry variant additionally takes `previous_response: str`,
+`validation_errors: list[str]`.
+
+**Output:** one deterministic `str` per call -- the complete prompt
+including the schema instruction block (all 7 `ReportContent` fields),
+JSON-only output instruction, grounding/anti-hallucination instruction,
+confidence/agreement framing, and the serialized evidence from
+`EvidenceSummary` (`findings_evidence`, `impressions_evidence`,
+`label_evidence`), in the order Phase 5 already guarantees deterministic.
+
+### Folder structure
+
+```
+backend/app/
+|-- domain/
+|   `-- interfaces.py       (IPromptBuilder: + build_retry_prompt)
+`-- services/
+    `-- prompt_builder.py
+
+backend/tests/
+`-- unit/
+    `-- test_prompt_builder.py
+```
+
+No integration test folder in this phase -- Prompt Builder has no live
+collaborators to integration-test against until Phase 7 exists to consume
+its output; its integration proof arrives naturally as part of Phase 7's
+integration test (a real LLM call against a real generated prompt).
+
+### Determinism rules
+
+Prompt output is a pure function of `(context, language)`, and additionally
+`(previous_response, validation_errors)` for the retry variant -- no
+timestamps, no random ordering, no dependence on anything outside the
+stated inputs. Since `ClinicalContext`'s collections are already
+deterministically ordered (Phase 5), Prompt Builder only serializes in the
+given order, never re-sorts.
+
+### Sequence diagram
+
+```mermaid
+sequenceDiagram
+    participant O as Future Orchestrator (Phase 7)
+    participant PB as PromptBuilder (Phase 6)
+
+    O->>PB: build_generation_prompt(context, language)
+    PB->>PB: serialize evidence_summary (deterministic order, from Phase 5)
+    PB->>PB: embed schema instruction (ReportContent fields)
+    PB->>PB: embed grounding + confidence instructions
+    PB-->>O: prompt string
+
+    Note over O: if LLM output fails validation
+    O->>PB: build_retry_prompt(context, language, previous_response, errors)
+    PB-->>O: correction prompt string
+```
+
+### Dependency diagram
+
+```mermaid
+flowchart TD
+    subgraph SVC["backend/app/services/"]
+        CB[ContextBuilder - frozen, Phase 5]
+        PB[PromptBuilder - NEW]
+    end
+    subgraph DOM["backend/app/domain/"]
+        IPB[IPromptBuilder]
+        ENT[ClinicalContext, EvidenceSummary - frozen]
+    end
+
+    CB -->|ClinicalContext| PB
+    PB -.implements.-> IPB
+    PB --> ENT
+```
+
+### Unit testing strategy
+
+Pure string-content assertions, no collaborators to fake:
+- schema instruction block present, lists all 7 `ReportContent` fields
+- language instruction correctly reflects `"en"` vs `"bn"`
+- grounding/anti-hallucination instruction present
+- `VotedLabel.agreement`'s actual value appears correctly in the prompt
+- all `findings_evidence`/`impressions_evidence` entries appear in output
+- empty-`EvidenceSummary` edge case (Phase 5's empty-input path) does not
+  crash, produces a sane "no evidence available" prompt
+- `build_retry_prompt` includes the previous response and the specific
+  validation errors, not a generic "try again"
+- **determinism regression test**: same `(context, language)` called
+  twice, byte-identical output -- same pattern as Phase 5
+
+### Risks
+
+1. Prompt length/token budget not addressed at `top_k=5` scale -- noted
+   for future scaling, not a current concern.
+2. `build_translation_prompt` may end up permanently unimplemented if
+   direct-language-generation holds through Phase 8 -- a deliberate
+   non-implementation to be stated as such, not silently forgotten.
+3. `build_retry_prompt`'s interface shape is necessarily provisional until
+   Phase 7 exists to exercise it in practice -- real risk that Phase 7
+   surfaces a shape mismatch; mitigated by keeping the signature minimal.
+
+---
+
+## Phase 6 — Prompt Builder — Implementation & Validation
+
+Implemented step by step against the frozen architecture above, with real
+execution and explicit confirmation gating each step, same discipline as
+Phases 4 and 5. Four steps.
+
+### Step 1 — Interface change
+
+Added `build_retry_prompt(context, language, previous_response,
+validation_errors) -> str` to `IPromptBuilder` in `app/domain/interfaces.py`,
+alongside the existing `build_generation_prompt`. `build_explanation_prompt`
+and `build_translation_prompt` left untouched as unimplemented stubs, per
+the frozen spec. Grepped the codebase for every existing implementer/caller
+of `IPromptBuilder` before editing -- none existed yet, so the additive
+change had nothing to break. Regression check: all 38 pre-existing Phase
+4/5 tests re-run unchanged and passing.
+
+### Step 2 — `PromptBuilder` service (`app/services/prompt_builder.py`)
+
+Implemented `build_generation_prompt(context, language)` and
+`build_retry_prompt(...)` as pure string construction over `(context,
+language)` (and additionally `previous_response`/`validation_errors` for
+the retry variant) -- no LLM calls, no timestamps, no wall-clock reads.
+Only these two `IPromptBuilder` methods are implemented on the class;
+`build_explanation_prompt`/`build_translation_prompt` are simply absent
+(`IPromptBuilder` is a Protocol, not an ABC, so partial implementation is
+valid and matches the frozen spec's scope). `build_retry_prompt` is built
+directly on top of `build_generation_prompt`'s own output (full schema,
+grounding, confidence, and evidence sections included) plus an appended
+retry section carrying `previous_response` and each `validation_errors`
+entry verbatim -- satisfying "full context on retry, not just an error
+message in isolation" as a structural guarantee rather than a convention
+to remember. The empty-`EvidenceSummary` case (Phase 5's zeroed-input
+path) and the `evidence_summary is None` case are both handled by the same
+guard, degrading to a fixed "no evidence available" message rather than
+crashing or emitting a malformed prompt.
+
+**Correctness/UX catch made during review, before Step 3's tests were
+written -- not after:** the first working version emitted `agreement`/
+`vote_weight` via plain `str()` on the raw float (e.g.
+`0.6666666666666666`). Flagged as a real issue, not a style nit: full
+float precision is no more accurate to an LLM than a rounded value (both
+are pure functions of the same input, so rounding costs nothing on
+determinism), and the same `agreement` value appeared twice in the
+prompt -- once in the confidence-instruction sentence, once in the label-
+evidence block -- at different implicit precision, inviting the reader
+(human or model) to wonder whether they were two different numbers. Fixed
+by formatting both values as `f"{value:.2f}"` everywhere they appear,
+consistently. Verified directly against a real generated prompt before
+and after the fix (`0.6666666666666666` -> `0.67` in both locations), and
+Step 3 formalized the fix as a regression test that asserts the rounded
+value is present *and* that the old full-precision `str()` representation
+is absent -- closing the regression rather than only covering the happy
+path.
+
+Real example (real `ClinicalContext` built via the actual, frozen
+`ContextBuilder` from Phase 5 -- 3 hand-built retrieved cases, 2 voted
+labels):
+
+```
+You are an AI radiology assistant generating a structured chest X-ray report.
+
+LANGUAGE INSTRUCTIONS:
+Respond in English.
+
+OUTPUT FORMAT INSTRUCTIONS:
+You must output ONLY a single JSON object and nothing else. Do not wrap the JSON in markdown code fences (no ``` characters), and do not include any explanation, preamble, or trailing text outside the JSON object. The JSON object must contain exactly these 7 string fields, in this shape:
+{
+  "examination": "<string>",
+  "clinical_history": "<string>",
+  "technique": "<string>",
+  "findings": "<string>",
+  "impression": "<string>",
+  "recommendation": "<string>",
+  "disclaimer": "<string>"
+}
+
+GROUNDING INSTRUCTIONS:
+You must base your report ONLY on the evidence provided below. Do not invent, infer, or hallucinate any finding, measurement, or clinical detail that is not directly supported by the evidence below. If the evidence is insufficient to support a finding, do not include it.
+
+CONFIDENCE / UNCERTAINTY INSTRUCTIONS:
+The top candidate label from retrieval-based voting is "Pneumonia" with an agreement score of 0.67 (the fraction of retrieved neighbor cases agreeing on this label). If this agreement score is low, you MUST express appropriate clinical uncertainty in your findings and impression rather than false certainty. Do not state a diagnosis as certain when the agreement score is low.
+
+EVIDENCE:
+Retrieved findings from similar cases (most similar first):
+1. Bilateral patchy opacities in the lower lung zones, more prominent on the right.
+2. Mild cardiomegaly with clear lung fields.
+3. Right lower lobe consolidation with air bronchograms.
+
+Retrieved impressions from similar cases (most similar first):
+1. Findings consistent with multifocal pneumonia.
+2. Stable cardiac silhouette enlargement, no acute pulmonary process.
+3. Findings favor pneumonia over atelectasis.
+
+Label evidence (top voted label partition):
+- Label: Pneumonia
+- Vote weight: 1.69
+- Agreement: 0.67
+- Supporting cases: 2
+- Contradictory cases: 1
+
+Now generate the JSON report.
+```
+
+The empty-evidence path (fed `ContextBuilder().build([], [])` directly)
+degrades to:
+
+```
+EVIDENCE:
+No retrieved evidence is available for this case.
+```
+
+with the schema/grounding/confidence sections still fully present above
+it -- confirmed not to crash and not to emit a malformed or empty prompt.
+
+### Step 3 — Unit tests (`backend/tests/unit/test_prompt_builder.py`)
+
+12 pure string-content assertion tests, `ClinicalContext`/`EvidenceSummary`
+constructed directly (not via `ContextBuilder`) to keep this suite isolated
+to `PromptBuilder`'s own behavior. Covers every item in the frozen spec's
+unit testing strategy list: the schema block lists all 7 `ReportContent`
+fields (read from `dataclasses.fields(ReportContent)`, not a hardcoded
+list, so the test cannot silently drift from the entity -- same discipline
+as Phase 4's `Settings`/collection-name parity check), the `"en"`/`"bn"`
+language instruction, the grounding instruction, the JSON-only/no-markdown
+instruction, the rounded `agreement` value present with the old
+full-precision string explicitly asserted absent, every
+`findings_evidence`/`impressions_evidence` entry present in the output,
+both the empty-`EvidenceSummary` and `evidence_summary is None` edge cases,
+`build_retry_prompt` carrying the previous response and validation errors
+verbatim (with an explicit assertion that no generic "please try again"
+text is substituted in), and a determinism regression test for both
+`build_generation_prompt` and `build_retry_prompt` (identical inputs called
+twice, asserted byte-identical). Real output:
+
+```
+backend\tests\unit\test_prompt_builder.py::test_schema_instruction_lists_all_seven_report_content_fields PASSED
+backend\tests\unit\test_prompt_builder.py::test_language_instruction_reflects_en_and_bn PASSED
+backend\tests\unit\test_prompt_builder.py::test_grounding_instruction_present PASSED
+backend\tests\unit\test_prompt_builder.py::test_output_only_json_no_markdown_instruction_present PASSED
+backend\tests\unit\test_prompt_builder.py::test_top_label_agreement_value_appears_rounded_in_prompt PASSED
+backend\tests\unit\test_prompt_builder.py::test_all_findings_and_impressions_evidence_entries_appear_in_output PASSED
+backend\tests\unit\test_prompt_builder.py::test_empty_evidence_summary_produces_no_evidence_message_without_raising PASSED
+backend\tests\unit\test_prompt_builder.py::test_none_evidence_summary_produces_no_evidence_message_without_raising PASSED
+backend\tests\unit\test_prompt_builder.py::test_build_retry_prompt_includes_previous_response_and_validation_errors_verbatim PASSED
+backend\tests\unit\test_prompt_builder.py::test_build_retry_prompt_with_no_validation_errors_uses_fallback_text PASSED
+backend\tests\unit\test_prompt_builder.py::test_determinism_same_inputs_produce_byte_identical_generation_prompt PASSED
+backend\tests\unit\test_prompt_builder.py::test_determinism_same_inputs_produce_byte_identical_retry_prompt PASSED
+12 passed in 0.03s
+```
+
+### Full regression (Phase 4 + Phase 5 + Phase 6 combined)
+
+Run after every step and one final time at the close of Step 4:
+
+```
+======================= 50 passed, 4 warnings in 20.90s =======================
+```
+
+24 Phase 4 tests + 14 Phase 5 tests (13 unit + 1 integration) + 12 Phase 6
+unit tests, all green, zero regressions introduced by the additive
+interface change or the new service.
+
+### How to Write This in Your Thesis
+
+*Methodology chapter, "Prompt Builder Implementation" subsection:*
+
+> The Prompt Builder was implemented directly against its frozen
+> architecture in four verified steps: an additive interface extension, the
+> deterministic prompt-construction service itself, a pure string-content
+> unit test suite, and a final full-suite regression run. One
+> implementation-level issue was caught and corrected before it could be
+> locked in by the test suite: the initial implementation rendered
+> similarity-derived confidence values (the retrieval-based label
+> agreement score) using full floating-point precision, which is
+> unnecessary for an autoregressive model to consume correctly and, more
+> importantly, caused the same underlying value to appear in two places in
+> the prompt at what read as two different levels of precision, creating
+> an avoidable source of ambiguity for the model consuming the prompt. The
+> fix -- rendering the value at a fixed, consistent precision everywhere it
+> appears -- was verified against a real generated prompt both before and
+> after the change, and the unit test suite was written to assert not only
+> that the corrected value is present but that the original,
+> higher-precision representation is absent, so that a future regression
+> reintroducing full-precision output would be caught rather than silently
+> passing. This illustrates a recurring theme in this project's validation
+> approach: catching an issue during implementation review, before it is
+> encoded as an assumed-correct baseline in a test suite, is materially
+> different from catching it after, since a test suite written against
+> already-incorrect behavior would have certified that behavior rather than
+> guarded against it.
+
+---
+
+## Phase 6 (Prompt Builder) — COMPLETE
+
+Both steps of the frozen development order that required implementation
+(interface extension, `PromptBuilder` service) are built, tested with real
+execution at every step, and confirmed by the user before proceeding at
+each gate -- same discipline as Phases 4 and 5. No integration test folder
+in this phase, per the frozen scope -- Prompt Builder has no live
+collaborators to integration-test against until Phase 7's LLM Orchestrator
+exists to consume its output. `build_explanation_prompt` (Phase 10) and
+`build_translation_prompt` (permanently unimplemented, per the frozen
+architecture's decision to generate directly in the target language rather
+than translate) remain deliberately absent, not silently forgotten. One
+real correctness/UX issue was caught and fixed during implementation, not
+discovered afterward: full-precision float formatting of
+`agreement`/`vote_weight` values, corrected to a consistent 2-decimal
+rounding everywhere those values appear in a prompt. Full backend test
+suite: **50/50 passing** (24 Phase 4 + 14 Phase 5 + 12 Phase 6). Not yet
+built (explicitly out of Phase 6 scope per the frozen architecture): the
+LLM Orchestrator that will actually call `build_generation_prompt`/
+`build_retry_prompt` against a real model (Phase 7), and the transport/
+structural response validation that will trigger the retry path in
+practice.
+
+---

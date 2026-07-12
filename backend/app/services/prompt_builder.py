@@ -1,0 +1,187 @@
+"""
+app/services/prompt_builder.py
+====================================================================
+Implements IPromptBuilder. Transforms a ClinicalContext (Phase 5's output)
+into a deterministic prompt string for a specific language, per the frozen
+Phase 6 architecture (development_log.md, "Phase 6 -- Prompt Builder:
+Architecture (FROZEN)"). Pure text construction only -- no LLM calls, no
+response parsing, no report formatting, no clinical judgment.
+
+Only build_generation_prompt and build_retry_prompt are implemented here.
+build_explanation_prompt (Phase 10) and build_translation_prompt
+(permanently unimplemented per the frozen spec -- bilingual output is
+produced by the LLM generating directly in the target language via the
+`language` parameter, not a separate translation pass) are intentionally
+absent from this class; IPromptBuilder is a Protocol, not an ABC, so this
+class is not required to implement every method on it, only the ones a
+given caller actually invokes.
+
+Determinism: every prompt is a pure function of its arguments -- no
+timestamps, no wall-clock reads, no random ordering. ClinicalContext's
+collections are already deterministically ordered by Phase 5; this module
+only serializes in the given order, never re-sorts.
+"""
+from __future__ import annotations
+
+from app.domain.entities import ClinicalContext, EvidenceSummary, VotedLabel
+
+REPORT_CONTENT_FIELDS = (
+    "examination",
+    "clinical_history",
+    "technique",
+    "findings",
+    "impression",
+    "recommendation",
+    "disclaimer",
+)
+
+NO_EVIDENCE_MESSAGE = "No retrieved evidence is available for this case."
+
+_LANGUAGE_INSTRUCTIONS = {
+    "en": "Respond in English.",
+    "bn": "Respond in Bengali (বাংলা).",
+}
+
+
+class PromptBuilder:
+    """Satisfies domain.interfaces.IPromptBuilder (partially -- see module docstring)."""
+
+    def build_generation_prompt(self, context: ClinicalContext, language: str) -> str:
+        sections = [
+            self._role_instruction(),
+            self._language_instruction(language),
+            self._schema_instruction(),
+            self._grounding_instruction(),
+            self._confidence_instruction(context.voted_labels),
+            self._evidence_section(context.evidence_summary),
+            "Now generate the JSON report.",
+        ]
+        return "\n\n".join(sections)
+
+    def build_retry_prompt(
+        self,
+        context: ClinicalContext,
+        language: str,
+        previous_response: str,
+        validation_errors: list[str],
+    ) -> str:
+        base_prompt = self.build_generation_prompt(context, language)
+        errors_block = (
+            "\n".join(f"- {error}" for error in validation_errors)
+            if validation_errors
+            else "(no specific validation errors provided)"
+        )
+        retry_section = (
+            "---\n"
+            "RETRY INSTRUCTIONS:\n"
+            "Your previous response failed validation and could not be accepted. "
+            "You must correct every issue listed below and output a new, complete, "
+            "valid JSON object following all the instructions above exactly. Do not "
+            "repeat the same mistakes.\n\n"
+            "PREVIOUS RESPONSE (rejected):\n"
+            f"{previous_response}\n\n"
+            "VALIDATION ERRORS (must all be fixed):\n"
+            f"{errors_block}"
+        )
+        return f"{base_prompt}\n\n{retry_section}"
+
+    @staticmethod
+    def _role_instruction() -> str:
+        return (
+            "You are an AI radiology assistant generating a structured chest "
+            "X-ray report."
+        )
+
+    @staticmethod
+    def _language_instruction(language: str) -> str:
+        instruction = _LANGUAGE_INSTRUCTIONS.get(
+            language, f"Respond in the language identified by the code '{language}'."
+        )
+        return f"LANGUAGE INSTRUCTIONS:\n{instruction}"
+
+    @staticmethod
+    def _schema_instruction() -> str:
+        field_lines = "\n".join(f'  "{name}": "<string>",' for name in REPORT_CONTENT_FIELDS)
+        # trim the trailing comma on the final field so the example reads as valid JSON
+        field_lines = field_lines.rsplit(",", 1)[0] if field_lines.endswith(",") else field_lines
+        return (
+            "OUTPUT FORMAT INSTRUCTIONS:\n"
+            "You must output ONLY a single JSON object and nothing else. Do not "
+            "wrap the JSON in markdown code fences (no ``` characters), and do not "
+            "include any explanation, preamble, or trailing text outside the JSON "
+            "object. The JSON object must contain exactly these 7 string fields, in "
+            "this shape:\n"
+            "{\n"
+            f"{field_lines}\n"
+            "}"
+        )
+
+    @staticmethod
+    def _grounding_instruction() -> str:
+        return (
+            "GROUNDING INSTRUCTIONS:\n"
+            "You must base your report ONLY on the evidence provided below. Do not "
+            "invent, infer, or hallucinate any finding, measurement, or clinical "
+            "detail that is not directly supported by the evidence below. If the "
+            "evidence is insufficient to support a finding, do not include it."
+        )
+
+    @staticmethod
+    def _confidence_instruction(voted_labels: tuple[VotedLabel, ...]) -> str:
+        if not voted_labels:
+            return (
+                "CONFIDENCE / UNCERTAINTY INSTRUCTIONS:\n"
+                "No label-voting evidence is available for this case. Do not state "
+                "any diagnosis with certainty; express appropriate clinical "
+                "uncertainty throughout."
+            )
+        top_label = voted_labels[0]
+        return (
+            "CONFIDENCE / UNCERTAINTY INSTRUCTIONS:\n"
+            f'The top candidate label from retrieval-based voting is "{top_label.label}" '
+            f"with an agreement score of {top_label.agreement:.2f} (the fraction of "
+            "retrieved neighbor cases agreeing on this label). If this agreement "
+            "score is low, you MUST express appropriate clinical uncertainty in your "
+            "findings and impression rather than false certainty. Do not state a "
+            "diagnosis as certain when the agreement score is low."
+        )
+
+    @staticmethod
+    def _evidence_section(evidence_summary: EvidenceSummary | None) -> str:
+        if evidence_summary is None or (
+            not evidence_summary.findings_evidence
+            and not evidence_summary.impressions_evidence
+            and not evidence_summary.label_evidence
+        ):
+            return f"EVIDENCE:\n{NO_EVIDENCE_MESSAGE}"
+
+        lines = ["EVIDENCE:"]
+
+        lines.append("Retrieved findings from similar cases (most similar first):")
+        if evidence_summary.findings_evidence:
+            for i, text in enumerate(evidence_summary.findings_evidence, start=1):
+                lines.append(f"{i}. {text}")
+        else:
+            lines.append("(none provided)")
+
+        lines.append("")
+        lines.append("Retrieved impressions from similar cases (most similar first):")
+        if evidence_summary.impressions_evidence:
+            for i, text in enumerate(evidence_summary.impressions_evidence, start=1):
+                lines.append(f"{i}. {text}")
+        else:
+            lines.append("(none provided)")
+
+        lines.append("")
+        lines.append("Label evidence (top voted label partition):")
+        if evidence_summary.label_evidence:
+            partition = evidence_summary.label_evidence[0]
+            lines.append(f"- Label: {partition.label}")
+            lines.append(f"- Vote weight: {partition.vote_weight:.2f}")
+            lines.append(f"- Agreement: {partition.agreement:.2f}")
+            lines.append(f"- Supporting cases: {len(partition.supporting_cases)}")
+            lines.append(f"- Contradictory cases: {len(partition.contradictory_cases)}")
+        else:
+            lines.append("(none)")
+
+        return "\n".join(lines)

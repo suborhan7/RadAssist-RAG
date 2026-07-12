@@ -78,8 +78,15 @@ class IContextBuilder(Protocol):
 @runtime_checkable
 class IPromptBuilder(Protocol):
     def build_generation_prompt(self, context: ClinicalContext, language: str) -> str: ...
-    def build_explanation_prompt(self, report: Report, question: str) -> str: ...
-    def build_translation_prompt(self, content: ReportContent, target_language: str) -> str: ...
+    def build_retry_prompt(
+        self,
+        context: ClinicalContext,
+        language: str,
+        previous_response: str,
+        validation_errors: list[str],
+    ) -> str: ...
+    def build_explanation_prompt(self, report: Report, question: str) -> str: ...   # unimplemented, Phase 10
+    def build_translation_prompt(self, content: ReportContent, target_language: str) -> str: ...  # unimplemented
 
 
 @runtime_checkable
