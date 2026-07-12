@@ -1880,3 +1880,51 @@ cache table, PHI masking on the upload path, and report generation --
 all deferred to whichever future phase introduces them.
 
 ---
+
+## Phase 4 Maintenance — `RetrievedCase.labels` now carries the full multi-label set
+
+Fixes the `label_set` degeneracy flagged at Steps 2/11/12: `RetrievedCase.labels`
+was a single-label 1-tuple regardless of how many disease labels a study
+actually had, because `chroma_result_mapper.py` only ever read
+`primary_label`. Scoped, minimal fix -- no redesign.
+
+**Verified before assuming (Step 0)**, against the real
+`iu_cxr_biomedclip_v1_train` collection (2,462 records): `label_set` is
+present and non-empty on every record (0 missing), 654 are genuinely
+multi-label, `primary_label` is always a member of `label_set.split(";")`
+(0 mismatches), 0 whitespace-around-semicolon noise, and `label_set` is
+consistently alphabetically sorted -- confirmed with real examples, e.g.
+`study_uid=4`: `primary_label='Fibrosis/Interstitial'`,
+`label_set='Emphysema/COPD;Fibrosis/Interstitial;Lung Opacity;Scarring'`
+(primary label sits second alphabetically, not first) -- proving a naive
+`label_set.split(";")` would have silently broken the `labels[0] ==
+primary_label` convention for any multi-label case.
+
+**Fix**: `chroma_result_mapper.py` adds `_parse_labels(primary_label,
+label_set)`, forcing `primary_label` first, then the remaining
+`label_set` entries deduplicated and sorted after it -- preserving the
+`labels[0] == primary_label` convention exactly rather than trusting
+`label_set`'s own (alphabetical, not primary-first) ordering. `RetrievedCase`
+itself needed no change (`labels: tuple[str, ...]` already accepted
+arbitrary length).
+
+**Tests** (3 new, `test_chroma_result_mapper.py`): multi-label
+(`primary_label="Cardiomegaly"`, `label_set="Atelectasis;Cardiomegaly;Effusion"`)
+asserts `labels[0]=="Cardiomegaly"` with all three present, no duplicates;
+single-label produces a clean `("Normal",)`, not a trailing-empty-string
+tuple; empty `label_set` falls back to `(primary_label,)`. Full suite:
+**24/24 passing** (21 prior + 3 new).
+
+**Real end-to-end proof, not just green fixture assertions**: self-queried
+the real `study_uid=4` record through the actual `ChromaVectorStore` and
+`_build_response()`:
+```
+real metadata label_set:   Emphysema/COPD;Fibrosis/Interstitial;Lung Opacity;Scarring
+RetrievedCase.labels:      ('Fibrosis/Interstitial', 'Emphysema/COPD', 'Lung Opacity', 'Scarring')
+API response label_set:    Fibrosis/Interstitial;Emphysema/COPD;Lung Opacity;Scarring
+```
+`primary_label` correctly first, all four real labels present, the
+Step 11 API response's `label_set` field now carries genuine multi-label
+content instead of a duplicate of `primary_label`.
+
+---

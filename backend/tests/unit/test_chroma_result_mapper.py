@@ -61,3 +61,59 @@ def test_result_order_preserved():
 def test_empty_result():
     empty = {"ids": [[]], "distances": [[]], "metadatas": [[]]}
     assert map_chroma_results(empty) == []
+
+
+def _fake_result_with_meta(meta: dict) -> dict:
+    return {
+        "ids": [["1"]],
+        "distances": [[0.0]],
+        "metadatas": [[meta]],
+    }
+
+
+def test_multi_label_case_puts_primary_label_first_not_alphabetically_first():
+    # label_set is alphabetically sorted (real index behavior) and would
+    # NOT put "Cardiomegaly" first if naively split -- this proves the
+    # labels[0] == primary_label convention survives multi-label parsing.
+    meta = {
+        "study_uid": "1",
+        "findings": "f",
+        "impression": "i",
+        "primary_label": "Cardiomegaly",
+        "label_set": "Atelectasis;Cardiomegaly;Effusion",
+        "image_path": "x.png",
+        "cluster_id": 1,
+    }
+    cases = map_chroma_results(_fake_result_with_meta(meta))
+    labels = cases[0].labels
+    assert labels[0] == "Cardiomegaly"
+    assert set(labels) == {"Atelectasis", "Cardiomegaly", "Effusion"}
+    assert len(labels) == len(set(labels))  # no duplicates
+
+
+def test_single_label_case_produces_clean_one_tuple():
+    meta = {
+        "study_uid": "1",
+        "findings": "f",
+        "impression": "i",
+        "primary_label": "Normal",
+        "label_set": "Normal",
+        "image_path": "x.png",
+        "cluster_id": -1,
+    }
+    cases = map_chroma_results(_fake_result_with_meta(meta))
+    assert cases[0].labels == ("Normal",)
+
+
+def test_empty_label_set_falls_back_to_primary_label_only():
+    meta = {
+        "study_uid": "1",
+        "findings": "f",
+        "impression": "i",
+        "primary_label": "Normal",
+        "label_set": "",
+        "image_path": "x.png",
+        "cluster_id": -1,
+    }
+    cases = map_chroma_results(_fake_result_with_meta(meta))
+    assert cases[0].labels == ("Normal",)
