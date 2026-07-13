@@ -71,6 +71,16 @@ class LLMOrchestrator:
 
         raise LLMGenerationValidationError(last_raw_response, last_validation_errors)
 
+    def answer_question(self, prompt: str) -> str:
+        """Phase 10 (Explainability Chat): free-text answer, no schema to
+        validate against, so NO content-retry/StructuralValidator loop --
+        deliberately the mirror image of generate_draft()'s two-loop
+        structure, reduced to just the transport-retry loop. Reuses the
+        exact same _call_llm_with_transport_retry helper introduced in
+        Phase 7 (not a reimplementation) -- a transport failure is exactly
+        as real here as it is for generate_draft()."""
+        return self._call_llm_with_transport_retry(prompt)
+
     def _call_llm_with_transport_retry(self, prompt: str) -> str:
         """Owns the transport-retry budget for a single logical call: retries
         up to transport_retry_count additional times on LLMTransportError,

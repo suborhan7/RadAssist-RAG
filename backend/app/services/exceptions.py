@@ -8,6 +8,11 @@ validation never passed) are different problems with different retry
 budgets, and must not be conflated into one exception type. Phase 8
 (ReportGenerationService): SessionNotFoundError, distinguishable from any
 other failure inside generate() by exception type, not by string matching.
+Phase 10 (ExplainabilityService): ReportNotFoundError -- a NEW type, not a
+reuse of SessionNotFoundError, since "no RetrievalSession for this
+session_id" and "no ReportRecord for this report_id" are different lookups
+against different tables; conflating them would make a caller's exception
+handler (and its error message) describe the wrong missing resource.
 """
 from __future__ import annotations
 
@@ -34,3 +39,10 @@ class SessionNotFoundError(Exception):
     generate() (LLM transport/content errors, DB persistence errors) so a
     caller (Step 7's API route) can map it to its own specific HTTP status
     rather than a generic 500."""
+
+
+class ReportNotFoundError(Exception):
+    """Raised by ExplainabilityService.explain() when report_id matches no
+    ReportRecord row (or isn't a valid UUID) -- distinguishable from
+    SessionNotFoundError since a report lookup and a session lookup are
+    different failure modes against different tables."""

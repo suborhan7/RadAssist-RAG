@@ -7,14 +7,19 @@ Phase 6 architecture (development_log.md, "Phase 6 -- Prompt Builder:
 Architecture (FROZEN)"). Pure text construction only -- no LLM calls, no
 response parsing, no report formatting, no clinical judgment.
 
-Only build_generation_prompt and build_retry_prompt are implemented here.
-build_explanation_prompt (Phase 10) and build_translation_prompt
+build_generation_prompt, build_retry_prompt, and (as of Phase 10)
+build_explanation_prompt are implemented here. build_translation_prompt
 (permanently unimplemented per the frozen spec -- bilingual output is
 produced by the LLM generating directly in the target language via the
-`language` parameter, not a separate translation pass) are intentionally
+`language` parameter, not a separate translation pass) is intentionally
 absent from this class; IPromptBuilder is a Protocol, not an ABC, so this
 class is not required to implement every method on it, only the ones a
 given caller actually invokes.
+
+build_explanation_prompt reuses _evidence_section (the exact same
+deterministic evidence serialization build_generation_prompt already
+uses) rather than a second, divergent copy -- same "one shared
+serialization" discipline as every prior phase's reuse decisions.
 
 Determinism: every prompt is a pure function of its arguments -- no
 timestamps, no wall-clock reads, no random ordering. ClinicalContext's
@@ -23,7 +28,7 @@ only serializes in the given order, never re-sorts.
 """
 from __future__ import annotations
 
-from app.domain.entities import ClinicalContext, EvidenceSummary, VotedLabel
+from app.domain.entities import ClinicalContext, EvidenceSummary, Report, ReportContent, VotedLabel
 
 REPORT_CONTENT_FIELDS = (
     "examination",
@@ -95,6 +100,61 @@ class PromptBuilder:
             f"{errors_block}"
         )
         return f"{base_prompt}\n\n{retry_section}"
+
+    def build_explanation_prompt(
+        self, report: Report, question: str, evidence_summary: EvidenceSummary | None
+    ) -> str:
+        sections = [
+            self._explanation_role_instruction(),
+            self._report_content_section(report.ai_content),
+            self._evidence_section(evidence_summary),
+            self._explanation_grounding_instruction(),
+            self._question_section(question),
+        ]
+        return "\n\n".join(sections)
+
+    @staticmethod
+    def _explanation_role_instruction() -> str:
+        return (
+            "You are an AI radiology assistant answering a clinician's question "
+            "about a previously generated chest X-ray report."
+        )
+
+    @staticmethod
+    def _report_content_section(content: ReportContent) -> str:
+        return (
+            "REPORT CONTENT:\n"
+            f"Examination: {content.examination}\n"
+            f"Clinical History: {content.clinical_history}\n"
+            f"Technique: {content.technique}\n"
+            f"Findings: {content.findings}\n"
+            f"Impression: {content.impression}\n"
+            f"Recommendation: {content.recommendation}\n"
+            f"Disclaimer: {content.disclaimer}"
+        )
+
+    @staticmethod
+    def _explanation_grounding_instruction() -> str:
+        # At least as strong as _grounding_instruction() above -- interactive
+        # chat is a worse hallucination surface than one-shot generation (a
+        # clinician can ask leading questions), so this adds an explicit
+        # "never introduce a new diagnosis" clause and a mandatory fallback
+        # sentence for out-of-scope questions, both stronger than the plain
+        # "do not include it" of the generation-time instruction.
+        return (
+            "GROUNDING INSTRUCTIONS:\n"
+            "You must answer ONLY using the report content and evidence provided "
+            "above. Do not invent, infer, or introduce any new diagnosis, finding, "
+            "measurement, or clinical detail that is not already present in the "
+            "report content or the evidence above. If the question asks about "
+            "something the report content and evidence above do not address, you "
+            "MUST explicitly state that the available evidence does not address "
+            "this question, rather than speculating or guessing."
+        )
+
+    @staticmethod
+    def _question_section(question: str) -> str:
+        return f"QUESTION:\n{question}"
 
     @staticmethod
     def _role_instruction() -> str:

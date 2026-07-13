@@ -4454,3 +4454,489 @@ status as Phase 8's Bengali section headers, both awaiting real domain
 review before any real clinical use.
 
 ---
+
+
+## Phase 10 — Explainability Chat: Architecture (FROZEN)
+
+**Status: approved and frozen.** Not to be redesigned without a critical
+correctness issue. Activates `IPromptBuilder.build_explanation_prompt`,
+a domain method scaffolded as an unimplemented stub since the original
+Phase 6 freeze, explicitly earmarked for this phase at that time.
+
+### Gaps identified and resolved before freezing
+
+1. **Evidence used to produce a report was never persisted -- resolved by
+   recomputation, not a schema change.** `ReportGenerationService.generate()`
+   computes a `ClinicalContext`/`EvidenceSummary` transiently and discards
+   it after producing the final `ai_content`. Since `ReportRecord.session_id`
+   is stored, and retrieval/voting/context-building are all deterministic
+   (Phase 5's own frozen guarantee), re-running the shared
+   `reconstruct_session_evidence()` helper (introduced Phase 9 Step 4,
+   now reused a third time) against that `session_id` reproduces the
+   identical evidence used at generation time. **Explicit, documented
+   assumption**: this is only valid because nothing in this system updates
+   or deletes ChromaDB records or `retrieved_evidence` rows after a
+   session is created -- true today, stated as a real constraint this
+   phase depends on, not an implicit one.
+2. **New method on frozen `ILLMOrchestrator`**: `answer_question(prompt:
+   str) -> str`. `generate_draft()` is typed for structured 7-field JSON
+   with a content-retry/structural-validation loop that doesn't apply to
+   free-text chat answers. `answer_question` reuses the same
+   `_call_llm_with_transport_retry` helper from Phase 7 (transport
+   failures still matter) but has no content-retry loop.
+3. **Semantic validation of chat answers deferred, not partially built.**
+   Phase 8's `ResponseValidator` is typed for `ReportContent`, a shape
+   free-text chat answers don't fit; adapting it now would be scope creep
+   on a component this phase doesn't otherwise need. Documented explicitly
+   as future work.
+4. **Single-turn only.** One question in, one grounded answer out, no
+   persisted conversation thread, no multi-turn context. Consistent with
+   this project's standing bias toward the smallest viable slice.
+   Extensible to multi-turn later via an additive history table, not a
+   redesign.
+5. **Signature addition to the frozen Phase 6 stub, flagged not silently
+   applied**: `build_explanation_prompt`'s original stub signature
+   (`report, question`) predates `EvidenceSummary` as an accessible
+   concept at that call site. Per Decision 1 above (reconstruct, don't
+   persist), the method now needs `evidence_summary` passed in --
+   `build_explanation_prompt(report, question, evidence_summary)`.
+
+### Decisions frozen
+
+1. `ILLMOrchestrator.answer_question(prompt: str) -> str` -- additive,
+   reuses transport retry, no content-retry/structural-validation loop.
+2. Single-turn explainability only -- no conversation history, memory, or
+   multi-turn chat in this phase.
+3. **Grounding is mandatory and at least as strong as Phase 6's grounding
+   instruction**, given interactive chat is a worse hallucination surface
+   than one-shot generation (a clinician can ask leading questions).
+   `build_explanation_prompt` must instruct the model to answer only from
+   the report's own content and the reconstructed evidence, never
+   introduce a new diagnosis or finding, and explicitly state "the
+   available evidence does not address this" when a question falls
+   outside grounded material, rather than speculate.
+4. Semantic validation of chat responses is deferred -- documented as
+   future work, not partially implemented.
+5. Evidence reconstructed deterministically from `session_id` via the
+   existing shared helper; `EvidenceSummary` is never persisted.
+   Backend-only, same reaffirmed structural boundary as every phase since
+   Phase 8.
+
+### New entity
+
+```python
+@dataclass(frozen=True)
+class ExplanationRecord:
+    id: str
+    report_id: str
+    question: str
+    answer: str
+    created_at: str
+```
+
+### Database (`explanations` table)
+
+```
+explanations:
+  id (UUID, PK)
+  report_id (UUID, FK -> reports.id)
+  question (str)
+  answer (str)
+  created_at (DATETIME)
+```
+
+### Folder structure
+
+```
+backend/app/
+|-- domain/
+|   |-- entities.py       (+ ExplanationRecord)
+|   `-- interfaces.py     (+ ILLMOrchestrator.answer_question;
+|                             + evidence_summary param on build_explanation_prompt)
+|-- services/
+|   |-- prompt_builder.py           (MODIFIED: implement build_explanation_prompt)
+|   |-- llm_orchestrator.py         (MODIFIED: + answer_question)
+|   `-- explainability_service.py
+|-- infrastructure/
+|   `-- ollama_client.py            (MODIFIED: expose underlying call for answer_question,
+|                                       reusing transport-retry)
+|-- models/
+|   `-- explanation.py              (new: explanations table)
+`-- api/
+    `-- explainability.py           (POST /reports/{report_id}/explain)
+alembic/versions/                    (new migration)
+
+backend/tests/
+|-- unit/
+|   |-- test_prompt_builder_explanation.py
+|   |-- test_llm_orchestrator_answer_question.py
+|   `-- test_explainability_service.py
+`-- integration/
+    `-- test_explainability_integration.py
+```
+
+### Step breakdown
+
+1. `ILLMOrchestrator.answer_question` + `OllamaClient` support -- reuse
+   transport-retry, no content loop. Unit tests: success path,
+   transport-exhausted path (mirroring Phase 7's Scenario C, no
+   content-retry equivalent).
+2. Domain layer: `ExplanationRecord`, interface signature changes --
+   regression check against full suite (99 tests).
+3. `PromptBuilder.build_explanation_prompt` -- grounding instruction,
+   report content + evidence serialization. Unit tests: grounding
+   instruction present; report content appears; evidence appears;
+   determinism (same inputs -> same prompt).
+4. `explanations` table + Alembic migration -- same rigor as Phase 8
+   Step 3 (disposable throwaway DBs, read the migration file, downgrade/
+   upgrade cycle proof).
+5. `ExplainabilityService.explain()` -- reuses `reconstruct_session_evidence`
+   (third use). Unit tests: correct sequencing (fakes); atomic
+   persistence-failure test (same pattern as every prior phase);
+   report-not-found error handling.
+6. `POST /reports/{report_id}/explain` -- thin-route audit, same standard
+   as every prior endpoint.
+7. Full integration test: real report (via a real prior
+   `/generate-report` call) -> real question -> real evidence
+   reconstruction -> real grounded answer -> real persistence. Assert
+   structural properties only (response shape, persisted row matches),
+   never exact answer wording -- same non-determinism discipline as
+   Phase 7/8.
+8. Full regression + dev log entry.
+
+### Risks
+
+1. The recomputation assumption (session evidence immutable
+   post-creation) is a real, silent dependency -- documented explicitly so
+   it is a stated constraint, not an implicit one.
+2. Deferred semantic validation means chat answers have zero automated
+   safety check beyond the grounding instruction itself -- acceptable per
+   explicit user decision, but must be named plainly as future work in
+   the thesis, not glossed over.
+3. The `build_explanation_prompt` signature change touches a year-old
+   unused stub -- low-risk (no real callers exist yet) but still a frozen-
+   file change, flagged per the standing rule.
+
+---
+
+## Phase 10 — Explainability Chat — Implementation & Validation
+
+Implemented across the frozen 8-step breakdown (Steps 2/3 batched, both
+low-risk and additive), with real execution and explicit confirmation
+gating every step. This phase activated `IPromptBuilder.build_explanation_prompt`,
+a domain stub scaffolded and left deliberately unimplemented since the
+original Phase 6 freeze, and produced the first real, grounded chat-style
+answer to a clinician's question about an actual generated report.
+
+### Step 1 — `ILLMOrchestrator.answer_question` + transport-retry reuse
+
+`answer_question(prompt: str) -> str` added to the interface and
+implemented as a one-line call to the exact same `_call_llm_with_transport_retry`
+helper introduced in Phase 7 -- not a reimplementation. No content-retry
+loop, no `StructuralValidator` reference anywhere in the method (free-text
+answers have no schema to validate against).
+
+**`OllamaClient` needed zero changes -- checked, not assumed from the
+frozen spec's folder listing.** The listing predicted `ollama_client.py`
+would be modified, but reading the actual current implementation showed
+`complete(prompt: str) -> str` was already completely generic: no JSON- or
+`ReportContent`-specific behavior is baked into the transport layer itself
+(that logic lives entirely in prompt text plus the separate
+`StructuralValidator`, neither of which `OllamaClient` touches). Same
+verify-before-changing instinct as Phase 8's `get_by_ids` order-preservation
+check -- a prediction written before a file exists doesn't get trusted
+over the file itself.
+
+4 new unit tests, mirroring Phase 7's Scenario C/D structure:
+
+```
+test_answer_question_success_on_first_attempt PASSED
+test_answer_question_transport_retry_recovers_within_budget PASSED
+test_answer_question_transport_budget_exhausted_raises_llm_transport_error PASSED
+test_answer_question_has_no_content_retry_loop PASSED
+11 passed in 0.03s
+```
+
+The last test's design is deliberately strong: it uses an EMPTY
+`FakeStructuralValidator({})`, so if `answer_question` ever called
+`.validate()` on anything it would raise `KeyError` -- the test passing at
+all is part of the proof, not just a soft assertion, reinforced by
+`sv.calls == []`. Full suite: **103 passed**.
+
+### Steps 2/3 (batched) — Domain layer + `build_explanation_prompt` implementation
+
+`ExplanationRecord` added field-for-field. `IPromptBuilder.build_explanation_prompt`'s
+signature updated to `(report, question, evidence_summary)` -- the flagged,
+pre-approved change to the year-old frozen stub. Grepped first: only the
+stub declaration itself existed anywhere in the codebase, no real callers
+to break.
+
+Implementation reuses `_evidence_section` directly (the exact same
+deterministic evidence serialization `build_generation_prompt` already
+uses) rather than a second, divergent copy -- automatic at this point,
+not something that needed to be asked for again. Grounding instruction
+verified explicitly stronger than `build_generation_prompt`'s own, not just
+asserted so: it adds two clauses the generation-time instruction lacks --
+an explicit "never introduce a new diagnosis" prohibition, and a mandatory
+fallback sentence for out-of-scope questions (vs. the generation
+instruction's softer "do not include it") -- and the unit test asserts on
+those exact required clauses, not merely on the `GROUNDING INSTRUCTIONS`
+header being present, so it would actually catch a future weakening of the
+wording.
+
+Real smoke output before formal tests were written:
+
+```
+GROUNDING INSTRUCTIONS:
+You must answer ONLY using the report content and evidence provided above. Do not
+invent, infer, or introduce any new diagnosis, finding, measurement, or clinical
+detail that is not already present in the report content or the evidence above. If
+the question asks about something the report content and evidence above do not
+address, you MUST explicitly state that the available evidence does not address
+this question, rather than speculating or guessing.
+
+QUESTION:
+Why do you think this is pneumonia and not just a normal finding?
+```
+
+5 new unit tests:
+
+```
+test_explanation_grounding_instruction_present_and_at_least_as_strong PASSED
+test_explanation_report_content_appears_in_output PASSED
+test_explanation_evidence_appears_in_output PASSED
+test_explanation_question_appears_in_output PASSED
+test_explanation_prompt_determinism_same_inputs_produce_byte_identical_output PASSED
+23 passed in 0.04s
+```
+
+Full suite: **108 passed**.
+
+### Step 4 — `explanations` table + Alembic migration
+
+Schema exactly per the frozen spec. The one thing this schema needed
+double-checked, since it's new for this project: `explanations.report_id`
+is the first FK in this schema that points at `reports` rather than
+`retrieval_sessions` (every prior FK -- `retrieved_evidence.session_id`,
+`reports.session_id` -- pointed at `retrieval_sessions.id`). Verified two
+ways, not assumed: reading the generated migration file
+(`sa.ForeignKeyConstraint(['report_id'], ['reports.id'], )`), and a
+side-by-side real-schema inspection rather than checking `explanations`'
+FK in isolation:
+
+```
+--- explanations table FK list ---
+(0, 0, 'reports', 'report_id', 'id', 'NO ACTION', 'NO ACTION', 'NONE')
+
+--- for comparison: reports table FK list (points at retrieval_sessions) ---
+(0, 0, 'retrieval_sessions', 'session_id', 'id', 'NO ACTION', 'NO ACTION', 'NONE')
+```
+
+A single-table check could have passed even with an accidental copy-paste
+pointing both FKs at the same parent; the side-by-side comparison is what
+actually proves they're genuinely different. Same disposable-throwaway-file
+precedent as Phase 8/9. Reversibility tested at both granularities --
+single-step (`downgrade -1`, removing only `explanations` without
+disturbing `reports`/`retrieval_sessions` underneath it) and full
+(`downgrade base` -> `upgrade head`), FK intact after the round-trip:
+
+```
+downgrade -1   -> Tables: [alembic_version, retrieval_sessions, retrieved_evidence, reports]
+downgrade base -> Tables: [('alembic_version',)]
+upgrade head   -> Tables: [alembic_version, retrieval_sessions, retrieved_evidence, reports, explanations]
+                  explanations FK still intact: [(0, 0, 'reports', 'report_id', 'id', ...)]
+```
+
+ORM model named `Explanation` (matches the filename-to-classname
+convention every other model follows) -- no Report/ReportRecord-style
+collision to avoid here, since the frozen domain entity is
+`ExplanationRecord`, a genuinely different name. Full suite: **108 passed**
+(unchanged -- migration-only step).
+
+### Step 5 — `ExplainabilityService.explain()`
+
+Sequence per the frozen spec: fetch `ReportRecord` -> reuse
+`reconstruct_session_evidence()` (its third caller, after
+`ReportGenerationService` and `QuestionnaireService`) -> reconstruct the
+`Report` domain entity from persisted `ai_content` ->
+`build_explanation_prompt` -> `answer_question` -> persist
+`Explanation` atomically -> return.
+
+**New `ReportNotFoundError`, not a reuse of `SessionNotFoundError` --
+reasoned explicitly.** A report lookup by `report_id` and a session lookup
+by `session_id` are different failure modes against different tables;
+conflating them would make an error message describe the wrong missing
+resource and would prevent a caller from distinguishing the two failure
+modes by exception type alone. Same discipline as Phase 7's distinct
+transport/content exception types.
+
+**`Report.study_id` substitution, documented rather than silently
+populated.** The frozen `Report` domain entity predates this system's
+actual persistence model and expects a `study_id` referencing a `studies`
+table that, per CLAUDE.md, was never built. `study_id` is populated with
+`str(ReportRecord.session_id)` -- the closest real identifier this system
+actually has -- stated explicitly in the module docstring as a real
+mismatch between an early domain-model assumption and what actually
+exists, not glossed over as if the field meant what its name implies.
+
+**Known limitation, named plainly:** the reconstructed `EvidenceSummary`
+reflects retrieval evidence only. Any `questionnaire_answers`/`clinical_notes`
+a clinician supplied at the *original* `/generate-report` call are not
+persisted anywhere on `ReportRecord` (Phase 9's schema doesn't store
+them), so they cannot be recovered for the explanation prompt -- a
+concrete, real example of early-assumption drift worth keeping for the
+thesis limitations section.
+
+```
+test_correct_sequencing_and_data_flow PASSED
+test_report_not_found_raises_specific_error_before_touching_collaborators PASSED
+test_malformed_report_id_raises_specific_error_not_a_crash PASSED
+test_atomic_persistence_failure_leaves_zero_rows PASSED
+4 passed in 0.28s
+```
+
+Full suite: **112 passed**.
+
+### Step 6 — `POST /reports/{report_id}/explain`
+
+**A real wiring gap found and fixed while building this route, not by a
+unit test (which structurally could not have caught it, since every prior
+test supplies its own fake `PromptBuilder` directly).** `PromptBuilder()`
+had only ever been constructed inline as an `LLMOrchestrator` constructor
+argument -- never stored on `app.state`, so no route had an independent
+reference to it. `ExplainabilityService` needs its own `prompt_builder`
+collaborator. Fixed by extracting `prompt_builder = PromptBuilder()` as
+its own variable, storing it on `app.state.prompt_builder`, and passing
+that *same instance* into `LLMOrchestrator` -- consolidating to one
+shared instance rather than patching the immediate gap with a second,
+silently-parallel instantiation. `PromptBuilder` is stateless today, so
+two instances would not currently misbehave, but two divergent instances
+of something conceptually singular is exactly the shape of latent
+inconsistency that becomes a real bug later.
+
+Typed response models from the start (`ExplanationResponse`).
+`ReportNotFoundError` -> 404, same mapping pattern as every prior
+not-found case. Thin-route audit: no line examines/branches on
+question/answer content or makes a clinical judgment -- same conclusion
+as every prior audit. Full suite: **112 passed** (unchanged -- endpoint
+wiring only, exercised for real in Step 7).
+
+### Step 7 — Full integration test
+
+Real flow, chained directly in this test's own fixture rather than
+importing another test module's fixtures across files (same
+self-contained pattern already used by Phase 9's own integration test):
+real `POST /retrieve` -> real `POST /generate-report` -> real
+`POST /reports/{report_id}/explain` with a real question, exercising every
+real collaborator end to end -- DB fetch, `reconstruct_session_evidence`,
+`Report`/`ReportContent` reconstruction from persisted `ai_content`, real
+`PromptBuilder.build_explanation_prompt`, a real Ollama call via
+`answer_question`, real persistence.
+
+```
+backend\tests\integration\test_explainability_integration.py::test_explain_report_full_real_chain PASSED
+1 passed, 2 warnings in 19.86s
+```
+
+The real question and the model's real, complete answer:
+
+```
+real question: Why do you think this finding is significant, and what should the clinician watch for?
+
+=== REAL ANSWER (model's actual response) ===
+Based on the provided report content and evidence, I can only provide an answer based on the information presented. The report states that there is increased opacity within the right upper lobe with possible mass and associated area of atelectasis or focal consolidation. The impression is that this finding may represent a benign process.
+
+The significance of this finding is not explicitly stated in the report, but it suggests that further evaluation is necessary to determine the cause of the opacity. The recommendation for chest CT is likely due to the complexity of the finding and the need for more detailed imaging to characterize the lesion.
+
+As for what the clinician should watch for, the report does not provide specific guidance on this topic. However, based on the findings, it would be reasonable for the clinician to monitor the patient's symptoms and follow up with further imaging or other diagnostic tests as necessary to determine the cause of the opacity and ensure that it is not a sign of a more serious underlying condition.
+
+It is important to note that the report does contain a disclaimer stating that there is clinical uncertainty due to a low agreement score (0.60). This suggests that there may be some variability in how radiologists interpret this finding, which could impact the significance and implications of the result.
+```
+
+Worth stating plainly, not just noting the test passed: this answer is
+concrete evidence the grounding instruction is being followed
+substantively, not just formally. The model grounds its reasoning in the
+report's own stated findings/impression/recommendation, cites the real
+0.60 agreement score from the disclaimer by name, and explicitly declines
+to speculate where the report itself is silent ("The significance of this
+finding is not explicitly stated in the report... the report does not
+provide specific guidance on this topic") -- the exact fallback behavior
+Decision 3 required, observed working end to end for the first time.
+Structural/contract assertions only (all frozen response fields present,
+persisted `Explanation` row matches the response field-for-field) --
+never exact wording, same non-determinism discipline as every real-LLM
+integration test since Phase 7.
+
+### Full regression (Phase 4 through Phase 10 combined)
+
+```
+======================= 113 passed, 8 warnings in 70.16s =======================
+```
+
+24 Phase 4 + 14 Phase 5 + 12 Phase 6 + 16 Phase 7 + 19 Phase 8 + 14 Phase 9
++ 14 Phase 10 (4 + 5 + 4 + 1), all green, zero regressions across the
+whole phase.
+
+### How to Write This in Your Thesis
+
+*Methodology chapter, "Explainability Chat Implementation" subsection:*
+
+> Phase 10 activated a domain-layer method that had been deliberately
+> scaffolded as an unimplemented placeholder four phases earlier,
+> illustrating a design choice made early in the project -- reserving a
+> named seam in a frozen interface for a capability not yet built -- paying
+> off exactly as intended when that capability's turn came. Two real
+> defects were caught during this phase's own implementation rather than
+> assumed absent. First, a documentation artifact predicting that an
+> existing infrastructure adapter would require modification was checked
+> against that adapter's actual source before any change was made, and the
+> prediction did not hold: the adapter's existing method was already
+> sufficiently generic, and no change was needed at all, illustrating that
+> a specification written before an artifact exists describes an
+> expectation, not a fact about that artifact once it does. Second, a
+> wiring omission was found in the application's dependency-assembly code
+> -- a shared component had been constructed only as an internal argument
+> to another component, with no independently addressable reference
+> available elsewhere in the system, a class of defect that unit tests
+> built around directly-supplied fakes cannot detect by construction, since
+> such tests never touch the real assembly code at all. Both defects were
+> caught by reading actual implementation and assembly code before
+> proceeding, not by inference from documentation or by trusting that
+> prior phases' patterns had been followed correctly. Finally, this phase
+> also surfaced a concrete instance of a more general limitation worth
+> stating plainly: a domain entity designed early in the project assumed
+> the eventual existence of a data model that was never built, and a
+> service in this phase had to document, rather than silently paper over,
+> a substitution of a similar-but-not-equivalent identifier in that
+> entity's place -- a reminder that early architectural assumptions can
+> drift from what a system actually ends up persisting, and that such
+> drift is best handled by explicit documentation at the point of
+> divergence rather than by a plausible-looking value that does not mean
+> what it appears to mean.
+
+---
+
+## Phase 10 (Explainability Chat) — COMPLETE
+
+All 8 steps of the frozen development order (Steps 2/3 batched) --
+`ILLMOrchestrator.answer_question` -> domain layer + `build_explanation_prompt`
+-> `explanations` table/migration -> `ExplainabilityService` ->
+`POST /reports/{report_id}/explain` -> full integration test -- are built,
+tested with real execution at every step, including a real local Ollama
+model, and confirmed by the user before proceeding at each gate, same
+discipline as every prior phase. Two real defects were caught and fixed
+during implementation, not discovered afterward: a documentation-vs-actual-
+code mismatch (the frozen spec's folder listing predicted `OllamaClient`
+would need modification; it did not, verified by reading the file) and a
+dependency-wiring gap (`PromptBuilder` had no independent reference on
+`app.state`, only existing buried inside `LLMOrchestrator`'s constructor).
+Single-turn only, no conversation history, per the frozen scope; semantic
+validation of chat answers is deferred, named explicitly as future work,
+not partially built. Full backend test suite: **113/113 passing** (24
+Phase 4 + 14 Phase 5 + 12 Phase 6 + 16 Phase 7 + 19 Phase 8 + 14 Phase 9 +
+14 Phase 10). Not yet built, explicitly out of Phase 10 scope: Longitudinal
+Patient History (Phase 11), the Frontend (Phase 12), the doctor-edit review
+workflow, multi-turn conversation history, and semantic validation of
+explanation answers.
+
+---

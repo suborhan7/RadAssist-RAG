@@ -166,6 +166,15 @@ class Questionnaire:
     questions: tuple[QuestionnaireQuestion, ...]
 
 
+@dataclass(frozen=True)
+class ExplanationRecord:
+    id: str
+    report_id: str
+    question: str
+    answer: str
+    created_at: str
+
+
 @dataclass
 class ReportContent:
     """Mutable: a report has an AI-generated version and a doctor-edited version."""

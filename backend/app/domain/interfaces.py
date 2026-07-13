@@ -94,7 +94,10 @@ class IPromptBuilder(Protocol):
         previous_response: str,
         validation_errors: list[str],
     ) -> str: ...
-    def build_explanation_prompt(self, report: Report, question: str) -> str: ...   # unimplemented, Phase 10
+    def build_explanation_prompt(
+        self, report: Report, question: str, evidence_summary: EvidenceSummary
+    ) -> str: ...   # implemented Phase 10; evidence_summary added since it wasn't an accessible
+    # concept at this stub's original Phase 6 freeze
     def build_translation_prompt(self, content: ReportContent, target_language: str) -> str: ...  # unimplemented
 
 
@@ -121,6 +124,14 @@ class ILLMOrchestrator(Protocol):
     with two independent retry budgets. Infrastructure: app/services/llm_orchestrator.py"""
 
     def generate_draft(self, context: ClinicalContext, language: str) -> ReportContent: ...
+
+    def answer_question(self, prompt: str) -> str:
+        """Phase 10: free-text explainability chat. Reuses the same
+        transport-retry protection as generate_draft() (a transport failure
+        is equally real here), but has NO content-retry/structural-
+        validation loop -- free-text answers have no schema to validate
+        against."""
+        ...
 
 
 @runtime_checkable

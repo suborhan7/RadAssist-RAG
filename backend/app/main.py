@@ -12,6 +12,11 @@ request.app.state rather than constructing anything themselves.
 `vector_store` itself is also stored directly on app.state (not just
 buried inside retrieval_service) since Phase 8's ReportGenerationService
 needs the same ChromaVectorStore instance independently, for get_by_ids().
+`prompt_builder` is likewise stored directly on app.state (Phase 10) --
+previously constructed inline as an LLMOrchestrator constructor arg only,
+with no standalone reference route code could reach; ExplainabilityService
+needs the same PromptBuilder instance independently, for
+build_explanation_prompt().
 """
 from __future__ import annotations
 
@@ -20,6 +25,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from app.api.explainability import router as explainability_router
 from app.api.generation import router as generation_router
 from app.api.questionnaire import router as questionnaire_router
 from app.api.retrieval import router as retrieval_router
@@ -59,8 +65,10 @@ async def lifespan(app: FastAPI):
     )
     app.state.label_voting_service = LabelVotingService()
     app.state.context_builder = ContextBuilder()
+    prompt_builder = PromptBuilder()
+    app.state.prompt_builder = prompt_builder
     app.state.llm_orchestrator = LLMOrchestrator(
-        prompt_builder=PromptBuilder(),
+        prompt_builder=prompt_builder,
         llm_client=OllamaClient(),
         structural_validator=StructuralValidator(),
         transport_retry_count=settings.LLM_TRANSPORT_RETRY_COUNT,
@@ -78,3 +86,4 @@ app = FastAPI(title="RadAssist-RAG Backend", lifespan=lifespan)
 app.include_router(retrieval_router)
 app.include_router(generation_router)
 app.include_router(questionnaire_router)
+app.include_router(explainability_router)

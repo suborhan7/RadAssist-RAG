@@ -98,3 +98,11 @@ class QuestionnaireResponse(BaseModel):
     session_id: str
     based_on_label: str
     questions: list[QuestionnaireQuestionResponse]
+
+
+class ExplanationResponse(BaseModel):
+    id: str
+    report_id: str
+    question: str
+    answer: str
+    created_at: str

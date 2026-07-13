@@ -193,3 +193,67 @@ def test_build_generation_prompt_called_exactly_once_across_multiple_retries():
 
     assert result is CONTENT
     assert len(pb.build_generation_prompt_calls) == 1
+
+
+# --- Phase 10: answer_question() -- same transport-retry pattern as
+# generate_draft(), applied to a simpler method with NO content-retry loop.
+
+
+def test_answer_question_success_on_first_attempt():
+    llm = FakeLLMClient(["The finding is likely benign based on stability."])
+    orchestrator = LLMOrchestrator(
+        FakePromptBuilder(), llm, FakeStructuralValidator({}), transport_retry_count=1, content_retry_count=2,
+    )
+
+    result = orchestrator.answer_question("EXPLANATION_PROMPT")
+
+    assert result == "The finding is likely benign based on stability."
+    assert llm.calls == ["EXPLANATION_PROMPT"]
+
+
+def test_answer_question_transport_retry_recovers_within_budget():
+    """Mirrors Phase 7's Scenario D (transport hiccup on the first call
+    recovers before any content concern is even relevant here)."""
+    llm = FakeLLMClient([LLMTransportError("flaky"), "recovered answer"])
+    orchestrator = LLMOrchestrator(
+        FakePromptBuilder(), llm, FakeStructuralValidator({}), transport_retry_count=1, content_retry_count=2,
+    )
+
+    result = orchestrator.answer_question("EXPLANATION_PROMPT")
+
+    assert result == "recovered answer"
+    assert llm.calls == ["EXPLANATION_PROMPT", "EXPLANATION_PROMPT"]
+
+
+def test_answer_question_transport_budget_exhausted_raises_llm_transport_error():
+    """Mirrors Phase 7's Scenario C."""
+    llm = FakeLLMClient([LLMTransportError("boom-1"), LLMTransportError("boom-2")])
+    orchestrator = LLMOrchestrator(
+        FakePromptBuilder(), llm, FakeStructuralValidator({}), transport_retry_count=1, content_retry_count=2,
+    )
+
+    with pytest.raises(LLMTransportError):
+        orchestrator.answer_question("EXPLANATION_PROMPT")
+
+    assert llm.calls == ["EXPLANATION_PROMPT", "EXPLANATION_PROMPT"]
+
+
+def test_answer_question_has_no_content_retry_loop():
+    """Confirms NO content-retry-style looping exists: an arbitrary,
+    unstructured text response (not JSON -- would fail StructuralValidator
+    if it were ever checked) is returned as-is on the first successful
+    call. FakeStructuralValidator({}) is deliberately empty -- if
+    answer_question ever called .validate() on anything, this would raise
+    KeyError, so the test passing at all is itself part of the proof;
+    sv.calls == [] and exactly one LLM call make it explicit."""
+    sv = FakeStructuralValidator({})
+    llm = FakeLLMClient(["this is not JSON, just a plain sentence answer."])
+    orchestrator = LLMOrchestrator(
+        FakePromptBuilder(), llm, sv, transport_retry_count=1, content_retry_count=2,
+    )
+
+    result = orchestrator.answer_question("EXPLANATION_PROMPT")
+
+    assert result == "this is not JSON, just a plain sentence answer."
+    assert llm.calls == ["EXPLANATION_PROMPT"]
+    assert sv.calls == []

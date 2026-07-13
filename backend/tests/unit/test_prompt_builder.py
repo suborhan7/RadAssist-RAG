@@ -13,8 +13,11 @@ import dataclasses
 from app.domain.entities import (
     ClinicalContext,
     EvidenceSummary,
+    Language,
     LabelEvidencePartition,
+    Report,
     ReportContent,
+    ReportStatus,
     RetrievalStats,
     RetrievedCase,
     VotedLabel,
@@ -242,3 +245,60 @@ def test_build_retry_prompt_carries_questionnaire_and_notes_through():
     assert "- duration: 3 days" in prompt
     assert "ADDITIONAL CLINICAL NOTES:" in prompt
     assert "Patient reports recent travel" in prompt
+
+
+# --- Phase 10: build_explanation_prompt ---
+
+
+def _report() -> Report:
+    content = ReportContent(
+        examination="Chest X-ray", clinical_history="Cough", technique="PA view",
+        findings="Right upper lobe opacity.", impression="Findings concerning for pneumonia.",
+        recommendation="Clinical correlation, consider follow-up imaging.", disclaimer="AI-generated draft",
+    )
+    return Report(
+        id="r1", study_id="s1", language=Language.ENGLISH, status=ReportStatus.AI_DRAFT,
+        ai_content=content, final_content=ReportContent(),
+    )
+
+
+def test_explanation_grounding_instruction_present_and_at_least_as_strong():
+    prompt = PromptBuilder().build_explanation_prompt(_report(), "Why?", _empty_context().evidence_summary)
+    assert "GROUNDING INSTRUCTIONS" in prompt
+    # required-strength clauses per the frozen spec, none of which are in
+    # build_generation_prompt's own grounding instruction -- a strictly
+    # stronger requirement, not just "a" grounding instruction
+    assert "do not invent, infer, or introduce any new diagnosis" in prompt.lower()
+    assert "evidence does not address this question" in prompt.lower()
+
+
+def test_explanation_report_content_appears_in_output():
+    report = _report()
+    prompt = PromptBuilder().build_explanation_prompt(report, "Why?", _empty_context().evidence_summary)
+    assert report.ai_content.findings in prompt
+    assert report.ai_content.impression in prompt
+    assert report.ai_content.recommendation in prompt
+
+
+def test_explanation_evidence_appears_in_output():
+    ctx = _populated_context()
+    prompt = PromptBuilder().build_explanation_prompt(_report(), "Why?", ctx.evidence_summary)
+    for text in ctx.evidence_summary.findings_evidence:
+        assert text in prompt
+    for text in ctx.evidence_summary.impressions_evidence:
+        assert text in prompt
+
+
+def test_explanation_question_appears_in_output():
+    question = "Why do you think this is pneumonia and not just a normal finding?"
+    prompt = PromptBuilder().build_explanation_prompt(_report(), question, _empty_context().evidence_summary)
+    assert "QUESTION:" in prompt
+    assert question in prompt
+
+
+def test_explanation_prompt_determinism_same_inputs_produce_byte_identical_output():
+    report = _report()
+    ctx = _populated_context()
+    first = PromptBuilder().build_explanation_prompt(report, "Why?", ctx.evidence_summary)
+    second = PromptBuilder().build_explanation_prompt(report, "Why?", ctx.evidence_summary)
+    assert first == second
