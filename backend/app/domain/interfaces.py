@@ -11,8 +11,10 @@ from typing import Protocol, runtime_checkable
 
 from app.domain.entities import (
     ClinicalContext,
+    ComparisonFacts,
     EvidenceSummary,
     FormattedReport,
+    Patient,
     QuestionnaireQuestion,
     Report,
     ReportContent,
@@ -99,6 +101,13 @@ class IPromptBuilder(Protocol):
     ) -> str: ...   # implemented Phase 10; evidence_summary added since it wasn't an accessible
     # concept at this stub's original Phase 6 freeze
     def build_translation_prompt(self, content: ReportContent, target_language: str) -> str: ...  # unimplemented
+    def build_comparison_prompt(
+        self, facts: ComparisonFacts, previous: ReportContent, current: ReportContent
+    ) -> str:
+        """Phase 11: narrates deterministic ComparisonFacts (already computed,
+        zero LLM involvement) into readable language. The LLM converts facts
+        to prose; it does not perform clinical reasoning of its own."""
+        ...
 
 
 @runtime_checkable
@@ -162,6 +171,54 @@ class IQuestionnaireProvider(Protocol):
     Infrastructure: app/services/questionnaire_templates.py"""
 
     def get_questions_for_label(self, label: str) -> tuple[QuestionnaireQuestion, ...]: ...
+
+
+@runtime_checkable
+class IPatientRepository(Protocol):
+    """Phase 11: patient registration, exact-match search, chronological
+    history. Infrastructure: app/services/patient_service.py.
+
+    get_history's return type is list[Report] (the frozen domain entity),
+    NOT list[ReportRecord] -- the frozen spec's prose named ReportRecord,
+    but that's the Phase 8 SQLAlchemy ORM model (app/models/report.py),
+    which imports SQLAlchemy; domain/interfaces.py must stay
+    framework-free (see entities.py's own docstring: "No FastAPI, no
+    SQLAlchemy... imports here"), and IReportRepository/IStudyRepository
+    immediately above already establish Report (not ReportRecord) as this
+    layer's convention. Same category of spec-text slip as Phase 5's
+    study_uid/source_uid mismatch -- corrected to the domain entity, not
+    silently imported across the domain/infrastructure boundary."""
+
+    def create(self, name: str, date_of_birth: str, gender: str) -> Patient: ...
+    def find_by_code(self, patient_code: str) -> Patient | None: ...
+    def find_by_name_and_dob(self, name: str, date_of_birth: str) -> list[Patient]: ...
+    def get_history(self, patient_id: str) -> list[Report]: ...  # chronological
+
+
+@runtime_checkable
+class IDeterministicComparator(Protocol):
+    """Phase 11: pure, no LLM, no DB -- diffs two reports' taxonomy-class
+    presence into resolved/persistent/new findings. Infrastructure:
+    app/services/deterministic_comparator.py
+
+    previous_report_id/current_report_id are plain string pass-through
+    params, not a DB lookup -- ComparisonFacts (domain/entities.py) carries
+    both report IDs, and nothing else in a pure, DB-free function can
+    supply them; the caller (ComparisonService, Step 8) already has both
+    IDs on hand from whatever it fetched, so this is free plumbing, not
+    new orchestration logic. Corrects an initial Step 1 spec gap where
+    compare()'s params couldn't actually populate ComparisonFacts'
+    required id fields."""
+
+    def compare(
+        self,
+        previous: ReportContent,
+        current: ReportContent,
+        previous_date: str,
+        current_date: str,
+        previous_report_id: str,
+        current_report_id: str,
+    ) -> ComparisonFacts: ...
 
 
 @runtime_checkable

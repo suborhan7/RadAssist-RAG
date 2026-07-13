@@ -13,6 +13,19 @@ reuse of SessionNotFoundError, since "no RetrievalSession for this
 session_id" and "no ReportRecord for this report_id" are different lookups
 against different tables; conflating them would make a caller's exception
 handler (and its error message) describe the wrong missing resource.
+Phase 11 (ComparisonService): a malformed/nonexistent
+compare_against_report_id REUSES ReportNotFoundError rather than a new
+type -- unlike the SessionNotFoundError/ReportNotFoundError split above,
+this is the exact same failure mode against the exact same table as
+current_report_id's own lookup (a specific report_id was looked up and no
+ReportRecord row exists for it), so conflating them here is correct, not a
+lapse of the "distinct failure modes deserve distinct types" principle.
+NoPriorReportError IS a genuinely new type: "patient has no earlier report
+to compare against" (the first-visit case, no compare_against_report_id
+supplied) is not a failed lookup at all -- no report_id was ever looked up
+and missed, there is simply no candidate to look up in the first place.
+Conflating that with ReportNotFoundError would make a caller's exception
+handler describe a lookup failure that never happened.
 """
 from __future__ import annotations
 
@@ -45,4 +58,15 @@ class ReportNotFoundError(Exception):
     """Raised by ExplainabilityService.explain() when report_id matches no
     ReportRecord row (or isn't a valid UUID) -- distinguishable from
     SessionNotFoundError since a report lookup and a session lookup are
-    different failure modes against different tables."""
+    different failure modes against different tables. Also raised by
+    ComparisonService.compare() for current_report_id or
+    compare_against_report_id -- same failure mode, same table, deliberately
+    reused rather than duplicated (see this module's docstring)."""
+
+
+class NoPriorReportError(Exception):
+    """Raised by ComparisonService.compare() when no compare_against_report_id
+    is supplied and the patient has no earlier report to compare the current
+    one against (the patient's first visit). Distinguishable from
+    ReportNotFoundError: no report_id lookup ever failed here, there was
+    simply no candidate report to look up (see this module's docstring)."""

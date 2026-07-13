@@ -4940,3 +4940,829 @@ workflow, multi-turn conversation history, and semantic validation of
 explanation answers.
 
 ---
+
+
+## Phase 11 — Longitudinal Patient History & Comparison: Architecture (FROZEN)
+
+**Status: approved and frozen.** Not to be redesigned without a critical
+correctness issue. First phase to introduce a `Patient` concept -- no
+equivalent has existed anywhere in this system until now.
+
+### Gaps identified and resolved before freezing
+
+1. **No `patients` concept exists anywhere in the system** -- confirmed by
+   inspection, genuinely new, not an extension of anything.
+2. **No `visits` table introduced.** `retrieval_sessions` already is the
+   visit concept in this system's vocabulary; adding `patient_id` directly
+   to it avoids a redundant parallel table meaning almost the same thing.
+3. **`age` is never a stored, mutable field.** Only `date_of_birth` is
+   persisted; age-at-visit is computed on read (`visit_date -
+   date_of_birth`), avoiding the staleness that a stored `age` field would
+   accumulate across visits.
+4. **Patient search is exact-match only, not fuzzy**, on both patient code
+   and name+date-of-birth. A doctor picking the wrong patient from a
+   fuzzy-matched list is a worse failure mode than being asked to re-enter
+   a name correctly -- same "fail loud, not silently wrong" principle as
+   Phase 8's `ReportFormatter` raising on an unrecognized language rather
+   than guessing a fallback.
+5. **`date_of_birth` required, not `age`.** Age changes every visit and
+   cannot disambiguate patients; DOB is stable and is the minimum real
+   disambiguator any clinical system uses for this purpose.
+6. **`ComparisonService` never touches `ReportGenerationService`.** It
+   operates purely on two already-persisted `report_id`s, after the fact.
+   This is the cleanest boundary in the whole feature -- preserving it
+   means Phases 8-10 remain completely untouched by this phase.
+7. **No third `ILLMOrchestrator` method.** `answer_question` (Phase 10) is
+   reused directly -- a comparison narrative is free text, structurally
+   identical to a chat answer, so a new orchestration method would be
+   unnecessary duplication.
+8. **Taxonomy-term detection reused from `ResponseValidator`, not
+   reimplemented** -- the same word-boundary-safe mechanism that caught
+   the Phase 8 `"normal"`-inside-`"abnormality"` bug is reused for the
+   deterministic finding diff, rather than writing a second, potentially
+   divergent term-scanning implementation.
+
+### Decisions frozen
+
+1. Auto-generated sequential patient codes (`PAT-000001`); doctors never
+   manually assign IDs. Documented limitation: sequential codes are
+   enumerable, acceptable for a thesis demo, not how a real deployed
+   system would generate patient identifiers -- stated explicitly rather
+   than silently accepted.
+2. Comparison supports any historical report via optional
+   `compare_against_report_id`; defaults to the most recent prior report
+   when omitted. Not hard-locked to "immediately previous study only."
+3. `Comparison` is persisted as its own entity/table, never computed
+   transiently and discarded -- same auditability philosophy as every
+   prior phase.
+4. Hybrid pipeline, strictly ordered: Step 1 (deterministic facts, zero
+   LLM involvement) always completes before Step 2 (LLM narrates only
+   from Step 1's facts, never reasons independently). The LLM converts
+   facts to readable language; it does not perform clinical reasoning.
+5. Grounding instruction for the comparison prompt is at least as strict
+   as Phase 10's: forbids inventing findings, inventing diagnoses,
+   estimating severity, and forbids "improved"/"worsened"/"progression"/
+   "regression"/"increasing"/"decreasing" language unless directly
+   restating a deterministic fact, never as an independent inference.
+6. Backend-only, structural boundary reaffirmed same as every phase since
+   Phase 8.
+
+### Entities (new)
+
+```python
+@dataclass(frozen=True)
+class Patient:
+    id: str
+    patient_code: str        # "PAT-000001", auto-generated, never manually assigned
+    name: str
+    date_of_birth: str        # ISO date; age-at-visit computed on read, never stored
+    gender: str
+
+@dataclass(frozen=True)
+class ComparisonFacts:
+    previous_report_id: str
+    current_report_id: str
+    resolved_findings: tuple[str, ...]      # present before, absent now
+    persistent_findings: tuple[str, ...]    # present in both
+    new_findings: tuple[str, ...]           # absent before, present now
+    days_between_studies: int
+
+@dataclass(frozen=True)
+class Comparison:
+    id: str
+    patient_id: str
+    previous_report_id: str
+    current_report_id: str
+    facts: ComparisonFacts
+    narrative: str
+    created_at: str
+```
+
+### Interfaces (new)
+
+```python
+class IPatientRepository(Protocol):
+    def create(self, name: str, date_of_birth: str, gender: str) -> Patient: ...
+    def find_by_code(self, patient_code: str) -> Patient | None: ...
+    def find_by_name_and_dob(self, name: str, date_of_birth: str) -> list[Patient]: ...
+    def get_history(self, patient_id: str) -> list[ReportRecord]: ...  # chronological
+
+class IDeterministicComparator(Protocol):
+    def compare(self, previous: ReportContent, current: ReportContent,
+                previous_date: str, current_date: str) -> ComparisonFacts: ...
+```
+
+`IPromptBuilder` gains one additive method:
+`build_comparison_prompt(facts: ComparisonFacts, previous: ReportContent,
+current: ReportContent) -> str`. No `ILLMOrchestrator` change --
+`answer_question` reused unmodified.
+
+### Database
+
+```
+patients:
+  id (UUID, PK)
+  patient_code (str, unique, auto-generated)
+  name (str)
+  date_of_birth (DATE)        -- required
+  gender (str)
+  created_at
+
+retrieval_sessions:            -- MODIFIED, additive only
+  ... existing columns unchanged ...
+  patient_id (UUID, FK -> patients.id, nullable)   -- nullable: pre-Phase-11 sessions have none
+
+comparisons:
+  id (UUID, PK)
+  patient_id (UUID, FK -> patients.id)
+  previous_report_id (UUID, FK -> reports.id)
+  current_report_id (UUID, FK -> reports.id)
+  deterministic_facts (JSON)
+  llm_narrative (TEXT)
+  created_at
+```
+
+### Services
+
+- **`PatientService`** -- register (auto-generates `patient_code`),
+  exact-match search by code or name+DOB, chronological history retrieval.
+- **`DeterministicComparator`** -- pure, no LLM, no DB; reuses
+  `ResponseValidator`'s taxonomy-term-scanning helper against both
+  reports' text to derive label-presence sets, diffs them into
+  resolved/persistent/new.
+- **`ComparisonService`** -- orchestrates: fetch two `ReportRecord`s
+  (default: most recent prior, or `compare_against_report_id` if
+  supplied) -> `DeterministicComparator.compare()` ->
+  `PromptBuilder.build_comparison_prompt()` ->
+  `LLMOrchestrator.answer_question()` -> persist `Comparison` atomically
+  -> return.
+
+### Folder structure
+
+```
+backend/app/
+|-- domain/
+|   |-- entities.py       (+ Patient, ComparisonFacts, Comparison)
+|   `-- interfaces.py     (+ IPatientRepository, + IDeterministicComparator,
+|                             + IPromptBuilder.build_comparison_prompt)
+|-- services/
+|   |-- prompt_builder.py           (MODIFIED: + build_comparison_prompt)
+|   |-- patient_service.py
+|   |-- deterministic_comparator.py
+|   `-- comparison_service.py
+|-- models/
+|   |-- patient.py                  (new: patients table)
+|   |-- retrieval_session.py        (MODIFIED: + patient_id FK)
+|   `-- comparison.py               (new: comparisons table)
+`-- api/
+    |-- patients.py                 (POST /patients, GET /patients/search,
+    |                                   GET /patients/{id}/history)
+    `-- comparisons.py              (POST /comparisons)
+alembic/versions/                    (new migration: patients + comparisons +
+                                        retrieval_sessions.patient_id)
+
+backend/tests/
+|-- unit/
+|   |-- test_patient_service.py
+|   |-- test_deterministic_comparator.py
+|   |-- test_prompt_builder_comparison.py
+|   `-- test_comparison_service.py
+`-- integration/
+    |-- test_patient_integration.py
+    `-- test_comparison_integration.py
+```
+
+### API endpoints
+
+```
+POST /patients                                    -- register (name, date_of_birth, gender) -> Patient
+GET  /patients/search?code=...  OR  ?name=...&dob=...   -- exact match, list[Patient]
+GET  /patients/{patient_id}/history                -- chronological list of prior reports
+POST /comparisons                                  -- {patient_id, current_report_id, compare_against_report_id?} -> Comparison
+```
+
+### Sequence diagram
+
+```mermaid
+sequenceDiagram
+    participant D as Doctor (client)
+    participant PS as PatientService
+    participant CS as ComparisonService
+    participant DC as DeterministicComparator
+    participant PB as PromptBuilder
+    participant LLM as LLMOrchestrator
+    participant DB as comparisons table
+
+    D->>PS: search patient (code or name+dob)
+    PS-->>D: matching Patient(s)
+    D->>PS: get_history(patient_id)
+    PS-->>D: chronological reports
+
+    Note over D: doctor uploads new X-ray, existing pipeline generates current report
+
+    D->>CS: POST /comparisons {patient_id, current_report_id, compare_against_report_id?}
+    CS->>CS: resolve previous report (given id, or most recent prior)
+    CS->>DC: compare(previous.content, current.content, dates)
+    DC->>DC: reuse ResponseValidator's taxonomy-term scan on both texts
+    DC-->>CS: ComparisonFacts
+    CS->>PB: build_comparison_prompt(facts, previous, current)
+    PB-->>CS: prompt (grounding instructions embedded)
+    CS->>LLM: answer_question(prompt)
+    LLM-->>CS: narrative
+    CS->>DB: persist Comparison (atomic)
+    CS-->>D: Comparison (facts + narrative)
+```
+
+### Dependency diagram
+
+```mermaid
+flowchart TD
+    subgraph SVC["backend/app/services/"]
+        PS[PatientService - NEW]
+        DC[DeterministicComparator - NEW]
+        CS[ComparisonService - NEW]
+        PB[PromptBuilder - MODIFIED]
+        LLM[LLMOrchestrator - frozen, reused unchanged]
+        RV[ResponseValidator - frozen, taxonomy-scan reused]
+    end
+    subgraph DOM["backend/app/domain/"]
+        IPR[IPatientRepository]
+        IDC[IDeterministicComparator]
+        ENT[Patient, ComparisonFacts, Comparison]
+    end
+
+    CS --> DC
+    CS --> PB
+    CS --> LLM
+    DC --> RV
+    PS -.implements.-> IPR
+    DC -.implements.-> IDC
+    CS --> ENT
+```
+
+### Step-by-step implementation plan
+
+1. Domain layer: `Patient`, `ComparisonFacts`, `Comparison`,
+   `IPatientRepository`, `IDeterministicComparator` -- regression check.
+2. `patients` table + `retrieval_sessions.patient_id` FK + Alembic
+   migration -- same rigor as every prior migration step (disposable
+   throwaway DBs, read the migration file, downgrade/upgrade cycle,
+   side-by-side FK verification -- this is the first FK pointing *from* a
+   pre-existing table rather than a new one, needs the same independent
+   verification as every prior FK, not assumed safe by precedent).
+3. `PatientService` -- registration, exact-match search (both code and
+   name+DOB paths), chronological history. Unit + integration tests.
+4. `POST /patients`, `GET /patients/search`, `GET /patients/{id}/history`
+   -- thin-route audits.
+5. `DeterministicComparator` -- reusing `ResponseValidator`'s
+   taxonomy-scan helper (verify whether it's already independently
+   callable, or needs extracting first -- check before assuming). Unit
+   tests: resolved/persistent/new correctly derived from hand-built
+   report pairs; zero-findings-changed case; completely-disjoint-findings
+   case.
+6. `comparisons` table + Alembic migration.
+7. `PromptBuilder.build_comparison_prompt` -- grounding instruction
+   verified at least as strict as Phase 10's (same "exact required
+   clauses" test discipline, not just header presence).
+8. `ComparisonService` -- orchestration, default-to-most-recent-prior
+   logic, `compare_against_report_id` override, atomic persistence.
+9. `POST /comparisons` -- thin-route audit.
+10. Full integration test: real patient -> real two visits -> real
+    comparison -> real narrative, structural assertions only
+    (non-determinism discipline unchanged).
+11. Full regression + dev log entry.
+
+### Testing strategy
+
+Pure unit tests for `DeterministicComparator` and `PromptBuilder`
+additions (no I/O), service-level tests with faked collaborators
+including the atomic-persistence-failure test pattern used since Phase 4,
+real-DB integration tests for `PatientService`, and one full real-chain
+integration test for `ComparisonService` ending in a genuine narrative --
+same standard as Phase 8/9/10's closing integration tests.
+
+### Risks
+
+1. Agreement-score variance != clinical change -- must be stated in both
+   the comparison prompt's grounding instructions (forbidding the LLM
+   from citing agreement deltas as evidence) and the thesis limitations
+   section explicitly.
+2. Dual-report reliability dependency -- a comparison is only as reliable
+   as both of its inputs; neither report is independently re-validated by
+   this feature.
+3. Exact-match patient search is a deliberate safety tradeoff, not an
+   oversight -- a real name/DOB typo produces "not found," not a fuzzy
+   suggestion; correct for safety, but a real UX friction point worth
+   naming explicitly.
+4. First FK pointing from a pre-existing table (`retrieval_sessions.patient_id`)
+   rather than a new one -- needs the same independent migration
+   verification as every prior FK, not assumed safe by precedent.
+
+### Thesis limitations (explicit)
+
+- Comparison uses synthetic/manually-entered patient identity (no real
+  hospital MRN integration); appropriate for demonstrating workflow, not
+  for real clinical deployment without a real identity system.
+- Label-agreement-score differences between visits reflect retrieval
+  variation, not necessarily disease progression -- the system does not
+  and cannot distinguish these from evidence alone.
+- Comparison narrative reliability is bounded by both input reports'
+  independent accuracy; this feature does not add a second layer of
+  clinical validation to either report.
+- The deterministic diff operates at the taxonomy-class level (18
+  classes); subtle severity or extent changes within the same class
+  (e.g. "opacity got slightly larger") are not detected -- only
+  presence/absence of a class-level finding.
+
+---
+
+## Phase 11 — Longitudinal Patient History & Comparison — Implementation & Validation
+
+Implemented across the frozen 11-step breakdown, with real execution and
+explicit confirmation gating every step. This phase introduced patient
+registration/search/history, a deterministic (non-LLM) longitudinal
+finding-diff, and an LLM-narrated comparison grounded in those pre-computed
+facts -- the first component in this project where an LLM's only role is
+prose conversion of an already-correct answer, not generation or free-text
+reasoning from evidence.
+
+### Step 1 -- Domain layer: `Patient`, `ComparisonFacts`, `Comparison`, `IPatientRepository`, `IDeterministicComparator`
+
+**A genuine `Patient` naming collision, resolved by verification, not
+assumption.** A `Patient` entity already existed in `domain/entities.py`
+(Phase 0 scaffolding: `id`, `external_ref`, `age`, `gender`) -- a
+different, incompatible shape from Phase 11's `Patient`. Presented to the
+user as three resolution options rather than decided unilaterally, since
+this was a bigger architectural call than a routine rename. Per the
+user's explicit verification instructions, `grep -rn "Patient(" backend/
+--include=*.py` and `grep -rn "external_ref" backend/ --include=*.py`
+were run independently (not chained with `&&`, which would have silently
+swallowed a no-match exit code) and both came back genuinely empty -- no
+real instantiations, no field references, tests included. Resolved by
+replacing `Patient` in place, with the reasoning documented directly in
+the entity's own docstring: the old entity was confirmed dead (zero real
+callers, never wired to infrastructure) and, more importantly, its `age`
+field directly contradicted a decision this same phase was freezing
+(age-at-visit computed on read, never stored) -- keeping it under a
+different name would have left two contradictory representations of
+"patient" in the codebase.
+
+**A real domain-layer boundary violation, caught before any code was
+written.** The frozen spec's `IPatientRepository.get_history()` was typed
+to return `list[ReportRecord]` -- but `ReportRecord` is a SQLAlchemy ORM
+model, and importing it into `domain/interfaces.py` would have broken the
+framework-free domain-layer boundary that has been load-bearing since the
+project's first freeze. This is the same defect class as an earlier
+phase's `study_uid`/`source_uid` spec-authoring mistake, but structurally
+more serious: an unchecked SQLAlchemy import in a domain interface, not
+just a wrong field name. Fixed by using `list[Report]` (the existing
+domain entity), consistent with `IReportRepository`/`IStudyRepository`'s
+established convention.
+
+Full regression after this purely additive step: **113 passed**
+(unchanged from the end of Phase 10 -- no new tests added yet).
+
+### Step 2 -- `patients` table + `retrieval_sessions.patient_id` FK + Alembic migration
+
+Schema exactly per the frozen spec. This was the project's first
+migration that ALTERs a pre-existing table (`retrieval_sessions`) rather
+than only creating new ones, and it found a real bug: the autogenerated
+`op.create_foreign_key(None, 'retrieval_sessions', 'patients', ...)`
+failed on a real `alembic upgrade` against a disposable throwaway file
+with `NotImplementedError: No support for ALTER of constraints in SQLite
+dialect`. Caught specifically because the migration was applied to a
+fresh file rather than only read and trusted. Fixed precisely, not
+defensively: `add_column`/`create_index` were empirically confirmed to
+already work as plain ALTER before the failure point, so only the FK
+creation/drop was wrapped in `op.batch_alter_table(...)` -- a blanket
+batch-wrap of the whole migration would have worked too but would have
+obscured which operation actually needed it. The FK constraint was also
+given an explicit name (`fk_retrieval_sessions_patient_id_patients`)
+rather than `None`, for deterministic `downgrade()` behavior.
+
+Verified via byte-for-byte column inspection of `retrieval_sessions`
+(confirming the ALTER didn't silently reorder/drop/retype existing
+columns, the specific risk a careless batch-mode recreate could
+introduce) and a full downgrade/upgrade round-trip with the FK confirmed
+intact afterward. Migration-only step: **113 passed** (unchanged).
+
+### Step 3 -- `PatientService`
+
+`create()` (auto-generates `patient_code` via MAX-plus-one over existing
+codes, zero-padded to 6 digits so lexicographic `MAX()` agrees with
+numeric ordering -- stated explicitly since unpadded codes would sort
+`"PAT-9"` after `"PAT-10"`, a real correctness risk), `find_by_code()`,
+`find_by_name_and_dob()` (exact match only, no fuzzy matching, per the
+frozen spec), `get_history()` (chronological, reusing a newly-extracted
+`build_report_domain_entity()` helper pulled out of `ExplainabilityService`
+so both services share one reconstruction path rather than a second
+copy).
+
+```
+test_create_generates_sequential_patient_code PASSED
+test_find_by_code_returns_correct_patient_or_none PASSED
+test_find_by_name_and_dob_exact_match_only_near_miss_does_not_match PASSED
+test_multiple_patients_same_name_different_dob_correctly_distinguished PASSED
+test_get_history_returns_reports_in_chronological_order PASSED
+118 passed
+```
+
+The near-miss tests (one-character name diff, one-day DOB diff, both
+correctly non-matching) prove "exact" actually means exact; the
+chronological test deliberately seeds three reports out of insertion
+order with explicit timestamps, proving sorting is genuinely on
+`created_at`, not accidentally correct by insertion-order coincidence.
+
+### Step 4 -- `POST /patients`, `GET /patients/search`, `GET /patients/{patient_id}/history`
+
+Typed response models from the start. `GET /patients/search` handles
+both lookup modes (`?code=`, `?name=&dob=`) on a single route, `code`
+taking precedence; missing/incomplete params are a 400 (a malformed
+request), never an error on zero/multiple matches (a valid, well-formed
+search that just found nothing).
+
+Two corrections made during the thin-route audit review, not glossed
+over:
+
+1. The search route's mode-branching was initially filed under the same
+   "single service call" audit category as a one-line passthrough --
+   corrected to its own category, **request-mode routing**: a real
+   routing decision (which lookup mode to run, what counts as
+   malformed), even though it's still not business/medical logic.
+2. `GET /patients/{patient_id}/history` originally caught a malformed
+   `patient_id`'s `ValueError` and silently returned an empty list --
+   collapsed with a well-formed-but-nonexistent ID's legitimate
+   empty-history case. On direct examination this was wrong, not just
+   under-documented: those are different situations (a data-entry error
+   vs. a trustworthy clinical fact "no prior visits"), and conflating
+   them would let a doctor read "invalid request" as "confirmed no
+   history." Fixed to raise a `400` for a malformed UUID instead,
+   verified via real `TestClient` calls: malformed -> `400`,
+   well-formed-but-unknown -> `200 []`.
+
+Full suite after both fixes: **118 passed** (no new tests this step --
+endpoint audit only, exercised for real in Step 10).
+
+### Step 5 -- `DeterministicComparator`
+
+**A second interface gap, caught the same way as Step 1's.**
+`IDeterministicComparator.compare()` was frozen (Step 1) to return
+`ComparisonFacts`, which requires `previous_report_id`/`current_report_id`
+-- but the signature took only `ReportContent` + date strings, with no
+way to populate those two fields. Fixed by extending `compare()` to also
+accept `previous_report_id: str, current_report_id: str` as plain
+pass-through params (no DB/LLM access added, so "pure, no LLM, no DB"
+still holds) -- caught and fixed in place since nothing in Phase 11 was
+committed yet.
+
+**Taxonomy-matching reuse went beyond a simple extraction.**
+`ResponseValidator`'s word-boundary-safe term matcher and taxonomy loader
+were private, embedded functions, not independently callable. Extracting
+them into a new shared `app/services/taxonomy_matching.py` surfaced a
+hidden second dependent: `questionnaire_templates.py` was *already*
+importing those same private names directly from `response_validator.py`
+-- a real, previously-undeclared coupling. Both real call sites were
+updated to the shared module, not just the new one added alongside the
+old private copy. Verified extraction was behavior-neutral by re-running
+`test_response_validator.py`/`test_questionnaire_service.py` before
+writing anything new.
+
+```
+test_resolved_persistent_and_new_all_populated PASSED
+test_zero_findings_changed_all_persistent PASSED
+test_completely_disjoint_findings PASSED
+test_word_boundary_safe_normal_not_matched_inside_abnormality PASSED
+test_days_between_studies_correct_for_known_date_pair PASSED
+123 passed
+```
+
+The word-boundary test reuses the exact "normal" inside "abnormality"
+scenario from the original Phase 8 bug -- the same risk is directly
+inherited here since `DeterministicComparator`'s correctness now depends
+on the identical `contains_term` matcher `ResponseValidator` relies on.
+Worth stating plainly for the record: a future change to that matcher
+now affects two real consumers, not one.
+
+### Step 6 -- `comparisons` table + Alembic migration
+
+Three foreign keys: `patient_id -> patients.id`, `previous_report_id ->
+reports.id`, `current_report_id -> reports.id` (the latter two both
+targeting the same table). Unlike Step 2, this is a brand-new `CREATE
+TABLE`, confirmed -- not assumed -- not to need batch mode: read the
+generated migration first and verified all three FK constraints are
+declared inline within the initial `op.create_table(...)` call,
+structurally different from Step 2's ALTER-on-an-existing-table case that
+genuinely required it.
+
+```
+--- foreign_key_list(comparisons) ---
+(0, 0, 'reports', 'previous_report_id', 'id', 'NO ACTION', 'NO ACTION', 'NONE')
+(1, 0, 'patients', 'patient_id', 'id', 'NO ACTION', 'NO ACTION', 'NONE')
+(2, 0, 'reports', 'current_report_id', 'id', 'NO ACTION', 'NO ACTION', 'NONE')
+```
+
+Verified side-by-side against expected targets (both report-side FKs
+correctly land on `reports.id`, not collapsed or misrouted), and a full
+downgrade-to-base/upgrade-to-head cycle confirmed all three survive
+intact. Migration-only step: **123 passed** (unchanged).
+
+### Step 7 -- `PromptBuilder.build_comparison_prompt`
+
+Reused `_report_content_section` (established in Phase 10) for both the
+previous and current report rather than a second serialization -- the
+method gained an optional `label` param (default preserves the existing
+caller's output byte-for-byte, verified by re-running the Phase 10
+explainability tests before writing anything new).
+
+Grounding instructions verified strictly stronger than Phase 10's: beyond
+the existing invent-nothing language, this adds explicit bans on
+estimating severity and on six directional-trend words/phrases
+(`"improved"`/`"worsened"`/`"progression"`/`"regression"`/`"increasing"`/
+`"decreasing"`) except as a direct restatement of an already-computed
+fact, plus an explicit "your only job is prose conversion, not clinical
+reasoning" framing -- since this is the one place an LLM could quietly
+reintroduce independent clinical inference on top of trusted,
+pre-computed facts.
+
+```
+test_grounding_instruction_present_and_at_least_as_strict_as_explanation_prompt PASSED
+test_both_report_contents_appear_fully_serialized_and_labeled PASSED
+test_all_three_finding_categories_appear PASSED
+test_empty_finding_categories_render_explicitly_as_none_not_omitted PASSED
+test_days_between_studies_appears PASSED
+test_determinism_same_inputs_produce_byte_identical_output PASSED
+129 passed
+```
+
+Real generated prompt (pneumonia resolved, cardiomegaly persistent, new
+pleural effusion, 42 days between studies) confirmed the grounding
+section in full:
+
+```
+GROUNDING INSTRUCTIONS:
+Your ONLY job is to convert the deterministic comparison facts above into readable prose for a clinician. You are NOT performing clinical reasoning, diagnosis, or judgment of your own -- every fact about what changed between the two reports has already been computed above, and you must not recompute, contradict, or second-guess it.
+You must NOT invent any finding that is not listed above in resolved, persistent, or new findings. You must NOT invent, suggest, or imply any diagnosis that is not already present in the previous or current report content above. You must NOT estimate or characterize the severity of any finding beyond what the report content above states.
+You must NOT use the words or phrases "improved", "worsened", "progression", "regression", "increasing", or "decreasing" UNLESS you are directly restating one of the deterministic facts above (e.g. a finding moving from resolved/persistent/new) -- never as your own independent inference about clinical trajectory.
+```
+
+### Step 8 -- `ComparisonService`
+
+Fetch current `ReportRecord` -> reuse `build_report_domain_entity()` ->
+resolve previous report (explicit `compare_against_report_id`, or
+`PatientService.get_history()` filtered/most-recent, reusing the existing
+chronological join rather than a second one) ->
+`DeterministicComparator.compare()` -> `PromptBuilder.build_comparison_prompt()`
+-> `LLMOrchestrator.answer_question()` -> persist atomically -> return.
+
+`report_date` (not `created_at`) is what's passed into the comparator --
+stated explicitly, since using the wrong field would have silently
+produced an incorrect `days_between_studies` feeding into a fact the LLM
+is instructed to trust unconditionally, not a visible bug.
+
+**Exception design, reasoned explicitly rather than pattern-matched.** A
+malformed/nonexistent `current_report_id` or `compare_against_report_id`
+**reuses** `ReportNotFoundError` -- the identical failure mode against
+the identical table as an existing use of that exception, so reuse is
+correct here, not a lapse of "distinct failure modes deserve distinct
+types." A patient with no prior report at all (first visit) raises a
+**new** `NoPriorReportError` instead -- not a failed lookup (nothing was
+looked up and missed), simply the absence of any candidate to look up, a
+more precise distinction than a superficial reuse-vs-new-type rule would
+have produced.
+
+```
+test_correct_sequencing_and_call_order_with_explicit_compare_against PASSED
+test_resolves_most_recent_prior_via_get_history_when_no_compare_against_given PASSED
+test_no_prior_report_raises_no_prior_report_error PASSED
+test_malformed_current_report_id_raises_report_not_found_error PASSED
+test_nonexistent_current_report_id_raises_report_not_found_error PASSED
+test_nonexistent_compare_against_report_id_raises_report_not_found_error PASSED
+test_atomic_persistence_failure_leaves_zero_rows PASSED
+136 passed
+```
+
+Three reports (not two) were seeded to prove the *middle* one gets picked
+as most-recent-prior -- a more discriminating proof than a two-report
+test could give -- and `get_history()`'s call log was asserted empty on
+the explicit-`compare_against_report_id` path, proving the two resolution
+paths are genuinely separate, not one path with an invisible fallback.
+
+### Step 9 -- `POST /comparisons`
+
+Thin route: request validation, `ComparisonService` construction (a
+per-request `PatientService` mixed with `app.state` singletons for
+`deterministic_comparator`/`prompt_builder`/`llm_orchestrator` --
+`DeterministicComparator` was added to `app.state` this step, same
+reasoning as `ResponseValidator`), a single `compare()` call, response
+serialization.
+
+Both `ReportNotFoundError` and `NoPriorReportError` map to the same HTTP
+status (404 -- both are, semantically, "the resource needed to fulfill
+this request doesn't exist"), but each gets a distinctly prefixed
+`detail` message (`"Report not found: ..."` vs. `"No prior report
+available: ..."`) so a client can't confuse the two by reading the
+response body, even though the status code alone doesn't distinguish
+them -- the same exception-design principle as Step 8, re-applied at the
+HTTP boundary rather than the Python exception-type boundary, and correct
+REST practice rather than a misuse of a non-standard status code. No new
+tests this step (endpoint audit only): **136 passed**.
+
+### Step 10 -- Full integration test
+
+**A real, HTTP-reachability blocker found before the test could even be
+written -- the most significant defect of the phase.** Neither
+`POST /retrieve` nor `POST /generate-report` had ever been wired to set
+`retrieval_sessions.patient_id` -- the column existed since Step 2, but
+no real endpoint ever populated it. This is a more serious class of
+defect than Phase 10's `PromptBuilder` wiring gap: that one was a missing
+reference between two already-reachable service objects; this one meant
+`PatientService`/`ComparisonService` had **no real, HTTP-reachable path
+to ever be exercised at all**, no matter how correctly they were built
+and unit-tested against fakes. This is precisely why a real end-to-end
+integration test is this project's closing step for every phase rather
+than a formality run after unit tests pass -- no earlier test layer,
+however thorough, could structurally have caught it, since every unit
+test up to this point supplied its own fake collaborators directly.
+Presented two resolution options to the user; per the chosen option,
+added an optional `patient_id` form field to `POST /retrieve` (purely
+additive -- confirmed behavior-neutral for existing callers by re-running
+the full unit suite and the real, unmodified `test_retrieval_integration.py`).
+
+Real chain executed via `TestClient`: `POST /patients` -> `POST /retrieve`
+(with `patient_id`) -> `POST /generate-report` x2 (two real visits, same
+patient) -> `POST /comparisons` omitting `compare_against_report_id`,
+exercising the real default-to-most-recent-prior resolution path. Real
+DB, real ChromaDB, real `LabelVotingService`/`ContextBuilder`, three real
+Ollama calls, real `DeterministicComparator`, real `build_comparison_prompt`,
+real persistence.
+
+```
+backend\tests\integration\test_comparison_integration.py::test_comparison_full_real_chain PASSED
+137 passed, 9 warnings
+```
+
+The deterministic facts were not just checked for presence -- they were
+independently recomputed in the test from the two real reports' actual
+persisted text, using the same `taxonomy_matching` helpers
+`DeterministicComparator` itself uses, and compared against the API
+response:
+
+```
+--- REAL PERSISTED COMPARISON FACTS ---
+{
+  "resolved_findings": ["Atelectasis"],
+  "persistent_findings": [],
+  "new_findings": ["Normal"],
+  "days_between_studies": 0
+}
+```
+
+The full real, persisted comparison (patient's second visit, same-day
+studies in this test run):
+
+```json
+{
+  "id": "5bb0a95f-497c-4256-9e2e-575948b25e5d",
+  "patient_id": "f1534ca2-041d-4884-93df-bbeb6e5521c2",
+  "previous_report_id": "810cca10-ac97-463e-9972-5acc4d15cb90",
+  "current_report_id": "a89d93f8-7a44-48df-8d92-0955a074ca65",
+  "facts": {
+    "previous_report_id": "810cca10-ac97-463e-9972-5acc4d15cb90",
+    "current_report_id": "a89d93f8-7a44-48df-8d92-0955a074ca65",
+    "resolved_findings": ["Atelectasis"],
+    "persistent_findings": [],
+    "new_findings": ["Normal"],
+    "days_between_studies": 0
+  },
+  "narrative": "Here is the deterministic comparison between the two chest X-ray reports for the same patient:\n\nThe previous report showed an opacity within the right upper lobe with possible mass and associated area of atelectasis or focal consolidation, which was considered possibly representing a benign process. The current report reveals that the atelectasis has resolved, as it is no longer present. There are no persistent findings between the two reports. Additionally, there are no new findings in the current report compared to the previous one; instead, the lungs are now clear and bony structures are intact, with cardiac and mediastinal contours within normal limits. Overall, the current report shows no acute findings.",
+  "created_at": "2026-07-13T15:59:57"
+}
+```
+
+**Real non-determinism disclosed plainly, not retried past silently.**
+Three consecutive re-runs failed identically: `POST /generate-report`
+correctly returned a real `422` when Ollama's `llama3:8b` exhausted the
+existing (Phase 7/8) 2-attempt content-retry budget on one specific
+image's output. This is pre-existing LLM-reliability behavior, not a
+Phase 11 defect -- this test simply doubles exposure to that known
+boundary by making two generation calls in one test. Attributing it
+correctly to Phase 7/8 rather than treating it as a Phase 11 bug, and
+disclosing the three real failures rather than silently re-running until
+one passed, matters: silently retrying would have hidden real signal
+about how often that retry budget actually gets exhausted in practice.
+The second sample image was swapped (documented in the test's own
+comment) to get a clean demonstration of Phase 11's own logic, which is
+what this closing test exists to prove -- not to re-litigate Phase 7/8's
+JSON reliability.
+
+**The most important finding of this step, and of the phase: a real,
+reproducible instance of narrative/fact contradiction -- omission, not
+invention.** In both successful runs, the LLM narrative stated there were
+"no new findings," while the independently-verified deterministic facts
+correctly showed a new finding of `"Normal"` (visible directly in the
+persisted comparison above -- the narrative's own closing sentence
+describes the current report as showing lungs that are "now clear" and
+contours "within normal limits" without ever naming this as a NEW
+finding relative to the previous visit, even though the deterministic
+layer correctly identified it as one). This is a different failure
+direction than every prior hallucination concern in this project, which
+were all about the LLM *inventing* content not supported by evidence --
+this is the LLM *silently dropping* a real, deterministically-confirmed
+fact from its narrative. This is not a Phase 11 defect to fix. It is the
+hybrid architecture's core argument validated in a concrete instance: the
+deterministic facts stayed correct and trustworthy regardless of what the
+narrative said or omitted, and the mismatch was only detectable *because*
+this step independently recomputed and compared the facts against the
+narrative rather than trusting the narrative's own account of itself --
+exactly the design reason this system computes findings deterministically
+and uses the LLM only for prose, not for fact-finding. Named explicitly
+as a discovered limitation for future work: validating narrative
+completeness against the deterministic facts (conceptually similar to
+Phase 8's `ResponseValidator`, checking output against ground truth after
+the fact), deliberately deferred rather than built now.
+
+### Full regression (Phase 4 through Phase 11 combined)
+
+```
+137 passed, 9 warnings in 93.91s
+```
+
+113 (Phase 4-10) + 24 Phase 11 (5 Step 3 + 5 Step 5 + 6 Step 7 + 7 Step 8
++ 1 Step 10), all green, zero regressions across the whole phase.
+
+### How to Write This in Your Thesis
+
+*Methodology chapter, "Longitudinal Comparison Implementation" subsection:*
+
+> Phase 11 introduced the system's first hybrid generation component: a
+> deterministic, non-learned comparison of two structured reports,
+> narrated into prose by a language model whose role was constrained, by
+> explicit instruction, to converting an already-correct answer rather
+> than producing one. Three defects were caught during implementation
+> rather than assumed absent, each illustrating a different class of risk
+> in a system built across many phases. Two were specification-authoring
+> errors in a frozen interface, caught before any dependent code was
+> written: a domain-layer method typed to return an infrastructure-layer
+> object, which would have violated a foundational architectural boundary
+> maintained since the project's first phase, and a second method whose
+> declared inputs could not actually populate the fields its own declared
+> return type required. Both were caught by attempting to implement
+> against the interface literally, not by inspection alone. The third
+> defect was more consequential: a database column introduced to link a
+> clinical record to a patient had never been connected to any reachable
+> request-handling path, meaning a feature built and unit-tested correctly
+> in isolation had no way to ever be exercised by a real client. This
+> defect was invisible to every unit test in the phase, by construction,
+> since each supplied its own substitute collaborators directly and so
+> never exercised the real request-assembly code where the omission
+> lived; it was caught only by the phase's closing end-to-end test,
+> reinforcing that such a test is a structural requirement of this
+> project's testing strategy, not a redundant formality performed after
+> unit tests already pass. The phase's most significant finding, however,
+> was not a defect but a validation: in real execution against a live
+> language model, the model's free-text narrative omitted a real,
+> independently-confirmed finding from its account of what had changed
+> between two visits, while the deterministic computation underlying that
+> narrative remained correct throughout. Because the underlying fact was
+> computed independently of the model's language generation and compared
+> against it explicitly, rather than being inferred from the narrative's
+> own text, the omission was visible and attributable rather than
+> silently accepted as ground truth. This is offered as concrete evidence
+> for the architectural rationale of separating deterministic computation
+> from language generation in a clinical system: a language model's
+> account of its own output cannot be assumed complete, and a system that
+> allows that account to be checked against an independently computed
+> fact is more trustworthy than one that must take the narrative at its
+> word. Validating narrative completeness against deterministic fact
+> automatically is identified as a natural extension of this work,
+> deliberately left unbuilt, rather than a gap unrecognized.
+
+---
+
+## Phase 11 (Longitudinal Patient History & Comparison) — COMPLETE
+
+All 11 steps of the frozen development order are built, tested with real
+execution at every step (including three real local Ollama calls in the
+closing integration test), and confirmed by the user before proceeding at
+each gate, same discipline as every prior phase. Three real defects were
+caught and fixed during implementation, not discovered afterward: a
+domain-layer framework-boundary violation in a frozen interface
+(`IPatientRepository.get_history()` typed to return an ORM model instead
+of the domain entity), a second frozen interface whose parameters could
+not populate its own declared return type (`IDeterministicComparator.compare()`
+missing report-ID params), and a real HTTP-reachability gap
+(`retrieval_sessions.patient_id` had no endpoint that could ever set it,
+closed by an additive `patient_id` field on `POST /retrieve`) -- the last
+of these structurally undetectable by any unit test in the phase, caught
+only by the closing integration test. That same closing test also
+produced the phase's most significant finding: a real, reproducible case
+of the LLM's narrative omitting a deterministically-confirmed finding,
+with the deterministic fact remaining correct throughout -- concrete
+validation of the hybrid deterministic-computation-plus-narration
+architecture, and named explicitly as the basis for future
+narrative-completeness validation work, not treated as a defect to fix
+now. Full backend test suite: **137/137 passing** (113 Phase 4-10 + 24
+Phase 11). Not yet built, explicitly out of Phase 11 scope:
+narrative-completeness validation against deterministic facts, the
+Frontend (Phase 12), the doctor-edit review workflow, and multi-turn
+conversation history.

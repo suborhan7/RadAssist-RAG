@@ -28,10 +28,29 @@ class Language(str, Enum):
 
 @dataclass(frozen=True)
 class Patient:
-    id: str                     # internal UUID
-    external_ref: str           # synthetic patient ID / MRN (demo workflow only)
-    age: Optional[int] = None
-    gender: Optional[str] = None
+    """Redefined in place for Phase 11 (Longitudinal Patient History &
+    Comparison), replacing the original Phase 0 stub (id, external_ref,
+    age, gender) rather than renaming this new arrival -- a deliberate
+    exception to the Phase 8 Report/ReportRecord precedent, not a reversal
+    of it. That precedent renamed the NEW class because the OLD Report
+    entity was actively load-bearing (real ReportContent flowed through it
+    across Phases 7-10). This old Patient shape was confirmed dead first
+    (grepped for `Patient(` constructor calls and `external_ref` field
+    references -- zero real hits anywhere), never wired to any
+    infrastructure, sitting unused since the original speculative domain
+    scaffolding. A second, independent reason to replace rather than
+    rename: the old shape stored `age` directly, which is exactly what
+    this same phase's frozen Decision 3 rejects (age-at-visit computed on
+    read from date_of_birth, never stored, to avoid staleness across
+    visits) -- keeping the old Patient around under a different name would
+    leave a second, contradictory representation of "patient" in the
+    codebase, one that directly violates a decision just frozen in this
+    phase. That is worse than a naming collision."""
+    id: str
+    patient_code: str        # "PAT-000001", auto-generated, never manually assigned
+    name: str
+    date_of_birth: str        # ISO date; age-at-visit computed on read, never stored
+    gender: str
 
 
 @dataclass(frozen=True)
@@ -172,6 +191,27 @@ class ExplanationRecord:
     report_id: str
     question: str
     answer: str
+    created_at: str
+
+
+@dataclass(frozen=True)
+class ComparisonFacts:
+    previous_report_id: str
+    current_report_id: str
+    resolved_findings: tuple[str, ...]      # present before, absent now
+    persistent_findings: tuple[str, ...]    # present in both
+    new_findings: tuple[str, ...]           # absent before, present now
+    days_between_studies: int
+
+
+@dataclass(frozen=True)
+class Comparison:
+    id: str
+    patient_id: str
+    previous_report_id: str
+    current_report_id: str
+    facts: ComparisonFacts
+    narrative: str
     created_at: str
 
 

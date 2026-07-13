@@ -21,6 +21,14 @@ deterministic evidence serialization build_generation_prompt already
 uses) rather than a second, divergent copy -- same "one shared
 serialization" discipline as every prior phase's reuse decisions.
 
+build_comparison_prompt (Phase 11) reuses _report_content_section (the
+exact same ReportContent serialization build_explanation_prompt
+established in Phase 10) for BOTH the previous and current report,
+rather than a second copy -- that method now takes an explicit `label`
+param (default "REPORT CONTENT", preserving build_explanation_prompt's
+existing output byte-for-byte) so each call site can distinguish
+"PREVIOUS REPORT CONTENT" from "CURRENT REPORT CONTENT".
+
 Determinism: every prompt is a pure function of its arguments -- no
 timestamps, no wall-clock reads, no random ordering. ClinicalContext's
 collections are already deterministically ordered by Phase 5; this module
@@ -28,7 +36,14 @@ only serializes in the given order, never re-sorts.
 """
 from __future__ import annotations
 
-from app.domain.entities import ClinicalContext, EvidenceSummary, Report, ReportContent, VotedLabel
+from app.domain.entities import (
+    ClinicalContext,
+    ComparisonFacts,
+    EvidenceSummary,
+    Report,
+    ReportContent,
+    VotedLabel,
+)
 
 REPORT_CONTENT_FIELDS = (
     "examination",
@@ -113,6 +128,18 @@ class PromptBuilder:
         ]
         return "\n\n".join(sections)
 
+    def build_comparison_prompt(
+        self, facts: ComparisonFacts, previous: ReportContent, current: ReportContent
+    ) -> str:
+        sections = [
+            self._comparison_role_instruction(),
+            self._report_content_section(previous, label="PREVIOUS REPORT CONTENT"),
+            self._report_content_section(current, label="CURRENT REPORT CONTENT"),
+            self._comparison_facts_section(facts),
+            self._comparison_grounding_instruction(),
+        ]
+        return "\n\n".join(sections)
+
     @staticmethod
     def _explanation_role_instruction() -> str:
         return (
@@ -121,9 +148,16 @@ class PromptBuilder:
         )
 
     @staticmethod
-    def _report_content_section(content: ReportContent) -> str:
+    def _comparison_role_instruction() -> str:
         return (
-            "REPORT CONTENT:\n"
+            "You are an AI radiology assistant narrating a longitudinal "
+            "comparison between two chest X-ray reports for the same patient."
+        )
+
+    @staticmethod
+    def _report_content_section(content: ReportContent, label: str = "REPORT CONTENT") -> str:
+        return (
+            f"{label}:\n"
             f"Examination: {content.examination}\n"
             f"Clinical History: {content.clinical_history}\n"
             f"Technique: {content.technique}\n"
@@ -131,6 +165,52 @@ class PromptBuilder:
             f"Impression: {content.impression}\n"
             f"Recommendation: {content.recommendation}\n"
             f"Disclaimer: {content.disclaimer}"
+        )
+
+    @staticmethod
+    def _comparison_facts_section(facts: ComparisonFacts) -> str:
+        def _list_or_none(items: tuple[str, ...]) -> str:
+            return ", ".join(items) if items else "(none)"
+
+        return (
+            "DETERMINISTIC COMPARISON FACTS (already computed, not to be recomputed "
+            "or second-guessed):\n"
+            f"Days between studies: {facts.days_between_studies}\n"
+            f"Resolved findings (present in previous report, absent from current): "
+            f"{_list_or_none(facts.resolved_findings)}\n"
+            f"Persistent findings (present in both reports): "
+            f"{_list_or_none(facts.persistent_findings)}\n"
+            f"New findings (absent from previous report, present in current): "
+            f"{_list_or_none(facts.new_findings)}"
+        )
+
+    @staticmethod
+    def _comparison_grounding_instruction() -> str:
+        # At least as strict as _explanation_grounding_instruction() above --
+        # per the frozen Phase 11 spec, this adds explicit prohibitions on
+        # inventing findings/diagnoses, estimating severity, and using
+        # directional/trend language ("improved"/"worsened"/"progression"/
+        # "regression"/"increasing"/"decreasing") except as a direct restatement
+        # of an already-computed deterministic fact -- never as independent
+        # clinical inference. The LLM's only job is prose conversion of facts
+        # already computed by DeterministicComparator, not clinical reasoning.
+        return (
+            "GROUNDING INSTRUCTIONS:\n"
+            "Your ONLY job is to convert the deterministic comparison facts above "
+            "into readable prose for a clinician. You are NOT performing clinical "
+            "reasoning, diagnosis, or judgment of your own -- every fact about what "
+            "changed between the two reports has already been computed above, and "
+            "you must not recompute, contradict, or second-guess it.\n"
+            "You must NOT invent any finding that is not listed above in resolved, "
+            "persistent, or new findings. You must NOT invent, suggest, or imply any "
+            "diagnosis that is not already present in the previous or current report "
+            "content above. You must NOT estimate or characterize the severity of any "
+            "finding beyond what the report content above states.\n"
+            'You must NOT use the words or phrases "improved", "worsened", '
+            '"progression", "regression", "increasing", or "decreasing" UNLESS you '
+            "are directly restating one of the deterministic facts above (e.g. a "
+            "finding moving from resolved/persistent/new) -- never as your own "
+            "independent inference about clinical trajectory."
         )
 
     @staticmethod

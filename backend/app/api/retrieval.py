@@ -15,6 +15,19 @@ inlined into the route body, but are flagged in the Step 11 dev log entry
 as not cleanly fitting the validate/call-service/serialize-response
 three-way split, since they're neither -- see that entry for the full
 line-by-line accounting.
+
+Phase 11 addition: an optional `patient_id` form field. This closes a
+real gap found while writing Phase 11's closing integration test --
+retrieval_sessions.patient_id (Step 2's migration) had no real,
+HTTP-reachable way to ever be set: neither this endpoint nor
+POST /generate-report accepted a patient_id, so PatientService.get_history()
+and ComparisonService had no way to find a real doctor's reports in
+production, only in tests that poked the DB directly. Added here (the
+point where the RetrievalSession row is actually created) rather than at
+POST /generate-report, since that keeps the fix to the endpoint that owns
+this column's creation and requires no change to ReportGenerationService.
+Purely additive: omitting patient_id preserves the exact prior behavior
+(NULL, as it always was for every existing caller).
 """
 from __future__ import annotations
 
@@ -108,6 +121,7 @@ def retrieve(
     file: UploadFile = File(...),
     top_k: int = Form(5),
     min_similarity: float = Form(0.0),
+    patient_id: str | None = Form(None),
     db: Session = Depends(get_db),
 ) -> RetrieveResponse:
     """retrieval_time_ms covers only RetrievalService.retrieve() +
@@ -115,6 +129,16 @@ def retrieve(
     upload file-save I/O (before) and DB persistence (after)."""
     retrieval_service = request.app.state.retrieval_service
     label_voting_service = request.app.state.label_voting_service
+
+    # Same "malformed identifier caught at the route boundary" precedent as
+    # app/api/patients.py's history endpoint -- 400, not a service-layer
+    # exception type, since this is a request-shape problem, not a lookup.
+    patient_uuid: uuid.UUID | None = None
+    if patient_id is not None:
+        try:
+            patient_uuid = uuid.UUID(patient_id)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="patient_id is not a valid UUID.")
 
     with _saved_upload(file) as temp_path:
         start = time.perf_counter()
@@ -134,6 +158,7 @@ def retrieve(
             min_similarity=min_similarity,
             num_results=len(retrieved_cases),
             retrieval_time_ms=retrieval_time_ms,
+            patient_id=patient_uuid,
         )
     )
     db.add_all(

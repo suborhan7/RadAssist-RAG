@@ -17,6 +17,18 @@ previously constructed inline as an LLMOrchestrator constructor arg only,
 with no standalone reference route code could reach; ExplainabilityService
 needs the same PromptBuilder instance independently, for
 build_explanation_prompt().
+
+PatientService (Phase 11) is NOT stored on app.state -- unlike every
+service above, it depends on nothing but a per-request db session (no
+shared collaborator singleton to wire), so app/api/patients.py constructs
+it directly in each route, same as it would even if a singleton existed
+to read here. `deterministic_comparator` IS stored on app.state (Phase
+11) -- same reasoning as `response_validator`: it takes no db session,
+only an optional taxonomy_classes override, so it is constructed once and
+reused, not rebuilt per request. app/api/comparisons.py's ComparisonService
+mixes both patterns: patient_repository is a per-request PatientService
+(db-dependent), while deterministic_comparator/prompt_builder/
+llm_orchestrator are read off app.state (shared singletons).
 """
 from __future__ import annotations
 
@@ -25,8 +37,10 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from app.api.comparisons import router as comparisons_router
 from app.api.explainability import router as explainability_router
 from app.api.generation import router as generation_router
+from app.api.patients import router as patients_router
 from app.api.questionnaire import router as questionnaire_router
 from app.api.retrieval import router as retrieval_router
 from app.core.config import settings
@@ -34,6 +48,7 @@ from app.infrastructure.biomedclip_adapter import BiomedCLIPAdapter
 from app.infrastructure.chroma_store import ChromaVectorStore
 from app.infrastructure.ollama_client import OllamaClient
 from app.services.context_builder import ContextBuilder
+from app.services.deterministic_comparator import DeterministicComparator
 from app.services.image_validator import ImageValidator
 from app.services.label_voting_service import LabelVotingService
 from app.services.llm_orchestrator import LLMOrchestrator
@@ -77,6 +92,7 @@ async def lifespan(app: FastAPI):
     app.state.response_validator = ResponseValidator()
     app.state.report_formatter = ReportFormatter()
     app.state.questionnaire_provider = QuestionnaireTemplateProvider()
+    app.state.deterministic_comparator = DeterministicComparator()
     logger.info("lifespan startup complete")
 
     yield
@@ -87,3 +103,5 @@ app.include_router(retrieval_router)
 app.include_router(generation_router)
 app.include_router(questionnaire_router)
 app.include_router(explainability_router)
+app.include_router(patients_router)
+app.include_router(comparisons_router)

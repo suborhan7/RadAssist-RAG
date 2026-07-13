@@ -5,6 +5,13 @@ retrieval_sessions: one row per POST /retrieve call (Phase 4 DB scope --
 see the frozen architecture's "Database model overview" table). Only this
 table and retrieved_evidence exist in this phase; patients/studies/reports/
 the broader sessions cache are explicitly deferred.
+
+patient_id (Phase 11, additive): nullable FK to patients.id -- nullable
+because every session created before Phase 11 has no associated patient,
+and retrofitting one is out of scope. No `visits` table was introduced
+for this linkage (frozen Phase 11 Decision 2): retrieval_sessions already
+is this system's "visit" concept, so patient_id is added directly here
+rather than via a redundant parallel table.
 """
 from __future__ import annotations
 
@@ -12,7 +19,7 @@ import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, Float, Integer, String, Uuid, func
+from sqlalchemy import DateTime, Float, ForeignKey, Integer, String, Uuid, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base
@@ -31,6 +38,9 @@ class RetrievalSession(Base):
     num_results: Mapped[int] = mapped_column(Integer, nullable=False)
     retrieval_time_ms: Mapped[int] = mapped_column(Integer, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, server_default=func.now())
+    patient_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid, ForeignKey("patients.id"), nullable=True, index=True
+    )
 
     evidence: Mapped[list["RetrievedEvidence"]] = relationship(
         back_populates="session", cascade="all, delete-orphan"

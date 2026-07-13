@@ -106,3 +106,38 @@ class ExplanationResponse(BaseModel):
     question: str
     answer: str
     created_at: str
+
+
+class PatientResponse(BaseModel):
+    id: str
+    patient_code: str
+    name: str
+    date_of_birth: str
+    gender: str
+
+
+class PatientHistoryReportResponse(BaseModel):
+    id: str
+    language: str
+    status: str
+    ai_content: ReportContentResponse
+    created_at: str
+
+
+class ComparisonFactsResponse(BaseModel):
+    previous_report_id: str
+    current_report_id: str
+    resolved_findings: list[str]
+    persistent_findings: list[str]
+    new_findings: list[str]
+    days_between_studies: int
+
+
+class ComparisonResponse(BaseModel):
+    id: str
+    patient_id: str
+    previous_report_id: str
+    current_report_id: str
+    facts: ComparisonFactsResponse
+    narrative: str
+    created_at: str

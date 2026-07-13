@@ -27,16 +27,11 @@ the explanation prompt is grounded in the report content and retrieval
 evidence, not in whatever supplementary context (if any) originally
 influenced generation.
 
-Report domain-entity reconstruction: the frozen `Report` entity predates
-this system's actual persistence model and expects a `study_id` (a
-`studies` table that, per CLAUDE.md, does not exist in this codebase).
-`report.study_id` is populated with str(ReportRecord.session_id) instead --
-the closest real identifier this system actually has for "what this
-report is about" -- since nothing else is available and leaving it
-silently wrong would be worse than documenting the substitution.
-`final_content`/`evidence` are left at their empty defaults (mirroring
-every other Phase 8+ read of this entity -- doctor-edit workflow isn't
-built, and build_explanation_prompt never reads report.evidence).
+Report domain-entity reconstruction is delegated to the shared
+build_report_domain_entity() helper (app/services/report_reconstruction.py,
+extracted this phase) rather than a private method here -- Phase 11's
+PatientService needs the identical reconstruction for get_history(), so
+this is now shared rather than re-derived a second time.
 """
 from __future__ import annotations
 
@@ -45,12 +40,7 @@ from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session
 
-from app.domain.entities import (
-    ExplanationRecord,
-    Language,
-    Report,
-    ReportContent,
-)
+from app.domain.entities import ExplanationRecord
 from app.domain.interfaces import (
     IContextBuilder,
     ILabelVoter,
@@ -61,6 +51,7 @@ from app.domain.interfaces import (
 from app.models.explanation import Explanation
 from app.models.report import ReportRecord
 from app.services.exceptions import ReportNotFoundError
+from app.services.report_reconstruction import build_report_domain_entity
 from app.services.session_reconstruction import reconstruct_session_evidence
 
 
@@ -101,7 +92,7 @@ class ExplainabilityService:
         )
         context = self._context_builder.build(retrieved_cases, voted_labels)
 
-        report = self._build_report_domain_entity(report_record)
+        report = build_report_domain_entity(report_record)
 
         prompt = self._prompt_builder.build_explanation_prompt(report, question, context.evidence_summary)
         answer = self._llm_orchestrator.answer_question(prompt)
@@ -124,23 +115,4 @@ class ExplainabilityService:
                 if explanation.created_at
                 else datetime.now(timezone.utc).isoformat()
             ),
-        )
-
-    @staticmethod
-    def _build_report_domain_entity(report_record: ReportRecord) -> Report:
-        """Reconstructs the frozen Report domain entity from ReportRecord's
-        persisted JSON column. ai_content was persisted via
-        dataclasses.asdict(ReportContent instance) in Phase 8 -- exactly the
-        7 field names ReportContent expects -- so ReportContent(**dict)
-        round-trips it directly. See module docstring for the study_id
-        substitution."""
-        return Report(
-            id=str(report_record.id),
-            study_id=str(report_record.session_id),
-            language=Language(report_record.language),
-            status=report_record.status,
-            ai_content=ReportContent(**report_record.ai_content),
-            final_content=ReportContent(),
-            created_at=report_record.created_at,
-            updated_at=report_record.updated_at,
         )

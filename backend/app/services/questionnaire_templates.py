@@ -5,13 +5,17 @@ Implements IQuestionnaireProvider. Static question bank keyed by the
 frozen Phase 0 18-class taxonomy -- no LLM call (frozen Phase 9 Decision
 1: questions come from predefined templates, not LLM-generated).
 
-Taxonomy loading reuses response_validator.py's existing
-_load_taxonomy_classes()/DEFAULT_LABEL_MAPPING_PATH directly (imported,
-not reimplemented) -- per Phase 8 Step 4's precedent of loading
-label_mapping.yaml straight from ml/config/ rather than importing across
-the frozen ml/<->backend/ boundary, there must be exactly ONE function in
-this codebase that parses that YAML into class names, not a second,
-divergent copy.
+Taxonomy loading reuses taxonomy_matching.py's load_taxonomy_classes()/
+DEFAULT_LABEL_MAPPING_PATH directly (imported, not reimplemented) -- that
+module was extracted from response_validator.py in Phase 11 so
+DeterministicComparator could reuse the same taxonomy loading/matching
+without a second, divergent copy; this call site was updated to point at
+the new shared location rather than the old response_validator.py
+re-export. Per Phase 8 Step 4's precedent of loading label_mapping.yaml
+straight from ml/config/ rather than importing across the frozen
+ml/<->backend/ boundary, there must be exactly ONE function in this
+codebase that parses that YAML into class names, not a second, divergent
+copy.
 
 Clinical content disclosure, same honesty convention as Phase 8 Step 5's
 Bengali section headers: the question text below is a best-reasonable-
@@ -24,7 +28,7 @@ sign-off by an actual radiologist/clinician.
 from __future__ import annotations
 
 from app.domain.entities import QuestionnaireQuestion
-from app.services.response_validator import DEFAULT_LABEL_MAPPING_PATH, _load_taxonomy_classes
+from app.services.taxonomy_matching import DEFAULT_LABEL_MAPPING_PATH, load_taxonomy_classes
 
 
 def _q(key: str, text: str, input_type: str) -> QuestionnaireQuestion:
@@ -205,7 +209,7 @@ QUESTION_TEMPLATES: dict[str, tuple[QuestionnaireQuestion, ...]] = {
 # uses -- catches a typo'd/drifted key at import time rather than silently
 # falling through to DEFAULT_QUESTIONS for a class that was actually meant
 # to have its own template.
-_TAXONOMY_CLASSES = _load_taxonomy_classes()
+_TAXONOMY_CLASSES = load_taxonomy_classes()
 _unknown_keys = set(QUESTION_TEMPLATES) - set(_TAXONOMY_CLASSES)
 if _unknown_keys:
     raise ValueError(
