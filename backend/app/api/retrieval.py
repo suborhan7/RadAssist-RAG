@@ -28,6 +28,21 @@ POST /generate-report, since that keeps the fix to the endpoint that owns
 this column's creation and requires no change to ReportGenerationService.
 Purely additive: omitting patient_id preserves the exact prior behavior
 (NULL, as it always was for every existing caller).
+
+Phase 12 Step 7 addition: the uploaded query image is now masked (via
+PHIMasker, app.state singleton, same shared/ implementation the offline
+ml/ pipeline uses) and persisted to settings.UPLOADED_IMAGES_DIR before
+the original temp upload is deleted, and query_image_path now stores that
+real, stable, servable path -- previously it stored only the original
+filename string (never a live reference to anything, since the temp file
+was always deleted in _saved_upload's `finally` block). This closes a
+real gap found while building the frontend Comparison page: there was
+previously no way to redisplay ANY past visit's X-ray at all. The RAW
+upload is deliberately never persisted, only the masked copy -- every
+image this system stores or serves has gone through PHI masking since
+Phase 1, and persisting live uploads was not going to be the first
+exception to that. GET /retrieval-sessions/{session_id}/image (below)
+serves the persisted masked file.
 """
 from __future__ import annotations
 
@@ -36,8 +51,10 @@ import tempfile
 import time
 import uuid
 from contextlib import contextmanager
+from pathlib import Path
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_db
@@ -140,6 +157,9 @@ def retrieve(
         except ValueError:
             raise HTTPException(status_code=400, detail="patient_id is not a valid UUID.")
 
+    session_id = uuid.uuid4()
+    phi_masker = request.app.state.phi_masker
+
     with _saved_upload(file) as temp_path:
         start = time.perf_counter()
         try:
@@ -149,11 +169,20 @@ def retrieve(
         voted_labels = label_voting_service.vote(retrieved_cases)
         retrieval_time_ms = int((time.perf_counter() - start) * 1000)
 
-    session_id = uuid.uuid4()
+        # Mask BEFORE the temp upload is deleted (_saved_upload's `finally`
+        # block removes it the moment this `with` exits) -- the persisted
+        # copy is the ONLY one that survives the request, and it must never
+        # be the raw upload (see this module's docstring).
+        suffix = os.path.splitext(file.filename or "")[1] or ".png"
+        persisted_dir = Path(settings.UPLOADED_IMAGES_DIR)
+        persisted_dir.mkdir(parents=True, exist_ok=True)
+        persisted_path = persisted_dir / f"{session_id}{suffix}"
+        phi_masker.detect_and_mask(Path(temp_path), persisted_path)
+
     db.add(
         RetrievalSession(
             id=session_id,
-            query_image_path=file.filename or temp_path,
+            query_image_path=str(persisted_path),
             top_k=top_k,
             min_similarity=min_similarity,
             num_results=len(retrieved_cases),
@@ -176,3 +205,35 @@ def retrieve(
         raise
 
     return _build_response(session_id, retrieval_time_ms, retrieved_cases, voted_labels)
+
+
+@router.get("/retrieval-sessions/{session_id}/image")
+def get_retrieval_session_image(session_id: str, db: Session = Depends(get_db)) -> FileResponse:
+    """Serves the MASKED query image persisted by POST /retrieve above.
+    Malformed or missing session_id both raise SessionNotFoundError -> 404,
+    reusing the exact same single-exception-type precedent
+    reconstruct_session_evidence() already established for this identifier
+    (Phase 8) -- not the different 400/404 split app/api/patients.py uses
+    for a different identifier. A session that exists but predates this
+    fix (query_image_path holding only a filename, not a real path) is
+    handled as the same 404 the client sees for "no image available" --
+    a stale pre-fix session is not a different failure mode a caller needs
+    to distinguish from "never had an image."
+    """
+    try:
+        session_uuid = uuid.UUID(session_id)
+    except ValueError:
+        raise HTTPException(status_code=404, detail=f"no RetrievalSession found for session_id={session_id}")
+
+    session = db.query(RetrievalSession).filter(RetrievalSession.id == session_uuid).one_or_none()
+    if session is None:
+        raise HTTPException(status_code=404, detail=f"no RetrievalSession found for session_id={session_id}")
+
+    image_path = Path(session.query_image_path)
+    if not image_path.is_file():
+        raise HTTPException(
+            status_code=404,
+            detail=f"no persisted image available for session_id={session_id}",
+        )
+
+    return FileResponse(image_path)

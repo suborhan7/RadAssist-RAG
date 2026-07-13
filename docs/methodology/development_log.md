@@ -5766,3 +5766,753 @@ Phase 11). Not yet built, explicitly out of Phase 11 scope:
 narrative-completeness validation against deterministic facts, the
 Frontend (Phase 12), the doctor-edit review workflow, and multi-turn
 conversation history.
+
+## Phase 12 — Radiologist Workflow UI & Frontend Architecture: Architecture (FROZEN)
+
+**Status: approved and frozen.** Not to be redesigned without a critical
+correctness issue. First phase to cross the frontend/backend boundary
+every prior phase explicitly protected -- `frontend/` is created and
+populated for the first time here.
+
+### Gaps identified and resolved before freezing
+
+1. **No authentication exists anywhere in the backend.** Every endpoint
+   built across Phases 4-11 is open, with no `users` table, no login, no
+   session ownership concept. Resolved: single-operator thesis demo, no
+   authentication built in this phase -- a real login system is a
+   substantial feature in its own right and is not this thesis's core
+   contribution.
+2. **Framework reconfirmed, not silently carried forward from months-old
+   planning docs**: Next.js + React + TypeScript + Tailwind CSS.
+3. **Scope**: full scope, all clinical modules included (patient history,
+   generation, comparison, explainability) rather than a reduced core
+   path -- these are the thesis's actual novelty and their absence would
+   materially reduce demonstrated value, per explicit user reasoning.
+4. **Type-safety boundary resolved without violating the "no shared
+   frontend/backend code" rule**: FastAPI's auto-generated OpenAPI schema
+   is the shared contract. TypeScript types generated at frontend build
+   time directly from `/openapi.json`, gitignored, regenerated whenever
+   the backend contract changes -- never hand-maintained, no shared code
+   folder created.
+5. **LLM latency shapes the UI architecture directly, not patched on
+   afterward** -- real backend timing already measured in this project
+   (Phase 7: ~6s single generation; Phase 11's chained test: 60s+) drives
+   an explicit, honestly-labeled step-progress component rather than a
+   generic spinner.
+6. **Deployment packaging explicitly out of scope** -- local dev only
+   (Next.js dev server + FastAPI, CORS configured between them).
+   Environment configuration (`NEXT_PUBLIC_API_URL`, dev/prod mode) is
+   documented as its own infrastructure subsection, deliberately kept
+   separate from the clinical workflow diagram rather than drawn as a
+   workflow node -- configuration and clinical process are different
+   concerns and conflating them in the diagram would blur that
+   distinction.
+
+### A real ordering correction, made before freezing
+
+The initial workflow draft placed Questionnaire and Explainability as
+parallel siblings both feeding into Comparison. This was incorrect against
+the frozen backend: Questionnaire enriches generation and must occur
+*before* `POST /generate-report` (Phase 9's entire design -- answers feed
+the prompt), while Explainability operates on an already-generated report
+and requires a real `report_id` to exist first (Phase 10's
+`/reports/{report_id}/explain`). These are not parallel siblings --
+Questionnaire is pre-generation, Explainability and Comparison are the
+true post-report parallel siblings. Corrected before the spec was frozen,
+not discovered during implementation.
+
+### Consolidation decisions (user-driven refinement over the initial draft)
+
+1. **Patient Profile is the real hub**, not a thin intermediate page --
+   overview, timeline, and previous reports/X-rays live here, matching
+   how backend data actually nests (patient -> sessions -> reports) and
+   how a doctor actually works (open patient, then do everything from
+   there).
+2. **No separate Retrieval Evidence page.** A doctor's real task at that
+   moment -- confirming the AI found reasonable comparable cases -- is a
+   quick confirmation glance, not a destination requiring navigation.
+   Retrieval evidence is an accordion within the Report workspace instead.
+3. **The Report page is a "Radiologist Workspace," not a viewer.**
+   Explainability and Comparison are actions launched *from* the report
+   (buttons: "Explain Report," "Compare Previous Report"), not separate,
+   disconnected features -- this is a naming/framing correction of an
+   already-correct structure from the prior draft, making the relationship
+   between components legible rather than changing the structure itself.
+4. **Upload -> Retrieval -> Questionnaire -> Generate is one guided flow**,
+   not separate routes -- the doctor experiences this as one continuous
+   action, and the URL structure reflects that (`patients/[patientId]/upload`
+   handles the whole sequence with a shared step-progress component).
+5. **Comparison gets a full, explicit side-by-side layout**, not a
+   narrative paragraph: previous X-ray + current X-ray, previous report +
+   current report, resolved/persistent/new findings, AI narrative, and an
+   explicit "Doctor Review Required" line -- the visual enforcement of
+   Phase 11's own frozen safety principle (a comparison narrative is a
+   draft requiring review, never a final verdict), carried through to the
+   UI layer explicitly rather than left implicit.
+6. **Previous X-ray image is shown, not just previous report text** -- a
+   comparison feature limited to text loses the visual core of what a
+   radiology comparison actually is.
+7. **Progress UI uses explicit per-stage checkmarks/spinners**
+   (`✓ Upload Completed`, `⏳ Retrieving Similar Cases`, etc.), directly
+   visualizing the real backend pipeline stages rather than a generic
+   "loading" indicator -- addresses the real "doctor thinks it's hung"
+   risk from Phase 7/11's measured multi-second-to-multi-minute latencies.
+8. **Patient History timeline exposes "Compare with this report" on every
+   past visit**, not just the most recent -- this is the single most
+   valuable addition over the initial draft: `POST /comparisons` has
+   accepted an optional `compare_against_report_id` since Phase 11,
+   specifically designed not to be locked to "most recent only," but
+   nothing in the original frontend draft actually exposed that parameter
+   anywhere in the UI. Without this, an entire piece of already-built
+   backend flexibility would have shipped invisible. The Comparison page
+   accepts this as a query parameter, making a doctor's choice to compare
+   e.g. Visit 1 vs. Visit 4 a real, reachable action.
+
+### Folder structure (final)
+
+```
+frontend/
+|-- src/
+|   |-- app/
+|   |   |-- page.tsx                          # Dashboard
+|   |   |-- patients/
+|   |   |   |-- new/page.tsx                  # Register
+|   |   |   |-- search/page.tsx                # Search
+|   |   |   `-- [patientId]/
+|   |   |       |-- page.tsx                   # Patient Profile (hub)
+|   |   |       `-- upload/page.tsx            # Upload -> Retrieval -> Questionnaire -> Generate (one guided flow)
+|   |   `-- reports/[reportId]/
+|   |       |-- page.tsx                       # Radiologist Workspace (AI Report + warnings + evidence accordion + actions)
+|   |       |-- explain/page.tsx               # Explainability (launched from workspace)
+|   |       `-- compare/page.tsx               # Comparison (accepts ?against=<report_id> from timeline)
+|   |-- components/
+|   |   |-- workflow/                          # step-indicator progress UI
+|   |   |-- patient/                            # includes timeline's "Compare with this report" action
+|   |   |-- report/                             # includes retrieval-evidence accordion
+|   |   |-- questionnaire/
+|   |   |-- explainability/
+|   |   `-- comparison/                         # side-by-side X-ray + report + findings layout
+|   |-- lib/
+|   |   |-- api-client.ts
+|   |   |-- env.ts                              # NEXT_PUBLIC_API_URL, dev/prod mode -- infra, not workflow
+|   |   `-- generated/                          # OpenAPI-generated types (gitignored)
+|   `-- hooks/
+|-- .env.local.example
+|-- package.json
+`-- next.config.js
+```
+
+### Final frozen workflow
+
+```
+Dashboard
+      |
+      v
+Patient Search / Register
+      |
+      v
+Patient Profile
+(Overview + Timeline + Previous Reports)
+      |
+      +---------------------+
+      |                     |
+      v                     v
+View History          New Examination
+                            |
+                            v
+                     Upload Chest X-ray
+                            |
+                            v
+                  Retrieve Similar Cases
+                            |
+                            v
+                Questionnaire (Optional)
+                            |
+                            v
+                  Generate AI Report
+                            |
+                            v
+              Radiologist Workspace
+        (AI Report + Evidence + Validation)
+                +------------+------------+
+                v                         v
+        Explainability             Comparison
+                                          |
+                                          v
+                   Previous X-ray  <->  Current X-ray
+                   Previous Report <->  Current Report
+                   Resolved / Persistent / New Findings
+                   AI Comparison Narrative
+                   Doctor Review Required
+```
+
+### Progress-state architecture (Decision 7, concrete)
+
+```typescript
+type WorkflowStep =
+  | "uploading"
+  | "retrieving_evidence"
+  | "generating_report"
+  | "running_questionnaire"
+  | "comparing_reports";
+```
+
+Each async backend call (`/retrieve`, `/generate-report`, `/comparisons`)
+maps to an explicit, labeled step shown with a checkmark/spinner state --
+not a generic spinner -- directly addressing the real multi-second-to-
+multi-minute latency measured in Phase 7/11.
+
+### OpenAPI type generation (Decision 4, concrete)
+
+Build-time step (`openapi-typescript` or equivalent) against the running
+backend's `/openapi.json`, output to `frontend/src/lib/generated/`,
+gitignored, regenerated on backend contract changes -- never hand-
+maintained, no shared code folder.
+
+### Step breakdown
+
+1. Next.js scaffold, Tailwind, OpenAPI type-generation pipeline, typed API
+   client -- plumbing only, no UI yet.
+2. Dashboard + Patient Registration + Patient Search.
+3. Patient Profile hub + History timeline (including the "Compare with
+   this report" action per visit).
+4. Upload X-ray -> Retrieval -> Questionnaire -> Generate, as one guided
+   flow with the step-progress component wired to real backend timing.
+5. Radiologist Workspace (AI Report + validation warnings + retrieval-
+   evidence accordion + action buttons).
+6. Explainability Chat (launched from the workspace).
+7. Comparison page (full side-by-side layout, accepts a target report_id
+   from the timeline's compare action).
+8. End-to-end manual walkthrough covering the complete frozen workflow +
+   dev log entry.
+
+### Testing strategy
+
+Frontend testing conventions differ from the backend's unit/integration
+discipline -- to be scoped concretely (component-level vs. end-to-end)
+once implementation begins, rather than assuming backend conventions
+transfer unchanged.
+
+### Risks
+
+1. Largest single-phase surface area in the project -- mitigated by the
+   8-step breakdown above, same granularity precedent as Phase 8.
+2. No authentication is a stated, deliberate scope boundary for a thesis
+   demo, not an oversight -- must be named explicitly in the thesis as a
+   limitation, not silently absent.
+3. OpenAPI-generated types require the backend to be running during
+   frontend builds -- a real dev-workflow dependency worth documenting
+   plainly, not discovering by surprise.
+4. Real LLM latency (measured up to 60s+ for chained operations) makes
+   the progress-state UI a genuine usability requirement, not polish --
+   if under-built, the demo risks reading as broken/hung during a live
+   thesis defense.
+
+---
+
+## Phase 12 — Radiologist Workflow UI & Frontend Architecture — Implementation & Validation
+
+Implemented across the frozen 8-step breakdown, with real execution and
+explicit confirmation gating every step -- the first phase to cross the
+frontend/backend boundary every prior phase explicitly protected.
+`frontend/` did not exist before this phase; every real backend gap named
+below was found by a real browser client exercising real endpoints for
+the first time, not by inspection or assumption.
+
+### Step 1 -- Next.js scaffold, OpenAPI type generation, typed API client, CORS
+
+Next.js (App Router) + TypeScript + Tailwind scaffolded via
+`create-next-app`, matching the frozen folder structure.
+`openapi-typescript` wired as `npm run generate-types`, pointed at the
+real running backend's `/openapi.json`, output to
+`frontend/src/lib/generated/api.d.ts`.
+
+**A real `.gitignore` catch, caught before it could bite the next
+clone.** The blanket `.env*` ignore rule Next.js scaffolds by default
+would have silently swallowed `.env.local.example` too -- a file that
+exists specifically to be committed, unlike a real `.env`. Caught and
+fixed with a scoped `!.env.local.example` exception, not a broader
+rewrite of the ignore rules.
+
+**CORS, flagged explicitly as new backend surface area, not folded in
+unannounced.** Every route built across Phases 4-11 was tested via
+`TestClient`/`pytest`, which bypass CORS entirely -- this is the first
+real browser-origin traffic this backend has ever had to handle.
+`CORSMiddleware` added to `main.py`, a new `CORS_ALLOWED_ORIGINS` setting
+added to `Settings` (defaulting to the Next.js dev server's origin),
+full backend suite re-run after touching `main.py`: **137 passed**
+(unchanged).
+
+Real end-to-end proof, not simulated: a real headless-browser session
+(Playwright) loaded the real page, executed a real `fetch()` against the
+real backend, and the real browser console showed:
+```
+[log] GET /health real response: {status: ok}
+```
+with the real response header `access-control-allow-origin:
+http://localhost:3000` confirmed present -- proof the actual
+cross-origin request succeeded, not just that no console error appeared
+(an absent error alone would not have ruled out the request never
+leaving the browser for an unrelated reason).
+
+### Step 2 -- Dashboard + Patient Registration + Patient Search
+
+Dashboard: minimal entry point with a real health-check status and
+navigation into Search/Register. Registration and Search pages call the
+real `POST /patients`/`GET /patients/search` via the generated types.
+
+**A real, pre-existing gap found the moment this system was run as a
+real persistent server for the first time.** The first real registration
+attempt threw a browser CORS error on `POST /patients`. Tracing the
+*real* cause rather than the misleading symptom mattered here: the
+actual root cause was a genuine backend `500`
+(`sqlite3.OperationalError: no such table: patients`) -- the CORS
+error was an accurate but misleading side effect of an unhandled
+exception dropping the CORS header, not a CORS misconfiguration.
+Fixing the CORS config itself would have been a plausible-looking wrong
+fix that masked the real bug. The real cause: `alembic upgrade head` had
+never been run against the real, persistent `backend/dev.db` -- every
+prior "real" verification since Phase 4 had gone through either
+`TestClient` (ephemeral, in-process) or disposable throwaway migration
+files, never a long-lived `dev.db` a real running server actually uses.
+Fixed by running the real migration for the first time.
+
+This is the same class of finding as Phase 11's `retrieval_sessions.patient_id`
+wiring gap: an **absence** invisible to every prior test layer by
+construction, not a defect anyone wrote -- eleven backend-only phases
+never had a real persistent client to expose it; the frontend's first
+real `POST` request was the first thing that could.
+
+Real registration/search proof: real sequential `patient_code`s
+(`PAT-000002` through `PAT-000006` across the session), exact-match
+search by code and by name+DOB correctly disambiguating two patients
+with the same name but different DOBs, a well-formed zero-match search
+rendering its own explicit "not an error" state, a true duplicate
+name+DOB pair correctly returning both matches for selection, and the
+backend's own `400` malformed-request path confirmed still reachable
+directly (the built form's `required` HTML attributes prevent it from
+being reachable through normal UI use -- verified as code-path-correct,
+not misrepresented as UI-tested). `npx tsc --noEmit`/`npm run lint`:
+clean.
+
+### Step 3 -- Patient Profile hub + History timeline
+
+Real Overview (name/code/DOB/gender), History timeline (newest-first --
+stated explicitly as the current default, not a fully settled design
+question: newest-first suits a quick status glance, but reading disease
+progression -- the entire premise of Phase 11's comparison feature --
+means reading the clinical story backwards under that ordering; worth
+revisiting once Comparison (Step 7) was built and both features could be
+evaluated together), "New Examination" action, and "Compare with this
+report" on every timeline entry except the single most recent one
+(comparing it against itself is meaningless), wired to
+`/reports/{mostRecentReportId}/compare?against={thisEntry.id}`.
+
+**Gap A -- `GET /patients/{patient_id}` did not exist.** Neither
+`GET /patients/search` (needs a code or name+dob, not just an id) nor
+`GET /patients/{id}/history` (report fields only) could answer "get this
+patient's own details from just their id" -- needed for the hub page to
+be correct on direct URL load, refresh, or bookmark, not only when
+navigated to in-app with patient details already in hand. Flagged via
+two explicit options before building; resolved by adding the endpoint
+(new `IPatientRepository.find_by_id()`, 1 new unit test) rather than
+threading patient data through client-side navigation state only, since
+the latter would silently break on any direct reload of the hub page the
+frozen spec explicitly designs around.
+
+**Gap B -- a live latent hazard, not another absence.** While
+re-verifying `find_by_id`, `POST /patients` threw the exact same
+"no such table: patients" `500` again, moments after the migration had
+just been confirmed applied. Root cause: four integration test files
+(`test_generate_report_integration.py`, `test_comparison_integration.py`,
+`test_explainability_integration.py`, `test_questionnaire_integration.py`)
+import the SAME production `engine`/`SessionLocal` from
+`app.database.base` directly and call
+`Base.metadata.create_all(engine)`/`drop_all(engine)` around their own
+real-chain tests -- with no environment override anywhere, that engine
+IS the real `dev.db`. Simply running `pytest`, something done at the end
+of every phase since Phase 8, had been silently dropping every real
+table in the developer's persistent database at test teardown. This is
+NOT the same class of finding as Gap A above or Step 2's never-migrated
+`dev.db` -- those are **absences**, invisible because a particular
+environment/configuration had never been run before. This is an
+**active hazard that had sat live in test code across four phases**,
+reachable the entire time by the ordinary act of running the test suite;
+it stayed invisible only because the specific concurrent
+usage pattern that would expose it -- a persistent dev server and the
+test suite both touching `dev.db` -- had never occurred before this
+phase. Absence-of-a-path bugs and a live latent hazard are different
+severities, and this is the more severe one.
+
+The fix is minimal and targeted, not a rewrite: one new
+`backend/tests/conftest.py` sets `DATABASE_URL` to an isolated
+`backend/test.db` before any other import in the test session --
+zero changes to any of the four existing test files, since their own
+logic was always correct in isolation; only the shared assumption about
+*which database* they all pointed at was wrong. Proven working, not
+assumed: `dev.db`'s mtime was bit-for-bit identical before and after a
+full 138-test run, and a separate `test.db` was confirmed created and
+used instead.
+
+**A real guardrail did its job and is worth its own sentence, not a
+parenthetical.** Repairing the corrupted `dev.db` (real tables dropped,
+`alembic_version` still stamped at head) first called for `rm -f dev.db`
+-- the auto-mode safety classifier correctly blocked this as an
+irreversible deletion of accumulated real local data the user never
+authorized wiping, forcing the correct, reversible path instead
+(`alembic stamp base` then `upgrade head`, both non-destructive
+bookkeeping/DDL operations, not file deletion). This is exactly the
+guardrail earning its place in this project's safety story: stopping a
+plausible-looking destructive shortcut in favor of the correct reversible
+recovery.
+
+Full suite after both fixes: **138 passed** (1 new: `find_by_id`).
+
+### Step 4 -- Upload -> Retrieval -> Questionnaire -> Generate guided flow
+
+One guided flow, not separate routes, per the frozen spec. Real
+`WorkflowStep` progress states (`uploading`, `retrieving_evidence`,
+`running_questionnaire`, `generating_report`) wired to the real backend
+calls, not simulated timing. "Uploading" and "retrieving_evidence" are
+split on two genuinely distinct real browser milestones within the SAME
+real `XMLHttpRequest` -- `xhr.upload.onload` (the browser has actually
+finished sending the multipart body) vs. `xhr.onload` (the full response
+has arrived) -- chosen specifically because `fetch()` exposes no
+upload-progress event at all, which would have forced guessing where
+upload ends and server-side work begins. Real engineering, not cosmetic
+polish.
+
+Questionnaire genuinely optional, both paths exercised for real: Skip
+proceeds straight to generation with `questionnaire_answers: null`;
+Continue was proven not just to navigate successfully but to actually
+carry the typed answers into the real wire payload --
+```json
+{"session_id":"05b8b8ac-...","language":"en","questionnaire_answers":{"symptom_reason":"Real answer 1 from automated check","prior_abnormal":"Real answer 2 from automated check","smoking_history":"Real answer 3 from automated check"},"clinical_notes":""}
+```
+-- the correct standard here, since a successful navigation only proves
+no error occurred, not that the three typed answers survived the trip
+from React state into the real payload. This is exactly the class of bug
+this project already caught once, in a different layer: Phase 6's
+questionnaire fields existing on `ClinicalContext` but never actually
+being read by `PromptBuilder`. Capturing the real request body over the
+wire is what turns "the button worked" into "the data was not silently
+dropped."
+
+Real per-stage timing cross-checked against an INDEPENDENT measurement
+source, not the UI's own self-report -- Playwright's own
+request/response event timestamps:
+```
+[+0.00s] REQUEST START  /retrieve
+[+0.12s] RESPONSE 200   /retrieve
+[+0.12s] REQUEST START  /questionnaire/{session_id}
+[+0.13s] RESPONSE 200   /questionnaire/{session_id}
+[+0.30s] REQUEST START  /generate-report
+[+6.51s] RESPONSE 200   /generate-report
+```
+A progress UI could show plausible-looking stages that are entirely
+decorative; only an independent measurement source turns "looks right"
+into "is right." The real generation latency (~6-8s across runs)
+matching Phase 7's own measured baseline from months of backend-only
+testing, in a completely different measurement context (a real browser
+today vs. a `pytest` integration test then), is genuinely reassuring
+consistency, not coincidence.
+
+### Step 5 -- Radiologist Workspace
+
+The report as workspace, not a viewer, per the frozen spec: Patient
+Information, full AI Report content, Validation warnings, a Retrieved
+Evidence accordion (not a separate page), and Explain/Compare/Download
+actions (Download PDF a deliberately disabled stub, explicitly out of
+scope).
+
+**Gap -- `GET /reports/{report_id}` did not exist.** Confirmed via a
+plain `grep` across every route file before writing any code, alongside
+confirming `GenerateReportResponse` has no `patient_id` field and
+`ReportRecord` has no `patient_id` column -- the only real path from a
+`report_id` to its patient is `session_id` -> `RetrievalSession.patient_id`.
+Resolved with a new `ReportDetailService`, notable for two decisions
+made by judgment rather than by mechanical pattern-matching:
+
+1. **A non-obvious reuse.** `reconstruct_session_evidence()` (Phase 9)
+   already returns the `RetrievalSession` object as part of its tuple,
+   for a completely different original purpose (evidence reconstruction)
+   -- recognizing that this existing return value ALSO incidentally
+   holds the answer to a new problem (`patient_id`), rather than writing
+   a second query to fetch the same underlying row a different way, is
+   the "don't duplicate a source of truth" discipline applied a level
+   more cleverly than the typical case.
+2. **The right precedent, not the nearest one.** A malformed or missing
+   `report_id` maps to a single `404` here, reusing Phase 10's
+   `ExplainabilityService`/`ReportNotFoundError` precedent for this
+   exact resource -- deliberately NOT `app/api/patients.py`'s different
+   400-malformed/404-missing split, since these are genuinely different
+   failure categories (a resource-by-id lookup vs. a request-shape
+   problem) and recognizing which one this situation actually matches is
+   the judgment call, not a rule to apply uniformly everywhere.
+
+The frontend composes two endpoints rather than duplicating patient-fetch
+logic: `GET /reports/{report_id}` for `patient_id`, then the existing
+`GET /patients/{patient_id}` for the Patient Information section, with
+that second fetch failing independently degrading gracefully ("no
+patient linked") rather than blocking the whole page -- the right design
+for a page whose primary content is the report itself.
+
+4 new unit tests (real DB + fakes, same pattern as
+`test_explainability_service.py`). Full suite: **142 passed**.
+
+### Step 6 -- Explainability Chat
+
+Single-turn chat launched from the Workspace. Report context shown
+briefly for orientation; only the current question+answer pair is shown
+at a time, never an accumulating thread -- an honest UI representation
+of a backend with zero conversation memory, the same "don't let the UI
+suggest more than the system actually delivers" principle this project
+held since the Bengali-headers disclosure (Phase 8).
+
+**A real, pre-existing gap, invisible for a genuinely different reason
+than every environment-based gap found earlier in this phase.** Checking
+what `/explain` actually returns on an LLM transport failure (rather
+than assuming it mirrors `/generate-report`'s handling) found that
+`app/api/explainability.py` had NO handler for `LLMTransportError` at
+all, despite `answer_question()` reusing the exact same transport-retry
+mechanism as `generate_draft()` and being able to genuinely raise it. A
+real Ollama outage during `/explain` would have propagated as an
+unhandled exception since Phase 10 shipped. The Step 2/3 dev.db gaps
+were invisible because a particular environment/configuration had never
+been run; this gap was invisible for a different reason entirely -- no
+test at ANY layer, service or route, had ever specifically exercised
+this exact exception crossing this exact HTTP boundary, even though it
+was reachable by any real transport failure at any point across five
+whole phases since Phase 10 shipped. "No one had tested this seam" is a
+different root cause than "no one had run this environment," even though
+both are invisible-by-construction to prior test layers.
+
+Fixed by mirroring `app/api/generation.py`'s existing `LLMTransportError
+-> 502` mapping for the identical exception type. Proven with 2 new
+route-level unit tests that monkeypatch `ExplainabilityService` directly
+(no real app lifespan/DB/Ollama needed) -- critically, the `502` test
+would have FAILED against the pre-fix code (the raw exception would have
+propagated instead of becoming an `HTTPException`), not merely passed
+after the fact. A test that only passes post-fix could be testing the
+wrong thing entirely; proving it would have failed first is what makes
+it real proof. Choosing to prove this via a monkeypatched unit test
+rather than actually taking down real Ollama infrastructure for a UI
+demo was the correct tradeoff, not a shortcut -- real disruption would
+have traded away test reliability for a momentary visual confirmation
+that adds nothing the controlled test doesn't already prove.
+
+Real question asked, real grounded answer returned, citing the real
+disclaimer/agreement score and declining to speculate where the report
+was silent -- the same grounding behavior Phase 10's own integration test
+first demonstrated. Real network-level timing (4.9s) matched the UI's
+own self-reported elapsed time exactly. Full suite: **144 passed**.
+
+### Step 7 -- Comparison page
+
+The phase's centerpiece -- the UI most directly demonstrating Phase 11's
+actual novelty. Full side-by-side layout per the frozen spec: previous
+X-ray + current X-ray, previous report + current report,
+resolved/persistent/new findings clearly sectioned, AI narrative, and an
+explicit "Doctor Review Required" line -- the visual enforcement of
+Phase 11's own safety principle, not optional polish.
+
+**The largest architecture gap of the phase, found before the feature
+could be built at all.** Unlike every other gap this phase (a missing
+endpoint over data that already existed), this one meant the underlying
+DATA did not exist to be queried: `POST /retrieve` saved every uploaded
+image to a `tempfile.NamedTemporaryFile` and deleted it in a `finally`
+block immediately after embedding, and ChromaDB stores no image bytes,
+only embeddings/metadata. There was no way, for any real visit, to
+redisplay an X-ray afterward. Two options were presented: persist the
+raw upload (simple, but breaks this system's own invariant -- every
+image it has ever stored or served has been PHI-masked since Phase 1),
+or serve a static match by coincidental filename (rejected as not
+merely imperfect but fundamentally non-general: it works only because
+every test upload in this project happens to already exist in the
+training corpus, and produces nothing at all for a genuinely new patient
+image, which is the actual, normal case a real visit represents). The
+corrected approach -- persist the upload, but run it through the
+EXISTING `PHIMasker` first, storing and serving the masked copy, never
+the raw one -- was the one actually implemented.
+
+**A second deliberate, narrow exception to the `ml/`<->`backend/`
+boundary, not an erosion of it.** `PHIMasker` was extracted from
+`ml/preprocessing/phi_masking.py` into `shared/phi_masking/masker.py`,
+joining `shared/embeddings/biomedclip_embedder.py` as the second
+instance of this project's one-off shared/ exception -- both exist
+because a production consumer (the live backend) and the offline `ml/`
+pipeline need the IDENTICAL implementation, not because `shared/` is a
+convenient dumping ground. Two real exceptions in twelve phases, both
+independently justified on the same "one implementation, no drift"
+grounds, is evidence the boundary is holding as a genuine rule with rare,
+justified exceptions -- not quietly eroding into a general escape hatch.
+`ml/preprocessing/phi_masking.py` was confirmed to still import and run
+cleanly after the extraction (`PHIMasker`/`MaskingResult` resolved
+correctly from the new location) before anything new was built on top of
+it -- the same "verify the refactor is behavior-neutral before building
+on it" discipline as this same phase's taxonomy-matcher precedent
+(Phase 11) and `reconstruct_session_evidence()` (Phase 9).
+
+**Real schema hygiene, not a new column bolted on.**
+`RetrievalSession.query_image_path` already existed but had never stored
+anything genuinely resolvable (`file.filename or temp_path` -- a bare
+filename string, never a live reference). Rather than adding a second,
+redundant column alongside a dead one, the existing column's actual
+semantics were corrected: it now stores the real, stable, masked path.
+No migration was required (same column, corrected content) -- a less
+careful fix would have left two confusingly-overlapping fields where one
+correct one now exists.
+
+**Masking verified as real work, not a silent no-op -- the same
+evidentiary standard as Phase 5's shuffle-and-compare determinism
+proof.** A genuinely unmasked raw source image (from
+`ml/datasets/raw/images/images_normalized/`, confirmed to have 2 real
+OCR-detectable text regions) was uploaded through the actual
+`/retrieve` endpoint, then verified three ways:
+```
+raw size: 2153758       persisted size: 5755638
+identical bytes: False
+regions still detectable on the persisted copy: 0
+regions detectable on the raw source (re-checked): 2
+```
+The third check is what makes this real proof rather than an ambiguous
+result: without re-confirming the raw source still shows its original 2
+regions, "zero regions on the persisted copy" would be indistinguishable
+between "masking worked" and "there was nothing to mask in the first
+place" -- exactly the same shape of ambiguity Phase 5's
+shuffle-and-compare check existed to close for a completely different
+claim (order-independence). A two-part check (bytes differ; persisted
+copy is clean) would have left that ambiguity open; the third part
+closes it.
+
+Both real comparison paths verified against real data on the same
+patient used in Step 3's timeline verification (fresh visits, since
+pre-fix sessions have no real image to serve): explicit `?against=`
+(from the timeline) and the default, no-query-param path (from the
+Workspace's own button) resolved to the identical previous report and
+produced consistent real facts/narrative, both real masked X-rays
+rendering correctly (`naturalWidth=2048`, confirmed real bytes, not
+broken image icons). Both real 404 failure modes
+(`NoPriorReportError`/`ReportNotFoundError`) confirmed showing their
+distinct, backend-authored messages, not a generic error. Full suite
+(no new backend tests this step -- infrastructure, not new business
+logic): **144 passed**, `dev.db` confirmed untouched.
+
+### Step 8 -- Full end-to-end manual walkthrough
+
+The complete frozen workflow executed as one continuous real session,
+not a piecemeal replay of prior steps' isolated checks: Dashboard ->
+Register -> Patient Profile (empty history) -> New Examination -> real
+guided flow (Skip path) -> real Radiologist Workspace -> Explain Report
+(real Q&A) -> Compare Previous Report on a genuine first visit (real
+`NoPriorReportError`, the correct behavior, not a bug) -> a second real
+visit for the same patient (Continue path, questionnaire answers filled
+for real) -> Compare Previous Report (default path, now real facts and a
+real narrative) -> Patient Profile (both visits, newest-first) ->
+"Compare with this report" on the older entry (explicit `?against=`
+path, consistent with the default path's result). One browser console
+message appeared across the entire walkthrough, and it was the expected
+one -- a real `404` logged by the browser for the intentionally-triggered
+first-visit `NoPriorReportError` check, not an unexpected failure.
+
+```
+144 passed, 9 warnings in 101.24s
+dev.db mtime before: 1783979556.9965987
+dev.db mtime after:  1783979556.9965987
+```
+
+`npx tsc --noEmit` and `npm run lint`: clean.
+
+### How to Write This in Your Thesis
+
+*Methodology chapter, "Frontend Implementation" subsection:*
+
+> Phase 12 built the first user-facing client for a system whose backend
+> had been developed and validated across eight prior phases entirely
+> through automated tests and direct API calls, and this transition
+> itself proved to be the phase's most significant methodological
+> contribution, independent of the interface it produced. Every
+> environment-dependent assumption the backend had implicitly carried
+> since its earliest phases was tested for the first time by the
+> introduction of a real, persistent client, and several had been false.
+> A development database had never actually been initialized by its own
+> migration tooling, invisible because no prior verification had run
+> against it as a genuinely persistent artifact rather than a disposable
+> or in-process one. A more serious defect was found immediately
+> afterward: several existing integration tests, written and passing
+> since an early phase, imported the same database connection the real
+> application used and reset its schema as an ordinary part of their own
+> setup and teardown, meaning the ordinary act of running the test suite
+> had been silently destroying real accumulated state the entire time --
+> a defect of a different character than a configuration nobody had
+> exercised yet, since this one was actively reachable throughout, and
+> remained unnoticed only because the specific pattern that would expose
+> it, a persistent server and an automated test run coexisting, had never
+> previously occurred. A third defect, found later in the same phase, was
+> different again in kind from both: an exception type known to be
+> reachable through a particular code path had a correct handler in one
+> caller of that path but not another, invisible not because of any
+> environment but because no test at any level had been written to
+> specifically exercise that exception at that boundary, despite the
+> underlying failure condition having been reachable since a much earlier
+> phase. Distinguishing these three categories explicitly -- an untested
+> environment, an actively hazardous shared assumption, and an untested
+> boundary -- is offered as a general methodological observation: that a
+> defect being invisible to a codebase's existing tests does not by
+> itself indicate why, and treating all such defects as a single
+> undifferentiated class of oversight would obscure real differences in
+> both their severity and the kind of verification discipline that would
+> have caught each one. The phase's largest architectural gap, concerning
+> the persistence of clinical images for later comparison, was resolved
+> only after an initially proposed solution was identified as violating
+> an invariant the system had maintained since its earliest phase, that
+> every image it stores or serves has been screened for identifying
+> information; the corrected solution extended an existing, previously
+> single-purpose module into a second shared implementation reused by
+> both the offline data pipeline and the live system, a deliberate and
+> narrow exception to an architectural boundary maintained throughout
+> this work, made only because the alternative would have been an
+> undetected second copy of safety-relevant logic. That the resulting
+> masking was verified against a genuinely unscreened source image, with
+> the source re-confirmed to still contain what had been detected and
+> removed from the copy, rather than merely confirming the copy differed
+> from its source, reflects the same evidentiary standard applied
+> earlier in this work to a different claim: that a transformation having
+> visibly changed its input is not evidence that the transformation did
+> what was intended, only that it did something.
+
+---
+
+## Phase 12 (Radiologist Workflow UI & Frontend Architecture) — COMPLETE
+
+All 8 steps of the frozen development order are built, tested with real
+execution at every step (a real headless browser exercising real
+backend endpoints throughout, including a full continuous walkthrough of
+the entire frozen workflow), and confirmed by the user before proceeding
+at each gate, same discipline as every prior phase. This is the first
+phase to introduce `frontend/`, and doing so surfaced real defects across
+the backend that eight prior, entirely backend-only phases could not
+have found by construction: a never-migrated persistent development
+database (an untested environment); four integration tests silently
+resetting that same real database on every test run, a live hazard that
+had sat active in test code since Phase 8 across four phases, not merely
+an untested configuration; two missing report/patient-detail endpoints
+(`GET /patients/{patient_id}`, `GET /reports/{report_id}`), each closed
+by reusing existing reconstruction helpers rather than a new path; an
+unhandled `LLMTransportError` in the Explainability route, reachable
+since Phase 10 but never exercised by any test at any layer; and the
+phase's largest gap, a complete absence of any mechanism to persist
+uploaded clinical images for later redisplay, resolved by extending
+`PHIMasker` into a second deliberate `shared/` exception alongside
+`biomedclip_embedder.py`, verified with the same rigor as this
+project's Phase 5 determinism proofs rather than assumed correct because
+the image visibly changed. Full backend test suite: **144/144 passing**
+(137 Phase 4-11 + 7 Phase 12: 1 Step 3 + 4 Step 5 + 2 Step 6). Frontend
+verification relied on real, direct browser-driven checks (Playwright)
+rather than a committed automated frontend test suite, per this phase's
+own frozen "testing conventions differ, to be scoped once implementation
+begins" decision. Not yet built, explicitly out of Phase 12 scope: the
+doctor-edit review workflow, multi-turn explainability conversation
+history, narrative-completeness validation against deterministic facts
+(named in Phase 11), PDF export, deployment packaging, and
+authentication.

@@ -100,6 +100,20 @@ def test_find_by_code_returns_correct_patient_or_none():
     db.close()
 
 
+def test_find_by_id_returns_correct_patient_or_none():
+    service, db = _make_service()
+    created = service.create(name="Jane Doe", date_of_birth="1980-01-01", gender="F")
+
+    found = service.find_by_id(created.id)
+    assert found is not None
+    assert found.patient_code == created.patient_code
+    assert found.name == "Jane Doe"
+
+    assert service.find_by_id(str(uuid.uuid4())) is None
+
+    db.close()
+
+
 def test_find_by_name_and_dob_exact_match_only_near_miss_does_not_match():
     service, db = _make_service()
     service.create(name="Jane Doe", date_of_birth="1980-01-01", gender="F")

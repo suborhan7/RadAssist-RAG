@@ -52,6 +52,18 @@ DEFAULT_LLM_CONTENT_RETRY_COUNT = 2
 DEFAULT_LLM_TRANSPORT_RETRY_COUNT = 1
 DEFAULT_LLM_TEMPERATURE = 0.0
 
+# Phase 12 Step 1 -- local dev only (frozen spec's Decision 6: deployment
+# packaging/CORS-for-production is explicitly out of scope). The Next.js
+# dev server's default origin; a real deployment would set this via env,
+# not by editing this default.
+DEFAULT_CORS_ALLOWED_ORIGINS = "http://localhost:3000"
+
+# Phase 12 Step 7 -- where POST /retrieve persists the MASKED copy of each
+# uploaded query image (see app/api/retrieval.py), so the Comparison page
+# can redisplay a past visit's X-ray. Gitignored runtime data, same
+# treatment as dev.db -- not committed, not a fixture.
+DEFAULT_UPLOADED_IMAGES_DIR = str(_BACKEND_DIR / "uploaded_images")
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
@@ -67,6 +79,8 @@ class Settings(BaseSettings):
     LLM_CONTENT_RETRY_COUNT: int = DEFAULT_LLM_CONTENT_RETRY_COUNT
     LLM_TRANSPORT_RETRY_COUNT: int = DEFAULT_LLM_TRANSPORT_RETRY_COUNT
     LLM_TEMPERATURE: float = DEFAULT_LLM_TEMPERATURE
+    CORS_ALLOWED_ORIGINS: str = DEFAULT_CORS_ALLOWED_ORIGINS
+    UPLOADED_IMAGES_DIR: str = DEFAULT_UPLOADED_IMAGES_DIR
 
 
 settings = Settings()

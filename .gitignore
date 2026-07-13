@@ -37,6 +37,7 @@ ml/outputs/evaluation/per_query/
 # =============================================================================
 backend/*.db
 backend/*.db-journal
+backend/uploaded_images/
 
 # =============================================================================
 # Environment / secrets

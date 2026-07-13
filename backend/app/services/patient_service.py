@@ -64,6 +64,15 @@ class PatientService:
         record = self._db.query(PatientRecord).filter(PatientRecord.patient_code == patient_code).one_or_none()
         return self._to_domain(record) if record is not None else None
 
+    def find_by_id(self, patient_id: str) -> Patient | None:
+        # Same "parse once, let a malformed id raise ValueError" pattern as
+        # get_history() below -- the route layer (not this service) is
+        # responsible for mapping a malformed-UUID ValueError to its own
+        # HTTP status, same precedent as every prior malformed-id route.
+        patient_uuid = uuid.UUID(patient_id)
+        record = self._db.query(PatientRecord).filter(PatientRecord.id == patient_uuid).one_or_none()
+        return self._to_domain(record) if record is not None else None
+
     def find_by_name_and_dob(self, name: str, date_of_birth: str) -> list[Patient]:
         dob = date.fromisoformat(date_of_birth)
         records = (

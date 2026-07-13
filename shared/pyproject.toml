@@ -7,7 +7,7 @@ name = "radassist-shared"
 version = "0.1.0"
 
 [tool.setuptools]
-packages = ["shared", "shared.embeddings"]
+packages = ["shared", "shared.embeddings", "shared.phi_masking"]
 
 [tool.setuptools.package-dir]
 shared = "."

@@ -141,3 +141,24 @@ class ComparisonResponse(BaseModel):
     facts: ComparisonFactsResponse
     narrative: str
     created_at: str
+
+
+class ReportDetailResponse(BaseModel):
+    """Phase 12: GET /reports/{report_id} -- reuses ReportContentResponse/
+    ValidationResponse/GenerationMetadataResponse/RetrievedCaseResponse
+    rather than duplicating their field definitions, same discipline as
+    every prior schema reuse in this project. patient_id is nullable --
+    a report's underlying RetrievalSession may predate Phase 11's patient
+    linkage, or may never have had a patient_id supplied."""
+
+    report_id: str
+    session_id: str
+    patient_id: str | None
+    content: ReportContentResponse
+    language: str
+    status: str
+    validation: ValidationResponse
+    generation_metadata: GenerationMetadataResponse
+    report_date: str
+    created_at: str
+    retrieved_cases: list[RetrievedCaseResponse]

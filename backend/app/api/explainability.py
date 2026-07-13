@@ -12,6 +12,20 @@ ExplainabilityService, which this step does not modify.
 
 ReportNotFoundError -> 404, same mapping pattern as every prior not-found
 case (SessionNotFoundError -> 404 in generation.py/questionnaire.py).
+
+LLMTransportError -> 502 (Phase 12 fix, found while building the frontend
+Explainability Chat page): a real, pre-existing gap since Phase 10 --
+answer_question() reuses the exact same transport-retry mechanism as
+generate_draft() and can genuinely raise LLMTransportError once that
+budget is exhausted, but this route never caught it, so a real Ollama
+outage during /explain would have propagated as an unhandled exception
+(no clean detail, likely no CORS headers either -- the same failure
+shape Phase 12 Step 2 found with an unhandled 500 elsewhere), never
+exercised by any existing test. Mapped identically to
+app/api/generation.py's existing LLMTransportError -> 502 precedent for
+the same exception type. answer_question() has no content-retry loop
+(free-text has no schema to validate), so LLMGenerationValidationError
+cannot occur here and needs no handler.
 """
 from __future__ import annotations
 
@@ -22,7 +36,7 @@ from sqlalchemy.orm import Session
 from app.api.dependencies import get_db
 from app.api.schemas import ExplanationResponse
 from app.domain.entities import ExplanationRecord
-from app.services.exceptions import ReportNotFoundError
+from app.services.exceptions import LLMTransportError, ReportNotFoundError
 from app.services.explainability_service import ExplainabilityService
 
 router = APIRouter()
@@ -62,5 +76,7 @@ def explain_report(
         explanation = service.explain(report_id, request_body.question)
     except ReportNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except LLMTransportError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
 
     return _build_response(explanation)

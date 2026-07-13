@@ -178,6 +178,15 @@ class IPatientRepository(Protocol):
     """Phase 11: patient registration, exact-match search, chronological
     history. Infrastructure: app/services/patient_service.py.
 
+    find_by_id (Phase 12, additive) exists for a real gap found while
+    building the frontend's Patient Profile page: neither find_by_code/
+    find_by_name_and_dob (both require info the page doesn't have from
+    just a patient_id in the URL) nor get_history (returns only report
+    fields, no patient details) can answer "get this patient's own
+    details given only their id" -- needed for the Profile page to be
+    correct on a direct URL load, refresh, or bookmark, not only when
+    navigated to in-app with patient details already in hand.
+
     get_history's return type is list[Report] (the frozen domain entity),
     NOT list[ReportRecord] -- the frozen spec's prose named ReportRecord,
     but that's the Phase 8 SQLAlchemy ORM model (app/models/report.py),
@@ -192,6 +201,7 @@ class IPatientRepository(Protocol):
     def create(self, name: str, date_of_birth: str, gender: str) -> Patient: ...
     def find_by_code(self, patient_code: str) -> Patient | None: ...
     def find_by_name_and_dob(self, name: str, date_of_birth: str) -> list[Patient]: ...
+    def find_by_id(self, patient_id: str) -> Patient | None: ...
     def get_history(self, patient_id: str) -> list[Report]: ...  # chronological
 
 

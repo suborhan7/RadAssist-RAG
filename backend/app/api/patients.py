@@ -40,6 +40,22 @@ into `reports = []`; a syntactically valid but unknown/nonexistent
 patient_id still legitimately falls through to get_history() returning an
 empty list, same as any other "well-formed query, no rows" case elsewhere
 in this project.
+
+GET /patients/{patient_id} (Phase 12, additive): added for a real gap
+found while building the frontend's Patient Profile page -- neither
+/patients/search (needs a code or name+dob, not just an id) nor
+/patients/{patient_id}/history (returns only report fields, no patient
+details) can answer "get this patient's own details from just their id."
+Unlike /patients/search's never-errors-on-zero-matches list semantics,
+this is a single-resource-by-id fetch, so a genuinely nonexistent
+patient_id is a real 404 here (standard REST semantics for a singular
+resource lookup, not a list) -- while a malformed (non-UUID) patient_id
+is still a 400, same distinction and same reasoning as the /history route
+directly above.
+
+Route registration order note: this route is declared AFTER
+/patients/search so the static "search" path segment is matched first,
+not swallowed by this dynamic {patient_id} segment.
 """
 from __future__ import annotations
 
@@ -117,6 +133,18 @@ def search_patients(
         )
 
     return [_build_patient_response(p) for p in patients]
+
+
+@router.get("/patients/{patient_id}", response_model=PatientResponse)
+def get_patient(patient_id: str, db: Session = Depends(get_db)) -> PatientResponse:
+    service = PatientService(db=db)
+    try:
+        patient = service.find_by_id(patient_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="patient_id is not a valid UUID.")
+    if patient is None:
+        raise HTTPException(status_code=404, detail=f"no patient found for patient_id={patient_id}")
+    return _build_patient_response(patient)
 
 
 @router.get("/patients/{patient_id}/history", response_model=list[PatientHistoryReportResponse])

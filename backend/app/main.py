@@ -29,6 +29,25 @@ reused, not rebuilt per request. app/api/comparisons.py's ComparisonService
 mixes both patterns: patient_repository is a per-request PatientService
 (db-dependent), while deterministic_comparator/prompt_builder/
 llm_orchestrator are read off app.state (shared singletons).
+
+CORS (Phase 12 Step 1): a real, necessary backend change, not silent
+scope creep into frontend/'s territory -- every route above was built and
+tested Phases 4-11 with no browser origin involved at all (TestClient/
+pytest bypass CORS entirely), so this is genuinely new backend surface
+area, flagged as such rather than folded in unannounced. Local dev only,
+per the frozen Phase 12 spec's explicit "deployment packaging out of
+scope" decision; `settings.CORS_ALLOWED_ORIGINS` defaults to the Next.js
+dev server's origin (http://localhost:3000), not hardcoded here.
+
+`phi_masker` (Phase 12 Step 7): a real prerequisite fix for the
+Comparison page -- POST /retrieve previously deleted every uploaded query
+image immediately after embedding, so there was no way to redisplay a
+past visit's X-ray at all. Persisting the raw upload would have broken
+this system's own PHI-masking invariant (every image this system stores/
+serves has been masked first, since Phase 1); PHIMasker is loaded once
+here, same "expensive singleton, constructed exactly once" rule as
+BiomedCLIPAdapter, and POST /retrieve now masks the upload before
+persisting it -- see app/api/retrieval.py.
 """
 from __future__ import annotations
 
@@ -36,12 +55,14 @@ import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.comparisons import router as comparisons_router
 from app.api.explainability import router as explainability_router
 from app.api.generation import router as generation_router
 from app.api.patients import router as patients_router
 from app.api.questionnaire import router as questionnaire_router
+from app.api.reports import router as reports_router
 from app.api.retrieval import router as retrieval_router
 from app.core.config import settings
 from app.infrastructure.biomedclip_adapter import BiomedCLIPAdapter
@@ -59,6 +80,7 @@ from app.services.response_validator import ResponseValidator
 from app.services.retrieval_service import RetrievalService
 from app.services.similarity_search import SimilaritySearchPolicy
 from app.services.structural_validator import StructuralValidator
+from shared.phi_masking.masker import PHIMasker
 
 logger = logging.getLogger(__name__)
 
@@ -70,6 +92,8 @@ async def lifespan(app: FastAPI):
     vector_store = ChromaVectorStore()
     validator = ImageValidator()
     search_policy = SimilaritySearchPolicy()
+    logger.info("lifespan startup: loading PHIMasker (EasyOCR model load, should log exactly once)")
+    app.state.phi_masker = PHIMasker()
 
     app.state.vector_store = vector_store
     app.state.retrieval_service = RetrievalService(
@@ -99,9 +123,17 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="RadAssist-RAG Backend", lifespan=lifespan)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[settings.CORS_ALLOWED_ORIGINS],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.include_router(retrieval_router)
 app.include_router(generation_router)
 app.include_router(questionnaire_router)
 app.include_router(explainability_router)
 app.include_router(patients_router)
 app.include_router(comparisons_router)
+app.include_router(reports_router)
