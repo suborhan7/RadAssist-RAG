@@ -3957,3 +3957,500 @@ persisted as `ReportStatus.AI_DRAFT` only. No PDF/print rendering exists
 yet either, per the frozen spec's explicit deferral to Phase 12.
 
 ---
+
+
+## Phase 9 — Clinical Questionnaire: Architecture (FROZEN)
+
+**Status: approved and frozen.** Not to be redesigned without a critical
+correctness issue.
+
+### Pre-design verification (before any Phase 9 work began)
+
+Checked whether `PromptBuilder.build_generation_prompt` (frozen since
+Phase 6) actually serializes `ClinicalContext.questionnaire_answers`/
+`clinical_notes` into the prompt, or silently accepts-but-ignores them.
+Verified two ways: reading the implementation directly (the method's
+`sections` list calls only `_role_instruction`, `_language_instruction`,
+`_schema_instruction`, `_grounding_instruction`, `_confidence_instruction`,
+`_evidence_section`, and a static closing line -- none reference either
+field), and empirically (constructed a real `ClinicalContext` with
+non-empty `questionnaire_answers`/`clinical_notes`, called
+`build_generation_prompt`, confirmed none of the supplied content appeared
+anywhere in the output). **Confirmed: the gap is real.** These two fields
+have existed on `ClinicalContext` since Phase 5 (made optional so
+`ContextBuilder` could run without them) but have never actually reached
+the LLM. Phase 9 therefore requires a `PromptBuilder` fix as its first
+step -- additive only, not a redesign -- before any questionnaire
+collection/storage machinery is built on top of what would otherwise be
+unused data.
+
+### Decisions frozen
+
+1. **Static questionnaire, not LLM-generated.** Questions come from
+   predefined templates keyed by the top voted disease label. No
+   additional Ollama/LLM call for question generation -- consistent with
+   this project's standing bias toward deterministic, LLM-free components
+   wherever an LLM call isn't strictly necessary (Context Builder is
+   LLM-free; direct-language generation was chosen over a second
+   translation pass specifically to avoid an extra call and failure
+   point).
+2. **Two separate endpoints**, not one combined call: `GET
+   /questionnaire/{session_id}` to fetch questions, `POST
+   /generate-report` (extended) to submit a report request optionally
+   carrying answers. Asking questions is a distinct client interaction
+   from generating a report.
+3. **Questionnaire is optional, enriching, never a gate.** A report can
+   still be generated with zero questionnaire data -- Phase 8's existing
+   no-data behavior must remain exactly unchanged when these new
+   parameters are omitted. Answers, when supplied, enrich the prompt
+   alongside retrieval evidence; they never replace or override it.
+4. **Backend-only, per explicit reaffirmation.** No `frontend/` files
+   created or touched, same structural boundary as every phase since
+   Phase 8's explicit reminder.
+
+### Step 0 -- PromptBuilder fix (frozen Phase 6 file, additive only)
+
+Two new conditionally-included sections in `build_generation_prompt`'s
+`sections` list: "CLINICAL QUESTIONNAIRE" (only when
+`questionnaire_answers` is non-empty, serialized as question/answer pairs
+sorted by key alphabetically for determinism) and "ADDITIONAL CLINICAL
+NOTES" (only when `clinical_notes` is non-empty/non-whitespace). Both
+threaded through `build_retry_prompt` as well (verify explicitly, don't
+assume the wrapping makes this automatic). **Required regression test**:
+empty-questionnaire/empty-notes input must produce a byte-identical prompt
+to pre-fix behavior -- this must not change output for the common case
+already exercised through Phases 6, 7, and 8.
+
+### Entities (new)
+
+```python
+@dataclass(frozen=True)
+class QuestionnaireQuestion:
+    key: str
+    text: str
+    input_type: str   # "text" | "yes_no" | "select"
+
+@dataclass(frozen=True)
+class Questionnaire:
+    session_id: str
+    based_on_label: str
+    questions: tuple[QuestionnaireQuestion, ...]
+```
+
+### Interface (new)
+
+```python
+class IQuestionnaireProvider(Protocol):
+    def get_questions_for_label(self, label: str) -> tuple[QuestionnaireQuestion, ...]: ...
+```
+
+### Folder structure
+
+```
+backend/app/
+|-- domain/
+|   |-- entities.py       (+ QuestionnaireQuestion, Questionnaire)
+|   `-- interfaces.py     (+ IQuestionnaireProvider)
+|-- services/
+|   |-- prompt_builder.py           (MODIFIED: + questionnaire/notes serialization)
+|   |-- questionnaire_service.py
+|   `-- questionnaire_templates.py
+`-- api/
+    `-- questionnaire.py   (GET /questionnaire/{session_id})
+
+backend/tests/
+|-- unit/
+|   |-- test_prompt_builder_questionnaire_serialization.py
+|   |-- test_questionnaire_service.py
+|   `-- test_report_generation_service_questionnaire_passthrough.py
+`-- integration/
+    `-- test_questionnaire_integration.py
+```
+
+### Step breakdown (9 steps, mirroring Phase 8's granularity given this phase also touches a frozen file)
+
+1. PromptBuilder fix -- both sections, threaded through retry prompt,
+   empty-input regression guard proven, real before/after prompt diff
+   with real questionnaire data shown.
+2. Domain layer -- `QuestionnaireQuestion`, `Questionnaire`,
+   `IQuestionnaireProvider` -- regression check.
+3. `questionnaire_templates.py` -- static bank keyed by the frozen Phase 0
+   18-class taxonomy (reusing `label_mapping.yaml`, same source
+   `ResponseValidator` already loads from -- not a third copy), explicit
+   default set for unmapped classes.
+4. `QuestionnaireService.get_questionnaire(session_id)` -- re-runs
+   retrieval+voting against the real session exactly like
+   `ReportGenerationService` already does (no new persistence needed) --
+   unit + real-session integration test.
+5. `GET /questionnaire/{session_id}` -- thin-route audit, same standard
+   as Phase 4/8.
+6. `ReportGenerationService.generate()` extension -- additive
+   `questionnaire_answers`/`clinical_notes` parameters (default
+   `None`/`""`), threaded to the existing `context_builder.build()` call.
+   **Required test: explicit backward-compatibility proof** -- same
+   session/language called with and without questionnaire data, asserting
+   the no-data call is byte-for-byte unchanged from Phase 8's behavior.
+7. `POST /generate-report` request schema extension -- same two optional
+   fields added to the Pydantic request model.
+8. Full integration test -- real questionnaire fetch -> real answers ->
+   real `/generate-report` call -> confirm the answers actually reached
+   the real generated prompt (asserting on what was sent to the LLM, not
+   on LLM output content, preserving the non-determinism discipline from
+   Phase 7/8).
+9. Full regression + dev log entry.
+
+### Testing strategy (consolidated)
+
+Step 1's before/after prompt diff is the single most important test in
+this phase -- it is the only thing that actually proves questionnaire data
+does anything beyond being persisted unused, which is the exact failure
+mode the pre-design verification exists to prevent. Step 6's backward-
+compatibility test is the second most important -- it is the only thing
+that proves this phase did not silently change Phase 8's already-shipped,
+already-tested no-questionnaire behavior. Everything else follows the
+established pattern: real templates tested against real labels, real
+session integration tests, no LLM calls anywhere except the one
+already-frozen call inside `LLMOrchestrator`.
+
+### Risks
+
+1. The PromptBuilder fix is the highest-risk single change in this phase,
+   since it touches a frozen file exercised by every real generation call
+   since Phase 6 -- mitigated by the required byte-identical-on-empty-input
+   regression test.
+2. Static templates will not cover every possible top-voted label
+   perfectly -- the explicit default/fallback set is the stated mitigation,
+   not a claim of full coverage.
+
+---
+
+## Phase 9 — Clinical Questionnaire — Implementation & Validation
+
+Implemented across the frozen 9-step breakdown, with real execution and
+explicit confirmation gating every step, same discipline as every prior
+phase. This phase started from a verified real gap (`PromptBuilder`
+silently accepting-but-ignoring `questionnaire_answers`/`clinical_notes`
+since Phase 5) rather than a speculative one, and closed with the first
+real proof that submitted answers actually reach the generated prompt.
+
+### Step 1 — `PromptBuilder` fix (frozen Phase 6 file, additive only)
+
+Two new conditionally-included sections added to `build_generation_prompt`:
+`CLINICAL QUESTIONNAIRE` (only when `questionnaire_answers` is non-empty,
+serialized as question/answer pairs sorted alphabetically by key) and
+`ADDITIONAL CLINICAL NOTES` (only when `clinical_notes.strip()` is
+non-empty -- a whitespace-only string does not trigger inclusion).
+`build_retry_prompt`'s carry-through was verified by reading its actual
+implementation (it calls `build_generation_prompt` with the same
+`context` object), not assumed, per the explicit instruction not to
+repeat the kind of oversight that created the original gap.
+
+**Required regression test, the one that matters most for this file**:
+captured the real pre-fix prompt output for the existing empty-fixture
+case, applied the fix, and confirmed byte-identical output --
+
+```
+before length: 1709
+after length: 1709
+BYTE-IDENTICAL: True
+```
+
+-- then formalized this as `test_empty_questionnaire_and_notes_produce_byte_identical_prompt`,
+which independently reconstructs the expected output from the same six
+unchanged private helper methods (not a hardcoded string literal), so it
+proves equivalence to the actual old code path. Real before/after prompt
+diff shown with real data
+(`{"duration": "3 days", "fever": "yes"}` / `"Patient reports recent
+travel"`) -- the new sections appear exactly where expected, in the
+generated prompt text itself, not merely described. 18 tests in
+`test_prompt_builder.py` (12 prior + 6 new), full suite **91 passed**.
+
+### Step 2 — Domain layer
+
+Added `QuestionnaireQuestion` (`key`, `text`, `input_type`), `Questionnaire`
+(`session_id`, `based_on_label`, `questions`), and `IQuestionnaireProvider`.
+Purely additive, brand-new concepts with zero prior callers to break.
+
+**Naming-collision check, done precisely, not adjacently**: after an
+initial pass reported "no existing callers" (a different question from
+what was asked), re-ran the exact check requested -- `grep -rn "class
+Questionnaire" backend/` and a broader `grep -rn "Questionnaire" backend/
+--include=*.py` -- confirming the only matches anywhere in the codebase
+are the two new entities and their own references, same category of check
+that caught the `Report`/`ReportRecord` collision in Phase 8, applied here
+and coming back genuinely clean rather than assumed clean. Full suite:
+**91 passed** (unchanged).
+
+### Step 3 — `questionnaire_templates.py`
+
+Static question bank keyed by the frozen Phase 0 18-class taxonomy.
+Reused `response_validator.py`'s existing `_load_taxonomy_classes()`/
+`DEFAULT_LABEL_MAPPING_PATH` directly (imported, not reimplemented) --
+there is exactly one function in this codebase that parses
+`label_mapping.yaml` into class names. That import is not decorative: at
+module load time, every `QUESTION_TEMPLATES` key is validated against the
+real loaded taxonomy, raising `ValueError` on any mismatch -- the same
+"enforced invariant, not a good intention" pattern as Phase 6's schema
+test reading field names from `dataclasses.fields()` instead of a
+hardcoded list.
+
+All 18 classes given explicit 3-5-question templates, including `Other
+Abnormality` (deliberately mapped directly to `DEFAULT_QUESTIONS` --
+a fabricated-specific template for an inherently non-specific catch-all
+class would have been the wrong kind of honesty) and `Support Devices`
+(its own explicit template, not defaulted). A separate `DEFAULT_QUESTIONS`
+set handles any label absent from the dict entirely (a genuinely
+unmapped/future label), verified to return real, non-empty questions
+rather than raising or returning empty. **Clinical content disclosure,
+same honesty convention as Phase 8's Bengali headers**: the question text
+is a best-reasonable-effort draft by a non-clinician, not written or
+reviewed by a certified medical professional -- stated in the module
+docstring, not to be presented as clinically validated without real
+review.
+
+```
+=== real taxonomy classes loaded (18 expected) ===
+18 ('Normal', 'Lung Opacity', 'Cardiomegaly', ..., 'Support Devices', 'Other Abnormality')
+taxonomy classes falling through to DEFAULT_QUESTIONS: set()
+```
+
+Full suite: **91 passed** (new file, no dedicated unit test file written for
+it directly -- see the open-gap note at the end of this entry -- but
+exercised end-to-end for real by both Step 4's and Step 8's integration
+tests, plus its own load-time self-validation).
+
+### Step 4 — `QuestionnaireService.get_questionnaire(session_id)`
+
+**Shared-vs-duplicate decision, made explicitly**: extracted
+`reconstruct_session_evidence()` into a new
+`app/services/session_reconstruction.py` from `ReportGenerationService`'s
+existing inline logic (UUID parsing, session/evidence fetch, `get_by_ids`,
+vote), rather than writing a second copy for `QuestionnaireService` --
+same reasoning as Step 3's taxonomy-loader reuse, and this logic was
+already fully proven correct in Phase 8 (including the `str`/`uuid.UUID`
+fix), so reusing it costs nothing and inherits that correctness
+automatically. The refactor's behavior-neutrality was verified by
+re-running `ReportGenerationService`'s existing 6 tests immediately after
+the extraction, before writing any new code -- isolating "did the
+refactor break anything" from "does the new code work":
+
+```
+test_correct_sequencing_and_data_flow PASSED
+test_session_not_found_raises_specific_error_before_touching_collaborators PASSED
+test_malformed_session_id_raises_specific_error_not_a_crash PASSED
+test_llm_transport_error_propagates_unchanged_and_nothing_persisted PASSED
+test_llm_generation_validation_error_propagates_unchanged_and_nothing_persisted PASSED
+test_atomic_persistence_failure_leaves_zero_rows PASSED
+6 passed in 0.28s
+```
+
+`QuestionnaireService.get_questionnaire()` reuses `SessionNotFoundError`
+(no second exception type for the same failure mode). 4 unit tests
+(correct questions for a known label; fallback questions forced via a
+fake vote result for an unmapped label, since a real session's real top
+label can't be forced deterministically; session-not-found; malformed
+session_id) plus a real-session integration test:
+
+```
+real session_id: 90ae1bd5-73f8-44c4-a725-6382e58fef6a
+real based_on_label: Normal
+real questions:
+  symptom_reason            [text  ] What symptom or concern prompted this chest X-ray?
+  prior_abnormal            [yes_no] Has the patient had any prior abnormal chest X-ray or CT?
+  smoking_history           [select] What is the patient's smoking history?
+PASSED
+```
+
+The integration test independently re-derives the top label via a fresh,
+separate `LabelVotingService.vote()` call (not reusing the same call or a
+fixture) -- the right level of proof that `QuestionnaireService` and
+`ReportGenerationService` will actually agree now that they share the
+extracted reconstruction logic. Full suite: **96 passed** (91 + 4 unit + 1
+integration).
+
+### Step 5 — `GET /questionnaire/{session_id}`
+
+Typed Pydantic response models (`QuestionnaireQuestionResponse`,
+`QuestionnaireResponse`) built from the start, same discipline as Phase 8
+Step 7. `SessionNotFoundError` -> 404, same mapping precedent as
+`/generate-report`. `questionnaire_provider` singleton wired into
+`main.py`'s lifespan alongside every other service. Thin-route audit:
+no line examines/branches on question content or makes a clinical
+judgment -- same conclusion as every prior audit. Full suite: **96 passed**
+(unchanged -- endpoint wiring only, exercised for real in Step 8).
+
+### Step 6/7 — `ReportGenerationService.generate()` extension + request schema
+
+Additive signature extension:
+`generate(session_id, language, questionnaire_answers=None, clinical_notes="")`.
+`questionnaire_answers` defaults `None`-then-`{}` (same convention as
+`PromptBuilder`'s own Phase 6 defaults, not a mutable literal as the
+actual default argument value). Confirmed `generate()` was already
+calling the shared `reconstruct_session_evidence()` from Step 4 -- no
+leftover inline copy existed to consolidate. Immediately re-ran Phase 8's
+existing 6 tests right after the signature change, before writing
+anything new (same verification order as Step 4's extraction): all 6
+passed unchanged.
+
+**The most important test in this phase, proof strategy stated
+explicitly**: `test_no_questionnaire_data_produces_byte_identical_behavior_to_phase_8`
+calls `generate()` twice on the same real session -- once with the new
+parameters omitted entirely, once explicitly passing `{}`/`""`.
+`report_id` legitimately differs (a fresh `ReportRecord` row is persisted
+each call), but `formatted_report`/`validation_result`/`generation_metadata`
+are asserted equal, **and** the actual arguments a fake `ContextBuilder`
+captured (`build_calls[0] == build_calls[1]`) are asserted equal too --
+proving "omitted" and "explicitly empty" are genuinely the same code
+path, not two paths that coincidentally produce equal output. Combined
+with Phase 8's own original `test_correct_sequencing_and_data_flow` being
+left unmodified (except two new assertion lines checking only the *new*
+default values) and still passing verbatim in the same suite, this is
+layered evidence that the extension did not alter Phase 8's shipped
+behavior at all -- not restated proof of the same thing twice.
+
+A second required test, `test_questionnaire_answers_and_notes_reach_context_builder_when_provided`,
+proves non-empty answers/notes actually reach `context_builder.build()`
+via the fake's captured call arguments -- checking one hop up the call
+chain from where the original Phase 6 gap was found in `PromptBuilder`,
+the generalized lesson from that gap rather than trusting the fix in
+isolation.
+
+```
+test_no_questionnaire_data_produces_byte_identical_behavior_to_phase_8 PASSED
+test_questionnaire_answers_and_notes_reach_context_builder_when_provided PASSED
+8 passed in 0.29s
+```
+
+`GenerateReportRequest` gained the same two optional fields
+(`questionnaire_answers`, `clinical_notes`); `app/api/generation.py`
+passes them straight through to `service.generate()` -- mechanical, no new
+logic in the route. Full suite: **98 passed** (96 + 2 new).
+
+### Step 8 — Full integration test
+
+Real flow: real `POST /retrieve` -> real `GET /questionnaire/{session_id}`
+-> real answers constructed from the REAL question keys the endpoint
+returned (not arbitrary made-up keys) -> real `POST /generate-report`
+with those answers plus real `clinical_notes` text.
+
+**Proof-of-reaching-the-LLM-prompt approach, decided and stated
+explicitly**: neither `LLMOrchestrator` nor `OllamaClient` expose the
+final prompt string anywhere capturable on a real call, and modifying
+either just to add a test-only inspection hook would be scope creep on
+frozen Phase 7 files. Instead, this test reconstructs the exact real
+`ClinicalContext` the real pipeline would build up to that point -- real
+`ChromaVectorStore.get_by_ids` + real `LabelVotingService.vote()` (via the
+same shared `reconstruct_session_evidence()`) + real `ContextBuilder.build()`
+with the real submitted answers/notes -- and feeds it to the REAL
+`PromptBuilder` (not faked, since `PromptBuilder` is the exact component
+the Phase 9 pre-design verification found broken). This proves the
+answers reach the real generated prompt string directly and
+deterministically, with no LLM call and no non-determinism involved in
+that specific assertion.
+
+```
+real top label: Normal
+real question keys -> constructed real answers: {'symptom_reason': 'Sample response for symptom_reason', 'prior_abnormal': 'yes', 'smoking_history': 'moderate'}
+real clinical_notes: 'Patient reports recent travel and a low-grade fever for the past three days.'
+
+=== real generated prompt excerpt (questionnaire/notes sections) ===
+CLINICAL QUESTIONNAIRE:
+- prior_abnormal: yes
+- smoking_history: moderate
+- symptom_reason: Sample response for symptom_reason
+
+ADDITIONAL CLINICAL NOTES:
+Patient reports recent travel and a low-grade fever for the past three days.
+
+Now generate the JSON report.
+PASSED
+```
+
+Followed by the standard integration assertions against the real
+`/generate-report` call with these same answers/notes: 200 response, all
+frozen contract fields present, a real `ReportRecord` persisted matching
+the response field-for-field. Full suite: **99 passed** (98 + 1 new).
+
+### Full regression (Phase 4 through Phase 9 combined)
+
+```
+======================= 99 passed, 7 warnings in 55.31s =======================
+```
+
+24 Phase 4 + 14 Phase 5 + 12 Phase 6 + 16 Phase 7 + 19 Phase 8 + 14 Phase 9
+(6 + 5 + 2 + 1), all green, zero regressions introduced by either the
+frozen-file modifications (`PromptBuilder`, `ReportGenerationService`) or
+the new questionnaire machinery.
+
+### Open gap, documented rather than silently left implicit
+
+`questionnaire_templates.py` has no dedicated unit test file of its own
+(the frozen spec's illustrative folder listing didn't name one either).
+Its correctness is covered by three real mechanisms instead: the
+load-time self-validation against the real taxonomy (Step 3), and two
+real integration tests (Step 4 and Step 8) that exercise the real
+`QuestionnaireTemplateProvider` end to end and assert on its real
+returned data. This is judged sufficient coverage for a static data
+module without its own branching logic, but is named explicitly rather
+than left for a reader to notice its absence.
+
+### How to Write This in Your Thesis
+
+*Methodology chapter, "Clinical Questionnaire Implementation" subsection:*
+
+> Phase 9 began not with a speculative feature addition but with a
+> targeted verification: checking whether two fields that had existed on
+> the shared context object since an early phase were actually being used
+> by the component responsible for constructing the language-model prompt,
+> or merely accepted and silently discarded. This verification confirmed a
+> real, previously undetected gap -- the fields were structurally present
+> but functionally inert -- which made the first implementation step a
+> correctness fix to already-shipped code rather than new feature work,
+> and every subsequent step in the phase was gated on that fix being
+> proven byte-identical for the case already exercised by every prior
+> phase's tests. Two design decisions in this phase generalize a lesson
+> from that original gap: first, a session-reconstruction routine already
+> proven correct in an earlier phase was extracted into a shared function
+> rather than duplicated for the new questionnaire-fetching service,
+> because duplicated logic is exactly the shape of defect that produces
+> silent drift over time. Second, the proof that submitted questionnaire
+> answers actually influence what the language model receives was
+> constructed one layer beneath the LLM call itself, directly exercising
+> the real prompt-construction component with the real data the full
+> pipeline would produce, rather than either trusting the fix in isolation
+> or modifying frozen infrastructure solely to expose an internal value
+> for inspection. This reflects a broader methodological position adopted
+> throughout this project: a component accepting a value is not evidence
+> that the value is used, and demonstrating actual data flow through a
+> system requires tracing it to where it is consumed, not merely to where
+> it is passed.
+
+---
+
+## Phase 9 (Clinical Questionnaire) — COMPLETE
+
+All 8 implementation steps of the frozen development order (`PromptBuilder`
+fix -> domain layer -> `questionnaire_templates.py` -> `QuestionnaireService`
+-> `GET /questionnaire/{session_id}` -> `ReportGenerationService` extension
+-> request schema extension -> full integration test) are built, tested
+with real execution at every step, and confirmed by the user before
+proceeding at each gate, same discipline as every prior phase. The phase
+opened with a verified real gap (`PromptBuilder` silently ignoring
+questionnaire data since Phase 5) rather than a speculative one, and
+closed with direct proof that submitted answers reach the real generated
+prompt -- the first concrete demonstration that the questionnaire feature
+does something beyond being persisted unused. One shared helper
+(`reconstruct_session_evidence()`) was extracted from Phase 8's
+`ReportGenerationService` to avoid a second, potentially-drifting copy of
+session-evidence reconstruction, verified behavior-neutral before any new
+code was added on top of it. Full backend test suite: **99/99 passing**
+(24 Phase 4 + 14 Phase 5 + 12 Phase 6 + 16 Phase 7 + 19 Phase 8 + 14
+Phase 9). Not yet built, explicitly out of Phase 9 scope: Explainability
+Chat (Phase 10), Longitudinal Patient History (Phase 11), the Frontend
+(Phase 12), and the doctor-edit review workflow (`Report.final_content`
+still null/unused). `questionnaire_templates.py`'s question text remains
+an unreviewed best-effort draft, not clinically validated -- same open
+status as Phase 8's Bengali section headers, both awaiting real domain
+review before any real clinical use.
+
+---

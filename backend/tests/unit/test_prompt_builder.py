@@ -164,3 +164,81 @@ def test_determinism_same_inputs_produce_byte_identical_retry_prompt():
     first = PromptBuilder().build_retry_prompt(ctx, "en", "prev", errors)
     second = PromptBuilder().build_retry_prompt(ctx, "en", "prev", errors)
     assert first == second
+
+
+def test_empty_questionnaire_and_notes_produce_byte_identical_prompt():
+    """The required Phase 9 regression test: _populated_context() has the
+    same empty questionnaire_answers={}/clinical_notes="" every test since
+    Phase 6 has used. `expected` is reconstructed independently from the
+    same six unchanged private helpers build_generation_prompt always
+    called, joined the same way -- proving the Phase 9 fix is a byte-exact
+    no-op for this case, not just "the new section headers are absent."
+    """
+    ctx = _populated_context()
+    pb = PromptBuilder()
+    actual = pb.build_generation_prompt(ctx, "en")
+
+    expected = "\n\n".join([
+        pb._role_instruction(),
+        pb._language_instruction("en"),
+        pb._schema_instruction(),
+        pb._grounding_instruction(),
+        pb._confidence_instruction(ctx.voted_labels),
+        pb._evidence_section(ctx.evidence_summary),
+        "Now generate the JSON report.",
+    ])
+
+    assert actual == expected
+    assert "CLINICAL QUESTIONNAIRE" not in actual
+    assert "ADDITIONAL CLINICAL NOTES" not in actual
+
+
+def test_questionnaire_answers_included_and_sorted_alphabetically_by_key():
+    ctx = dataclasses.replace(
+        _populated_context(),
+        questionnaire_answers={"fever": "yes", "duration": "3 days", "cough": "dry"},
+    )
+    prompt = PromptBuilder().build_generation_prompt(ctx, "en")
+
+    assert "CLINICAL QUESTIONNAIRE:" in prompt
+    assert "- cough: dry" in prompt
+    assert "- duration: 3 days" in prompt
+    assert "- fever: yes" in prompt
+
+    section = prompt.split("CLINICAL QUESTIONNAIRE:")[1].split("\n\n")[0]
+    assert section.index("cough") < section.index("duration") < section.index("fever")
+
+
+def test_clinical_notes_included_when_non_empty():
+    ctx = dataclasses.replace(_populated_context(), clinical_notes="Patient reports recent travel")
+    prompt = PromptBuilder().build_generation_prompt(ctx, "en")
+    assert "ADDITIONAL CLINICAL NOTES:" in prompt
+    assert "Patient reports recent travel" in prompt
+
+
+def test_whitespace_only_clinical_notes_not_included():
+    ctx = dataclasses.replace(_populated_context(), clinical_notes="   \n\t  ")
+    prompt = PromptBuilder().build_generation_prompt(ctx, "en")
+    assert "ADDITIONAL CLINICAL NOTES" not in prompt
+
+
+def test_empty_questionnaire_dict_not_included():
+    ctx = dataclasses.replace(_populated_context(), questionnaire_answers={})
+    prompt = PromptBuilder().build_generation_prompt(ctx, "en")
+    assert "CLINICAL QUESTIONNAIRE" not in prompt
+
+
+def test_build_retry_prompt_carries_questionnaire_and_notes_through():
+    """Verified by reading build_retry_prompt's actual implementation (it
+    calls build_generation_prompt with the same context), not assumed --
+    this test proves that reading is correct."""
+    ctx = dataclasses.replace(
+        _populated_context(),
+        questionnaire_answers={"duration": "3 days"},
+        clinical_notes="Patient reports recent travel",
+    )
+    prompt = PromptBuilder().build_retry_prompt(ctx, "en", "bad json", ["missing field: impression"])
+    assert "CLINICAL QUESTIONNAIRE:" in prompt
+    assert "- duration: 3 days" in prompt
+    assert "ADDITIONAL CLINICAL NOTES:" in prompt
+    assert "Patient reports recent travel" in prompt

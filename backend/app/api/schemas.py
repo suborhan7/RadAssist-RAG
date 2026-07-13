@@ -86,3 +86,15 @@ class GenerateReportResponse(BaseModel):
     formatted_report: FormattedReportResponse
     validation: ValidationResponse
     generation_metadata: GenerationMetadataResponse
+
+
+class QuestionnaireQuestionResponse(BaseModel):
+    key: str
+    text: str
+    input_type: str
+
+
+class QuestionnaireResponse(BaseModel):
+    session_id: str
+    based_on_label: str
+    questions: list[QuestionnaireQuestionResponse]

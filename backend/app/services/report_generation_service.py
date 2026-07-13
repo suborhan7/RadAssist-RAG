@@ -54,9 +54,7 @@ from app.domain.interfaces import (
     IVectorStore,
 )
 from app.models.report import ReportRecord
-from app.models.retrieval_session import RetrievalSession
-from app.models.retrieved_evidence import RetrievedEvidence
-from app.services.exceptions import SessionNotFoundError
+from app.services.session_reconstruction import reconstruct_session_evidence
 
 
 class ReportGenerationService:
@@ -79,36 +77,27 @@ class ReportGenerationService:
         self._report_formatter = report_formatter
 
     def generate(
-        self, session_id: str, language: str
+        self,
+        session_id: str,
+        language: str,
+        questionnaire_answers: dict[str, str] | None = None,
+        clinical_notes: str = "",
     ) -> tuple[uuid.UUID, FormattedReport, SemanticValidationResult, GenerationMetadata]:
-        # RetrievalSession.id / RetrievedEvidence.session_id are Uuid-typed
-        # columns -- SQLAlchemy's Uuid type expects an actual uuid.UUID
-        # object bound as a query parameter, not a plain str (a bare str
-        # comparison raises deep inside the DBAPI param processor, not a
-        # clean "not found"). session_id is a str at this method's own
-        # boundary (matching ILLMOrchestrator-style plain-str interfaces
-        # elsewhere), so it's parsed once here.
-        try:
-            session_uuid = uuid.UUID(session_id)
-        except ValueError:
-            raise SessionNotFoundError(f"session_id is not a valid UUID: {session_id!r}") from None
+        # Phase 9 additive extension: questionnaire_answers/clinical_notes
+        # default to None/"" (same null-handling convention as
+        # PromptBuilder's own build() defaults from Phase 6 --
+        # None-then-convert for the mutable dict, never a mutable literal
+        # as the actual default argument value). Omitting both entirely
+        # must be byte-identical to Phase 8's existing behavior -- see
+        # test_no_questionnaire_data_produces_byte_identical_behavior_to_phase_8.
+        questionnaire_answers = questionnaire_answers or {}
 
-        retrieval_session = (
-            self._db.query(RetrievalSession).filter(RetrievalSession.id == session_uuid).one_or_none()
+        # Shared with QuestionnaireService (Phase 9) -- see
+        # session_reconstruction.py's own docstring for why this is
+        # extracted rather than duplicated.
+        retrieval_session, retrieved_cases, voted_labels = reconstruct_session_evidence(
+            self._db, self._vector_store, self._label_voting_service, session_id
         )
-        if retrieval_session is None:
-            raise SessionNotFoundError(f"no RetrievalSession found for session_id={session_id}")
-
-        evidence_rows = (
-            self._db.query(RetrievedEvidence)
-            .filter(RetrievedEvidence.session_id == session_uuid)
-            .order_by(RetrievedEvidence.rank)
-            .all()
-        )
-        study_uids = [row.study_uid for row in evidence_rows]
-
-        retrieved_cases = self._vector_store.get_by_ids(study_uids)
-        voted_labels = self._label_voting_service.vote(retrieved_cases)
 
         retrieval_metadata = RetrievalMetadata(
             collection_name=settings.CHROMA_COLLECTION_NAME,
@@ -116,7 +105,13 @@ class ReportGenerationService:
             embedding_version=settings.CHROMA_EMBEDDING_VERSION,
             retrieved_at=retrieval_session.created_at.isoformat() if retrieval_session.created_at else "",
         )
-        context = self._context_builder.build(retrieved_cases, voted_labels, retrieval_metadata=retrieval_metadata)
+        context = self._context_builder.build(
+            retrieved_cases,
+            voted_labels,
+            questionnaire_answers=questionnaire_answers,
+            clinical_notes=clinical_notes,
+            retrieval_metadata=retrieval_metadata,
+        )
 
         # LLMTransportError / LLMGenerationValidationError intentionally
         # NOT caught here -- see module docstring's propagation policy.

@@ -48,6 +48,8 @@ router = APIRouter()
 class GenerateReportRequest(BaseModel):
     session_id: str
     language: str = "en"
+    questionnaire_answers: dict[str, str] | None = None
+    clinical_notes: str = ""
 
 
 def _build_response(
@@ -103,7 +105,10 @@ def generate_report(
 
     try:
         report_id, formatted_report, validation, generation_metadata = service.generate(
-            request_body.session_id, request_body.language
+            request_body.session_id,
+            request_body.language,
+            questionnaire_answers=request_body.questionnaire_answers,
+            clinical_notes=request_body.clinical_notes,
         )
     except SessionNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc

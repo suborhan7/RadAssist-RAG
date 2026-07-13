@@ -152,6 +152,20 @@ class GenerationMetadata:
     collection_name: str
 
 
+@dataclass(frozen=True)
+class QuestionnaireQuestion:
+    key: str
+    text: str
+    input_type: str   # "text" | "yes_no" | "select"
+
+
+@dataclass(frozen=True)
+class Questionnaire:
+    session_id: str
+    based_on_label: str
+    questions: tuple[QuestionnaireQuestion, ...]
+
+
 @dataclass
 class ReportContent:
     """Mutable: a report has an AI-generated version and a doctor-edited version."""

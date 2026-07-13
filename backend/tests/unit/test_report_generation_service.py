@@ -80,7 +80,13 @@ class FakeContextBuilder:
 
     def build(self, retrieved, voted_labels, questionnaire_answers=None, clinical_notes="", retrieval_metadata=None):
         self.build_calls.append(
-            {"retrieved": list(retrieved), "voted_labels": list(voted_labels), "retrieval_metadata": retrieval_metadata}
+            {
+                "retrieved": list(retrieved),
+                "voted_labels": list(voted_labels),
+                "questionnaire_answers": questionnaire_answers,
+                "clinical_notes": clinical_notes,
+                "retrieval_metadata": retrieval_metadata,
+            }
         )
         return self.context
 
@@ -215,6 +221,9 @@ def test_correct_sequencing_and_data_flow():
     assert build_call["retrieval_metadata"].embedding_model == settings.CHROMA_EMBEDDING_MODEL
     assert build_call["retrieval_metadata"].embedding_version == settings.CHROMA_EMBEDDING_VERSION
     assert build_call["retrieval_metadata"].retrieved_at == retrieval_session.created_at.isoformat()
+    # Phase 9: questionnaire_answers/clinical_notes default to {}/"" when omitted
+    assert build_call["questionnaire_answers"] == {}
+    assert build_call["clinical_notes"] == ""
     # 6: llm_orchestrator.generate_draft called with (context, language)
     assert fakes["llm_orchestrator"].generate_draft_calls == [(context, "en")]
     # 7: response_validator.validate_semantic called with (content, evidence_summary, voted_labels)
@@ -366,5 +375,90 @@ def test_atomic_persistence_failure_leaves_zero_rows(monkeypatch):
         assert fresh_db.query(ReportRecord).count() == 0
     finally:
         fresh_db.close()
+
+    db.close()
+
+
+def test_no_questionnaire_data_produces_byte_identical_behavior_to_phase_8():
+    """The required Phase 9 regression test, and the most important one in
+    this phase. Proof strategy, stated explicitly:
+
+    1. Call generate() TWICE on the exact same real session/language: once
+       with questionnaire_answers/clinical_notes OMITTED entirely (relying
+       on the new defaults), once EXPLICITLY passing questionnaire_answers={}
+       and clinical_notes="". report_id legitimately differs between the
+       two calls (a fresh ReportRecord row is persisted each time -- that
+       is expected, not a bug), but formatted_report/validation_result/
+       generation_metadata must be identical, AND the actual arguments
+       reaching context_builder.build() (captured by FakeContextBuilder)
+       must be identical too -- proving "omitted" and "explicitly empty"
+       are genuinely the same code path, not two paths that coincidentally
+       produce the same fake output.
+    2. test_correct_sequencing_and_data_flow above (Phase 8's own original
+       test, left unmodified except for two new assertion lines that check
+       the *new* default values -- none of its Phase 8 assertions were
+       touched or loosened) is re-run as part of this same file/suite and
+       still passes verbatim. Combined with (1), this demonstrates the
+       Phase 9 extension did not alter Phase 8's already-shipped,
+       already-tested no-questionnaire behavior at all.
+    """
+    engine = _make_engine()
+    SessionLocal = sessionmaker(bind=engine)
+    db = SessionLocal()
+
+    case_a = RetrievedCase(source_uid="u1", similarity=1.0, findings="fa", impression="ia", labels=("Pneumonia",))
+    voted = [VotedLabel(label="Pneumonia", vote_weight=1.0, agreement=0.5)]
+    context = ClinicalContext(retrieved_cases=(case_a,), voted_labels=tuple(voted), evidence_summary=_evidence_summary())
+    session_id = _seed_session(db, ["u1"])
+
+    service, fakes = _make_service(db, {"u1": case_a}, voted, context, llm_content=CONTENT)
+
+    # call 1: new params OMITTED entirely
+    report_id_1, formatted_report_1, validation_1, generation_metadata_1 = service.generate(str(session_id), "en")
+
+    # call 2: new params EXPLICITLY passed as empty
+    report_id_2, formatted_report_2, validation_2, generation_metadata_2 = service.generate(
+        str(session_id), "en", questionnaire_answers={}, clinical_notes="",
+    )
+
+    assert report_id_1 != report_id_2  # legitimately different rows, expected
+    assert formatted_report_1 == formatted_report_2
+    assert validation_1 == validation_2
+    assert generation_metadata_1 == generation_metadata_2
+
+    # the actual arguments context_builder.build() received are identical
+    # between the two calls -- not just the final fake-returned output
+    call_1, call_2 = fakes["context_builder"].build_calls[0], fakes["context_builder"].build_calls[1]
+    assert call_1["questionnaire_answers"] == {} and call_2["questionnaire_answers"] == {}
+    assert call_1["clinical_notes"] == "" and call_2["clinical_notes"] == ""
+    assert call_1 == call_2
+
+    db.close()
+
+
+def test_questionnaire_answers_and_notes_reach_context_builder_when_provided():
+    """Fake ContextBuilder capturing its call arguments -- proves non-empty
+    questionnaire_answers/clinical_notes actually reach the
+    context_builder.build() call, not just accepted and silently dropped
+    (the exact Phase 6/9 gap this phase's pre-design verification found in
+    PromptBuilder, checked here one layer up the call chain)."""
+    engine = _make_engine()
+    SessionLocal = sessionmaker(bind=engine)
+    db = SessionLocal()
+
+    case_a = RetrievedCase(source_uid="u1", similarity=1.0, findings="fa", impression="ia", labels=("Pneumonia",))
+    voted = [VotedLabel(label="Pneumonia", vote_weight=1.0, agreement=0.5)]
+    context = ClinicalContext(retrieved_cases=(case_a,), voted_labels=tuple(voted), evidence_summary=_evidence_summary())
+    session_id = _seed_session(db, ["u1"])
+
+    service, fakes = _make_service(db, {"u1": case_a}, voted, context, llm_content=CONTENT)
+
+    answers = {"duration": "3 days", "fever": "yes"}
+    notes = "Patient reports recent travel"
+    service.generate(str(session_id), "en", questionnaire_answers=answers, clinical_notes=notes)
+
+    build_call = fakes["context_builder"].build_calls[0]
+    assert build_call["questionnaire_answers"] == answers
+    assert build_call["clinical_notes"] == notes
 
     db.close()

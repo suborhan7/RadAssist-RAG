@@ -21,6 +21,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from app.api.generation import router as generation_router
+from app.api.questionnaire import router as questionnaire_router
 from app.api.retrieval import router as retrieval_router
 from app.core.config import settings
 from app.infrastructure.biomedclip_adapter import BiomedCLIPAdapter
@@ -31,6 +32,7 @@ from app.services.image_validator import ImageValidator
 from app.services.label_voting_service import LabelVotingService
 from app.services.llm_orchestrator import LLMOrchestrator
 from app.services.prompt_builder import PromptBuilder
+from app.services.questionnaire_templates import QuestionnaireTemplateProvider
 from app.services.report_formatter import ReportFormatter
 from app.services.response_validator import ResponseValidator
 from app.services.retrieval_service import RetrievalService
@@ -66,6 +68,7 @@ async def lifespan(app: FastAPI):
     )
     app.state.response_validator = ResponseValidator()
     app.state.report_formatter = ReportFormatter()
+    app.state.questionnaire_provider = QuestionnaireTemplateProvider()
     logger.info("lifespan startup complete")
 
     yield
@@ -74,3 +77,4 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="RadAssist-RAG Backend", lifespan=lifespan)
 app.include_router(retrieval_router)
 app.include_router(generation_router)
+app.include_router(questionnaire_router)

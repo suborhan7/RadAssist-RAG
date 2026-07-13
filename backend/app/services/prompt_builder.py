@@ -54,8 +54,19 @@ class PromptBuilder:
             self._grounding_instruction(),
             self._confidence_instruction(context.voted_labels),
             self._evidence_section(context.evidence_summary),
-            "Now generate the JSON report.",
         ]
+        # Phase 9 fix: questionnaire_answers/clinical_notes existed on
+        # ClinicalContext since Phase 5 but were never serialized into the
+        # prompt -- silently accepted, never read. Both sections are
+        # conditionally included ONLY when there's real content, so the
+        # empty-fixture case every test since Phase 6 has exercised is
+        # byte-identical to before this fix (see
+        # test_empty_questionnaire_and_notes_produce_byte_identical_prompt).
+        if context.questionnaire_answers:
+            sections.append(self._questionnaire_section(context.questionnaire_answers))
+        if context.clinical_notes.strip():
+            sections.append(self._clinical_notes_section(context.clinical_notes))
+        sections.append("Now generate the JSON report.")
         return "\n\n".join(sections)
 
     def build_retry_prompt(
@@ -185,3 +196,14 @@ class PromptBuilder:
             lines.append("(none)")
 
         return "\n".join(lines)
+
+    @staticmethod
+    def _questionnaire_section(questionnaire_answers: dict[str, str]) -> str:
+        lines = ["CLINICAL QUESTIONNAIRE:"]
+        for key in sorted(questionnaire_answers):
+            lines.append(f"- {key}: {questionnaire_answers[key]}")
+        return "\n".join(lines)
+
+    @staticmethod
+    def _clinical_notes_section(clinical_notes: str) -> str:
+        return f"ADDITIONAL CLINICAL NOTES:\n{clinical_notes}"

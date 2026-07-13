@@ -13,6 +13,7 @@ from app.domain.entities import (
     ClinicalContext,
     EvidenceSummary,
     FormattedReport,
+    QuestionnaireQuestion,
     Report,
     ReportContent,
     RetrievalMetadata,
@@ -142,6 +143,14 @@ class IReportFormatter(Protocol):
     (never rendered PDF/HTML). Infrastructure: app/services/report_formatter.py"""
 
     def format(self, content: ReportContent, language: str, report_date: str) -> FormattedReport: ...
+
+
+@runtime_checkable
+class IQuestionnaireProvider(Protocol):
+    """Phase 9: static, label-keyed question templates -- no LLM call.
+    Infrastructure: app/services/questionnaire_templates.py"""
+
+    def get_questions_for_label(self, label: str) -> tuple[QuestionnaireQuestion, ...]: ...
 
 
 @runtime_checkable
