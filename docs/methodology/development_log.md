@@ -3264,3 +3264,696 @@ Phase 8's semantic/clinical Response Validator, Hospital Report Formatter,
 persistence, and the real generation API endpoint.
 
 ---
+
+## Phase 8 — Response Validator + Hospital Report Formatter: Architecture (FROZEN)
+
+**Status: approved and frozen.** Not to be redesigned without a critical
+correctness issue. Largest phase since Phase 4 -- broken into 9 smaller,
+independently-confirmed implementation steps rather than the 4-7 step
+pattern used in Phases 5-7, given its size.
+
+### Objective
+
+Close the loop from a persisted retrieval session to a stored, formatted
+report draft: reconstruct evidence from a session, re-run the frozen
+retrieval/voting/context/generation chain, semantically validate the LLM's
+output as a set of warnings (not a gate), format into a structured
+hospital-style object, and persist -- with full reproducibility metadata
+(LLM model/temperature, embedding model/version, collection name) stored
+alongside every generated report.
+
+### Structural boundary (reaffirmed, stated explicitly per direct request)
+
+Phase 8 is entirely `backend/`. No `frontend/` files created or modified.
+Every new file lands in its correct existing Clean Architecture subfolder
+(`domain/`, `services/`, `infrastructure/`, `models/`, `api/`, `tests/`).
+The one shared-contract surface (the `/generate-report` response shape)
+stays backend-owned in `app/api/schemas.py`, same precedent as Phase 4's
+`RetrieveResponse` -- no cross-language shared code created at this stage.
+PDF/print rendering and all UI concerns remain explicitly out of scope,
+deferred to Phase 12 (Frontend).
+
+### Decisions frozen
+
+1. **No automatic semantic retry.** `ResponseValidator` produces
+   `SemanticValidationResult` as warnings surfaced to a human reviewer,
+   never a pass/fail gate that triggers automated LLM regeneration. An
+   automated "fix the hallucination and regenerate" loop is a real safety
+   risk for a medical system -- a second LLM attempt is not guaranteed to
+   be less hallucinated, only differently worded, and could optimize
+   toward passing the heuristic rather than being correct. Consistent
+   with the human-in-the-loop framing established since the PHI-masking
+   design discussion: the AI drafts and flags its own uncertainty: a
+   clinician decides.
+2. **`IVectorStore.get_by_ids(uids: list[str]) -> list[RetrievedCase]`**
+   added (additive) to reconstruct full case content for a session, since
+   `retrieved_evidence` (Phase 4) only stores `study_uid`/`rank`/
+   `similarity`, not findings/impression/labels -- this data lives in
+   ChromaDB. This closes a gap flagged as early as the original Phase 5
+   scoping discussion and correctly deferred at the time.
+3. **Hallucination heuristic is a concrete, grounded, bounded design**:
+   reuse the frozen Phase 0 18-class taxonomy (`label_mapping.yaml`) as
+   the term dictionary. Scan generated `findings`/`impression` text
+   (case-insensitive) for taxonomy-class mentions; flag any mentioned
+   class absent from the case's `label_evidence` labels as an unsupported
+   term. Stated explicitly, same honesty convention as the Phase 0
+   label-overlap proxy: a limited, documented signal, not a hallucination
+   guarantee.
+4. **`ReportFormatter` produces a structured object only** --
+   `FormattedReport`, not rendered PDF/HTML. This is also where the report
+   date is generated (a Phase 6 decision deferred date-stamping to
+   formatting time, not generation time) -- `report_date` is computed here,
+   never inside the LLM prompt.
+5. **Bengali section headers require external review before being treated
+   as clinically correct** -- proposed candidates are not to be presented
+   as verified medical terminology without a domain reviewer's sign-off.
+6. **New `ReportGenerationService`** orchestrates the full chain (fetch
+   session evidence -> vote -> build context -> generate -> semantically
+   validate -> format -> persist), keeping `POST /generate-report`'s route
+   thin, per the Phase 4 thin-routes rule.
+7. **Reproducibility metadata persisted with every report**: `llm_model`,
+   `llm_temperature` read directly from `Settings` at record-keeping time
+   (the same source `OllamaClient` itself reads from) rather than by
+   extending `LLMOrchestrator`'s frozen return type -- avoids touching a
+   frozen Phase 7 interface. `embedding_model`/`embedding_version`/
+   `collection_name` sourced from `ClinicalContext.evidence_summary
+   .retrieval_metadata`, already threaded through since Phase 5.
+
+### Entities (new)
+
+```python
+@dataclass(frozen=True)
+class SemanticValidationResult:
+    missing_findings: bool
+    missing_impression: bool
+    unsupported_terms: tuple[str, ...]
+    top_label_unreflected: bool
+    warnings: tuple[str, ...]
+    is_clean: bool
+
+@dataclass(frozen=True)
+class FormattedReport:
+    content: ReportContent
+    language: str
+    report_date: str
+    section_headers: dict[str, str]
+
+@dataclass(frozen=True)
+class GenerationMetadata:
+    llm_model: str
+    llm_temperature: float
+    embedding_model: str
+    embedding_version: str
+    collection_name: str
+```
+
+### Interfaces (new)
+
+```python
+class IResponseValidator(Protocol):
+    def validate_semantic(
+        self, content: ReportContent, evidence_summary: EvidenceSummary,
+        voted_labels: list[VotedLabel],
+    ) -> SemanticValidationResult: ...
+
+class IReportFormatter(Protocol):
+    def format(self, content: ReportContent, language: str, report_date: str) -> FormattedReport: ...
+
+# Additive to frozen IVectorStore (Phase 4):
+def get_by_ids(self, uids: list[str]) -> list[RetrievedCase]: ...
+```
+
+### Database (new `reports` table)
+
+```
+reports:
+  id (UUID, PK)
+  session_id (UUID, FK -> retrieval_sessions.id)
+  language (str)
+  status (frozen ReportStatus enum -- AI_DRAFT for all Phase 8 output)
+  ai_content (JSON, ReportContent fields)
+  validation_warnings (JSON, SemanticValidationResult.warnings)
+  report_date (str)
+  llm_model (str)
+  llm_temperature (float)
+  embedding_model (str)
+  embedding_version (str)
+  collection_name (str)
+  created_at, updated_at
+```
+
+`final_content`/doctor-edit fields on the frozen `Report` entity remain
+null/unused -- a future editing phase's concern, not built here.
+
+### API response (extends Phase 4's precedent)
+
+```json
+{
+  "report_id": "uuid",
+  "session_id": "uuid",
+  "formatted_report": { "content": {...}, "language": "en", "report_date": "...", "section_headers": {...} },
+  "validation": { "is_clean": true, "warnings": [] },
+  "generation_metadata": { "llm_model": "...", "llm_temperature": 0.0, "embedding_model": "...", "embedding_version": "...", "collection_name": "..." }
+}
+```
+
+### Folder structure
+
+```
+backend/app/
+|-- domain/interfaces.py       (+ IResponseValidator, + IReportFormatter, IVectorStore.get_by_ids)
+|-- services/
+|   |-- response_validator.py
+|   |-- report_formatter.py
+|   `-- report_generation_service.py
+|-- infrastructure/chroma_store.py   (+ get_by_ids)
+|-- models/report.py            (new)
+`-- api/generation.py           (POST /generate-report)
+alembic/versions/                (new migration)
+
+backend/tests/
+|-- unit/{test_response_validator,test_report_formatter,test_report_generation_service}.py
+`-- integration/test_generate_report_integration.py
+```
+
+### Sequence diagram
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant API as POST /generate-report
+    participant RGS as ReportGenerationService
+    participant VS as ChromaVectorStore
+    participant LV as LabelVotingService (frozen)
+    participant CB as ContextBuilder (frozen)
+    participant LLM as LLMOrchestrator (frozen)
+    participant RV as ResponseValidator
+    participant FMT as ReportFormatter
+    participant DB as reports table
+
+    C->>API: session_id, language
+    API->>RGS: generate(session_id, language)
+    RGS->>DB: fetch retrieval_sessions/retrieved_evidence by session_id
+    RGS->>VS: get_by_ids(study_uids)
+    VS-->>RGS: list[RetrievedCase]
+    RGS->>LV: vote(retrieved_cases)
+    LV-->>RGS: list[VotedLabel]
+    RGS->>CB: build(retrieved, voted_labels)
+    CB-->>RGS: ClinicalContext
+    RGS->>LLM: generate_draft(context, language)
+    LLM-->>RGS: ReportContent
+    RGS->>RV: validate_semantic(content, evidence_summary, voted_labels)
+    RV-->>RGS: SemanticValidationResult
+    RGS->>FMT: format(content, language, report_date)
+    FMT-->>RGS: FormattedReport
+    RGS->>DB: persist Report (atomic, same pattern as Phase 4)
+    RGS-->>API: FormattedReport + SemanticValidationResult
+    API-->>C: JSON response
+```
+
+### Step breakdown (9 steps, given this phase's size)
+
+1. Domain layer: `get_by_ids` on `IVectorStore`, the 3 new entities,
+   `IResponseValidator`/`IReportFormatter` -- regression check.
+2. `ChromaVectorStore.get_by_ids()` -- real collection test.
+3. `reports` table model + Alembic migration -- schema verification, same
+   rigor as Phase 4 Step 10.
+4. `ResponseValidator` (taxonomy-heuristic hallucination check,
+   missing-section checks) -- unit tests.
+5. `ReportFormatter` -- unit tests.
+6. `ReportGenerationService` -- unit tests (fakes), including the atomic-
+   persistence-failure test (same pattern as Phase 4).
+7. `POST /generate-report` endpoint -- thin-route audit, same standard as
+   Phase 4 Step 11.
+8. Integration test -- real end-to-end chain.
+9. Full regression + dev log entry.
+
+### Unit testing strategy
+
+- `ResponseValidator`: empty findings/impression flagged; a taxonomy term
+  in output text absent from evidence flagged; high-agreement top label
+  missing from output flagged; clean, well-supported input produces
+  `is_clean=True` with no false positives.
+- `ReportFormatter`: correct headers per language; `report_date` correctly
+  injected; pure function, deterministic.
+- `ReportGenerationService`: all collaborators faked, correct sequencing,
+  atomic persistence (same transaction-failure test pattern as Phase 4).
+
+### Integration testing strategy
+
+Full real chain: real session -> real `get_by_ids` -> real vote/context/
+generate/validate/format/persist -> real DB row assertions, same rigor as
+Phase 4's `/retrieve` integration tests.
+
+### Risks
+
+1. Largest phase since Phase 4 -- mitigated by the 9-step breakdown above.
+2. The taxonomy-term hallucination heuristic will have false positives/
+   negatives -- stated as a limited signal in the thesis, same honesty
+   convention as every other heuristic in this project.
+3. Bengali terminology needs real domain review before being presented as
+   clinically validated, not accepted from an LLM-proposed default.
+
+---
+
+## Phase 8 — Response Validator + Hospital Report Formatter — Implementation & Validation
+
+Implemented across the frozen 9-step breakdown, with real execution and
+explicit confirmation gating every step, same discipline as every prior
+phase. The largest phase since Phase 4, and the phase that finally closes
+the loop from a persisted retrieval session to a stored, formatted report
+draft. Three real bugs were caught and fixed along the way -- each is
+called out at its own step below, not folded together, since each is a
+distinct kind of mistake worth remembering separately.
+
+### Step 1 — Domain layer
+
+Added `get_by_ids(uids: list[str]) -> list[RetrievedCase]` to `IVectorStore`
+(additive); the three new entities (`SemanticValidationResult`,
+`FormattedReport`, `GenerationMetadata`) to `domain/entities.py`; and
+`IResponseValidator`/`IReportFormatter` to `interfaces.py`. Grepped for
+every existing implementer/caller of `IVectorStore` first (only
+`ChromaVectorStore` implements it, only `RetrievalService` depends on it as
+a constructor type hint) and confirmed zero `isinstance(x, IVectorStore)`
+checks exist anywhere in the codebase -- meaning `ChromaVectorStore` could
+correctly continue satisfying the *old* interface shape even before
+`get_by_ids` existed on it, since Python doesn't enforce Protocol
+completeness at call time. Verified this by running the full suite rather
+than reasoning about it alone: **66 passed** (unchanged from Phase 7).
+
+### Step 2 — `ChromaVectorStore.get_by_ids()`
+
+Real fetch (`collection.get(ids=...)`), not a similarity search, so
+`similarity` is set to `1.0` for every result -- stated explicitly as a
+deliberate choice (no ranking is involved, and the original retrieval-time
+distance isn't threaded through this interface, so `1.0` reads honestly as
+"not a ranked result" rather than fabricating a plausible-but-meaningless
+score). Reuses `map_chroma_results` (the exact mapper `query()` already
+uses) by wrapping `get()`'s flat result shape into `query()`'s
+nested-per-query shape, rather than writing a second, divergent mapping
+path.
+
+**Real, non-obvious API behavior caught by testing against the actual
+collection, not assumed either way:** ChromaDB's `collection.get(ids=...)`
+does **not** preserve the requested id order --
+
+```
+requested order: ['10', '3', '7', '2']
+raw get() returned ids order: ['2', '3', '7', '10']
+ORDER PRESERVED: False
+```
+
+Chroma silently returns results sorted by its own internal order (here,
+lexicographic), not the caller's request order. Left unhandled, this would
+have been a silent, hard-to-diagnose bug the first time `get_by_ids` fed
+into anything order-sensitive downstream. Fixed by explicitly reordering
+`get_by_ids`'s output to match the caller's requested order before
+returning:
+
+```
+returned source_uid order: ['10', '3', '7', '2']
+ORDER MATCHES REQUEST: True
+```
+
+A uid absent from the collection is silently dropped from the output
+(documented explicitly, both in the docstring and an inline comment, as
+deliberate -- the expected caller only ever passes a session's own
+previously-persisted, already-known-valid study_uids, so a miss here means
+the collection was mutated out from under an existing session, not a bad
+caller input worth failing loudly on). Verified end to end against the
+real `iu_cxr_biomedclip_v1_train` collection: correct count, correct field
+mapping (masked `image_path`, full `findings`/`impression`/`labels`),
+missing-uid and empty-input edge cases. Full suite: **66 passed**.
+
+### Step 3 — `reports` table + Alembic migration
+
+Schema exactly per the frozen spec: `session_id` FK to
+`retrieval_sessions`, `ai_content`/`validation_warnings` as JSON columns,
+the 5 reproducibility columns, `status` as a real 4-value `Enum`. Following
+Phase 4 Step 10's exact precedent of not trusting the live `dev.db` (which
+turned out to be independently drifted -- empty `alembic_version`, no data
+tables, unrelated to this phase), two throwaway SQLite files were used
+instead: one brought to the current pre-Phase-8 schema state to autogenerate
+a clean diff, another completely fresh one to verify the full migration
+chain from scratch. Migration file read in full before running anything.
+
+**Naming collision caught and fixed, not left as a documented risk:** the
+ORM model was initially named `Report`, identically to the frozen domain
+entity in `domain/entities.py`. Flagged as a real correctness risk, not
+cosmetic -- an import alias only protects call sites that remember to use
+it, and the first author who forgets gets a silent type-shadowing bug at
+exactly the domain/infrastructure boundary this architecture exists to
+protect. Renamed to `ReportRecord` (table name `reports` unaffected); the
+newly-introduced infrastructure class was renamed, not the frozen,
+foundational domain concept. Re-verified schema-neutral after the rename:
+
+```
+Tables: [alembic_version, retrieval_sessions, retrieved_evidence, reports]
+downgrade base -> Tables: [('alembic_version',)]
+upgrade head   -> Tables: [alembic_version, retrieval_sessions, retrieved_evidence, reports]
+                  FK still intact: [(0, 0, 'retrieval_sessions', 'session_id', 'id', ...)]
+```
+
+Identical to the pre-rename result. Full suite: **66 passed**.
+
+### Step 4 — `ResponseValidator`
+
+Structure-only semantic checks: empty findings/impression, a taxonomy-term
+hallucination heuristic (reusing the frozen Phase 0 18-class taxonomy from
+`label_mapping.yaml`, loaded directly rather than importing across the
+frozen `ml/`<->`backend/` boundary -- no clean, importable loader exists;
+the only existing one is a private helper inside an `ml/`-only CLI script),
+and a high-agreement-top-label-unreflected check
+(`TOP_LABEL_AGREEMENT_THRESHOLD = 0.5`, stated explicitly as "a majority of
+retrieved neighbor cases agree," not left as an unexamined magic number).
+
+**Real bug caught by the test suite itself, not a happy-path oversight:**
+the first implementation used naive substring containment to scan for
+taxonomy terms, which flagged `Normal` as an unsupported hallucinated term
+because `"normal"` is literally a substring of `"abnormality"`
+(**ab** + normal + **ity**) -- a report that never claimed anything was
+normal was incorrectly flagged. Caught by
+`test_low_agreement_top_label_absent_from_text_not_flagged`, a test
+written specifically to catch over-eager flagging, not just
+under-flagging. Fixed with `\b`-word-boundary regex matching instead of
+plain substring `in`:
+
+```
+_contains_term('abnormality noted', 'Normal')                      -> False (fixed)
+_contains_term('no acute process, normal exam', 'Normal')            -> True  (still catches real mentions)
+_contains_term('life support devices in place', 'Support Devices')   -> True  (multi-word phrases still work)
+```
+
+A second, non-obvious correctness decision: `_evidence_labels` unions
+labels from **both** `supporting_cases` and `contradictory_cases` in
+`label_evidence`, not just `supporting_cases` -- since Phase 5's partition
+is exhaustive over every retrieved case (proven by Phase 5's own
+integration test), this is the only way to avoid flagging a real,
+evidence-backed secondary finding (e.g. `Atelectasis`, living in the
+*contradictory* bucket for a *Pneumonia* partition) as hallucinated just
+because it isn't the top voted label. Verified with 7 unit tests including
+a dedicated test for exactly this scenario:
+
+```
+test_clean_well_supported_report_is_clean_with_no_false_positives PASSED
+test_empty_findings_flagged PASSED
+test_empty_impression_flagged PASSED
+test_taxonomy_term_absent_from_evidence_flagged_as_unsupported PASSED
+test_high_agreement_top_label_absent_from_text_flagged PASSED
+test_low_agreement_top_label_absent_from_text_not_flagged PASSED
+test_zero_false_positives_with_varied_phrasing_and_secondary_evidence_backed_finding PASSED
+7 passed in 0.05s
+```
+
+Full suite: **73 passed** (66 + 7 new).
+
+### Step 5 — `ReportFormatter`
+
+Pure, deterministic `format(content, language, report_date) ->
+FormattedReport`. `report_date` is passed through exactly as given, never
+generated internally -- confirming the division of responsibility with
+Step 6's `ReportGenerationService`, which owns wall-clock time.
+
+Two decisions stated explicitly, as required: an unsupported/unknown
+`language` raises `ValueError` rather than silently falling back to
+`"en"` -- a caller passing an unexpected language code is a real bug worth
+surfacing immediately, since silently defaulting to English headers while
+the LLM was asked (Phase 6's `PromptBuilder`) to respond in a different
+language would produce a mismatched, mislabeled report, a worse failure
+mode in a medical-report system than a loud error. Bengali section headers
+are marked explicitly as provisional/unreviewed placeholder terms in code
+comments, per the frozen spec's Decision 5 -- the unit test deliberately
+does not assert exact Bengali wording, only that a non-empty label exists
+per field, so the test suite itself cannot silently certify unvalidated
+medical terminology as if it were a verified spec.
+
+```
+test_correct_headers_for_english PASSED
+test_correct_headers_for_bengali PASSED
+test_report_date_passed_through_unchanged PASSED
+test_determinism_same_inputs_produce_identical_output PASSED
+test_unsupported_language_raises_value_error PASSED
+5 passed in 0.02s
+```
+
+Full suite: **78 passed** (73 + 5 new).
+
+### Step 6 — `ReportGenerationService`
+
+Pure sequencing over its six injected collaborators, per the frozen
+sequence diagram: fetch session + evidence -> `get_by_ids` -> vote ->
+build context -> generate -> validate -> format -> persist.
+
+**Real bug caught by the test suite itself:** `generate(session_id: str,
+...)` originally passed the raw string straight into a filter against
+`RetrievalSession.id`, a `Uuid`-typed column. SQLAlchemy's `Uuid` type
+processor expects an actual `uuid.UUID` object, not a string -- it failed
+deep inside DBAPI parameter binding
+(`AttributeError: 'str' object has no attribute 'hex'`), not as a clean
+"not found." Exactly the kind of failure that is brutal to debug in
+production: a type mismatch surfacing as a cryptic internal error several
+layers away from the actual cause. Fixed by parsing `session_id` into
+`uuid.UUID` once at the top of `generate()`, raising the new
+`SessionNotFoundError` for both a genuinely-missing session and a
+malformed UUID string -- a dedicated regression test
+(`test_malformed_session_id_raises_specific_error_not_a_crash`) was added
+so this specific failure mode cannot silently reappear.
+
+Two decisions stated explicitly: `LLMTransportError`/
+`LLMGenerationValidationError` from `llm_orchestrator.generate_draft()`
+propagate **unchanged**, uncaught -- mirrors Phase 4's exact precedent
+(`RetrievalService` lets `ValueError` propagate to the one place that
+translates domain exceptions into HTTP statuses); catching and re-wrapping
+here would duplicate that responsibility. And a reproducibility-metadata
+gap, flagged rather than silently worked around: `RetrievalSession`
+(Phase 4's frozen schema) does not persist `collection_name`/
+`embedding_model`/`embedding_version` per-session, so these are sourced
+from `Settings` (the current config) at generation time -- a real, named
+limitation if that config changes between a session's original retrieval
+and a later report-generation call.
+
+Return signature was extended mid-step, after initial confirmation, from
+`(FormattedReport, SemanticValidationResult)` to `(report_id: uuid.UUID,
+FormattedReport, SemanticValidationResult, GenerationMetadata)` so Step 7's
+API layer would not need to re-query the DB for `report_id`/
+`generation_metadata`. `report_id` is returned as a native `uuid.UUID`
+(the domain/service layer's own working type throughout), converted to
+`str` only at the API/JSON boundary in Step 7 -- the same convention
+`app/api/retrieval.py` already uses for `session_id`.
+
+Unit tests use a real, throwaway in-memory SQLite session (not a hand-built
+fake) for DB access -- faking SQLAlchemy's query/filter/order_by mechanics
+would be more complex and less trustworthy, and it is what let the
+atomic-persistence-failure test prove genuine rollback behavior, same
+pattern as Phase 4's own `test_transaction_atomicity_on_persistence_failure`.
+Every non-DB collaborator is a hand-built fake.
+
+```
+test_correct_sequencing_and_data_flow PASSED
+test_session_not_found_raises_specific_error_before_touching_collaborators PASSED
+test_malformed_session_id_raises_specific_error_not_a_crash PASSED
+test_llm_transport_error_propagates_unchanged_and_nothing_persisted PASSED
+test_llm_generation_validation_error_propagates_unchanged_and_nothing_persisted PASSED
+test_atomic_persistence_failure_leaves_zero_rows PASSED
+6 passed in 0.29s
+```
+
+Full suite: **84 passed** (78 + 6 new).
+
+### Step 7 — `POST /generate-report`
+
+Typed Pydantic response models (`ReportContentResponse`,
+`FormattedReportResponse`, `ValidationResponse`,
+`GenerationMetadataResponse`, `GenerateReportResponse`) built from the
+start, deliberately avoiding a repeat of Phase 4 Step 12's untyped-dict gap
+that had to be retrofitted after the fact. Confirmed route registration
+via `app.openapi()` without needing to trigger the expensive real-model
+lifespan: `['/health', '/retrieve', '/generate-report']`.
+
+Exception -> HTTP status mapping, each reasoned through rather than
+defaulted: `SessionNotFoundError` -> 404; `LLMTransportError` -> **502 Bad
+Gateway**, not 503 -- this server is healthy, the failure is an upstream
+dependency (Ollama) failing to produce a usable response, and 503 would
+incorrectly imply this server itself is overloaded/down;
+`LLMGenerationValidationError` -> 422, with `last_raw_response`/
+`last_validation_errors` included in the response body so a caller can see
+exactly what went wrong.
+
+Thin-route audit (every line of `generate_report`, same standard as Phase 4
+Step 11): no line examines or branches on report content values,
+recomputes anything beyond field renaming/passthrough, or makes a clinical
+judgment -- the same conclusion as Phase 4's own audit.
+
+A small, deliberately-not-deferred fix: `get_db()` had been duplicated
+identically in `api/retrieval.py` and the new `api/generation.py`.
+Consolidated into a new `app/api/dependencies.py` (neither call site
+touches a frozen interface, so this was a same-step fix, not carried
+forward) -- verified as a pure, behavior-neutral refactor:
+
+```
+84 passed, 5 warnings in 28.99s
+```
+
+### Step 8 — Integration test (real end-to-end chain)
+
+`test_generate_report_integration.py`: a real `POST /retrieve` call
+(Phase 4's own frozen endpoint, via `TestClient`) creates a genuine
+`RetrievalSession`/`RetrievedEvidence` first -- chosen over calling
+`RetrievalService` directly, since it is the more integration-realistic
+path and needs no duplicated persistence logic in the test -- then a real
+`POST /generate-report` against that real `session_id`, exercising every
+real collaborator end to end: DB, `ChromaVectorStore.get_by_ids`,
+`LabelVotingService`, `ContextBuilder`, `LLMOrchestrator` (a real Ollama
+call), `ResponseValidator`, `ReportFormatter`, persistence. The fixture
+checks Ollama's reachability first and skips with an actionable message
+if it isn't running, rather than silently faking a response.
+
+```
+backend\tests\integration\test_generate_report_integration.py::test_generate_report_full_real_chain PASSED
+1 passed, 2 warnings in 15.50s
+```
+
+`/generate-report`'s own wall-clock time: **3.84s**. The real response, in
+full:
+
+```json
+{
+  "report_id": "fe30aaa6-154a-4b99-af84-2c2532b88a01",
+  "session_id": "34d556b0-c3f5-4884-8d71-fb5fa889318a",
+  "formatted_report": {
+    "content": {
+      "examination": "Chest X-ray",
+      "clinical_history": "Unknown",
+      "technique": "Posteroanterior (PA) view",
+      "findings": "Increased opacity within the right upper lobe with possible mass and associated area of atelectasis or focal consolidation. Opacity in the left midlung overlying the posterior left 5th rib may represent focal airspace disease.",
+      "impression": "Focal consolidation or mass lesion with atelectasis in the right upper lobe, possibly representing a benign process. Recommend chest CT for further evaluation.",
+      "recommendation": "Chest CT",
+      "disclaimer": "Clinical uncertainty due to low agreement score (0.60)"
+    },
+    "language": "en",
+    "report_date": "2026-07-12",
+    "section_headers": {
+      "examination": "Examination",
+      "clinical_history": "Clinical History",
+      "technique": "Technique",
+      "findings": "Findings",
+      "impression": "Impression",
+      "recommendation": "Recommendation",
+      "disclaimer": "Disclaimer"
+    }
+  },
+  "validation": {
+    "is_clean": false,
+    "warnings": [
+      "Top voted label 'Normal' (agreement 0.60) not reflected in report text"
+    ]
+  },
+  "generation_metadata": {
+    "llm_model": "llama3:8b",
+    "llm_temperature": 0.0,
+    "embedding_model": "biomedclip",
+    "embedding_version": "v1",
+    "collection_name": "iu_cxr_biomedclip_v1_train"
+  }
+}
+```
+
+Worth stating plainly, not just noting the test passed: this is the first
+real, genuine demonstration of `ResponseValidator` doing meaningful work
+end to end, not just passing its own unit tests. The retrieval-based top
+voted label for this case was `Normal` at 0.60 agreement, but the LLM's
+generated findings/impression describe a focal consolidation/mass -- a
+real discrepancy between what similarity-weighted voting suggested and
+what the model actually wrote, correctly surfaced as `is_clean: false`
+with a specific, actionable warning, exactly the human-in-the-loop signal
+this phase exists to produce (frozen Decision 1: never an automated gate,
+always a warning for a clinician to weigh).
+
+Non-determinism discipline carried over from Phase 7: only structural/
+contract properties were asserted (all frozen fields present,
+`generation_metadata` matches `Settings` exactly, the persisted
+`ReportRecord` row matches the response field-for-field) -- never exact
+`ReportContent` wording.
+
+### Full regression (Phase 4 through Phase 8 combined)
+
+Run after every step and one final time at the close of Step 9:
+
+```
+======================= 85 passed, 6 warnings in 46.72s =======================
+```
+
+24 Phase 4 + 14 Phase 5 + 12 Phase 6 + 16 Phase 7 + 19 Phase 8 (7 + 5 + 6
+unit + 1 integration), all green, zero regressions across the whole phase.
+
+### How to Write This in Your Thesis
+
+*Methodology chapter, "Response Validator and Report Formatter
+Implementation" subsection:*
+
+> Phase 8 closed the loop from a persisted retrieval session to a stored,
+> formatted report draft, integrating every prior phase's frozen
+> components into a single orchestrated service for the first time. Three
+> implementation-level defects were caught during development and fixed
+> before being locked in by their respective test suites, each
+> illustrating a different category of mistake worth documenting
+> separately. First, a third-party vector database's `get`-by-id operation
+> was assumed, then verified, not to preserve caller-specified ordering --
+> an easy assumption to get wrong silently, since the failure would only
+> manifest as subtly incorrect downstream behavior rather than a crash.
+> Second, a naive text-matching heuristic intended to detect
+> unsupported clinical claims produced a false positive by matching a
+> target term as a sub-string of an unrelated, morphologically similar
+> word, caught specifically because a test was written to probe for
+> over-eager flagging rather than only confirming correct detection.
+> Third, a plain string identifier was passed into a database query
+> expecting a strongly-typed identifier object, surfacing as an opaque
+> internal error several abstraction layers removed from its actual cause
+> rather than as a clear validation failure -- a category of defect that,
+> left uncaught, tends to be disproportionately costly to diagnose in a
+> deployed system. In each case, the fix was verified directly against
+> real infrastructure or a dedicated regression test before proceeding,
+> consistent with this project's standing discipline of treating "matches
+> the design on paper" and "behaves correctly against real inputs" as
+> distinct claims. The phase's closing integration test additionally
+> produced the first genuine evidence that the semantic response
+> validator adds real value rather than only passing its own unit tests:
+> against a real generated report, it correctly identified a case where
+> the model's written findings diverged from the retrieval system's own
+> top-voted label, surfacing this as an explicit warning for clinician
+> review rather than silently accepting or automatically rejecting the
+> output -- the exact human-in-the-loop behavior the validator was
+> designed to provide.
+
+---
+
+## Phase 8 (Response Validator + Hospital Report Formatter) — COMPLETE
+
+All 9 steps of the frozen development order (domain layer ->
+`ChromaVectorStore.get_by_ids()` -> `reports` table/migration ->
+`ResponseValidator` -> `ReportFormatter` -> `ReportGenerationService` ->
+`POST /generate-report` -> integration test -> full regression) are built,
+tested with real execution at every step -- including a real local Ollama
+model and a real ChromaDB collection, never faked -- and confirmed by the
+user before proceeding at each gate, same discipline as every prior phase.
+Three real defects were caught and fixed before being locked in by tests,
+not discovered afterward: ChromaDB's non-preserved `get`-by-id ordering
+(Step 2), a word-boundary substring-matching false positive in the
+hallucination heuristic (Step 4), and a `str`/`uuid.UUID` type mismatch at
+a database query boundary (Step 6). The full pipeline -- retrieval, voting,
+context building, prompt construction, LLM generation, structural
+validation, semantic validation, formatting, and persistence -- now runs
+end to end through a single real HTTP endpoint for the first time. Full
+backend test suite: **85/85 passing** (24 Phase 4 + 14 Phase 5 + 12 Phase 6
++ 16 Phase 7 + 19 Phase 8).
+
+Not yet built, explicitly out of Phase 8 scope per the frozen architecture
+and the revised phase ordering (Phase 6's spec): Clinical Questionnaire
+(now Phase 9), Explainability Chat (Phase 10), Longitudinal Patient History
+(Phase 11), the Frontend (Phase 12), and the doctor-edit review workflow --
+`Report.final_content` and the broader edit/approval fields on the frozen
+domain `Report` entity remain null/unused, since every Phase 8 output is
+persisted as `ReportStatus.AI_DRAFT` only. No PDF/print rendering exists
+yet either, per the frozen spec's explicit deferral to Phase 12.
+
+---

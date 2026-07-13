@@ -48,3 +48,55 @@ class ChromaVectorStore:
         # Not used by the Phase 4 retrieval path (ml/retrieval/build_chroma_index.py
         # owns indexing) -- implemented for IVectorStore interface completeness.
         self._collection.upsert(ids=[uid], embeddings=[embedding], metadatas=[metadata])
+
+    def get_by_ids(self, uids: list[str]) -> list[RetrievedCase]:
+        """Phase 8: ID-based fetch (collection.get()), not a similarity search --
+        reconstructs full case content (findings/impression/labels) for a
+        session's stored study_uids, since retrieved_evidence (Phase 4) only
+        persists study_uid/rank/similarity, not the full case content.
+
+        Reuses map_chroma_results (the exact same mapper query() already goes
+        through) rather than a second, divergent mapping path: collection.get()'s
+        flat result shape is wrapped into query()'s nested-per-query shape before
+        calling it.
+
+        No ranking is involved in a direct ID fetch, so there is no real
+        similarity score to report. distance is forced to 0.0 for every result,
+        which maps through map_chroma_results' existing (1 - distance) formula
+        to similarity = 1.0. This was chosen over "reuse the original similarity
+        from first retrieval" because get_by_ids has no access to that original
+        query's distance -- it isn't threaded through this interface -- and 1.0
+        reads honestly as "not a ranked result" rather than fabricating a
+        plausible-looking but meaningless score.
+
+        collection.get(ids=...) does NOT guarantee the returned order matches
+        the input `uids` order (verified empirically against the real
+        collection -- see Phase 8 Step 2 dev log entry). Results are explicitly
+        reordered here to match the caller's requested order, since downstream
+        code (re-voting, context building) assumes result order corresponds to
+        what was asked for.
+
+        A uid not found in the collection is silently dropped from the output,
+        not raised as an error -- deliberate, because get_by_ids' expected
+        caller (ReportGenerationService, Phase 8) only ever passes a session's
+        own previously-persisted, already-known-valid study_uids read back out
+        of retrieved_evidence; a miss here would mean the ChromaDB collection
+        was mutated/rebuilt out from under an existing session, not a bad
+        caller input worth failing loudly on. The practical consequence a
+        future caller must know: the returned list can be SHORTER than `uids`
+        if any id no longer exists, so callers must not assume
+        len(result) == len(uids).
+        """
+        if not uids:
+            return []
+
+        raw_get_result = self._collection.get(ids=uids, include=["metadatas"])
+        wrapped = {
+            "ids": [raw_get_result["ids"]],
+            "distances": [[0.0] * len(raw_get_result["ids"])],
+            "metadatas": [raw_get_result["metadatas"]],
+        }
+        cases_by_uid = {case.source_uid: case for case in map_chroma_results(wrapped)}
+        # silently drop any requested uid absent from the collection -- see
+        # docstring above for why this is a deliberate non-error, not an oversight
+        return [cases_by_uid[uid] for uid in uids if uid in cases_by_uid]

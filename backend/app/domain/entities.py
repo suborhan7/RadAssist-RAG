@@ -121,6 +121,37 @@ class ClinicalContext:
     evidence_summary: Optional[EvidenceSummary] = None
 
 
+@dataclass(frozen=True)
+class SemanticValidationResult:
+    """ResponseValidator output: semantic/clinical warnings, never a pass/fail
+    gate -- surfaced to a human reviewer, never triggers automated retry."""
+    missing_findings: bool
+    missing_impression: bool
+    unsupported_terms: tuple[str, ...]
+    top_label_unreflected: bool
+    warnings: tuple[str, ...]
+    is_clean: bool
+
+
+@dataclass(frozen=True)
+class FormattedReport:
+    """ReportFormatter output: a structured object only, never rendered PDF/HTML."""
+    content: ReportContent
+    language: str
+    report_date: str
+    section_headers: dict[str, str]
+
+
+@dataclass(frozen=True)
+class GenerationMetadata:
+    """Reproducibility metadata persisted with every generated report."""
+    llm_model: str
+    llm_temperature: float
+    embedding_model: str
+    embedding_version: str
+    collection_name: str
+
+
 @dataclass
 class ReportContent:
     """Mutable: a report has an AI-generated version and a doctor-edited version."""

@@ -1,0 +1,370 @@
+"""
+Unit tests for ReportGenerationService, per the frozen Phase 8 architecture
+(development_log.md, "Phase 8 -- Response Validator + Hospital Report
+Formatter: Architecture (FROZEN)", "Unit testing strategy" section).
+
+DB access is exercised against a REAL, throwaway in-memory SQLite session
+(via SQLAlchemy's own Session class, same engine shared across a test via
+StaticPool) rather than a hand-built fake -- faking SQLAlchemy's query/
+filter/order_by mechanics would be more complex to write and less
+trustworthy than just using a real, fast, disposable DB, and it lets the
+atomic-persistence-failure test prove genuine rollback behavior (same
+pattern as Phase 4's test_transaction_atomicity_on_persistence_failure),
+not just "my code calls .rollback() when .commit() raises." Every
+non-DB collaborator (vector_store, label_voting_service, context_builder,
+llm_orchestrator, response_validator, report_formatter) is a hand-built
+fake, per the frozen spec's "all collaborators faked" unit testing
+strategy.
+"""
+from __future__ import annotations
+
+import uuid
+from datetime import datetime, timezone
+
+import pytest
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session as SASession
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
+
+from app.core.config import settings
+from app.database.base import Base
+from app.domain.entities import (
+    ClinicalContext,
+    EvidenceSummary,
+    FormattedReport,
+    ReportContent,
+    ReportStatus,
+    RetrievalStats,
+    RetrievedCase,
+    SemanticValidationResult,
+    VotedLabel,
+)
+from app.models.report import ReportRecord
+from app.models.retrieval_session import RetrievalSession
+from app.models.retrieved_evidence import RetrievedEvidence
+from app.services.exceptions import LLMGenerationValidationError, LLMTransportError, SessionNotFoundError
+from app.services.report_generation_service import ReportGenerationService
+
+
+class FakeVectorStore:
+    def __init__(self, cases_by_uid):
+        self.cases_by_uid = cases_by_uid
+        self.get_by_ids_calls = []
+
+    def get_by_ids(self, uids):
+        self.get_by_ids_calls.append(list(uids))
+        return [self.cases_by_uid[uid] for uid in uids]
+
+    def query(self, embedding, top_k):
+        raise NotImplementedError
+
+    def upsert(self, uid, embedding, metadata):
+        raise NotImplementedError
+
+
+class FakeLabelVoter:
+    def __init__(self, voted_labels):
+        self.voted_labels = voted_labels
+        self.vote_calls = []
+
+    def vote(self, retrieved):
+        self.vote_calls.append(list(retrieved))
+        return self.voted_labels
+
+
+class FakeContextBuilder:
+    def __init__(self, context):
+        self.context = context
+        self.build_calls = []
+
+    def build(self, retrieved, voted_labels, questionnaire_answers=None, clinical_notes="", retrieval_metadata=None):
+        self.build_calls.append(
+            {"retrieved": list(retrieved), "voted_labels": list(voted_labels), "retrieval_metadata": retrieval_metadata}
+        )
+        return self.context
+
+
+class FakeLLMOrchestrator:
+    def __init__(self, content=None, raises=None):
+        self.content = content
+        self.raises = raises
+        self.generate_draft_calls = []
+
+    def generate_draft(self, context, language):
+        self.generate_draft_calls.append((context, language))
+        if self.raises is not None:
+            raise self.raises
+        return self.content
+
+
+class FakeResponseValidator:
+    def __init__(self, result):
+        self.result = result
+        self.validate_semantic_calls = []
+
+    def validate_semantic(self, content, evidence_summary, voted_labels):
+        self.validate_semantic_calls.append((content, evidence_summary, list(voted_labels)))
+        return self.result
+
+
+class FakeReportFormatter:
+    def __init__(self, formatted_report):
+        self.formatted_report = formatted_report
+        self.format_calls = []
+
+    def format(self, content, language, report_date):
+        self.format_calls.append((content, language, report_date))
+        return self.formatted_report
+
+
+def _make_engine():
+    engine = create_engine(
+        "sqlite:///:memory:", connect_args={"check_same_thread": False}, poolclass=StaticPool
+    )
+    Base.metadata.create_all(engine)
+    return engine
+
+
+def _seed_session(db: SASession, study_uids: list[str]) -> uuid.UUID:
+    session_id = uuid.uuid4()
+    db.add(
+        RetrievalSession(
+            id=session_id, query_image_path="query.png", top_k=len(study_uids),
+            min_similarity=0.0, num_results=len(study_uids), retrieval_time_ms=10,
+        )
+    )
+    db.add_all(
+        [
+            RetrievedEvidence(session_id=session_id, study_uid=uid, rank=rank, similarity=0.9)
+            for rank, uid in enumerate(study_uids, start=1)
+        ]
+    )
+    db.commit()
+    return session_id
+
+
+CONTENT = ReportContent(
+    examination="e", clinical_history="c", technique="t", findings="f",
+    impression="i", recommendation="r", disclaimer="d",
+)
+VALIDATION_RESULT = SemanticValidationResult(
+    missing_findings=False, missing_impression=False, unsupported_terms=(),
+    top_label_unreflected=False, warnings=("some warning",), is_clean=False,
+)
+FORMATTED_REPORT = FormattedReport(content=CONTENT, language="en", report_date="2026-07-12", section_headers={})
+
+
+def _evidence_summary() -> EvidenceSummary:
+    return EvidenceSummary(
+        top_retrieved_case=None, findings_evidence=(), impressions_evidence=(),
+        retrieval_stats=RetrievalStats(0, 0, 0, 0.0, 0.0, 0.0, 0, 0),
+        retrieval_metadata=None, label_evidence=(),
+    )
+
+
+def _make_service(db, cases_by_uid, voted_labels, context, llm_content=None, llm_raises=None):
+    fakes = {
+        "vector_store": FakeVectorStore(cases_by_uid),
+        "label_voting_service": FakeLabelVoter(voted_labels),
+        "context_builder": FakeContextBuilder(context),
+        "llm_orchestrator": FakeLLMOrchestrator(content=llm_content, raises=llm_raises),
+        "response_validator": FakeResponseValidator(VALIDATION_RESULT),
+        "report_formatter": FakeReportFormatter(FORMATTED_REPORT),
+    }
+    service = ReportGenerationService(
+        db=db,
+        vector_store=fakes["vector_store"],
+        label_voting_service=fakes["label_voting_service"],
+        context_builder=fakes["context_builder"],
+        llm_orchestrator=fakes["llm_orchestrator"],
+        response_validator=fakes["response_validator"],
+        report_formatter=fakes["report_formatter"],
+    )
+    return service, fakes
+
+
+def test_correct_sequencing_and_data_flow():
+    engine = _make_engine()
+    SessionLocal = sessionmaker(bind=engine)
+    db = SessionLocal()
+
+    case_a = RetrievedCase(source_uid="u1", similarity=1.0, findings="fa", impression="ia", labels=("Pneumonia",))
+    case_b = RetrievedCase(source_uid="u2", similarity=1.0, findings="fb", impression="ib", labels=("Normal",))
+    voted = [VotedLabel(label="Pneumonia", vote_weight=1.0, agreement=0.5)]
+    context = ClinicalContext(retrieved_cases=(case_a, case_b), voted_labels=tuple(voted), evidence_summary=_evidence_summary())
+
+    session_id = _seed_session(db, ["u1", "u2"])
+    retrieval_session = db.query(RetrievalSession).filter(RetrievalSession.id == session_id).one()
+
+    service, fakes = _make_service(
+        db, {"u1": case_a, "u2": case_b}, voted, context, llm_content=CONTENT,
+    )
+
+    report_id, formatted_report, validation_result, generation_metadata = service.generate(str(session_id), "en")
+
+    # 1-2-3: fetch + study_uids extraction + get_by_ids, in rank order
+    assert fakes["vector_store"].get_by_ids_calls == [["u1", "u2"]]
+    # 4: vote called with exactly what get_by_ids returned
+    assert fakes["label_voting_service"].vote_calls == [[case_a, case_b]]
+    # 5: context_builder.build called with retrieved + voted_labels + retrieval_metadata
+    build_call = fakes["context_builder"].build_calls[0]
+    assert build_call["retrieved"] == [case_a, case_b]
+    assert build_call["voted_labels"] == voted
+    assert build_call["retrieval_metadata"].collection_name == settings.CHROMA_COLLECTION_NAME
+    assert build_call["retrieval_metadata"].embedding_model == settings.CHROMA_EMBEDDING_MODEL
+    assert build_call["retrieval_metadata"].embedding_version == settings.CHROMA_EMBEDDING_VERSION
+    assert build_call["retrieval_metadata"].retrieved_at == retrieval_session.created_at.isoformat()
+    # 6: llm_orchestrator.generate_draft called with (context, language)
+    assert fakes["llm_orchestrator"].generate_draft_calls == [(context, "en")]
+    # 7: response_validator.validate_semantic called with (content, evidence_summary, voted_labels)
+    assert fakes["response_validator"].validate_semantic_calls == [(CONTENT, context.evidence_summary, voted)]
+    # 8-9: report_formatter.format called with (content, language, today's UTC date)
+    today = datetime.now(timezone.utc).date().isoformat()
+    assert fakes["report_formatter"].format_calls == [(CONTENT, "en", today)]
+    # 11: return value matches (now a 4-tuple: report_id, formatted_report,
+    # validation_result, generation_metadata)
+    assert formatted_report is FORMATTED_REPORT
+    assert validation_result is VALIDATION_RESULT
+
+    # 10: ReportRecord persisted with correct fields
+    record = db.query(ReportRecord).filter(ReportRecord.session_id == session_id).one()
+    assert report_id == record.id
+    assert record.language == "en"
+    assert record.status == ReportStatus.AI_DRAFT
+    assert record.ai_content == {
+        "examination": "e", "clinical_history": "c", "technique": "t",
+        "findings": "f", "impression": "i", "recommendation": "r", "disclaimer": "d",
+    }
+    assert record.validation_warnings == ["some warning"]
+    assert record.report_date == today
+    assert record.llm_model == settings.OLLAMA_MODEL
+    assert record.llm_temperature == settings.LLM_TEMPERATURE
+    assert record.embedding_model == settings.CHROMA_EMBEDDING_MODEL
+    assert record.embedding_version == settings.CHROMA_EMBEDDING_VERSION
+    assert record.collection_name == settings.CHROMA_COLLECTION_NAME
+
+    # generation_metadata mirrors exactly what was persisted, not re-queried
+    assert generation_metadata.llm_model == record.llm_model
+    assert generation_metadata.llm_temperature == record.llm_temperature
+    assert generation_metadata.embedding_model == record.embedding_model
+    assert generation_metadata.embedding_version == record.embedding_version
+    assert generation_metadata.collection_name == record.collection_name
+
+    db.close()
+
+
+def test_session_not_found_raises_specific_error_before_touching_collaborators():
+    engine = _make_engine()
+    SessionLocal = sessionmaker(bind=engine)
+    db = SessionLocal()
+
+    service, fakes = _make_service(db, {}, [], None, llm_content=CONTENT)
+
+    with pytest.raises(SessionNotFoundError):
+        service.generate(str(uuid.uuid4()), "en")
+
+    assert fakes["vector_store"].get_by_ids_calls == []
+    assert fakes["label_voting_service"].vote_calls == []
+    assert fakes["llm_orchestrator"].generate_draft_calls == []
+    assert db.query(ReportRecord).count() == 0
+
+    db.close()
+
+
+def test_malformed_session_id_raises_specific_error_not_a_crash():
+    """session_id isn't even a valid UUID string -- must still raise
+    SessionNotFoundError cleanly, not a raw exception from deep inside the
+    DBAPI parameter binding (the actual bug caught while writing this
+    suite: a bare str was originally passed straight into a Uuid-typed
+    column filter)."""
+    engine = _make_engine()
+    SessionLocal = sessionmaker(bind=engine)
+    db = SessionLocal()
+
+    service, fakes = _make_service(db, {}, [], None, llm_content=CONTENT)
+
+    with pytest.raises(SessionNotFoundError):
+        service.generate("not-a-uuid-at-all", "en")
+
+    assert fakes["vector_store"].get_by_ids_calls == []
+    db.close()
+
+
+def test_llm_transport_error_propagates_unchanged_and_nothing_persisted():
+    engine = _make_engine()
+    SessionLocal = sessionmaker(bind=engine)
+    db = SessionLocal()
+
+    case_a = RetrievedCase(source_uid="u1", similarity=1.0, findings="fa", impression="ia", labels=("Pneumonia",))
+    voted = [VotedLabel(label="Pneumonia", vote_weight=1.0, agreement=0.5)]
+    context = ClinicalContext(retrieved_cases=(case_a,), voted_labels=tuple(voted), evidence_summary=_evidence_summary())
+    session_id = _seed_session(db, ["u1"])
+
+    service, fakes = _make_service(
+        db, {"u1": case_a}, voted, context, llm_raises=LLMTransportError("simulated transport failure"),
+    )
+
+    with pytest.raises(LLMTransportError):
+        service.generate(str(session_id), "en")
+
+    assert db.query(ReportRecord).count() == 0
+    db.close()
+
+
+def test_llm_generation_validation_error_propagates_unchanged_and_nothing_persisted():
+    engine = _make_engine()
+    SessionLocal = sessionmaker(bind=engine)
+    db = SessionLocal()
+
+    case_a = RetrievedCase(source_uid="u1", similarity=1.0, findings="fa", impression="ia", labels=("Pneumonia",))
+    voted = [VotedLabel(label="Pneumonia", vote_weight=1.0, agreement=0.5)]
+    context = ClinicalContext(retrieved_cases=(case_a,), voted_labels=tuple(voted), evidence_summary=_evidence_summary())
+    session_id = _seed_session(db, ["u1"])
+
+    error = LLMGenerationValidationError(last_raw_response="bad json", last_validation_errors=["oops"])
+    service, fakes = _make_service(db, {"u1": case_a}, voted, context, llm_raises=error)
+
+    with pytest.raises(LLMGenerationValidationError) as exc_info:
+        service.generate(str(session_id), "en")
+
+    assert exc_info.value.last_raw_response == "bad json"
+    assert exc_info.value.last_validation_errors == ["oops"]
+    assert db.query(ReportRecord).count() == 0
+    db.close()
+
+
+def test_atomic_persistence_failure_leaves_zero_rows(monkeypatch):
+    engine = _make_engine()
+    SessionLocal = sessionmaker(bind=engine)
+    db = SessionLocal()
+
+    case_a = RetrievedCase(source_uid="u1", similarity=1.0, findings="fa", impression="ia", labels=("Pneumonia",))
+    voted = [VotedLabel(label="Pneumonia", vote_weight=1.0, agreement=0.5)]
+    context = ClinicalContext(retrieved_cases=(case_a,), voted_labels=tuple(voted), evidence_summary=_evidence_summary())
+    session_id = _seed_session(db, ["u1"])
+
+    service, fakes = _make_service(db, {"u1": case_a}, voted, context, llm_content=CONTENT)
+
+    def failing_commit(self):
+        # real proof, not a trivial short-circuit: actually flush the
+        # pending INSERT before failing, simulating a failure between
+        # "row sent to the DB" and "transaction finalized" -- same pattern
+        # as Phase 4's test_transaction_atomicity_on_persistence_failure.
+        self.flush()
+        raise RuntimeError("simulated persistence failure after flush, before commit")
+
+    monkeypatch.setattr(SASession, "commit", failing_commit)
+
+    with pytest.raises(RuntimeError, match="simulated persistence failure"):
+        service.generate(str(session_id), "en")
+
+    monkeypatch.undo()
+    # fresh session against the same engine to confirm nothing leaked
+    fresh_db = SessionLocal()
+    try:
+        assert fresh_db.query(ReportRecord).count() == 0
+    finally:
+        fresh_db.close()
+
+    db.close()

@@ -11,10 +11,13 @@ from typing import Protocol, runtime_checkable
 
 from app.domain.entities import (
     ClinicalContext,
+    EvidenceSummary,
+    FormattedReport,
     Report,
     ReportContent,
     RetrievalMetadata,
     RetrievedCase,
+    SemanticValidationResult,
     Study,
     VotedLabel,
 )
@@ -34,6 +37,11 @@ class IVectorStore(Protocol):
 
     def query(self, embedding: list[float], top_k: int) -> list[RetrievedCase]: ...
     def upsert(self, uid: str, embedding: list[float], metadata: dict) -> None: ...
+    def get_by_ids(self, uids: list[str]) -> list[RetrievedCase]:
+        """Phase 8: reconstructs full RetrievedCase content (findings/impression/
+        labels) for a set of study_uids -- retrieved_evidence (Phase 4) only
+        persists study_uid/rank/similarity, not the full case content."""
+        ...
 
 
 @runtime_checkable
@@ -112,6 +120,28 @@ class ILLMOrchestrator(Protocol):
     with two independent retry budgets. Infrastructure: app/services/llm_orchestrator.py"""
 
     def generate_draft(self, context: ClinicalContext, language: str) -> ReportContent: ...
+
+
+@runtime_checkable
+class IResponseValidator(Protocol):
+    """Phase 8: semantic/clinical validation of an already structurally-valid
+    ReportContent. Produces warnings for human review, never a pass/fail gate
+    that triggers automated retry. Infrastructure: app/services/response_validator.py"""
+
+    def validate_semantic(
+        self,
+        content: ReportContent,
+        evidence_summary: EvidenceSummary,
+        voted_labels: list[VotedLabel],
+    ) -> SemanticValidationResult: ...
+
+
+@runtime_checkable
+class IReportFormatter(Protocol):
+    """Phase 8: formats a validated ReportContent into a structured object
+    (never rendered PDF/HTML). Infrastructure: app/services/report_formatter.py"""
+
+    def format(self, content: ReportContent, language: str, report_date: str) -> FormattedReport: ...
 
 
 @runtime_checkable

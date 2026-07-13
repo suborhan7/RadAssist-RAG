@@ -8,6 +8,10 @@ mirrors the frozen response contract (development_log.md, Phase 4
 "Input/output contracts") plus the Step 11 voted_labels extension, so
 FastAPI's generated OpenAPI schema actually documents the real shape
 instead of an unspecified object.
+
+GenerateReportResponse (Phase 8) mirrors that same frozen-response-contract
+discipline from the start -- typed models built up front, not retrofitted
+after an untyped-dict gap like Phase 4 Step 12 had to fix.
 """
 from __future__ import annotations
 
@@ -44,3 +48,41 @@ class RetrieveResponse(BaseModel):
     collection_name: str
     retrieved_cases: list[RetrievedCaseResponse]
     voted_labels: list[VotedLabelResponse]
+
+
+class ReportContentResponse(BaseModel):
+    examination: str
+    clinical_history: str
+    technique: str
+    findings: str
+    impression: str
+    recommendation: str
+    disclaimer: str
+
+
+class FormattedReportResponse(BaseModel):
+    content: ReportContentResponse
+    language: str
+    report_date: str
+    section_headers: dict[str, str]
+
+
+class ValidationResponse(BaseModel):
+    is_clean: bool
+    warnings: list[str]
+
+
+class GenerationMetadataResponse(BaseModel):
+    llm_model: str
+    llm_temperature: float
+    embedding_model: str
+    embedding_version: str
+    collection_name: str
+
+
+class GenerateReportResponse(BaseModel):
+    report_id: str
+    session_id: str
+    formatted_report: FormattedReportResponse
+    validation: ValidationResponse
+    generation_metadata: GenerationMetadataResponse
