@@ -31,6 +31,15 @@ ownership-guarded mutation (e.g. report finalize) is built.
 Requires Ollama running locally with settings.OLLAMA_MODEL pulled (only
 POST /generate-report needs it) -- the client fixture checks reachability
 first and skips with a clear, actionable message if it isn't running.
+
+test_ownership_exposed_via_api_and_real_dashboard_counts (Phase 15):
+doctor_id has been persisted since Phase 13a, but no API response ever
+returned it until this phase -- this test proves GET /reports/{id} and
+GET /patients/{id}/history now actually carry it, that the new
+GET /doctors/{id} resolves a real name (and 404s for a real nonexistent
+id), and that GET /dashboard/stats returns real, distinct per-doctor
+counts against a genuinely shared registry (same total_reports/
+total_patients seen by both doctors, different my_reports/my_patients).
 """
 from __future__ import annotations
 
@@ -149,3 +158,86 @@ def test_two_doctor_shared_patient_ownership_gate(client):
         assert str(session_b.patient_id) == patient_id
     finally:
         db.close()
+
+
+def test_ownership_exposed_via_api_and_real_dashboard_counts(client):
+    """
+    Phase 15 gate: doctor_id (persisted since Phase 13a) is now actually
+    RETURNED by the API, not just sitting in the database -- and
+    GET /doctors/{doctor_id} + GET /dashboard/stats, both new this phase,
+    resolve correctly against real, independently-owned data.
+    """
+    doctor_a_id = _register(client, "Dr. Fifteen A")
+
+    patient_response = client.post(
+        "/patients",
+        json={"name": "Phase 15 Ownership Patient", "date_of_birth": "1990-02-02", "gender": "F"},
+    )
+    assert patient_response.status_code == 200
+    patient_id = patient_response.json()["id"]
+
+    image_a, image_b = _sample_images(2)
+
+    with open(image_a, "rb") as f:
+        retrieve_response = client.post(
+            "/retrieve",
+            files={"file": (image_a.name, f, "image/png")},
+            data={"top_k": "5", "min_similarity": "0.0", "patient_id": patient_id},
+        )
+    assert retrieve_response.status_code == 200
+    session_a_id = retrieve_response.json()["session_id"]
+
+    generate_response = client.post("/generate-report", json={"session_id": session_a_id, "language": "en"})
+    assert generate_response.status_code == 200
+    report_a_id = generate_response.json()["report_id"]
+
+    # real dashboard stats for doctor A, BEFORE doctor B does anything
+    stats_a_before = client.get("/dashboard/stats")
+    assert stats_a_before.status_code == 200
+    stats_a_before_body = stats_a_before.json()
+    assert stats_a_before_body["my_reports"] >= 1
+    assert stats_a_before_body["my_patients"] >= 1
+    assert stats_a_before_body["total_reports"] >= stats_a_before_body["my_reports"]
+    assert stats_a_before_body["total_patients"] >= stats_a_before_body["my_patients"]
+
+    doctor_b_id = _register(client, "Dr. Fifteen B")
+
+    # GET /reports/{id} now returns doctor_id -- the real point of Phase 15
+    report_response = client.get(f"/reports/{report_a_id}")
+    assert report_response.status_code == 200
+    assert report_response.json()["doctor_id"] == doctor_a_id
+
+    # GET /patients/{id}/history also carries doctor_id per entry
+    history_response = client.get(f"/patients/{patient_id}/history")
+    assert history_response.status_code == 200
+    history_body = history_response.json()
+    assert len(history_body) == 1
+    assert history_body[0]["doctor_id"] == doctor_a_id
+
+    # doctor B resolves doctor A's real name via the new GET /doctors/{id}
+    doctor_a_lookup = client.get(f"/doctors/{doctor_a_id}")
+    assert doctor_a_lookup.status_code == 200
+    assert doctor_a_lookup.json() == {"id": doctor_a_id, "full_name": "Dr. Fifteen A"}
+
+    # a real 404 for a well-formed but nonexistent doctor_id
+    nonexistent_lookup = client.get(f"/doctors/{uuid.uuid4()}")
+    assert nonexistent_lookup.status_code == 404
+
+    # doctor B creates their own session on the SAME shared patient
+    with open(image_b, "rb") as f:
+        retrieve_response_b = client.post(
+            "/retrieve",
+            files={"file": (image_b.name, f, "image/png")},
+            data={"top_k": "5", "min_similarity": "0.0", "patient_id": patient_id},
+        )
+    assert retrieve_response_b.status_code == 200
+
+    # doctor B's real dashboard stats: their own 1 patient/session, but the
+    # SAME total_reports/total_patients as doctor A saw (shared registry)
+    stats_b = client.get("/dashboard/stats")
+    assert stats_b.status_code == 200
+    stats_b_body = stats_b.json()
+    assert stats_b_body["my_reports"] == 0  # doctor B never called /generate-report
+    assert stats_b_body["my_patients"] == 1  # doctor B's own new session on this patient
+    assert stats_b_body["total_reports"] == stats_a_before_body["total_reports"]
+    assert stats_b_body["total_patients"] == stats_a_before_body["total_patients"]

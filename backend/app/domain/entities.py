@@ -210,6 +210,10 @@ class ExplanationRecord:
     question: str
     answer: str
     created_at: str
+    # Phase 15: who asked, per phase13_auth_architecture.md's ownership
+    # model. Optional/defaulted so this stays additive -- nothing that
+    # already constructs an ExplanationRecord needs to change.
+    doctor_id: str | None = None
 
 
 @dataclass(frozen=True)
@@ -231,6 +235,9 @@ class Comparison:
     facts: ComparisonFacts
     narrative: str
     created_at: str
+    # Phase 15: who ran the comparison, per phase13_auth_architecture.md's
+    # ownership model. Optional/defaulted so this stays additive.
+    doctor_id: str | None = None
 
 
 @dataclass

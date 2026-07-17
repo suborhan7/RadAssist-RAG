@@ -59,6 +59,8 @@ not swallowed by this dynamic {patient_id} segment.
 """
 from __future__ import annotations
 
+import uuid
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -66,6 +68,7 @@ from sqlalchemy.orm import Session
 from app.api.dependencies import get_current_doctor, get_db
 from app.api.schemas import PatientHistoryReportResponse, PatientResponse, ReportContentResponse
 from app.domain.entities import Doctor, Patient, Report
+from app.models.retrieval_session import RetrievalSession
 from app.services.patient_service import PatientService
 
 router = APIRouter()
@@ -87,7 +90,7 @@ def _build_patient_response(patient: Patient) -> PatientResponse:
     )
 
 
-def _build_history_response(report: Report) -> PatientHistoryReportResponse:
+def _build_history_response(report: Report, doctor_id: str | None) -> PatientHistoryReportResponse:
     return PatientHistoryReportResponse(
         id=report.id,
         language=report.language.value,
@@ -102,6 +105,7 @@ def _build_history_response(report: Report) -> PatientHistoryReportResponse:
             disclaimer=report.ai_content.disclaimer,
         ),
         created_at=report.created_at.isoformat() if report.created_at else "",
+        doctor_id=doctor_id,
     )
 
 
@@ -167,4 +171,20 @@ def get_patient_history(
         reports = service.get_history(patient_id)
     except ValueError:
         raise HTTPException(status_code=400, detail="patient_id is not a valid UUID.")
-    return [_build_history_response(r) for r in reports]
+
+    # Phase 15: each report's owner is derived via its session's doctor_id
+    # (per phase13_auth_architecture.md -- reports have no doctor_id of
+    # their own). IPatientRepository.get_history()'s frozen Report entity
+    # has no session_id field; report.study_id IS str(session_id), a
+    # documented substitution (see report_reconstruction.py) reused here
+    # rather than changing the frozen interface's return type, which
+    # ComparisonService also depends on.
+    session_ids = [uuid.UUID(r.study_id) for r in reports]
+    sessions = (
+        db.query(RetrievalSession).filter(RetrievalSession.id.in_(session_ids)).all()
+        if session_ids
+        else []
+    )
+    doctor_by_session_id = {str(s.id): (str(s.doctor_id) if s.doctor_id else None) for s in sessions}
+
+    return [_build_history_response(r, doctor_by_session_id.get(r.study_id)) for r in reports]

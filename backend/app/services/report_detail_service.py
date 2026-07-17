@@ -65,6 +65,10 @@ class ReportDetail:
     report_date: str
     created_at: str
     retrieved_cases: tuple[RetrievedCase, ...]
+    # Phase 15: a report's owner is derived via session.doctor_id, per
+    # phase13_auth_architecture.md's "reports has no doctor_id of its
+    # own" decision -- this is that derived value, not a new column.
+    doctor_id: str | None = None
 
 
 class ReportDetailService:
@@ -104,4 +108,5 @@ class ReportDetailService:
             report_date=record.report_date,
             created_at=report.created_at.isoformat() if report.created_at else "",
             retrieved_cases=tuple(retrieved_cases),
+            doctor_id=str(retrieval_session.doctor_id) if retrieval_session.doctor_id else None,
         )

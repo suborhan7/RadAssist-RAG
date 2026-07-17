@@ -134,6 +134,7 @@ class ComparisonService:
                 if comparison_record.created_at
                 else datetime.now(timezone.utc).isoformat()
             ),
+            doctor_id=str(comparison_record.doctor_id) if comparison_record.doctor_id else None,
         )
 
     def _resolve_previous_record(

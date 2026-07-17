@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ApiError, getPatient, getPatientHistory } from "@/lib/api-client";
+import { ApiError, getCurrentDoctor, getPatient, getPatientHistory } from "@/lib/api-client";
 import { Card } from "@/components/ui/card";
 import { StatusChip } from "@/components/ui/chip";
+import { OwnerChip } from "@/components/ui/owner-chip";
 import { toChipReportStatus } from "@/lib/report-status";
 import { BUTTON_BASE, SIZE, VARIANT } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
@@ -21,12 +22,13 @@ type PatientHistoryReportResponse =
  * chronological history timeline + "New Examination" action, per the
  * frozen spec's Consolidation Decision 1 ("Patient Profile is the real
  * hub, not a thin intermediate page") and design_specification.md §8.7's
- * "clinical hub" framing. Full ownership/access-log rail (§8.7) and the
- * §10.5 "14% of the AI draft was edited" edit-tracking header are not
- * built here -- both depend on data this system doesn't have yet
- * (doctor_id is tagged at creation per Phase 13a, but no UI reads it
- * anywhere yet; edit tracking needs a doctor-edit workflow that doesn't
- * exist, see Phase 13a's documented finalize/edit/regenerate gap).
+ * "clinical hub" framing. Timeline entries now carry an OwnershipChip
+ * (Phase 15, using the real doctor_id GET /patients/{id}/history returns
+ * as of this phase). The §10.5 "14% of the AI draft was edited"
+ * edit-tracking header is still not built -- it needs a doctor-edit
+ * workflow that doesn't exist, see Phase 13a's documented finalize/edit/
+ * regenerate gap. Full access-log rail (§8.7) also not built -- no
+ * access-log table exists.
  */
 export default function PatientProfilePage() {
   const params = useParams<{ patientId: string }>();
@@ -35,6 +37,7 @@ export default function PatientProfilePage() {
   const [patient, setPatient] = useState<PatientResponse | null>(null);
   const [history, setHistory] = useState<PatientHistoryReportResponse[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [currentDoctorId, setCurrentDoctorId] = useState<string | null>(null);
 
   useEffect(() => {
     Promise.all([getPatient(patientId), getPatientHistory(patientId)])
@@ -49,6 +52,9 @@ export default function PatientProfilePage() {
             : "Failed to load patient profile.",
         );
       });
+    getCurrentDoctor()
+      .then((doctor) => setCurrentDoctorId(doctor?.id ?? null))
+      .catch(() => setCurrentDoctorId(null));
   }, [patientId]);
 
   if (error) {
@@ -112,7 +118,10 @@ export default function PatientProfilePage() {
                   <span className="text-sm font-medium text-ink">
                     {new Date(report.created_at).toLocaleString()}
                   </span>
-                  <StatusChip status={toChipReportStatus(report.status)} />
+                  <div className="flex items-center gap-2">
+                    <OwnerChip ownerId={report.doctor_id ?? null} currentDoctorId={currentDoctorId} />
+                    <StatusChip status={toChipReportStatus(report.status)} />
+                  </div>
                 </div>
                 <p className="line-clamp-2 text-sm text-ink-2">
                   {report.ai_content.impression || "(no impression recorded)"}

@@ -4,13 +4,15 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { useEffect } from "react";
-import { ApiError, getPatient, getReport, retrievalSessionImageUrl } from "@/lib/api-client";
+import { ApiError, getCurrentDoctor, getPatient, getReport, retrievalSessionImageUrl } from "@/lib/api-client";
 import { Card } from "@/components/ui/card";
 import { StatusChip } from "@/components/ui/chip";
 import { SimilarityBar } from "@/components/ui/similarity-bar";
 import { AgreementBadge } from "@/components/ui/agreement-badge";
+import { OwnerChip } from "@/components/ui/owner-chip";
 import { computeAgreement } from "@/lib/evidence-agreement";
 import { toChipReportStatus } from "@/lib/report-status";
+import { useDoctorName } from "@/lib/use-doctor-name";
 import { BUTTON_BASE, SIZE, VARIANT } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import type { paths } from "@/lib/generated/api";
@@ -62,6 +64,16 @@ const CONTENT_FIELDS: { key: keyof ReportDetailResponse["content"]; label: strin
  *   computed client-side from retrieved_cases (see lib/evidence-agreement.ts)
  *   since ReportDetailResponse carries no voted_labels field -- a
  *   documented re-derivation, not a second backend source of truth.
+ *
+ * Phase 15: OwnershipChip (via OwnerChip) in the context bar, and a
+ * read-only banner (§8.15, adapted copy -- no "signed" language, since
+ * finalize doesn't exist, and no "your access has been recorded" clause,
+ * since no access-log table exists, per frontend/CLAUDE.md's explicit
+ * instruction). Read is universal (Phase 13a): the banner is purely
+ * informational and does not gate Explain/Compare, which any
+ * authenticated doctor may use on any report regardless of ownership --
+ * there is no edit/finalize control anywhere in this UI to disable in
+ * the first place.
  */
 export default function ReportWorkspacePage() {
   const params = useParams<{ reportId: string }>();
@@ -71,6 +83,7 @@ export default function ReportWorkspacePage() {
   const [patient, setPatient] = useState<PatientResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [railTab, setRailTab] = useState<"evidence" | "agreement" | "alternatives">("evidence");
+  const [currentDoctorId, setCurrentDoctorId] = useState<string | null>(null);
 
   useEffect(() => {
     getReport(reportId)
@@ -88,12 +101,19 @@ export default function ReportWorkspacePage() {
       .catch((err) => {
         setError(err instanceof ApiError ? err.message : "Failed to load report.");
       });
+    getCurrentDoctor()
+      .then((doctor) => setCurrentDoctorId(doctor?.id ?? null))
+      .catch(() => setCurrentDoctorId(null));
   }, [reportId]);
 
   const agreement = useMemo(() => {
     if (!report) return null;
     return computeAgreement(report.retrieved_cases);
   }, [report]);
+
+  const reportOwnerId = report?.doctor_id ?? null;
+  const isOwner = reportOwnerId !== null && currentDoctorId !== null && reportOwnerId === currentDoctorId;
+  const otherOwnerName = useDoctorName(isOwner ? null : reportOwnerId);
 
   if (error) {
     return (
@@ -127,8 +147,18 @@ export default function ReportWorkspacePage() {
             <span className="text-sm text-ink-3">No patient linked to this report.</span>
           )}
         </div>
-        <StatusChip status={toChipReportStatus(report.status)} />
+        <div className="flex items-center gap-3">
+          <OwnerChip ownerId={reportOwnerId} currentDoctorId={currentDoctorId} />
+          <StatusChip status={toChipReportStatus(report.status)} />
+        </div>
       </div>
+
+      {!isOwner && reportOwnerId !== null && (
+        <div className="border-b border-hairline bg-sunken px-page py-3 text-sm text-ink-2">
+          This report belongs to {otherOwnerName ?? "another doctor"}. You can read it and compare
+          against it.
+        </div>
+      )}
 
       <div className="flex flex-1 flex-col gap-4 p-page lg:flex-row">
         {/* Lightbox -- the only black surface */}

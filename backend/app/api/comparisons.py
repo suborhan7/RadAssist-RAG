@@ -62,6 +62,7 @@ def _build_response(comparison: Comparison) -> ComparisonResponse:
         ),
         narrative=comparison.narrative,
         created_at=comparison.created_at,
+        doctor_id=comparison.doctor_id,
     )
 
 

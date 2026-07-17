@@ -129,4 +129,5 @@ class ExplainabilityService:
                 if explanation.created_at
                 else datetime.now(timezone.utc).isoformat()
             ),
+            doctor_id=str(explanation.doctor_id) if explanation.doctor_id else None,
         )

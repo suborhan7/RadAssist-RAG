@@ -7264,3 +7264,238 @@ navigation. Not yet built, explicitly out of Phase 14 scope: Phase 15's
 ownership UI (chips, read-only banners, real per-doctor dashboard
 counts), global sidebar navigation, bilingual EN/বাংলা reporting, and
 the response-time breakdown panel.
+
+---
+
+## Phase 15 (Ownership UI)
+
+Per `frontend/CLAUDE.md`'s Phase 15 section: ownership chips ("You" /
+doctor name) on sessions, reports, comparisons, explanations; a
+read-only banner on non-owned reports; real per-doctor dashboard counts
+replacing the design spec's invented "38 of 142" placeholder. Gate: log
+in as two real registered doctors, confirm ownership renders correctly
+and read-only enforcement is visible, not just backend-enforced.
+
+**A real, load-bearing gap found before any frontend work could start,
+not a styling task at all:** `doctor_id` has been persisted on
+`retrieval_sessions`/`comparisons`/`explanations` since Phase 13a, but
+**no API response anywhere ever returned it** -- `ReportDetailResponse`,
+`PatientHistoryReportResponse`, `ComparisonResponse`, and
+`ExplanationResponse` all omitted it entirely, and no endpoint existed
+to resolve an arbitrary `doctor_id` to a name, or to count "my reports
+vs. the registry." Ownership chips and a read-only banner are simply
+impossible to render without this data reaching the frontend. This is
+additive-only backend work (new response fields + two new endpoints, no
+behavior change to any existing service's computation), and squarely
+what `phase13_auth_architecture.md` was building toward -- proceeded
+with it as part of this phase rather than stopping, since skipping it
+would make the phase's own stated gate un-buildable, but flagged
+explicitly since it is real backend scope, not "styling and
+interaction."
+
+### Implementation & Validation
+
+**Backend, additive-only.** `doctor_id: str | None = None` added to the
+`ExplanationRecord` and `Comparison` domain entities (both already had a
+real, persisted `doctor_id` on their ORM records since Phase 13a; this
+just lets the domain layer carry it through) and to `ReportDetail`
+(`report_detail_service.py`, derived from `retrieval_session.doctor_id`
+-- reports still have no column of their own, per
+`phase13_auth_architecture.md`'s frozen "reports has no doctor_id"
+decision). `ExplainabilityService.explain()` and
+`ComparisonService.compare()` now populate it from the real persisted
+record; `ReportDetailResponse`/`ComparisonResponse`/`ExplanationResponse`
+gained the matching field.
+
+`GET /patients/{id}/history` needed a different fix, since
+`IPatientRepository.get_history()` is a frozen Protocol interface
+`ComparisonService` also depends on -- changing its return shape was
+not an option. Its frozen `Report` domain entity has no `session_id`
+field, but `report.study_id` **is** `str(session_id)`, a documented
+substitution from Phase 10/11 (`report_reconstruction.py`'s own
+docstring: "study_id substitution... populated with
+str(ReportRecord.session_id)"). The route now batch-queries
+`RetrievalSession` for those session ids and maps `doctor_id` back onto
+each `PatientHistoryReportResponse` entry -- reusing an existing,
+already-documented substitution rather than touching the frozen
+interface.
+
+Two new endpoints, both thin routes following this codebase's
+established convention: `GET /doctors/{doctor_id}` (new
+`app/api/doctors.py`) resolves a `doctor_id` to `{id, full_name}` only
+-- a new, deliberately narrow `DoctorPublicResponse` schema, not the
+full `DoctorResponse`, since another doctor's email/created_at aren't
+this caller's business (matches `GET /auth/me`'s own care about what a
+doctor's identity exposes to others). `GET /dashboard/stats` (new
+`app/api/dashboard.py` + `app/services/dashboard_service.py`) returns
+real, queried counts -- `my_reports`/`total_reports` via a join on
+`retrieval_sessions.doctor_id`, `my_patients`/`total_patients` via
+`COUNT(DISTINCT retrieval_sessions.patient_id)` scoped to the
+authenticated doctor (distinct patients touched, not total sessions --
+examining the same patient five times must not inflate a doctor's own
+patient count fivefold).
+
+**A real bug, caught by running the new code, not assumed correct from
+review:** the first real call to `GET /dashboard/stats` returned a raw
+500. Traced to `DashboardService.get_stats()` filtering
+`RetrievalSession.doctor_id == current_doctor_id` with a plain Python
+`str` -- `doctor_id` is a SQLAlchemy `Uuid`-typed column, which expects
+an actual `uuid.UUID` for parameter binding; the bare string compiled
+fine and only failed deep inside DBAPI parameter processing
+(`AttributeError: 'str' object has no attribute 'hex'`), reproduced
+directly via a one-off script calling the service outside any route,
+confirmed exactly which line raised, then fixed by parsing to
+`uuid.UUID` once at the top of `get_stats()` -- the same lesson every
+other `doctor_id`-comparing service in this codebase already knew
+(`DoctorService.find_by_id`), just missed here on first write.
+
+New test coverage, not just reused old tests: added
+`test_ownership_exposed_via_api_and_real_dashboard_counts` to the
+existing Phase 13a gate file, extending the same two-doctor
+shared-patient scenario -- doctor A's real dashboard stats before doctor
+B does anything; doctor B registers; `GET /reports/{id}` and
+`GET /patients/{id}/history` both now genuinely carry `doctor_id ==
+doctor_a_id` in the real response body (not just the database); doctor
+B resolves doctor A's real name via `GET /doctors/{id}` and gets a real
+404 for a well-formed but nonexistent id; doctor B creates their own
+session on the same shared patient; doctor B's own stats show `1`
+against the *same* `total_reports`/`total_patients` doctor A saw (a
+genuinely shared registry, not two isolated tallies). Full suite after
+the fix: **157 passed** (156 + this new test).
+
+**A pre-existing, unrelated flaky test found incidentally while
+running regression, correctly NOT treated as a Phase 15 regression:**
+`test_jwt_verify_rejects_tampered_token` failed once, with no code
+changes anywhere near JWT handling. Root-caused analytically before
+re-running anything: HS256's base64url-encoded signature packs 256 bits
+into 43 characters, and the last character carries only 4 of its 6 bits
+of real signal (the trailing 2 are padding); the test's tamper method
+(`token[:-1] + ("A" if token[-1] != "A" else "B")`) can land on a
+replacement character sharing the original's significant 4 bits, in
+which case the "tampered" token decodes to the identical signature and
+verification legitimately succeeds -- and since `JWTHandler.issue()`
+stamps a fresh `iat`/`exp` every call, whether this occurs varies run to
+run. Confirmed empirically (passed cleanly on a subsequent full-suite
+run with zero code changes), not fixed as part of this phase since it's
+orthogonal to Phase 15's own scope -- named here so it isn't
+rediscovered as a surprise later.
+
+**Frontend.** `useDoctorName(doctorId)` (new `lib/use-doctor-name.ts`)
+resolves `GET /doctors/{doctor_id}` with a module-level name cache
+(the same other-doctor commonly appears in several chips on one page)
+and backs the new `OwnerChip` component (`components/ui/owner-chip.tsx`),
+a thin wrapper around `p0-design-system`'s existing `OwnershipChip`
+primitive that resolves "you" vs. "a named other doctor" vs. renders
+nothing for a `null` owner (a pre-Phase-13 row, before `doctor_id`
+existed -- `OwnershipChip`'s contract is "you" or "a name," and
+inventing a third "unowned" visual state wasn't asked for). Wired onto
+the Radiologist Workspace's context bar, the Comparison page's two
+X-ray headers, and the Patient Profile timeline's per-entry chip. The
+read-only banner (§8.15 of `design_specification.md` -- adapted per
+frontend/CLAUDE.md's explicit instruction to drop the "your access has
+been recorded" clause, since no access-log table exists, and any
+"signed" language, since finalize doesn't exist) is purely informational:
+read is universal (Phase 13a), so it does not gate Explain/Compare,
+which any authenticated doctor may use on any report regardless of
+ownership -- there is no edit/finalize control anywhere in this UI to
+disable in the first place. Dashboard now calls `GET /dashboard/stats`
+and shows "Your reports: N of Total" / "Your patients: N of Total,"
+replacing the placeholder-free minimal dashboard with real counts; a 401
+(not logged in yet) is treated as the expected pre-login state, not an
+error banner.
+
+**Two real ESLint bugs caught and fixed, not silenced.** An initial
+`useDoctorName` called `setState` synchronously at the top of its effect
+body for two different branches (the null-`doctorId` case and the
+cache-hit case) -- `react-hooks/set-state-in-effect` flagged both,
+correctly: synchronous `setState` inside an effect can cascade renders,
+and neither branch actually needed it. Fixed by deriving both cases
+directly during render (`return doctorId ? nameCache.get(doctorId) ??
+fetchedName : null`), leaving `setState` only inside the async fetch's
+own `.then()`/`.catch()` callbacks -- the pattern the rule is actually
+asking for, not a suppression.
+
+**Real end-to-end verification, via a real headless browser against
+real running dev servers, not screenshots of static markup:** doctor A
+registers, creates a shared patient, uploads and generates a real
+report (confirmed "✓ You" chip on their own Workspace view); doctor B
+registers (the shared cookie jar now authenticates as B); doctor B
+opens doctor A's report and the page shows a real, resolved "Dr. Owner
+Alpha" chip (not "You") plus the exact read-only banner text ("This
+report belongs to Dr. Owner Alpha. You can read it and compare against
+it."); doctor B creates their own second visit on the *same* shared
+patient and their own Workspace view correctly shows "✓ You"; the
+Patient Profile timeline shows both entries with the correct
+chip each ("✓ You" on B's own newest entry, "Dr. Owner Alpha" on the
+older one); the Comparison page shows both owner chips correctly on
+their respective X-ray headers; the Dashboard shows doctor B's real,
+distinct counts ("Your reports: 1 of 15," "Your patients: 1 of 12" --
+against the same shared-registry totals doctor A's own stats call
+returned earlier in the same run). Zero console errors across the
+entire walkthrough. `npx tsc --noEmit`, `npm run lint`, and
+`npm run check:design` (**0 violations, 32 files**) all clean.
+
+### How to Write This in Your Thesis
+
+*Methodology chapter, "Ownership UI" subsection:*
+
+> Phase 15 is the clearest instance in this project of a distinction
+> worth naming explicitly: data being correctly computed and persisted
+> is not the same claim as that data being usable by the system that
+> needs it. `doctor_id` had been written to three tables since Phase
+> 13a, verified by a real two-doctor integration test, and enforced
+> nowhere incorrectly -- and yet not a single API response exposed it,
+> because the phase that persisted it was never asked to render
+> anything with it. Discovering this gap only at the moment a UI needed
+> to consume the data, rather than when the data was first written, is
+> itself informative: a backend can be fully correct by its own tests
+> and still be unusable by its stated next consumer, and the tests that
+> would catch this are necessarily different in kind from the tests that
+> validate persistence -- one asks "was the right row written," the
+> other asks "can anything downstream read it back out." The phase's one
+> genuine defect, a bare string compared against a UUID-typed column,
+> is a small illustration of the same principle at a different layer:
+> the query compiled without complaint and only failed at the moment a
+> real database driver tried to bind the parameter, which is exactly the
+> class of error a type-checker cannot catch in a dynamically-typed
+> service method and only a real, executed query against a real database
+> ever surfaces. Equally informative was the flaky JWT test found by
+> coincidence during this phase's own regression run: distinguishing "a
+> new defect this phase introduced" from "a latent property of code this
+> phase never touched, whose probability of manifesting happens to
+> depend on wall-clock time" required reasoning about the actual
+> encoding scheme involved before concluding anything, and reporting a
+> false regression would have been its own kind of methodological
+> failure -- attributing a defect to the wrong cause is not more
+> cautious than investigating it, only less accurate.
+
+---
+
+## Phase 15 (Ownership UI) — COMPLETE
+
+`doctor_id` (persisted since Phase 13a) now genuinely reaches the
+frontend: `ReportDetailResponse`, `PatientHistoryReportResponse`,
+`ComparisonResponse`, and `ExplanationResponse` all carry it; two new
+endpoints (`GET /doctors/{doctor_id}`, `GET /dashboard/stats`) resolve a
+doctor's name and real per-doctor counts respectively. `OwnerChip`
+(wrapping `p0-design-system`'s `OwnershipChip`) renders on the
+Radiologist Workspace, Comparison page, and Patient Profile timeline;
+a read-only, informational-only banner (read stays universal, per
+Phase 13a) appears on non-owned reports; the Dashboard shows real
+"Your reports/patients: N of Total" counts. One real backend bug found
+and fixed (a bare `str` compared against a `Uuid`-typed SQLAlchemy
+column, caught by actually running the new endpoint, not by review).
+One pre-existing, unrelated flaky JWT test found, root-caused
+analytically, and confirmed NOT a regression before moving on. Two real
+ESLint violations (`react-hooks/set-state-in-effect`) caught and fixed
+properly rather than suppressed. Full backend: **157/157 passing**.
+Full frontend: `tsc`/`lint` clean, `check:design` **0 violations, 32
+files**. Gate passed for real: two independently registered doctors,
+cross-owned data on a shared patient, verified via a real headless
+browser walkthrough with zero console errors -- ownership renders
+correctly, not just backend-enforced. Not built, explicitly out of
+Phase 15 scope: disabling edit controls (none exist anywhere in this UI
+yet, since finalize/edit/regenerate remains the still-open Phase 13a
+gap), an access-log table/UI, and anything under "Not in scope unless
+you tell me otherwise" in `frontend/CLAUDE.md` (Settings·Profile,
+standalone Studies registry, admin role).

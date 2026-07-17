@@ -62,6 +62,7 @@ def _build_response(detail: ReportDetail) -> ReportDetailResponse:
         ),
         report_date=detail.report_date,
         created_at=detail.created_at,
+        doctor_id=detail.doctor_id,
         retrieved_cases=[
             RetrievedCaseResponse(
                 rank=rank,

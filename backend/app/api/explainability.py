@@ -53,6 +53,7 @@ def _build_response(explanation: ExplanationRecord) -> ExplanationResponse:
         question=explanation.question,
         answer=explanation.answer,
         created_at=explanation.created_at,
+        doctor_id=explanation.doctor_id,
     )
 
 

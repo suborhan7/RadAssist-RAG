@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ApiError, createComparison, getReport, retrievalSessionImageUrl } from "@/lib/api-client";
+import { ApiError, createComparison, getCurrentDoctor, getReport, retrievalSessionImageUrl } from "@/lib/api-client";
 import { StepProgress, type WorkflowStepDisplay } from "@/components/workflow/StepProgress";
 import { Card } from "@/components/ui/card";
+import { OwnerChip } from "@/components/ui/owner-chip";
 import type { paths } from "@/lib/generated/api";
 
 type ReportDetailResponse =
@@ -53,6 +54,13 @@ export default function ComparePage() {
   const [comparison, setComparison] = useState<ComparisonResponse | null>(null);
   const [status, setStatus] = useState<"loading" | "comparing" | "done" | "error">("loading");
   const [errorDetail, setErrorDetail] = useState<string | null>(null);
+  const [currentDoctorId, setCurrentDoctorId] = useState<string | null>(null);
+
+  useEffect(() => {
+    getCurrentDoctor()
+      .then((doctor) => setCurrentDoctorId(doctor?.id ?? null))
+      .catch(() => setCurrentDoctorId(null));
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -165,9 +173,12 @@ export default function ComparePage() {
         {/* Side-by-side X-rays, in the lightbox register */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-2">
-            <h2 className="text-eyebrow uppercase text-ink-3">
-              Previous X-ray ({previousReport.report_date})
-            </h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-eyebrow uppercase text-ink-3">
+                Previous X-ray ({previousReport.report_date})
+              </h2>
+              <OwnerChip ownerId={previousReport.doctor_id ?? null} currentDoctorId={currentDoctorId} />
+            </div>
             <div className="flex items-center justify-center rounded-card bg-lightbox p-2">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -178,9 +189,12 @@ export default function ComparePage() {
             </div>
           </div>
           <div className="flex flex-col gap-2">
-            <h2 className="text-eyebrow uppercase text-ink-3">
-              Current X-ray ({currentReport.report_date})
-            </h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-eyebrow uppercase text-ink-3">
+                Current X-ray ({currentReport.report_date})
+              </h2>
+              <OwnerChip ownerId={currentReport.doctor_id ?? null} currentDoctorId={currentDoctorId} />
+            </div>
             <div className="flex items-center justify-center rounded-card bg-lightbox p-2">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img

@@ -67,6 +67,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.auth import router as auth_router
 from app.api.comparisons import router as comparisons_router
+from app.api.dashboard import router as dashboard_router
+from app.api.doctors import router as doctors_router
 from app.api.explainability import router as explainability_router
 from app.api.generation import router as generation_router
 from app.api.patients import router as patients_router
@@ -151,3 +153,5 @@ app.include_router(patients_router)
 app.include_router(comparisons_router)
 app.include_router(reports_router)
 app.include_router(auth_router)
+app.include_router(doctors_router)
+app.include_router(dashboard_router)

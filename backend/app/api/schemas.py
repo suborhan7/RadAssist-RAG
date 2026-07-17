@@ -106,6 +106,7 @@ class ExplanationResponse(BaseModel):
     question: str
     answer: str
     created_at: str
+    doctor_id: str | None = None
 
 
 class PatientResponse(BaseModel):
@@ -122,6 +123,7 @@ class PatientHistoryReportResponse(BaseModel):
     status: str
     ai_content: ReportContentResponse
     created_at: str
+    doctor_id: str | None = None
 
 
 class ComparisonFactsResponse(BaseModel):
@@ -141,6 +143,7 @@ class ComparisonResponse(BaseModel):
     facts: ComparisonFactsResponse
     narrative: str
     created_at: str
+    doctor_id: str | None = None
 
 
 class ReportDetailResponse(BaseModel):
@@ -162,6 +165,7 @@ class ReportDetailResponse(BaseModel):
     report_date: str
     created_at: str
     retrieved_cases: list[RetrievedCaseResponse]
+    doctor_id: str | None = None
 
 
 class DoctorResponse(BaseModel):
@@ -174,6 +178,19 @@ class DoctorResponse(BaseModel):
     created_at: str
 
 
+class DoctorPublicResponse(BaseModel):
+    """Phase 15: GET /doctors/{doctor_id}, for rendering another doctor's
+    name on an OwnershipChip. Deliberately narrower than DoctorResponse --
+    excludes email/created_at, not just password_hash -- a doctor's own
+    identity is fully visible to themselves (GET /auth/me), but the
+    shared-registry read model (§2 of phase13_auth_architecture.md) only
+    needs a name to attribute someone else's work, not their contact
+    details."""
+
+    id: str
+    full_name: str
+
+
 class RegisterResponse(BaseModel):
     doctor: DoctorResponse
     token: str
@@ -181,3 +198,13 @@ class RegisterResponse(BaseModel):
 
 class LoginResponse(BaseModel):
     token: str
+
+
+class DashboardStatsResponse(BaseModel):
+    """Phase 15. Real counts, per frontend/CLAUDE.md's explicit
+    instruction not to invent a placeholder stat."""
+
+    my_reports: int
+    total_reports: int
+    my_patients: int
+    total_patients: int

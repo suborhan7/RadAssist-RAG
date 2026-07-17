@@ -381,3 +381,38 @@ export async function getCurrentDoctor(): Promise<CurrentDoctorResponse | null> 
   }
   return response.json() as Promise<CurrentDoctorResponse>;
 }
+
+type DoctorPublicResponse =
+  paths["/doctors/{doctor_id}"]["get"]["responses"][200]["content"]["application/json"];
+
+/**
+ * Phase 15: resolves an arbitrary doctor_id to a display name for
+ * OwnershipChip's "other doctor" case (design_specification.md §7).
+ * Deliberately returns only {id, full_name} -- another doctor's email
+ * isn't this caller's business, per the backend route's own docstring.
+ */
+export async function getDoctor(doctorId: string): Promise<DoctorPublicResponse> {
+  const response = await fetch(`${API_URL}/doctors/${doctorId}`, { credentials: "include" });
+  if (!response.ok) {
+    const detail = await readErrorDetail(response);
+    throw new ApiError(response.status, detail ?? `GET /doctors/${doctorId} failed: ${response.status}`);
+  }
+  return response.json() as Promise<DoctorPublicResponse>;
+}
+
+type DashboardStatsResponse =
+  paths["/dashboard/stats"]["get"]["responses"][200]["content"]["application/json"];
+
+/**
+ * Phase 15: real counts for the Dashboard's ownership framing --
+ * "your reports vs. the shared registry" -- per frontend/CLAUDE.md's
+ * explicit instruction not to invent a placeholder stat.
+ */
+export async function getDashboardStats(): Promise<DashboardStatsResponse> {
+  const response = await fetch(`${API_URL}/dashboard/stats`, { credentials: "include" });
+  if (!response.ok) {
+    const detail = await readErrorDetail(response);
+    throw new ApiError(response.status, detail ?? `GET /dashboard/stats failed: ${response.status}`);
+  }
+  return response.json() as Promise<DashboardStatsResponse>;
+}
