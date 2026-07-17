@@ -6775,3 +6775,201 @@ scope: report finalize/edit/regenerate (a pre-existing gap from Phase
 8/12, confirmed with the user rather than silently patched around, still
 open), and everything in Phase 13b/14/15 (frontend login/register,
 visual system pass, ownership UI).
+
+---
+
+## Phase 13b (Authentication & Doctor Ownership — Frontend Login/Register)
+
+Per `frontend/CLAUDE.md`'s build order: `frontend/src/app/login/page.tsx`
+and `register/page.tsx` (new routes), `lib/api-client.ts` wired for
+cookie-based auth, gated on registering and logging in through the real
+UI and confirming the session round-trips to a protected endpoint.
+
+**Citation slips found and corrected, not treated as blocking
+conflicts.** `frontend/CLAUDE.md` cites the Login screen as
+`design_specification.md` §8.1 and its corrections section as §16; the
+actual document has Login at §8.2 (§8.1 is "Landing (public)", a
+different screen) and its corrections section at §15 (§16 is "Frozen", a
+closing statement, not a corrections list). Both are off-by-one citation
+errors, confirmed by reading the sections directly, not a genuine
+disagreement about what to build -- the content CLAUDE.md described
+("split, lightbox left, form right, service status strip" /
+"PAT-000001, not `RA-{YYYY}-{NNNNNN}`") is real, just filed under the
+adjacent section number. Corrected in place rather than escalated, same
+class of resolution as this project's prior folder-structure/naming
+mismatches.
+
+**A second, more consequential gap: no doctor self-registration screen
+exists anywhere in `design_specification.md`.** Its own §8.6 "Register
+patient" is a different entity entirely (a `Patient` record, modal,
+server-generated `RA-{YYYY}-{NNNNNN}` id -- not reused here, per
+`frontend/CLAUDE.md`'s explicit rule). Self-registration
+(`phase13_auth_architecture.md` Decision 1) was never in the original
+design's scope. Rather than inventing new visual language or silently
+skipping the screen, `/register` reuses `/login`'s exact layout and
+component styling -- the lowest-risk extension of an already-frozen
+pattern -- and this substitution is stated in the page's own docstring
+and here, not left for a reader to discover independently.
+
+**Service status strip, deliberately reduced, not fully built.** The
+design spec calls for four live indicators (FastAPI, Ollama, ChromaDB,
+GPU) on the Login screen. No backend endpoint reports Ollama/ChromaDB/GPU
+reachability individually (`GET /health` is liveness-only, by its own
+docstring, unchanged since Phase 4). Fabricating three additional status
+dots with no real check behind them would display false information
+rather than none, so `/login` shows a single real "Backend" indicator,
+reusing the exact `GET /health` call the existing Dashboard already
+makes. Flagged here rather than silently presented as the full strip the
+spec describes.
+
+### Implementation & Validation
+
+**`lib/api-client.ts`**: `registerDoctor()`/`loginDoctor()`/
+`getCurrentDoctor()` added, typed directly off the regenerated OpenAPI
+schema (`npm run generate-types` re-run against the live backend, now
+including the three Phase 13a auth routes). Every existing fetch call in
+this file (`createPatient`, `searchPatients`, `getPatient`,
+`getPatientHistory`, `getQuestionnaire`, `generateReport`, `getReport`,
+`explainReport`, `createComparison`) and the XHR-based
+`retrieveWithProgress` gained `credentials: "include"` /
+`xhr.withCredentials = true` -- every one of these routes now requires
+`Depends(get_current_doctor)` as of Phase 13a Step 5, and without
+sending credentials, every call would silently 401 regardless of a valid
+cookie sitting in the browser. The response body's own `token` field
+(also present in the register/login response, per the frozen contract)
+is deliberately never read or stored in JS state -- the real session is
+the httpOnly cookie the same response already set; persisting the token
+a second place JS can reach would defeat the point of httpOnly in the
+first place.
+
+**A real, non-hypothetical bug found by testing through an actual
+browser instead of only unit-level fetch mocking:** the first full
+register -> `/auth/me` round-trip, run via Playwright against the real
+dev servers, showed the cookie was never being set in the browser at
+all -- `POST /auth/register` returned 200, but a follow-up
+`GET /auth/me` came back 401. Root cause: `lib/env.ts`'s default
+`NEXT_PUBLIC_API_URL` was `http://127.0.0.1:8000`, while this app is
+served from `http://localhost:3000` -- and browsers treat `localhost`
+and `127.0.0.1` as different *sites* for cookie purposes (SameSite
+policy keys on hostname, not on whether both resolve to the loopback
+interface), so the `SameSite=Lax` cookie Phase 13a's `_set_auth_cookie`
+sets was silently never sent back on the follow-up request. This would
+have broken authentication for every real user of this dev setup, not
+just the test -- fixed by changing the default (and `.env.local`/
+`.env.local.example`) to `http://localhost:8000`, confirmed both
+hostnames independently reach the same running backend
+(`curl localhost:8000/health` and `curl 127.0.0.1:8000/health` both
+`200`) before concluding the hostname, not reachability, was the actual
+defect.
+
+**Real end-to-end verification, via a real headless browser against the
+real dev servers (not a mocked fetch or a unit test), after the fix:**
+```
+=== 1. Navigate to /register ===
+=== 2. Submit registration ===
+Redirected to: http://localhost:3000/
+=== 3. Confirm real httpOnly cookie was set ===
+radassist_token cookie present: true httpOnly: true
+=== 4. Confirm GET /auth/me (protected) succeeds with this cookie ===
+GET /auth/me: 200 {"id":"...","email":"...","full_name":"Dr. Gate Verify",...}
+=== 5. Log out (clear cookies) and log back in via /login ===
+Redirected to: http://localhost:3000/
+GET /auth/me after login: 200 {...same doctor...}
+=== 6. Wrong password on /login shows the specific error copy ===
+Wrong-password error shown correctly.
+```
+The one console message logged during the whole flow was the expected
+401 from step 6's intentional wrong-password check, not an unexpected
+failure -- same "one console message, and it was the expected one"
+verification standard as Phase 12 Step 8's walkthrough. `npx tsc
+--noEmit` and `npm run lint`: both clean.
+
+**`check:design`, corrected after an initial wrong claim.** This log
+originally stated "`check:design` does not exist yet" without having run
+it -- wrong, and caught only because the user asked for the literal
+command output rather than accepting the summary. `check-design-tokens.mjs`
+exists as a real, standalone, runnable script (not yet aliased to
+`npm run check:design` in `package.json`); running it directly
+(`node check-design-tokens.mjs`) against the real `src/` tree shows it
+**fails project-wide: 203 violations across 12 files**, including every
+pre-existing Phase 12 page (`page.tsx`: 8, `patients/new/page.tsx`: 11,
+`reports/[reportId]/page.tsx`: 30, `globals.css`: 4, and so on) --
+because `src/styles/tokens.css` and the semantic Tailwind config the
+script checks against were never extracted into `frontend/src/` at all;
+that extraction is Phase 14's explicitly scoped job, not something
+Phase 12 or 13b did. This is a pre-existing condition from Phase 12, not
+a Phase 13b regression.
+
+Verified directly, not assumed, that Login/Register's violations are the
+same kind already present everywhere else, not a new or worse pattern:
+filtering the script's real output to just `login/page.tsx` (19
+violations) and `register/page.tsx` (16) shows every single one is the
+identical `tailwind-default-palette` rule, over the identical class
+families (`text-zinc-*`, `bg-zinc-*`, `border-zinc-*`, `bg-red-*`/
+`bg-green-*`) already present in `page.tsx` and `patients/new/page.tsx`
+side-by-side. Zero `hex-literal` or `raw-padding` violations in either
+new file. Both new pages were written by directly following
+`patients/new/page.tsx`'s existing styling convention, so this identity
+is by construction, not coincidence. Phase 14 is scoped to fix all 12
+files -- including these two -- together, in one pass, once the token
+system actually exists to check against.
+
+### How to Write This in Your Thesis
+
+*Methodology chapter, "Authentication & Ownership" subsection, continued:*
+
+> The frontend half of Phase 13 surfaced a defect of a kind distinct from
+> any of the three categories Phase 12 had already named -- not an
+> untested environment, not an actively hazardous shared assumption, and
+> not an untested exception boundary, but a same-machine hostname
+> distinction invisible to every check performed at the level of a single
+> service. The backend's own test suite, run entirely through
+> `TestClient`, never constructs two different hostnames pointed at the
+> same process and therefore could never have exposed it; the frontend's
+> type-checker and linter have no concept of cookie same-site policy at
+> all. Only a real browser, executing a real cross-origin request between
+> two independently-addressed loopback names, ever exercises the specific
+> mechanism that failed. That the fix reduces to a one-line default
+> change should not be read as evidence the defect was minor to find:
+> it was invisible to every form of verification this project had used
+> up to this point, and became visible only once an end-to-end browser
+> check treated the frontend and backend as the two genuinely separate
+> origins a real deployment would also treat them as, rather than as a
+> single logical system under test.
+
+---
+
+## Phase 13b (Authentication & Doctor Ownership — Frontend Login/Register) — COMPLETE
+
+`login/` and `register/` routes built, `lib/api-client.ts` wired for
+cookie-based auth across every existing call, and the real gate --
+register through the actual UI, confirm a genuine httpOnly session
+cookie, confirm it authenticates a protected endpoint, log out and back
+in, confirm the specific (not generic) wrong-credentials copy -- passed
+against real running dev servers via a headless browser, not a mock.
+Found and fixed one real defect in the process (a `127.0.0.1`/`localhost`
+default-hostname mismatch that silently broke cookie delivery for every
+real user of the existing dev setup, not merely for this phase's own
+test). Two citation slips in `frontend/CLAUDE.md` (section numbers for
+the Login screen and the design spec's corrections list) corrected in
+place. One real scope gap named explicitly rather than worked around
+silently: `design_specification.md` has no doctor self-registration
+screen at all, so `/register` deliberately reuses `/login`'s visual
+language rather than inventing new design. Service status strip reduced
+to a single real backend-liveness check, since no endpoint exists yet to
+back the design spec's other three indicators. `npx tsc --noEmit` and
+`npm run lint`: clean. `check-design-tokens.mjs` (not yet aliased to
+`npm run check:design`) fails project-wide -- 203 violations, 12 files --
+a pre-existing condition from Phase 12 (the token system it checks
+against was never extracted into `frontend/src/`), confirmed NOT a
+Phase 13b regression: Login/Register's violations (19 and 16) are the
+identical `tailwind-default-palette` rule over the identical class
+families already present in every other Phase 12 page, verified by
+directly diffing the script's filtered output against `page.tsx`/
+`patients/new/page.tsx`. Phase 14 fixes all 12 files together. Not yet
+built, explicitly out of Phase 13b scope:
+auth guards retrofitted onto the existing Phase 12 pages (redirecting an
+unauthenticated visitor away from e.g. the upload flow or Radiologist
+Workspace), which remains open for a later phase; Phase 14 (visual
+system pass) and Phase 15 (ownership UI), both still gated on this phase
+as planned.

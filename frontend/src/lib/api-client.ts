@@ -18,6 +18,16 @@
  * search, zero matches") is NOT an error at all, per Phase 11 Step 4's
  * backend semantics. That distinction has to be preserved here, not
  * collapsed into "the fetch succeeded or it didn't."
+ *
+ * Phase 13: every request now sends `credentials: "include"` -- the
+ * real auth mechanism is an httpOnly cookie (radassist_token) set by
+ * POST /auth/register and /auth/login, and every other route now
+ * requires it (Depends(get_current_doctor), Phase 13a Step 5). Without
+ * `credentials: "include"`, fetch() never sends cookies on a
+ * cross-origin request (frontend :3000, backend :8000 are different
+ * origins even though same-site), so every call would silently 401
+ * despite a valid cookie sitting in the browser. retrieveWithProgress()
+ * gets the equivalent via `xhr.withCredentials = true`.
  */
 import { API_URL } from "./env";
 import type { paths } from "./generated/api";
@@ -78,6 +88,7 @@ export async function createPatient(body: CreatePatientRequest): Promise<Patient
   const response = await fetch(`${API_URL}/patients`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify(body),
   });
   if (!response.ok) {
@@ -101,7 +112,9 @@ export async function searchPatients(
   if (query.name) params.set("name", query.name);
   if (query.dob) params.set("dob", query.dob);
 
-  const response = await fetch(`${API_URL}/patients/search?${params.toString()}`);
+  const response = await fetch(`${API_URL}/patients/search?${params.toString()}`, {
+    credentials: "include",
+  });
   if (!response.ok) {
     const detail = await readErrorDetail(response);
     throw new ApiError(response.status, detail ?? `GET /patients/search failed: ${response.status}`);
@@ -113,7 +126,7 @@ type GetPatientResponse =
   paths["/patients/{patient_id}"]["get"]["responses"][200]["content"]["application/json"];
 
 export async function getPatient(patientId: string): Promise<GetPatientResponse> {
-  const response = await fetch(`${API_URL}/patients/${patientId}`);
+  const response = await fetch(`${API_URL}/patients/${patientId}`, { credentials: "include" });
   if (!response.ok) {
     const detail = await readErrorDetail(response);
     throw new ApiError(response.status, detail ?? `GET /patients/${patientId} failed: ${response.status}`);
@@ -125,7 +138,7 @@ type PatientHistoryResponse =
   paths["/patients/{patient_id}/history"]["get"]["responses"][200]["content"]["application/json"];
 
 export async function getPatientHistory(patientId: string): Promise<PatientHistoryResponse> {
-  const response = await fetch(`${API_URL}/patients/${patientId}/history`);
+  const response = await fetch(`${API_URL}/patients/${patientId}/history`, { credentials: "include" });
   if (!response.ok) {
     const detail = await readErrorDetail(response);
     throw new ApiError(
@@ -165,6 +178,7 @@ export function retrieveWithProgress(
 
     const xhr = new XMLHttpRequest();
     xhr.open("POST", `${API_URL}/retrieve`);
+    xhr.withCredentials = true;
     xhr.upload.onload = () => callbacks.onUploadComplete();
     xhr.onload = () => {
       if (xhr.status >= 200 && xhr.status < 300) {
@@ -191,7 +205,7 @@ type QuestionnaireResponse =
   paths["/questionnaire/{session_id}"]["get"]["responses"][200]["content"]["application/json"];
 
 export async function getQuestionnaire(sessionId: string): Promise<QuestionnaireResponse> {
-  const response = await fetch(`${API_URL}/questionnaire/${sessionId}`);
+  const response = await fetch(`${API_URL}/questionnaire/${sessionId}`, { credentials: "include" });
   if (!response.ok) {
     const detail = await readErrorDetail(response);
     throw new ApiError(
@@ -213,6 +227,7 @@ export async function generateReport(
   const response = await fetch(`${API_URL}/generate-report`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify(body),
   });
   if (!response.ok) {
@@ -226,7 +241,7 @@ type ReportDetailResponse =
   paths["/reports/{report_id}"]["get"]["responses"][200]["content"]["application/json"];
 
 export async function getReport(reportId: string): Promise<ReportDetailResponse> {
-  const response = await fetch(`${API_URL}/reports/${reportId}`);
+  const response = await fetch(`${API_URL}/reports/${reportId}`, { credentials: "include" });
   if (!response.ok) {
     const detail = await readErrorDetail(response);
     throw new ApiError(response.status, detail ?? `GET /reports/${reportId} failed: ${response.status}`);
@@ -252,6 +267,7 @@ export async function explainReport(reportId: string, question: string): Promise
   const response = await fetch(`${API_URL}/reports/${reportId}/explain`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify(body),
   });
   if (!response.ok) {
@@ -284,6 +300,7 @@ export async function createComparison(
   const response = await fetch(`${API_URL}/comparisons`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify(body),
   });
   if (!response.ok) {
@@ -298,4 +315,69 @@ export async function createComparison(
  * builds the URL for a plain <img src=...>, no fetch/parsing needed. */
 export function retrievalSessionImageUrl(sessionId: string): string {
   return `${API_URL}/retrieval-sessions/${sessionId}/image`;
+}
+
+type RegisterRequest =
+  paths["/auth/register"]["post"]["requestBody"]["content"]["application/json"];
+type RegisterResponse =
+  paths["/auth/register"]["post"]["responses"][200]["content"]["application/json"];
+
+/**
+ * The response body's `token` field is deliberately ignored by every
+ * caller here -- the real session mechanism is the httpOnly cookie the
+ * backend already set on this same response (Set-Cookie: radassist_token,
+ * per Phase 13a). Storing the body's token in JS state/localStorage would
+ * duplicate the session in a location an XSS payload COULD read, defeating
+ * the entire point of making the cookie httpOnly in the first place.
+ */
+export async function registerDoctor(body: RegisterRequest): Promise<RegisterResponse> {
+  const response = await fetch(`${API_URL}/auth/register`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(body),
+  });
+  if (!response.ok) {
+    const detail = await readErrorDetail(response);
+    throw new ApiError(response.status, detail ?? `POST /auth/register failed: ${response.status}`);
+  }
+  return response.json() as Promise<RegisterResponse>;
+}
+
+type LoginRequest =
+  paths["/auth/login"]["post"]["requestBody"]["content"]["application/json"];
+type LoginResponse =
+  paths["/auth/login"]["post"]["responses"][200]["content"]["application/json"];
+
+export async function loginDoctor(body: LoginRequest): Promise<LoginResponse> {
+  const response = await fetch(`${API_URL}/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(body),
+  });
+  if (!response.ok) {
+    const detail = await readErrorDetail(response);
+    throw new ApiError(response.status, detail ?? `POST /auth/login failed: ${response.status}`);
+  }
+  return response.json() as Promise<LoginResponse>;
+}
+
+type CurrentDoctorResponse =
+  paths["/auth/me"]["get"]["responses"][200]["content"]["application/json"];
+
+/**
+ * 401 (no cookie, or an expired/invalid one) is the normal "not logged
+ * in" case here, not a real error -- callers use this to check auth
+ * state (e.g. redirecting to /login), so it returns null on 401 instead
+ * of throwing, unlike every other function in this client.
+ */
+export async function getCurrentDoctor(): Promise<CurrentDoctorResponse | null> {
+  const response = await fetch(`${API_URL}/auth/me`, { credentials: "include" });
+  if (response.status === 401) return null;
+  if (!response.ok) {
+    const detail = await readErrorDetail(response);
+    throw new ApiError(response.status, detail ?? `GET /auth/me failed: ${response.status}`);
+  }
+  return response.json() as Promise<CurrentDoctorResponse>;
 }
