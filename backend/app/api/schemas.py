@@ -170,12 +170,37 @@ class ReportDetailResponse(BaseModel):
 
 class DoctorResponse(BaseModel):
     """Phase 13. Deliberately excludes password_hash -- never serialized
-    back to any client, registering or otherwise."""
+    back to any client, registering or otherwise.
+
+    Phase 16: bmdc_number/default_* are self-only fields (Settings/Profile).
+    They belong ONLY here, never on DoctorPublicResponse below -- same
+    reasoning that already kept email/created_at out of that one."""
 
     id: str
     email: str
     full_name: str
     created_at: str
+    bmdc_number: str | None = None
+    default_top_k: int | None = None
+    default_language: str | None = None
+    default_questionnaire_skip: bool | None = None
+    default_rail_state: str | None = None
+    default_export_format: str | None = None
+
+
+class UpdateProfileRequest(BaseModel):
+    """Phase 16: PATCH /auth/me. Every field optional -- a partial update,
+    not a full replace; omitted fields are left untouched. email is
+    deliberately not here -- no re-verification workflow exists for
+    changing it."""
+
+    full_name: str | None = None
+    bmdc_number: str | None = None
+    default_top_k: int | None = None
+    default_language: str | None = None
+    default_questionnaire_skip: bool | None = None
+    default_rail_state: str | None = None
+    default_export_format: str | None = None
 
 
 class DoctorPublicResponse(BaseModel):
@@ -185,7 +210,9 @@ class DoctorPublicResponse(BaseModel):
     identity is fully visible to themselves (GET /auth/me), but the
     shared-registry read model (§2 of phase13_auth_architecture.md) only
     needs a name to attribute someone else's work, not their contact
-    details."""
+    details. Phase 16: bmdc_number/default_* are likewise excluded here on
+    purpose -- self-only data, never exposed via the public
+    name-resolution endpoint."""
 
     id: str
     full_name: str
@@ -208,3 +235,23 @@ class DashboardStatsResponse(BaseModel):
     total_reports: int
     my_patients: int
     total_patients: int
+
+
+class SystemStatsResponse(BaseModel):
+    """Phase 16: GET /system/stats, design_specification.md §8.16's
+    "storage & privacy" + index-stats section.
+
+    original_images_stored is a STRUCTURAL guarantee, not a live query --
+    confirmed by reading app/api/retrieval.py: POST /retrieve is the only
+    file-upload endpoint in this backend, and the raw upload only ever
+    exists as a tempfile.NamedTemporaryFile, synchronously deleted in
+    _saved_upload's `finally` block before the request even returns.
+    There is no directory this system could count originals in, so this
+    is always 0 by construction, not a coincidence of current usage."""
+
+    masked_images_stored: int
+    original_images_stored: int
+    index_size: int
+    embedding_model: str
+    embedding_version: str
+    collection_name: str

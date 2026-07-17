@@ -7499,3 +7499,218 @@ yet, since finalize/edit/regenerate remains the still-open Phase 13a
 gap), an access-log table/UI, and anything under "Not in scope unless
 you tell me otherwise" in `frontend/CLAUDE.md` (Settings·Profile,
 standalone Studies registry, admin role).
+
+---
+
+## Phase 16 (Settings · Profile)
+
+Per explicit user scoping (not an implicit go-ahead from
+`frontend/CLAUDE.md`'s "not in scope unless you tell me otherwise"
+list, which named four items -- Settings·Profile, a standalone Studies
+registry, an access-log table/UI, an admin role -- each requiring its
+own confirmed mini-architecture, same discipline as Phase 13): Phase 16
+is scoped to **Settings·Profile only**. The standalone Studies registry
+is explicitly deferred to its own future phase/gate -- a different risk
+class (hospital-wide read semantics on a new page), not bundled here.
+
+Three scope decisions confirmed before any migration was written, same
+discipline as Phase 15's `doctor_id` gap:
+1. **Workspace defaults (K, language, questionnaire-skip, rail state,
+   export format): extend the `doctors` table with 5 nullable columns**,
+   not a new `doctor_preferences` table -- matches this project's
+   existing precedent of not over-splitting small 1:1 data.
+2. **Settings·System scoped to storage stats + index stats only.**
+   `GET /health` reused as-is for "service health" -- no new Ollama/
+   ChromaDB reachability checks, which would be new backend scope beyond
+   Settings·Profile (the same reasoning that already ruled out inventing
+   a finalize endpoint in Phase 13a/15).
+3. **BMDC number confirmed as a genuine 6th additive column**, not
+   already part of the frozen `phase13_auth_architecture.md` `Doctor`
+   entity (`{id, email, password_hash, full_name, created_at}` --
+   checked directly before assuming) -- recorded as entered, this system
+   has no access to any real BMDC registry, and the UI says so rather
+   than implying verification.
+
+**Response-schema plan confirmed before the migration, not assumed:**
+`DoctorResponse` (the existing self-view schema already used by
+`RegisterResponse`/`GET /auth/me`, which is exactly why `DoctorPublicResponse`
+had to be split off separately in Phase 15) gains the 6 new fields.
+`DoctorPublicResponse` (`GET /doctors/{doctor_id}`) stays **completely
+untouched** -- verified by a dedicated integration test, not just
+asserted, that a second doctor resolving the first doctor's name never
+sees `bmdc_number`/`default_*`/`email` in that response.
+
+**`original_images_stored`'s exact semantics investigated before
+writing any code, per explicit user instruction not to guess:** grepped
+every route in `app/api/` for `UploadFile` -- `POST /retrieve`
+(`app/api/retrieval.py`) is the **only** file-upload endpoint in this
+entire backend, and its raw upload only ever exists as a
+`tempfile.NamedTemporaryFile`, synchronously deleted in `_saved_upload`'s
+`finally` block before the request even returns. There is no
+directory anywhere in this system that could hold an original at rest.
+`original_images_stored` is therefore a documented **structural
+constant** (always `0`, by construction, not by current usage), not a
+disguised hardcoded value standing in for a skipped query -- stated as
+such in `SystemStatsService`'s own docstring, not left for a reader to
+wonder about.
+
+### Implementation & Validation
+
+**Migration** (`4da4e9df3c23`, chained after Phase 15's
+`93de8accdb66`): `bmdc_number`, `default_top_k`, `default_language`,
+`default_questionnaire_skip`, `default_rail_state`, `default_export_format`
+-- all nullable, plain `ADD COLUMN` (no batch mode needed, no FK, no
+index, since none of these are ever filtered/joined on). Verified
+against a disposable throwaway file: real `PRAGMA table_info` inspection
+(all 6 columns present, all nullable), single-step `downgrade -1`, full
+`downgrade base -> upgrade head` round-trip, both clean, before applying
+to real `dev.db`.
+
+**`Doctor` domain entity, `DoctorRecord`, `DoctorService`:** all 6 fields
+added, defaulted to `None`/nullable throughout. New
+`DoctorService.update_profile(doctor_id, **fields)` -- a real partial
+update (`setattr` only for keys actually present in `**fields`), added
+to `IDoctorRepository`'s Protocol too (a real capability, not a
+one-off route-layer hack). New `PATCH /auth/me` (same `/auth/*`
+namespace as the existing `GET /auth/me`, same resource, different
+verb) uses Pydantic's `model_dump(exclude_unset=True)` so an omitted
+field is genuinely left untouched, not reset to `None` -- verified by a
+dedicated test that a second partial update to a *different* field does
+not erase what the first one set.
+
+**`GET /system/stats`:** `IVectorStore.count()` added (a real,
+one-line passthrough to chromadb's own `collection.count()`, not a
+re-derivation) and implemented in `ChromaVectorStore`. New
+`SystemStatsService` computes `masked_images_stored` via a real
+directory listing of `settings.UPLOADED_IMAGES_DIR`, `index_size` via
+the new `count()`, and `original_images_stored` as the documented
+structural `0`. New `app/api/system.py` route, authenticated like every
+other Phase 4-15 route even though the data itself isn't per-doctor
+(there is no genuinely public route in this system apart from
+`GET /health`).
+
+**A real encoding bug caught mid-implementation, not left in the
+codebase:** several docstrings/comments written this phase used a
+literal middle-dot character (`Settings·Profile`) that silently
+mis-encoded to an unrelated CJK character (`路`, U+8DEF) during this
+session's own file-write tool calls -- confirmed by grepping the actual
+`.py`/`.ts` source files directly, not assumed from how the text
+displayed. Swept across every affected backend and frontend file
+(`schemas.py`, `auth.py`, `entities.py`, `interfaces.py`, `doctor.py`,
+`system_stats_service.py`, `api-client.ts`, `settings/page.tsx`) and
+replaced with an ASCII-safe `Settings/Profile` separator to remove the
+encoding risk entirely rather than fight the same tool behavior again;
+full backend regression re-run afterward to confirm the sweep changed
+nothing behaviorally.
+
+**New test coverage**, not just manual verification:
+`test_doctor_service_update_profile.py` (4 unit tests: fresh doctor has
+every field `None`; a partial update sets only what was passed; a
+*second* partial update to a different field doesn't erase the first;
+a nonexistent `doctor_id` raises) and
+`test_phase16_settings_integration.py` (2 integration tests: the full
+real `PATCH /auth/me` round-trip including the cross-doctor
+`DoctorPublicResponse` leak check described above, and
+`GET /system/stats` returning real, structurally-correct values). Full
+suite: **163 passed** (157 + 6 new).
+
+**Real end-to-end verification, via a real headless browser against
+real running dev servers, not assumed from the API tests alone:**
+registered a doctor, navigated to the new `/settings` route (linked from
+the Dashboard), filled in a BMDC number and all 5 workspace defaults,
+saved, **reloaded the page**, and confirmed every value round-tripped
+through a real page reload (not just client-side state) -- BMDC number,
+`default_top_k=7`, language, the questionnaire-skip checkbox, and rail
+state all persisted correctly. The System section showed real,
+non-fabricated values: `Index size: 2462 cases` (a real `chromadb`
+collection count), `Masked images stored: 204` (a real, live directory
+count that had grown from 162 earlier in this session, from this
+session's own test walkthroughs), `Original images stored: 0` with the
+honest privacy statement, and a real `Backend: ok` service-health chip
+(an actual `GET /health` call, not a hardcoded "online"). Zero console
+errors. `npx tsc --noEmit`, `npm run lint`, `npm run check:design`
+(**0 violations, 33 files**) all clean.
+
+**One design decision corrected mid-build, not shipped as first
+written:** `ServiceChip` (the dot + label + mono-value primitive) was
+initially reused for the Index size/embedding model/storage rows too,
+matching its visual style -- but `ServiceChip`'s dot literally encodes
+an online/degraded/offline *state*, which plain data like "2462 cases"
+does not have. Reworked before showing any screen: `ServiceChip` stays
+reserved for the one genuine service-health row (`Backend`, backed by a
+real `GET /health` call added for this page specifically, not assumed
+from another call having succeeded), and the stats themselves render as
+a plain `<dl>` list -- a small thing, but exactly the kind of "does this
+component's implied semantics actually match what I'm using it to say"
+check this project has applied to every UI primitive since Phase 14.
+
+### How to Write This in Your Thesis
+
+*Methodology chapter, "Settings and Self-Service" subsection:*
+
+> Phase 16 was the smallest phase in scope but not in the number of
+> real decisions it required, because nearly every one of its fields
+> touched a boundary this project has repeatedly had to draw
+> explicitly: what a doctor is entitled to see about themselves versus
+> what the shared registry is entitled to see about them. The BMDC
+> number and workspace-preference fields are self-only by design, and
+> the actual risk they introduce is not that they exist but that they
+> could leak sideways through an endpoint built for a different purpose
+> -- `GET /doctors/{doctor_id}`, added the previous phase to resolve a
+> colleague's name onto an ownership chip. Confirming that leak could
+> not happen was not a matter of code review; it required a real second
+> doctor, a real HTTP call, and a real assertion that specific keys were
+> absent from the response body, because a schema that merely doesn't
+> list a field is a different and weaker guarantee than a schema proven
+> not to expose it under a concurrent, adversarial-shaped usage. The
+> phase's other finding, an original-images count that could have been
+> a single hardcoded return statement, was treated with the same
+> standard applied throughout this project to every claim about what
+> data does or does not exist: the constant is correct not because
+> zero is a safe default but because grepping every route in this
+> backend confirmed there is exactly one upload path and it deletes its
+> input before returning, which makes the zero a provable property of
+> the system rather than an assumption about its current inputs. Coding
+> agent tooling introduced an unrelated but instructive failure mode
+> this phase: a Unicode character typed correctly, and displayed
+> correctly on screen, silently corrupted into an unrelated character
+> during a file write, detectable only by grepping the raw bytes of the
+> source file rather than trusting what any tool had rendered back --
+> a reminder that the layer at which a defect is introduced is not
+> always the layer at which it is checked.
+
+---
+
+## Phase 16 (Settings · Profile) — COMPLETE
+
+Settings·Profile built to the explicitly confirmed scope only (Studies
+registry, access-log table/UI, and admin role all remain deferred,
+un-improvised). Backend: 6 new nullable `doctors` columns (BMDC number +
+5 workspace defaults), a real partial-update `PATCH /auth/me`
+(`exclude_unset` semantics, verified not to clobber untouched fields
+across successive calls), and `GET /system/stats` (real `chromadb`
+index count via a new `IVectorStore.count()`, real masked-image
+directory count, and a documented structural `0` for
+`original_images_stored` -- confirmed via a full grep of every upload
+route in this backend, not assumed). `DoctorPublicResponse` (Phase 15)
+verified, via a dedicated integration test, to never leak any of the 6
+new self-only fields to another doctor. One real encoding bug (a
+middle-dot character silently corrupted during this session's own file
+writes) found by grepping raw source bytes and swept clean across 8
+files. Full backend: **163/163 passing** (157 + 6 new tests). Frontend:
+a new `/settings` page (Profile, Workspace, System sections), linked
+from the Dashboard, verified via a real headless-browser walkthrough
+including an actual page reload to prove persistence (not just client
+state) -- BMDC number and all 5 workspace defaults round-tripped
+correctly, System section showed real index/storage counts and a real
+`GET /health`-backed status chip. `tsc`/`lint` clean, `check:design`
+**0 violations, 33 files**. One design-decision correction made before
+shipping, not after: `ServiceChip`'s online/degraded/offline semantics
+don't fit plain data stats, so those render as a plain list while
+`ServiceChip` stays reserved for the one genuine service-health row.
+"Thresholds shown read-only" (design_specification.md §8.16) not built
+-- no real backend-configured similarity threshold exists to show
+honestly. Nothing in this phase wires the new workspace defaults into
+any other flow yet (e.g. the upload flow does not pre-fill K from
+`default_top_k`) -- stated explicitly as a known gap, not a silent
+inconsistency.

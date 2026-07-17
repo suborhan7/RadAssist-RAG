@@ -75,6 +75,7 @@ from app.api.patients import router as patients_router
 from app.api.questionnaire import router as questionnaire_router
 from app.api.reports import router as reports_router
 from app.api.retrieval import router as retrieval_router
+from app.api.system import router as system_router
 from app.core.config import settings
 from app.infrastructure.biomedclip_adapter import BiomedCLIPAdapter
 from app.infrastructure.chroma_store import ChromaVectorStore
@@ -155,3 +156,4 @@ app.include_router(reports_router)
 app.include_router(auth_router)
 app.include_router(doctors_router)
 app.include_router(dashboard_router)
+app.include_router(system_router)

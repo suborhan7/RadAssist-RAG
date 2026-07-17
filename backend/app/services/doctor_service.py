@@ -51,6 +51,25 @@ class DoctorService:
         record = self._db.query(DoctorRecord).filter(DoctorRecord.id == doctor_uuid).one_or_none()
         return self._to_domain(record) if record is not None else None
 
+    def update_profile(self, doctor_id: str, **fields: object) -> Doctor:
+        """Phase 16: partial self-update. Only the keys actually present in
+        **fields are written -- e.g. calling with only bmdc_number=... must
+        not silently reset full_name or any default_* preference to None.
+        email is deliberately not an updatable field here (no route passes
+        it) -- no re-verification workflow exists for changing it."""
+        doctor_uuid = uuid.UUID(doctor_id)
+        record = self._db.query(DoctorRecord).filter(DoctorRecord.id == doctor_uuid).one_or_none()
+        if record is None:
+            raise ValueError(f"no DoctorRecord found for doctor_id={doctor_id}")
+        for key, value in fields.items():
+            setattr(record, key, value)
+        try:
+            self._db.commit()
+        except Exception:
+            self._db.rollback()
+            raise
+        return self._to_domain(record)
+
     @staticmethod
     def _to_domain(record: DoctorRecord) -> Doctor:
         return Doctor(
@@ -59,4 +78,10 @@ class DoctorService:
             password_hash=record.password_hash,
             full_name=record.full_name,
             created_at=record.created_at.isoformat() if record.created_at else "",
+            bmdc_number=record.bmdc_number,
+            default_top_k=record.default_top_k,
+            default_language=record.default_language,
+            default_questionnaire_skip=record.default_questionnaire_skip,
+            default_rail_state=record.default_rail_state,
+            default_export_format=record.default_export_format,
         )

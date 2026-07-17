@@ -100,3 +100,8 @@ class ChromaVectorStore:
         # silently drop any requested uid absent from the collection -- see
         # docstring above for why this is a deliberate non-error, not an oversight
         return [cases_by_uid[uid] for uid in uids if uid in cases_by_uid]
+
+    def count(self) -> int:
+        """Phase 16: a thin passthrough to chromadb's own collection.count() --
+        real index size, not a re-derivation of it."""
+        return self._collection.count()

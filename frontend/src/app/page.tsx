@@ -111,6 +111,12 @@ export default function Home() {
           >
             Register New Patient
           </Link>
+          <Link
+            href="/settings"
+            className={cn(BUTTON_BASE, VARIANT.ghost, SIZE.md, "w-full")}
+          >
+            Settings
+          </Link>
         </div>
       </main>
     </div>

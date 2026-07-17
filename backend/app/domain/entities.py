@@ -63,12 +63,27 @@ class Doctor:
     doctor performs (retrieval_sessions/comparisons/explanations each gain
     a `doctor_id` at the persistence layer, not here -- this entity's
     shape carries no ownership fields of its own, since a doctor doesn't
-    own themselves)."""
+    own themselves).
+
+    Phase 16 (Settings/Profile): bmdc_number and the five default_*
+    workspace preference fields are additive, self-only data -- NOT part
+    of the frozen phase13_auth_architecture.md entity shape. They must
+    never be added to DoctorPublicResponse (app/api/schemas.py), only to
+    the self-scoped DoctorResponse -- same reasoning that already kept
+    email/created_at out of the public one. bmdc_number is recorded as
+    entered; this system has no access to any real BMDC registry to
+    verify it against, and the UI must say so, not imply verification."""
     id: str
     email: str
     password_hash: str
     full_name: str
     created_at: str
+    bmdc_number: str | None = None
+    default_top_k: int | None = None
+    default_language: str | None = None
+    default_questionnaire_skip: bool | None = None
+    default_rail_state: str | None = None
+    default_export_format: str | None = None
 
 
 @dataclass(frozen=True)

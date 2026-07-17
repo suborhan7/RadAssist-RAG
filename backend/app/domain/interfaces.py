@@ -47,6 +47,13 @@ class IVectorStore(Protocol):
         persists study_uid/rank/similarity, not the full case content."""
         ...
 
+    def count(self) -> int:
+        """Phase 16: real index size for Settings/System (design_specification.md
+        §8.16). A thin passthrough to the underlying chromadb collection's
+        own .count() -- not a new capability this system computes, just one
+        this interface didn't expose yet."""
+        ...
+
 
 @runtime_checkable
 class IImageValidator(Protocol):
@@ -259,6 +266,13 @@ class IDoctorRepository(Protocol):
     def create(self, email: str, password_hash: str, full_name: str) -> Doctor: ...
     def find_by_email(self, email: str) -> Doctor | None: ...
     def find_by_id(self, doctor_id: str) -> Doctor | None: ...
+
+    def update_profile(self, doctor_id: str, **fields: object) -> Doctor:
+        """Phase 16: partial self-update (full_name, bmdc_number, the five
+        default_* workspace preferences). Only keys actually present in
+        **fields are changed -- omitted fields are left untouched, not
+        reset to None."""
+        ...
 
 
 @runtime_checkable

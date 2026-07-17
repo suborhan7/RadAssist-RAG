@@ -416,3 +416,40 @@ export async function getDashboardStats(): Promise<DashboardStatsResponse> {
   }
   return response.json() as Promise<DashboardStatsResponse>;
 }
+
+type UpdateProfileRequest =
+  paths["/auth/me"]["patch"]["requestBody"]["content"]["application/json"];
+type UpdateProfileResponse =
+  paths["/auth/me"]["patch"]["responses"][200]["content"]["application/json"];
+
+/**
+ * Phase 16: Settings/Profile's partial self-update. Only send the fields
+ * that actually changed -- the backend's exclude_unset semantics mean an
+ * omitted field is left untouched, not reset to null.
+ */
+export async function updateProfile(body: UpdateProfileRequest): Promise<UpdateProfileResponse> {
+  const response = await fetch(`${API_URL}/auth/me`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(body),
+  });
+  if (!response.ok) {
+    const detail = await readErrorDetail(response);
+    throw new ApiError(response.status, detail ?? `PATCH /auth/me failed: ${response.status}`);
+  }
+  return response.json() as Promise<UpdateProfileResponse>;
+}
+
+type SystemStatsResponse =
+  paths["/system/stats"]["get"]["responses"][200]["content"]["application/json"];
+
+/** Phase 16: Settings/System's real storage/index stats. */
+export async function getSystemStats(): Promise<SystemStatsResponse> {
+  const response = await fetch(`${API_URL}/system/stats`, { credentials: "include" });
+  if (!response.ok) {
+    const detail = await readErrorDetail(response);
+    throw new ApiError(response.status, detail ?? `GET /system/stats failed: ${response.status}`);
+  }
+  return response.json() as Promise<SystemStatsResponse>;
+}

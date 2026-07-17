@@ -33,7 +33,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import AUTH_COOKIE_NAME, get_current_doctor, get_db
-from app.api.schemas import DoctorResponse, LoginResponse, RegisterResponse
+from app.api.schemas import DoctorResponse, LoginResponse, RegisterResponse, UpdateProfileRequest
 from app.core.config import settings
 from app.domain.entities import Doctor
 from app.services.auth_service import AuthService
@@ -56,7 +56,16 @@ class LoginRequest(BaseModel):
 
 def _build_doctor_response(doctor: Doctor) -> DoctorResponse:
     return DoctorResponse(
-        id=doctor.id, email=doctor.email, full_name=doctor.full_name, created_at=doctor.created_at
+        id=doctor.id,
+        email=doctor.email,
+        full_name=doctor.full_name,
+        created_at=doctor.created_at,
+        bmdc_number=doctor.bmdc_number,
+        default_top_k=doctor.default_top_k,
+        default_language=doctor.default_language,
+        default_questionnaire_skip=doctor.default_questionnaire_skip,
+        default_rail_state=doctor.default_rail_state,
+        default_export_format=doctor.default_export_format,
     )
 
 
@@ -117,3 +126,19 @@ def login(
 @router.get("/auth/me", response_model=DoctorResponse)
 def me(current_doctor: Doctor = Depends(get_current_doctor)) -> DoctorResponse:
     return _build_doctor_response(current_doctor)
+
+
+@router.patch("/auth/me", response_model=DoctorResponse)
+def update_me(
+    request_body: UpdateProfileRequest,
+    db: Session = Depends(get_db),
+    current_doctor: Doctor = Depends(get_current_doctor),
+) -> DoctorResponse:
+    """Phase 16: self-only partial update (Settings/Profile). Only fields
+    actually present in the request body are changed -- Pydantic's
+    exclude_unset distinguishes "field omitted" from "field explicitly
+    set to null", so e.g. sending only {"bmdc_number": "..."} does not
+    reset full_name or any default_* preference to None."""
+    service = DoctorService(db=db)
+    updated = service.update_profile(current_doctor.id, **request_body.model_dump(exclude_unset=True))
+    return _build_doctor_response(updated)
