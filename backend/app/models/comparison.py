@@ -22,6 +22,11 @@ ComparisonService reconstruction helper, not a mismatch to fix here.
 Naming note: named `ComparisonRecord`, not `Comparison` -- `Comparison` is
 already the frozen domain entity, same Report/ReportRecord and
 Patient/PatientRecord collision-avoidance precedent applied proactively.
+
+doctor_id (Phase 13, additive): nullable FK to doctors.id -- the doctor
+who created this comparison, per phase13_auth_architecture.md's frozen
+"ownership attaches to the work" decision (creation only; reads stay
+universal).
 """
 from __future__ import annotations
 
@@ -50,3 +55,6 @@ class ComparisonRecord(Base):
     deterministic_facts: Mapped[dict] = mapped_column(JSON, nullable=False)
     llm_narrative: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, server_default=func.now())
+    doctor_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid, ForeignKey("doctors.id"), nullable=True, index=True
+    )

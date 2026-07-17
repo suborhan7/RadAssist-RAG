@@ -18,6 +18,7 @@ from app.database.base import Base, SessionLocal, engine
 from app.main import app
 from app.models.retrieval_session import RetrievalSession
 from app.models.retrieved_evidence import RetrievedEvidence
+from tests.integration.auth_helpers import register_test_doctor
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 MASKED_DIR = REPO_ROOT / "ml" / "datasets" / "masked"
@@ -43,6 +44,7 @@ def client():
         # lifespan startup (incl. real BiomedCLIP model load) has completed
         # by the time TestClient's context manager returns.
         _startup_elapsed["seconds"] = time.perf_counter() - start
+        register_test_doctor(c)
         yield c
     Base.metadata.drop_all(engine)
 

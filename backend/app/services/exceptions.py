@@ -70,3 +70,46 @@ class NoPriorReportError(Exception):
     one against (the patient's first visit). Distinguishable from
     ReportNotFoundError: no report_id lookup ever failed here, there was
     simply no candidate report to look up (see this module's docstring)."""
+
+
+class InvalidCredentialsError(Exception):
+    """Phase 13: raised by AuthService.login() for EITHER a nonexistent
+    email OR a correct-email-wrong-password attempt -- deliberately ONE
+    type covering both, not split the way ReportNotFoundError/
+    NoPriorReportError are elsewhere in this project. Distinguishing "no
+    such account" from "wrong password" in the response would let an
+    attacker enumerate registered doctor emails one probe at a time; the
+    two failure modes are handled identically on purpose, a security
+    property, not an oversight of this project's usual "distinct failure
+    modes deserve distinct types" principle."""
+
+
+class EmailAlreadyRegisteredError(Exception):
+    """Raised by AuthService.register() when the email is already taken --
+    distinct from InvalidCredentialsError since this is a registration-time
+    conflict (409), not a login-time authentication failure (401), and
+    unlike login there is no enumeration concern in refusing a duplicate
+    registration outright (the caller already knows the email, since they
+    just typed it into a registration form)."""
+
+
+class InvalidTokenError(Exception):
+    """Raised by JWTHandler.verify() for an expired, tampered, or malformed
+    token alike -- ONE type, not split by sub-reason, since
+    get_current_doctor (Step 5) reacts identically to all three (401,
+    "log in again"); a caller that genuinely needed to distinguish
+    "expired" from "tampered" for a different UX (e.g. auto-refresh vs.
+    hard logout) would be the reason to split this later, not a
+    speculative concern now."""
+
+
+class ForbiddenError(Exception):
+    """Phase 13: raised by a service's ownership check (e.g.
+    ReportGenerationService.finalize()) when the authenticated doctor is
+    not the owner of the work being mutated. Deliberately a NEW type, not
+    a reuse of any NotFoundError above: the resource genuinely exists and
+    was found (read already succeeded, since read is universal per the
+    frozen Phase 13 shared-registry decision) -- this is an authorization
+    failure on a real, located resource, mapped to 403, never 404 (a 404
+    here would incorrectly suggest the report doesn't exist rather than
+    that this doctor may not write to it)."""

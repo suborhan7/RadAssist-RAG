@@ -41,6 +41,11 @@ python-multipart>=0.0.9
 # Step 11's fastapi/uvicorn promotion above)
 httpx>=0.27
 
+# Phase 13 -- authentication + doctor ownership (Argon2 password hashing,
+# JWT in an httpOnly cookie, per phase13_auth_architecture.md)
+argon2-cffi>=23.1
+pyjwt>=2.8
+
 # shared/ and backend/ are editable-installed as local packages so
 # `from shared.embeddings...` and `from app...` resolve regardless of the
 # process's CWD -- replaces the sys.path hacks/conftest.py shim used

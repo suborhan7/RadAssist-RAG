@@ -30,7 +30,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from app.api.dependencies import get_db
+from app.api.dependencies import get_current_doctor, get_db
 from app.api.schemas import (
     FormattedReportResponse,
     GenerateReportResponse,
@@ -38,7 +38,7 @@ from app.api.schemas import (
     ReportContentResponse,
     ValidationResponse,
 )
-from app.domain.entities import FormattedReport, GenerationMetadata, SemanticValidationResult
+from app.domain.entities import Doctor, FormattedReport, GenerationMetadata, SemanticValidationResult
 from app.services.exceptions import LLMGenerationValidationError, LLMTransportError, SessionNotFoundError
 from app.services.report_generation_service import ReportGenerationService
 
@@ -92,6 +92,7 @@ def generate_report(
     request_body: GenerateReportRequest,
     request: Request,
     db: Session = Depends(get_db),
+    current_doctor: Doctor = Depends(get_current_doctor),
 ) -> GenerateReportResponse:
     service = ReportGenerationService(
         db=db,

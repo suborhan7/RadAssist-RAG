@@ -63,9 +63,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from app.api.dependencies import get_db
+from app.api.dependencies import get_current_doctor, get_db
 from app.api.schemas import PatientHistoryReportResponse, PatientResponse, ReportContentResponse
-from app.domain.entities import Patient, Report
+from app.domain.entities import Doctor, Patient, Report
 from app.services.patient_service import PatientService
 
 router = APIRouter()
@@ -106,7 +106,11 @@ def _build_history_response(report: Report) -> PatientHistoryReportResponse:
 
 
 @router.post("/patients", response_model=PatientResponse)
-def create_patient(request_body: CreatePatientRequest, db: Session = Depends(get_db)) -> PatientResponse:
+def create_patient(
+    request_body: CreatePatientRequest,
+    db: Session = Depends(get_db),
+    current_doctor: Doctor = Depends(get_current_doctor),
+) -> PatientResponse:
     service = PatientService(db=db)
     patient = service.create(request_body.name, request_body.date_of_birth, request_body.gender)
     return _build_patient_response(patient)
@@ -118,6 +122,7 @@ def search_patients(
     name: str | None = None,
     dob: str | None = None,
     db: Session = Depends(get_db),
+    current_doctor: Doctor = Depends(get_current_doctor),
 ) -> list[PatientResponse]:
     service = PatientService(db=db)
 
@@ -136,7 +141,11 @@ def search_patients(
 
 
 @router.get("/patients/{patient_id}", response_model=PatientResponse)
-def get_patient(patient_id: str, db: Session = Depends(get_db)) -> PatientResponse:
+def get_patient(
+    patient_id: str,
+    db: Session = Depends(get_db),
+    current_doctor: Doctor = Depends(get_current_doctor),
+) -> PatientResponse:
     service = PatientService(db=db)
     try:
         patient = service.find_by_id(patient_id)
@@ -148,7 +157,11 @@ def get_patient(patient_id: str, db: Session = Depends(get_db)) -> PatientRespon
 
 
 @router.get("/patients/{patient_id}/history", response_model=list[PatientHistoryReportResponse])
-def get_patient_history(patient_id: str, db: Session = Depends(get_db)) -> list[PatientHistoryReportResponse]:
+def get_patient_history(
+    patient_id: str,
+    db: Session = Depends(get_db),
+    current_doctor: Doctor = Depends(get_current_doctor),
+) -> list[PatientHistoryReportResponse]:
     service = PatientService(db=db)
     try:
         reports = service.get_history(patient_id)

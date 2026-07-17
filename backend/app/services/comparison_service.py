@@ -38,6 +38,14 @@ it's the identical failure mode against the identical table. A patient
 with no prior report at all (first visit, no compare_against_report_id
 given) raises the new NoPriorReportError instead -- not a failed lookup,
 simply no candidate to look up.
+
+current_doctor_id (Phase 13, additive): the creating doctor becomes this
+comparison's owner, per phase13_auth_architecture.md's "creating a
+brand-new comparison makes the creating doctor its owner automatically --
+there is no 'assign ownership' action" decision. No ownership CHECK is
+performed here -- any authenticated doctor may create a comparison
+against any shared patient's reports (read/creation are universal per
+that same frozen doc); this parameter only tags who did.
 """
 from __future__ import annotations
 
@@ -75,6 +83,7 @@ class ComparisonService:
         patient_id: str,
         current_report_id: str,
         compare_against_report_id: str | None = None,
+        current_doctor_id: str | None = None,
     ) -> Comparison:
         current_record = self._fetch_report_record(current_report_id)
         current_report = build_report_domain_entity(current_record)
@@ -104,6 +113,7 @@ class ComparisonService:
             current_report_id=current_record.id,
             deterministic_facts=asdict(facts),
             llm_narrative=narrative,
+            doctor_id=uuid.UUID(current_doctor_id) if current_doctor_id is not None else None,
         )
         self._db.add(comparison_record)
         try:

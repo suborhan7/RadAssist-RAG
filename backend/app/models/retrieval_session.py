@@ -12,6 +12,12 @@ and retrofitting one is out of scope. No `visits` table was introduced
 for this linkage (frozen Phase 11 Decision 2): retrieval_sessions already
 is this system's "visit" concept, so patient_id is added directly here
 rather than via a redundant parallel table.
+
+doctor_id (Phase 13, additive): nullable FK to doctors.id, same nullable
+reasoning as patient_id -- every session created before Phase 13 has no
+associated doctor. Ownership attaches to the WORK (this row), per
+phase13_auth_architecture.md's frozen decision, not to Patient (which
+stays shared/institutional, unchanged).
 """
 from __future__ import annotations
 
@@ -40,6 +46,9 @@ class RetrievalSession(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, server_default=func.now())
     patient_id: Mapped[uuid.UUID | None] = mapped_column(
         Uuid, ForeignKey("patients.id"), nullable=True, index=True
+    )
+    doctor_id: Mapped[uuid.UUID | None] = mapped_column(
+        Uuid, ForeignKey("doctors.id"), nullable=True, index=True
     )
 
     evidence: Mapped[list["RetrievedEvidence"]] = relationship(

@@ -6516,3 +6516,262 @@ doctor-edit review workflow, multi-turn explainability conversation
 history, narrative-completeness validation against deterministic facts
 (named in Phase 11), PDF export, deployment packaging, and
 authentication.
+
+---
+
+## Phase 13a (Authentication & Doctor Ownership — Backend): Architecture (FROZEN)
+
+Drafted as `frontend/phase13_auth_architecture.md` (Phase 12's own gap #1,
+"no authentication exists anywhere in the backend," reopened at explicit
+user request once multi-doctor ownership was decided to have real thesis
+value). That document's own header originally read "draft, pending user
+review... do not implement until this section is explicitly frozen" --
+flagged explicitly rather than silently proceeding, and the user confirmed
+verbatim: **"Yes, frozen -- implement as written."** Frozen decisions, in
+brief (full reasoning in the source file, reproduced here only in
+summary per this log's own continuity convention):
+
+1. **Self-registration only** (`POST /auth/register`), no invite/admin
+   approval -- named as a scope boundary, same as Phase 12 named "no auth."
+2. **Patients remain shared/institutional.** No `doctor_id` on `patients`;
+   `IPatientRepository`/`IDeterministicComparator` unchanged.
+3. **Ownership attaches to the work, not the patient.**
+   `retrieval_sessions`, `comparisons`, `explanations` each gain a nullable
+   `doctor_id`. `reports` gains no column -- its owner is derived via
+   `reports.session_id -> retrieval_sessions.doctor_id`.
+4. **Read is universal, write is owned.** Creating a session/comparison/
+   explanation makes the creating doctor its owner automatically.
+5. **Argon2 password hashing, JWT in an httpOnly cookie**, `get_current_doctor`
+   wired additively into every existing route's dependencies only -- no
+   existing request/response schema changes shape.
+6. **Enforcement lives in the service layer**, not the route layer.
+
+Explicitly not in this phase: password reset/email verification,
+role-based access, per-patient ownership, and the design spec's invented
+`RA-{YYYY}-{NNNNNN}` patient ID format (the real, already-migrated
+`PAT-000001` format is unchanged).
+
+**Folder-structure correction, stated plainly rather than silently
+patched:** the frozen doc proposed a generic Clean-Architecture-style
+layout (`domain/entities/doctor.py`, `application/interfaces/`,
+`infrastructure/auth/`, `infrastructure/repositories/`, `api/deps.py`,
+`api/routes/auth.py`) that matches none of this codebase's actual,
+consistent flat-file convention (confirmed via `find app -maxdepth 2
+-type d` before writing anything) -- the same class of pre-code-written
+mismatch as Phase 5's `study_uid`/`source_uid`, Phase 9's `OllamaClient`
+check, and Phase 12's own folder-structure assumptions. Every new file
+was mapped onto the existing flat convention instead (`app/domain/
+entities.py`/`interfaces.py` as single files, `app/infrastructure/
+password_hasher.py`/`jwt_handler.py` flat, `app/services/doctor_service.py`/
+`auth_service.py` flat, `app/api/auth.py` flat, `get_current_doctor`
+added to the existing `app/api/dependencies.py` rather than a new
+`deps.py`) -- a decision, not an oversight, and stated as such rather than
+silently deviating.
+
+**Migration-granularity correction, same reasoning:** the frozen doc's
+Step 5 described three `doctor_id` columns as one bundled step; this
+project has consistently kept each schema change as its own isolated,
+individually-tested Alembic migration (explicit Phase 11 precedent), so
+three separate migrations were written instead, each independently
+verified (round-trip tested) before the next was written.
+
+**Scope gap, confirmed with the user rather than guessed past:** the
+frozen doc's Step 6 called for an ownership check inside
+`ReportGenerationService`'s finalize/edit/regenerate actions, and its
+Step 8 gate test included "doctor B attempts to finalize [the report]
+(403)." Neither exists anywhere in this codebase -- `ReportStatus` has
+only ever had one value (`AI_DRAFT`), `final_content` is never populated
+by any code path, and there are zero `PATCH`/`PUT`/`DELETE` routes in
+Phases 4-12. This is not a naming/folder mismatch resolvable by deferring
+to existing convention; it's the frozen doc assuming a report-mutation
+workflow that was never built. Flagged explicitly (matching this
+project's "if anything conflicts, stop and ask, don't guess and continue"
+standing instruction) rather than either inventing a finalize endpoint as
+undiscussed new scope or silently dropping the check. The user's
+explicit decision: leave finalize/edit/regenerate unimplemented (a
+pre-existing gap from Phase 8/12, unrelated to Phase 13); ownership
+enforcement applies to session/comparison/explanation creation only;
+add a write-rejection case to the gate test once the first
+ownership-guarded mutation is eventually built.
+
+### Implementation & Validation
+
+**Step 1 -- `Doctor` entity + `IDoctorRepository`/`IPasswordHasher`/
+`ITokenService` + `doctors` table.** Grepped clean first (no prior
+`Doctor` name existed anywhere). `Doctor` added as a frozen dataclass
+immediately after `Patient` in `app/domain/entities.py`; the three new
+Protocol interfaces added to `app/domain/interfaces.py`, each docstring
+stating the flat-file-convention correction versus the frozen doc's
+proposed structure. `doctors` table migration (plain `create_table`, no
+batch mode needed -- brand-new table, same reasoning as Phase 11's
+`comparisons` table) verified against a disposable throwaway file
+(`sqlite3`/`PRAGMA` inspection, full `downgrade base` -> `upgrade head`
+round-trip) before being applied for real to `dev.db`. Full suite: **144
+passed**, unchanged.
+
+**Step 2 -- `IPasswordHasher` (Argon2) + `ITokenService` (JWT) + unit
+tests.** `argon2-cffi`/`pyjwt` added to `requirements.txt`.
+`Argon2PasswordHasher` (`app/infrastructure/password_hasher.py`) wraps
+`argon2.PasswordHasher`, catching `VerifyMismatchError` in `verify()` to
+return `False` rather than raising. `JWTHandler`
+(`app/infrastructure/jwt_handler.py`) issues a `sub`-claim JWT with a
+24h expiry and verifies it, raising the new `InvalidTokenError` -- one
+type covering expired/tampered/malformed alike, since `get_current_doctor`
+reacts identically to all three (same "distinct failure modes deserve
+distinct types, except where collapsing them is itself a deliberate
+property" principle already established for `InvalidCredentialsError`'s
+anti-enumeration design, added this step). Six real unit tests: hash
+round-trip, wrong-password rejection, JWT issue/verify round-trip,
+expired-token rejection (constructed directly with a past `exp`),
+tampered-token rejection (flips the last character of a real issued
+token), wrong-secret-signed-token rejection. All passed.
+
+**Step 3 -- `AuthService.register()`/`.login()` + `POST /auth/register`,
+`POST /auth/login`, `GET /auth/me`.** `AuthService` orchestrates
+`IDoctorRepository`/`IPasswordHasher`/`ITokenService` with no business
+logic of its own, same discipline as every prior service. `login()`
+deliberately raises the identical `InvalidCredentialsError` for both a
+nonexistent email and a wrong password for a real email -- proven by a
+dedicated unit test asserting both cases raise the same exception type,
+not merely documented. Routes set the JWT as an httpOnly cookie (`samesite=
+lax`) AND return it in the JSON body -- not a contradiction: httpOnly
+protects the cookie from later JS reads, not from the legitimate response
+that just received it. Five `AuthService` unit tests (real in-memory
+SQLite `DoctorService`, hand-built password-hasher/token-service fakes)
+plus three route-level checks, all real, all passed.
+
+**Step 4 -- `get_current_doctor` dependency.** Reads the JWT from the
+`radassist_token` httpOnly cookie, verifies it via the shared
+`ITokenService` singleton on `app.state`, resolves the real `Doctor`.
+Built alone this step (used immediately by `GET /auth/me`); wiring it
+onto every other route was deliberately deferred to Step 5.
+
+**Step 5 -- wired into every existing route.** A real, necessary
+consequence recognized before writing any code, not discovered by a
+failing test afterward: adding a mandatory auth dependency to every
+route would break all 5 existing `TestClient`-based integration tests,
+since none of them authenticated. A shared `register_test_doctor()`
+helper (`tests/integration/auth_helpers.py`) was added first, then all 5
+fixtures (`test_comparison_integration.py`,
+`test_explainability_integration.py`, `test_generate_report_integration.py`,
+`test_questionnaire_integration.py`, `test_retrieve_endpoint.py`) updated
+to register a real doctor immediately after constructing their
+`TestClient`, relying on `TestClient`'s own cookie-jar persistence to
+authenticate every later request that fixture's tests make.
+`Depends(get_current_doctor)` then added to all 7 router files' routes
+(`retrieval.py` both routes, `generation.py`, `questionnaire.py`,
+`explainability.py`, `patients.py` all 4 routes, `comparisons.py`,
+`reports.py`) -- `GET /health` deliberately excluded, staying public.
+Verified as genuinely enforced, not merely present in the test suite by
+coincidence: a real unauthenticated `TestClient` request confirmed
+`GET /health` still returns 200 while `GET /patients/search` and
+`POST /patients` both now return a real 401 `{"detail": "not
+authenticated"}`. Full suite: **155 passed** (unchanged count, all now
+authenticating first).
+
+**Step 6 -- `doctor_id` columns + three separate migrations.** Added a
+nullable `doctor_id` FK to `retrieval_sessions`/`comparisons`/
+`explanations` in three independent Alembic migrations (chained,
+`8550fea2771a -> 11971c2c9396 -> 689ad1cf33f4 -> 93de8accdb66`), same
+add_column+create_index-then-batch_alter_table-for-FK pattern as Phase
+11's `patient_id` addition to `retrieval_sessions`. Verified against a
+disposable throwaway file: real schema/FK inspection via `PRAGMA` on all
+three tables, single-step `downgrade -1` x3, then a full `downgrade
+base -> upgrade head` round-trip, both clean. Applied for real to
+`dev.db` (confirmed via `PRAGMA table_info` on all three tables before
+and after). Full suite: **155 passed**, unchanged.
+
+**Step 7 -- wiring doctor_id at creation, no forbidden write path to
+guard.** `current_doctor.id` is now set directly on the `RetrievalSession`
+row inside `POST /retrieve` (same route-layer pattern as `patient_id`);
+`ComparisonService.compare()` and `ExplainabilityService.explain()` each
+gained an additive, optional `current_doctor_id` parameter, threaded from
+their routes, tagging the creator on `ComparisonRecord`/`Explanation`. No
+ownership *check* exists at creation, by design -- any authenticated
+doctor may create a session/comparison/explanation against any shared
+patient; the check that the frozen doc actually needed (finalize/edit/
+regenerate) has no endpoint to attach to (see Scope gap, above), so there
+is currently no rejectable write path anywhere in this system.
+Existing `test_comparison_service.py`/`test_explainability_service.py`
+unit tests extended (not just left passing) with a real assertion that
+the persisted row's `doctor_id` matches the doctor id passed in.
+Verified end-to-end against a live app, not only via the test suite: a
+freshly `POST /auth/register`-ed doctor's real id was confirmed, via a
+direct `SessionLocal` query, to equal the `doctor_id` persisted on the
+`retrieval_sessions` row created by that same doctor's real `/retrieve`
+call. Full suite: **155 passed**.
+
+**Step 8 -- the two-doctor gate test (adapted scope, per the Scope gap
+above).** `tests/integration/test_phase13_ownership_integration.py`:
+register doctor A -> create a shared patient (no `doctor_id`, per
+Decision 2) -> doctor A's real `/retrieve` + `/generate-report` on that
+patient -> register doctor B (the shared `TestClient`'s cookie jar now
+authenticates as B) -> doctor B's real `GET /reports/{id}` on doctor A's
+report (200, proving read is universal) -> doctor B's real `/retrieve`
+against the SAME shared patient (200, a separate new session) -> direct
+DB verification that session A's `doctor_id` is doctor A's real id,
+session B's is doctor B's, and both sessions' `patient_id` is identical
+(the one shared patient). No 403/write-rejection case, per the confirmed
+scope adaptation -- there is no ownership-guarded write endpoint yet to
+exercise one against. Passed on its own
+(`1 passed in 21.00s`) and as part of the full suite: **156 passed, 10
+warnings in 116.48s**.
+
+### How to Write This in Your Thesis
+
+*Methodology chapter, "Authentication & Ownership" subsection:*
+
+> Phase 13 reopened a scope boundary Phase 12 had deliberately closed --
+> the absence of authentication -- not because that earlier judgment had
+> been wrong, but because the thesis's demonstrable claims changed once
+> multi-doctor, shared-registry access became worth defending explicitly
+> rather than assumed. Implementing it surfaced a distinction worth
+> naming on its own terms: a frozen architecture document authored before
+> any of its code exists necessarily describes an idealized target, and
+> two different classes of mismatch emerged between that target and the
+> codebase it was meant to extend. The first class -- a proposed folder
+> layout and migration grouping that did not match this codebase's actual,
+> consistently-applied conventions -- was a description problem, resolved
+> mechanically by preferring the codebase's own established pattern over
+> the document's generic proposal, the same resolution this project had
+> already applied to several earlier phases' pre-code specifications. The
+> second class was categorically different: the document assumed a
+> report finalization workflow existed to be guarded, when in fact no
+> such workflow, nor any mutating endpoint of any kind, had ever been
+> built across five prior phases. Treating this the same way as the first
+> class -- silently adapting around it -- would have quietly narrowed the
+> phase's actual security claim without ever stating that narrowing
+> occurred. Surfacing it explicitly, and having the narrowed scope (creation-
+> time ownership tagging and universal read, with write-enforcement
+> deferred until a write path exists to enforce against) confirmed rather
+> than assumed, is the methodological point worth making: a frozen
+> specification's authority extends only as far as the assumptions it
+> was written under remain true of the system it describes, and verifying
+> that continued truth is itself part of implementing it faithfully, not
+> a deviation from doing so.
+
+---
+
+## Phase 13a (Authentication & Doctor Ownership — Backend) — COMPLETE
+
+All 8 steps of the frozen (with two explicitly confirmed scope
+adaptations, see above) development order are built and verified with
+real execution at every step, matching this project's standing
+discipline. `doctors` table, three additive `doctor_id` migrations
+(`retrieval_sessions`/`comparisons`/`explanations`), Argon2+JWT auth
+infrastructure, `AuthService` + 3 auth routes, `get_current_doctor` wired
+into all 7 pre-existing router files (`GET /health` remains public), and
+creation-time ownership tagging across the three ownership-bearing
+tables. Full backend test suite: **156/156 passing** (155 Phase 4-12 +
+1 new Phase 13a gate test; several Phase 4-12 unit tests were extended
+in place with real `doctor_id`-persistence assertions rather than left
+unchanged). Confirmed, not assumed: a real unauthenticated request to a
+protected route returns 401 while `GET /health` stays public; a real
+registered doctor's id lands on a real persisted row; the Phase 13a gate
+test's two real doctors, one shared patient, universal read, and
+independently-owned sessions all verified via direct DB queries, not
+response-body trust alone. Not yet built, explicitly out of Phase 13a
+scope: report finalize/edit/regenerate (a pre-existing gap from Phase
+8/12, confirmed with the user rather than silently patched around, still
+open), and everything in Phase 13b/14/15 (frontend login/register,
+visual system pass, ownership UI).

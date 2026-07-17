@@ -37,6 +37,7 @@ from app.services.prompt_builder import PromptBuilder
 from app.services.questionnaire_service import QuestionnaireService
 from app.services.questionnaire_templates import QuestionnaireTemplateProvider
 from app.services.session_reconstruction import reconstruct_session_evidence
+from tests.integration.auth_helpers import register_test_doctor
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 MASKED_DIR = REPO_ROOT / "ml" / "datasets" / "masked"
@@ -71,6 +72,7 @@ def client():
         pytest.skip(f"chroma_db not found at {CHROMA_PATH} -- run build_chroma_index.py first")
     Base.metadata.create_all(engine)
     with TestClient(app, raise_server_exceptions=False) as c:
+        register_test_doctor(c)
         yield c
     Base.metadata.drop_all(engine)
 

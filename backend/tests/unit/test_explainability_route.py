@@ -24,7 +24,7 @@ class _FakeService:
     def __init__(self, to_raise: Exception, **_ignored_kwargs) -> None:
         self._to_raise = to_raise
 
-    def explain(self, report_id: str, question: str):
+    def explain(self, report_id: str, question: str, current_doctor_id: str | None = None):
         raise self._to_raise
 
 
@@ -57,6 +57,7 @@ def _call_route(monkeypatch, to_raise: Exception):
         request_body=request_body,
         request=_fake_request(),
         db=None,
+        current_doctor=SimpleNamespace(id="22222222-2222-2222-2222-222222222222"),
     )
 
 

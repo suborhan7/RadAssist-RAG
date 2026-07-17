@@ -32,6 +32,13 @@ build_report_domain_entity() helper (app/services/report_reconstruction.py,
 extracted this phase) rather than a private method here -- Phase 11's
 PatientService needs the identical reconstruction for get_history(), so
 this is now shared rather than re-derived a second time.
+
+current_doctor_id (Phase 13, additive): the asking doctor becomes this
+explanation's owner, per phase13_auth_architecture.md's "creating a
+brand-new explanation makes the creating doctor its owner automatically"
+decision. No ownership CHECK here -- any authenticated doctor may ask a
+question about any shared/readable report; this parameter only tags who
+asked.
 """
 from __future__ import annotations
 
@@ -72,7 +79,9 @@ class ExplainabilityService:
         self._prompt_builder = prompt_builder
         self._llm_orchestrator = llm_orchestrator
 
-    def explain(self, report_id: str, question: str) -> ExplanationRecord:
+    def explain(
+        self, report_id: str, question: str, current_doctor_id: str | None = None
+    ) -> ExplanationRecord:
         # Same Uuid-typed-column lesson as Phase 8 Step 6: parse once,
         # raise a clean, specific error for both "malformed" and "missing."
         try:
@@ -97,7 +106,12 @@ class ExplainabilityService:
         prompt = self._prompt_builder.build_explanation_prompt(report, question, context.evidence_summary)
         answer = self._llm_orchestrator.answer_question(prompt)
 
-        explanation = Explanation(report_id=report_record.id, question=question, answer=answer)
+        explanation = Explanation(
+            report_id=report_record.id,
+            question=question,
+            answer=answer,
+            doctor_id=uuid.UUID(current_doctor_id) if current_doctor_id is not None else None,
+        )
         self._db.add(explanation)
         try:
             self._db.commit()

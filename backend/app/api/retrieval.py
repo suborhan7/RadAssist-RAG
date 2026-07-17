@@ -57,10 +57,10 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, Uplo
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
-from app.api.dependencies import get_db
+from app.api.dependencies import get_current_doctor, get_db
 from app.api.schemas import HealthResponse, RetrievedCaseResponse, RetrieveResponse, VotedLabelResponse
 from app.core.config import settings
-from app.domain.entities import RetrievedCase, VotedLabel
+from app.domain.entities import Doctor, RetrievedCase, VotedLabel
 from app.models.retrieval_session import RetrievalSession
 from app.models.retrieved_evidence import RetrievedEvidence
 
@@ -140,6 +140,7 @@ def retrieve(
     min_similarity: float = Form(0.0),
     patient_id: str | None = Form(None),
     db: Session = Depends(get_db),
+    current_doctor: Doctor = Depends(get_current_doctor),
 ) -> RetrieveResponse:
     """retrieval_time_ms covers only RetrievalService.retrieve() +
     LabelVotingService.vote() -- the ML pipeline itself. It excludes the
@@ -188,6 +189,7 @@ def retrieve(
             num_results=len(retrieved_cases),
             retrieval_time_ms=retrieval_time_ms,
             patient_id=patient_uuid,
+            doctor_id=uuid.UUID(current_doctor.id),
         )
     )
     db.add_all(
@@ -208,7 +210,11 @@ def retrieve(
 
 
 @router.get("/retrieval-sessions/{session_id}/image")
-def get_retrieval_session_image(session_id: str, db: Session = Depends(get_db)) -> FileResponse:
+def get_retrieval_session_image(
+    session_id: str,
+    db: Session = Depends(get_db),
+    current_doctor: Doctor = Depends(get_current_doctor),
+) -> FileResponse:
     """Serves the MASKED query image persisted by POST /retrieve above.
     Malformed or missing session_id both raise SessionNotFoundError -> 404,
     reusing the exact same single-exception-type precedent

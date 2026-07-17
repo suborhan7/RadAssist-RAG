@@ -54,6 +54,24 @@ class Patient:
 
 
 @dataclass(frozen=True)
+class Doctor:
+    """Phase 13: authentication + doctor ownership. Grepped clean first --
+    no prior `Doctor` name existed anywhere in this codebase.
+
+    Patients remain shared/institutional (no `doctor_id` on `Patient` --
+    unchanged since Phase 11); ownership instead attaches to the WORK a
+    doctor performs (retrieval_sessions/comparisons/explanations each gain
+    a `doctor_id` at the persistence layer, not here -- this entity's
+    shape carries no ownership fields of its own, since a doctor doesn't
+    own themselves)."""
+    id: str
+    email: str
+    password_hash: str
+    full_name: str
+    created_at: str
+
+
+@dataclass(frozen=True)
 class StudyImage:
     id: str
     file_path: str

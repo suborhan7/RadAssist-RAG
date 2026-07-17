@@ -64,6 +64,16 @@ DEFAULT_CORS_ALLOWED_ORIGINS = "http://localhost:3000"
 # treatment as dev.db -- not committed, not a fixture.
 DEFAULT_UPLOADED_IMAGES_DIR = str(_BACKEND_DIR / "uploaded_images")
 
+# Phase 13 -- JWT signing secret for doctor sessions. This default is a
+# clearly-labeled dev-only placeholder, not a real secret -- a real
+# deployment MUST override this via the JWT_SECRET_KEY env var (self-
+# registration having no email/identity verification is already a named
+# scope boundary for this thesis demo; a hardcoded signing secret would be
+# a second, avoidable one layered on top of it).
+DEFAULT_JWT_SECRET_KEY = "dev-only-insecure-secret-do-not-use-in-production"
+DEFAULT_JWT_ALGORITHM = "HS256"
+DEFAULT_JWT_EXPIRATION_MINUTES = 60 * 24  # 24h -- long enough a doctor isn't logged out mid-demo
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
@@ -81,6 +91,9 @@ class Settings(BaseSettings):
     LLM_TEMPERATURE: float = DEFAULT_LLM_TEMPERATURE
     CORS_ALLOWED_ORIGINS: str = DEFAULT_CORS_ALLOWED_ORIGINS
     UPLOADED_IMAGES_DIR: str = DEFAULT_UPLOADED_IMAGES_DIR
+    JWT_SECRET_KEY: str = DEFAULT_JWT_SECRET_KEY
+    JWT_ALGORITHM: str = DEFAULT_JWT_ALGORITHM
+    JWT_EXPIRATION_MINUTES: int = DEFAULT_JWT_EXPIRATION_MINUTES
 
 
 settings = Settings()

@@ -182,7 +182,8 @@ def test_correct_sequencing_and_data_flow():
     service, fakes = _make_service(db, {"u1": case_a}, voted, context, answer="Because the finding is stable.")
 
     question = "Why do you think this is pneumonia?"
-    result = service.explain(str(report_id), question)
+    current_doctor_id = str(uuid.uuid4())
+    result = service.explain(str(report_id), question, current_doctor_id=current_doctor_id)
 
     # evidence reconstruction: get_by_ids -> vote -> context_builder.build
     assert fakes["vector_store"].get_by_ids_calls == [["u1"]]
@@ -210,6 +211,7 @@ def test_correct_sequencing_and_data_flow():
     assert record.question == question
     assert record.answer == "Because the finding is stable."
     assert str(record.id) == result.id
+    assert record.doctor_id == uuid.UUID(current_doctor_id)
 
     db.close()
 

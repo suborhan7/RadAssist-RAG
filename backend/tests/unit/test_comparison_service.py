@@ -180,8 +180,11 @@ def test_correct_sequencing_and_call_order_with_explicit_compare_against():
     current_id = _seed_report(db, None, datetime(2026, 1, 15, tzinfo=timezone.utc), "2026-01-15", current_content)
 
     service, fakes = _make_service(db)
+    current_doctor_id = str(uuid.uuid4())
 
-    result = service.compare(patient_id, str(current_id), compare_against_report_id=str(previous_id))
+    result = service.compare(
+        patient_id, str(current_id), compare_against_report_id=str(previous_id), current_doctor_id=current_doctor_id
+    )
 
     # deterministic_comparator called with the correct content/dates/ids, in order
     assert fakes["deterministic_comparator"].compare_calls == [
@@ -203,6 +206,7 @@ def test_correct_sequencing_and_call_order_with_explicit_compare_against():
     assert persisted.previous_report_id == previous_id
     assert persisted.current_report_id == current_id
     assert persisted.llm_narrative == fakes["llm_orchestrator"].narrative
+    assert persisted.doctor_id == uuid.UUID(current_doctor_id)
 
     # returned Comparison domain entity matches
     assert result.patient_id == patient_id

@@ -37,6 +37,7 @@ from app.core.config import settings
 from app.database.base import Base, SessionLocal, engine
 from app.main import app
 from app.models.report import ReportRecord
+from tests.integration.auth_helpers import register_test_doctor
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 MASKED_DIR = REPO_ROOT / "ml" / "datasets" / "masked"
@@ -66,6 +67,7 @@ def client():
         )
     Base.metadata.create_all(engine)
     with TestClient(app, raise_server_exceptions=False) as c:
+        register_test_doctor(c)
         yield c
     Base.metadata.drop_all(engine)
 

@@ -12,6 +12,7 @@ from typing import Protocol, runtime_checkable
 from app.domain.entities import (
     ClinicalContext,
     ComparisonFacts,
+    Doctor,
     EvidenceSummary,
     FormattedReport,
     Patient,
@@ -242,3 +243,38 @@ class IReportRepository(Protocol):
     def get(self, report_id: str) -> Report | None: ...
     def save(self, report: Report) -> None: ...
     def list_by_study(self, study_id: str) -> list[Report]: ...
+
+
+@runtime_checkable
+class IDoctorRepository(Protocol):
+    """Phase 13: authentication + doctor ownership.
+    Infrastructure: app/services/doctor_service.py (matches
+    IPatientRepository's precedent -- the repository-Protocol
+    implementation lives in app/services/ as a plain `xxx_service.py`,
+    not in a separate infrastructure/repositories/ layer; this codebase
+    has never had that extra layer, and introducing it for exactly one
+    new entity would fragment an otherwise consistent convention for no
+    stated benefit)."""
+
+    def create(self, email: str, password_hash: str, full_name: str) -> Doctor: ...
+    def find_by_email(self, email: str) -> Doctor | None: ...
+    def find_by_id(self, doctor_id: str) -> Doctor | None: ...
+
+
+@runtime_checkable
+class IPasswordHasher(Protocol):
+    """Phase 13. Infrastructure: app/infrastructure/password_hasher.py
+    (flat, matching every other infrastructure adapter in this
+    package -- no auth/ subdirectory precedent exists anywhere in
+    app/infrastructure/)."""
+
+    def hash(self, plain: str) -> str: ...
+    def verify(self, plain: str, hashed: str) -> bool: ...
+
+
+@runtime_checkable
+class ITokenService(Protocol):
+    """Phase 13. Infrastructure: app/infrastructure/jwt_handler.py."""
+
+    def issue(self, doctor_id: str) -> str: ...
+    def verify(self, token: str) -> str: ...  # returns doctor_id or raises

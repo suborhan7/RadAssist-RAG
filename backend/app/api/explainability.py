@@ -33,9 +33,9 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from app.api.dependencies import get_db
+from app.api.dependencies import get_current_doctor, get_db
 from app.api.schemas import ExplanationResponse
-from app.domain.entities import ExplanationRecord
+from app.domain.entities import Doctor, ExplanationRecord
 from app.services.exceptions import LLMTransportError, ReportNotFoundError
 from app.services.explainability_service import ExplainabilityService
 
@@ -62,6 +62,7 @@ def explain_report(
     request_body: ExplainRequest,
     request: Request,
     db: Session = Depends(get_db),
+    current_doctor: Doctor = Depends(get_current_doctor),
 ) -> ExplanationResponse:
     service = ExplainabilityService(
         db=db,
@@ -73,7 +74,7 @@ def explain_report(
     )
 
     try:
-        explanation = service.explain(report_id, request_body.question)
+        explanation = service.explain(report_id, request_body.question, current_doctor_id=current_doctor.id)
     except ReportNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except LLMTransportError as exc:

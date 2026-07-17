@@ -48,6 +48,14 @@ serves has been masked first, since Phase 1); PHIMasker is loaded once
 here, same "expensive singleton, constructed exactly once" rule as
 BiomedCLIPAdapter, and POST /retrieve now masks the upload before
 persisting it -- see app/api/retrieval.py.
+
+`password_hasher`/`token_service` (Phase 13): both stateless/cheap to
+construct (no model load, unlike BiomedCLIPAdapter/PHIMasker), but wired
+as app.state singletons anyway for the same reason `response_validator`/
+`deterministic_comparator` are -- consistency: every cross-cutting
+collaborator that isn't inherently per-request (like a db session) lives
+on app.state, not "singleton for expensive ones, ad-hoc construction for
+cheap ones."
 """
 from __future__ import annotations
 
@@ -57,6 +65,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.auth import router as auth_router
 from app.api.comparisons import router as comparisons_router
 from app.api.explainability import router as explainability_router
 from app.api.generation import router as generation_router
@@ -67,7 +76,9 @@ from app.api.retrieval import router as retrieval_router
 from app.core.config import settings
 from app.infrastructure.biomedclip_adapter import BiomedCLIPAdapter
 from app.infrastructure.chroma_store import ChromaVectorStore
+from app.infrastructure.jwt_handler import JWTHandler
 from app.infrastructure.ollama_client import OllamaClient
+from app.infrastructure.password_hasher import Argon2PasswordHasher
 from app.services.context_builder import ContextBuilder
 from app.services.deterministic_comparator import DeterministicComparator
 from app.services.image_validator import ImageValidator
@@ -117,6 +128,8 @@ async def lifespan(app: FastAPI):
     app.state.report_formatter = ReportFormatter()
     app.state.questionnaire_provider = QuestionnaireTemplateProvider()
     app.state.deterministic_comparator = DeterministicComparator()
+    app.state.password_hasher = Argon2PasswordHasher()
+    app.state.token_service = JWTHandler()
     logger.info("lifespan startup complete")
 
     yield
@@ -137,3 +150,4 @@ app.include_router(explainability_router)
 app.include_router(patients_router)
 app.include_router(comparisons_router)
 app.include_router(reports_router)
+app.include_router(auth_router)

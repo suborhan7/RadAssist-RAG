@@ -162,3 +162,22 @@ class ReportDetailResponse(BaseModel):
     report_date: str
     created_at: str
     retrieved_cases: list[RetrievedCaseResponse]
+
+
+class DoctorResponse(BaseModel):
+    """Phase 13. Deliberately excludes password_hash -- never serialized
+    back to any client, registering or otherwise."""
+
+    id: str
+    email: str
+    full_name: str
+    created_at: str
+
+
+class RegisterResponse(BaseModel):
+    doctor: DoctorResponse
+    token: str
+
+
+class LoginResponse(BaseModel):
+    token: str

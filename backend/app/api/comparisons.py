@@ -30,9 +30,9 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from app.api.dependencies import get_db
+from app.api.dependencies import get_current_doctor, get_db
 from app.api.schemas import ComparisonFactsResponse, ComparisonResponse
-from app.domain.entities import Comparison
+from app.domain.entities import Comparison, Doctor
 from app.services.comparison_service import ComparisonService
 from app.services.exceptions import NoPriorReportError, ReportNotFoundError
 from app.services.patient_service import PatientService
@@ -70,6 +70,7 @@ def create_comparison(
     request_body: CreateComparisonRequest,
     request: Request,
     db: Session = Depends(get_db),
+    current_doctor: Doctor = Depends(get_current_doctor),
 ) -> ComparisonResponse:
     service = ComparisonService(
         db=db,
@@ -84,6 +85,7 @@ def create_comparison(
             request_body.patient_id,
             request_body.current_report_id,
             request_body.compare_against_report_id,
+            current_doctor_id=current_doctor.id,
         )
     except NoPriorReportError as exc:
         raise HTTPException(status_code=404, detail=f"No prior report available: {exc}") from exc

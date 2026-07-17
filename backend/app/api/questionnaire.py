@@ -17,9 +17,9 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
-from app.api.dependencies import get_db
+from app.api.dependencies import get_current_doctor, get_db
 from app.api.schemas import QuestionnaireQuestionResponse, QuestionnaireResponse
-from app.domain.entities import Questionnaire
+from app.domain.entities import Doctor, Questionnaire
 from app.services.exceptions import SessionNotFoundError
 from app.services.questionnaire_service import QuestionnaireService
 
@@ -42,6 +42,7 @@ def get_questionnaire(
     session_id: str,
     request: Request,
     db: Session = Depends(get_db),
+    current_doctor: Doctor = Depends(get_current_doctor),
 ) -> QuestionnaireResponse:
     service = QuestionnaireService(
         db=db,

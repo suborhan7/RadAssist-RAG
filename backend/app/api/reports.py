@@ -18,7 +18,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
-from app.api.dependencies import get_db
+from app.api.dependencies import get_current_doctor, get_db
 from app.api.schemas import (
     GenerationMetadataResponse,
     ReportContentResponse,
@@ -26,6 +26,7 @@ from app.api.schemas import (
     RetrievedCaseResponse,
     ValidationResponse,
 )
+from app.domain.entities import Doctor
 from app.services.exceptions import ReportNotFoundError
 from app.services.report_detail_service import ReportDetail, ReportDetailService
 
@@ -79,7 +80,12 @@ def _build_response(detail: ReportDetail) -> ReportDetailResponse:
 
 
 @router.get("/reports/{report_id}", response_model=ReportDetailResponse)
-def get_report(report_id: str, request: Request, db: Session = Depends(get_db)) -> ReportDetailResponse:
+def get_report(
+    report_id: str,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_doctor: Doctor = Depends(get_current_doctor),
+) -> ReportDetailResponse:
     service = ReportDetailService(
         db=db,
         vector_store=request.app.state.vector_store,
