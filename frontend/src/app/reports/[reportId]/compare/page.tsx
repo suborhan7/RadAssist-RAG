@@ -5,6 +5,7 @@ import { useParams, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ApiError, createComparison, getReport, retrievalSessionImageUrl } from "@/lib/api-client";
 import { StepProgress, type WorkflowStepDisplay } from "@/components/workflow/StepProgress";
+import { Card } from "@/components/ui/card";
 import type { paths } from "@/lib/generated/api";
 
 type ReportDetailResponse =
@@ -23,31 +24,23 @@ const CONTENT_FIELDS: { key: keyof ReportDetailResponse["content"]; label: strin
 ];
 
 /**
- * Comparison page (Phase 12 Step 7) -- the phase's centerpiece, the UI
- * most directly demonstrating Phase 11's actual novelty. Full side-by-side
- * layout per the frozen spec's Consolidation Decision 5: previous X-ray +
- * current X-ray, previous report + current report, resolved/persistent/
- * new findings clearly sectioned, AI narrative, and an explicit "Doctor
- * Review Required" line -- the visual enforcement of Phase 11's own
- * safety principle (a comparison narrative is a draft requiring review,
- * never a final verdict), not optional polish.
+ * Comparison Workspace (Phase 12 Step 7, restyled Phase 14 per
+ * design_specification.md §8.14 -- frontend/CLAUDE.md cites this as
+ * §8.12, a citation slip; §8.12 is actually "Radiologist Workspace", a
+ * different screen).
  *
- * [reportId] (route) is the CURRENT report -- the anchor. ?against=
- * (query, optional) is the explicit previous-report override, present
- * when arriving from the Patient Profile timeline's "Compare with this
- * report" action; absent when arriving from this same report's own
- * Workspace "Compare Previous Report" button, which relies on the
- * backend's default-to-most-recent-prior resolution.
+ * §8.14's provenance split is the content addition this phase makes:
+ * "Computed by ComparisonService · Deterministic" under the diff,
+ * "Narrative generated ... from the deterministic diff above" under the
+ * narrative. ComparisonResponse carries no llm_model field (that's only
+ * on GenerateReportResponse's generation_metadata, a different endpoint),
+ * so the caption says "an LLM", not a specific hardcoded model name --
+ * asserting a model this response never actually names would be a small
+ * fabrication, not a styling choice.
  *
- * Images: GET /reports/{report_id} (Step 5) gives each side's session_id;
- * GET /retrieval-sessions/{session_id}/image (Step 7 prerequisite fix)
- * serves each side's real, masked X-ray directly as an <img src=...>.
- *
- * Two real, distinct 404 failure modes are shown as the backend
- * describes them, not collapsed into one generic error (see
- * api-client.ts's createComparison docstring): NoPriorReportError
- * ("No prior report available: ...") and ReportNotFoundError ("Report
- * not found: ...").
+ * Linked-viewer pan/zoom synchronisation (§8.14's "single behaviour that
+ * makes this feel like PACS") is real image-viewer engineering, not
+ * attempted here -- flagged rather than silently dropped.
  */
 export default function ComparePage() {
   const params = useParams<{ reportId: string }>();
@@ -125,20 +118,17 @@ export default function ComparePage() {
     id: "comparing",
     label: "Generating Comparison",
     status: status === "comparing" || status === "loading" ? "active" : status === "done" ? "done" : "error",
-    // No `detail` here on error -- the dedicated error message box below
-    // already shows the full text; repeating it in the step row too was
-    // pure redundancy.
   };
 
   if (status === "error") {
     return (
-      <div className="flex min-h-screen flex-col items-center bg-zinc-50 font-sans dark:bg-black">
-        <main className="flex w-full max-w-md flex-col gap-4 px-6 py-16">
+      <div className="flex min-h-screen flex-col items-center bg-paper">
+        <main className="flex w-full max-w-md flex-col gap-4 px-page py-16">
           <StepProgress steps={[stepDisplay]} />
-          <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
+          <p className="rounded-card border border-critical-bd bg-critical-bg px-3 py-2 text-sm text-critical-ink">
             {errorDetail}
           </p>
-          <Link href={`/reports/${reportId}`} className="text-sm text-zinc-500 underline dark:text-zinc-400">
+          <Link href={`/reports/${reportId}`} className="text-sm text-ink-3 underline">
             Back to Workspace
           </Link>
         </main>
@@ -148,9 +138,9 @@ export default function ComparePage() {
 
   if (status !== "done" || !comparison || !currentReport || !previousReport) {
     return (
-      <div className="flex min-h-screen flex-col items-center bg-zinc-50 font-sans dark:bg-black">
-        <main className="flex w-full max-w-md flex-col gap-4 px-6 py-16">
-          <h1 className="text-2xl font-semibold text-black dark:text-zinc-50">Comparison</h1>
+      <div className="flex min-h-screen flex-col items-center bg-paper">
+        <main className="flex w-full max-w-md flex-col gap-4 px-page py-16">
+          <h1 className="text-h1 text-ink">Comparison</h1>
           <StepProgress steps={[stepDisplay]} />
         </main>
       </div>
@@ -158,43 +148,47 @@ export default function ComparePage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex w-full max-w-5xl flex-col gap-6 px-6 py-16">
+    <div className="flex min-h-screen flex-col items-center bg-paper">
+      <main className="flex w-full max-w-5xl flex-col gap-6 px-page py-16">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold text-black dark:text-zinc-50">Comparison</h1>
-          <Link href={`/reports/${reportId}`} className="text-sm text-zinc-500 underline dark:text-zinc-400">
+          <h1 className="text-h1 text-ink">Comparison</h1>
+          <Link href={`/reports/${reportId}`} className="text-sm text-ink-3 underline">
             Back to Workspace
           </Link>
         </div>
 
         {/* Doctor Review Required -- visual enforcement of Phase 11's safety principle */}
-        <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-300">
+        <div className="rounded-card border border-caution-bd bg-caution-bg px-4 py-3 text-sm font-semibold text-caution-ink">
           Doctor Review Required -- this AI-generated comparison is a draft, not a final verdict.
         </div>
 
-        {/* Side-by-side X-rays */}
+        {/* Side-by-side X-rays, in the lightbox register */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-2">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+            <h2 className="text-eyebrow uppercase text-ink-3">
               Previous X-ray ({previousReport.report_date})
             </h2>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={retrievalSessionImageUrl(previousReport.session_id)}
-              alt="Previous chest X-ray"
-              className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800"
-            />
+            <div className="flex items-center justify-center rounded-card bg-lightbox p-2">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={retrievalSessionImageUrl(previousReport.session_id)}
+                alt="Previous chest X-ray"
+                className="max-h-96 w-full object-contain"
+              />
+            </div>
           </div>
           <div className="flex flex-col gap-2">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+            <h2 className="text-eyebrow uppercase text-ink-3">
               Current X-ray ({currentReport.report_date})
             </h2>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={retrievalSessionImageUrl(currentReport.session_id)}
-              alt="Current chest X-ray"
-              className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800"
-            />
+            <div className="flex items-center justify-center rounded-card bg-lightbox p-2">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={retrievalSessionImageUrl(currentReport.session_id)}
+                alt="Current chest X-ray"
+                className="max-h-96 w-full object-contain"
+              />
+            </div>
           </div>
         </div>
 
@@ -204,49 +198,51 @@ export default function ComparePage() {
             { label: "Previous Report", content: previousReport.content },
             { label: "Current Report", content: currentReport.content },
           ].map(({ label, content }) => (
-            <div
-              key={label}
-              className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950"
-            >
-              <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                {label}
-              </h2>
+            <Card key={label} className="p-card">
+              <h2 className="mb-2 text-eyebrow uppercase text-ink-3">{label}</h2>
               <dl className="flex flex-col gap-2">
                 {CONTENT_FIELDS.map(({ key, label: fieldLabel }) => (
                   <div key={key}>
-                    <dt className="text-xs font-medium text-zinc-500 dark:text-zinc-400">{fieldLabel}</dt>
-                    <dd className="text-sm text-zinc-700 dark:text-zinc-300">{content[key] || "(none)"}</dd>
+                    <dt className="text-xs font-medium text-ink-3">{fieldLabel}</dt>
+                    <dd className="text-report text-ink-2">{content[key] || "(none)"}</dd>
                   </div>
                 ))}
               </dl>
-            </div>
+            </Card>
           ))}
         </div>
 
-        {/* Resolved / Persistent / New findings */}
+        {/* Resolved / Persistent / New findings -- text labels, never colour alone */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           {[
-            { label: "Resolved Findings", items: comparison.facts.resolved_findings, color: "green" },
-            { label: "Persistent Findings", items: comparison.facts.persistent_findings, color: "amber" },
-            { label: "New Findings", items: comparison.facts.new_findings, color: "red" },
-          ].map(({ label, items, color }) => (
-            <div
-              key={label}
-              className={`rounded-lg border p-4 ${
-                color === "green"
-                  ? "border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950"
-                  : color === "amber"
-                    ? "border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950"
-                    : "border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950"
-              }`}
-            >
-              <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-zinc-600 dark:text-zinc-400">
-                {label}
-              </h3>
+            {
+              label: "Resolved Findings",
+              items: comparison.facts.resolved_findings,
+              border: "border-stable-bd",
+              bg: "bg-stable-bg",
+              ink: "text-stable-ink",
+            },
+            {
+              label: "Persistent Findings",
+              items: comparison.facts.persistent_findings,
+              border: "border-caution-bd",
+              bg: "bg-caution-bg",
+              ink: "text-caution-ink",
+            },
+            {
+              label: "New Findings",
+              items: comparison.facts.new_findings,
+              border: "border-critical-bd",
+              bg: "bg-critical-bg",
+              ink: "text-critical-ink",
+            },
+          ].map(({ label, items, border, bg, ink }) => (
+            <div key={label} className={`rounded-card border ${border} ${bg} p-card`}>
+              <h3 className={`mb-2 text-eyebrow uppercase ${ink}`}>{label}</h3>
               {items.length === 0 ? (
-                <p className="text-sm text-zinc-500 dark:text-zinc-400">(none)</p>
+                <p className="text-sm text-ink-3">(none)</p>
               ) : (
-                <ul className="list-inside list-disc text-sm text-zinc-700 dark:text-zinc-300">
+                <ul className="list-inside list-disc text-sm text-ink">
                   {items.map((item) => (
                     <li key={item}>{item}</li>
                   ))}
@@ -255,19 +251,22 @@ export default function ComparePage() {
             </div>
           ))}
         </div>
-        <p className="-mt-2 text-xs text-zinc-500 dark:text-zinc-400">
-          Days between studies: {comparison.facts.days_between_studies}
+        {/* Provenance split: the diff's authorship is public (§8.14) */}
+        <p className="-mt-2 text-xs text-ink-3">
+          Computed by ComparisonService &middot; Deterministic. Days between studies:{" "}
+          {comparison.facts.days_between_studies}.
         </p>
 
         {/* AI comparison narrative */}
-        <section className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950">
-          <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-            AI Comparison Narrative
-          </h2>
-          <p className="whitespace-pre-wrap text-sm text-zinc-700 dark:text-zinc-300">
-            {comparison.narrative}
+        <Card className="p-card">
+          <h2 className="mb-2 text-eyebrow uppercase text-ink-3">AI Comparison Narrative</h2>
+          <p className="whitespace-pre-wrap text-report text-ink-2">{comparison.narrative}</p>
+          <p className="mt-3 rounded-card bg-sunken p-tight text-sm text-ink-2">
+            Narrative generated by an LLM from the deterministic diff above. The diff itself is
+            not decided by the model -- it is computed by ComparisonService and passed to the
+            LLM only to be described in prose.
           </p>
-        </section>
+        </Card>
       </main>
     </div>
   );

@@ -1,0 +1,107 @@
+/* ============================================================
+   RadAssist-RAG — Design tokens
+   design_specification.md §6. THE ONLY FILE THAT MAY CONTAIN HEX.
+   Enforced by scripts/check-design-tokens.mjs (P0 gate, §13).
+   ============================================================ */
+
+:root {
+  /* ---- neutrals — cool-leaning, never pure gray (§6.2) ---- */
+  --paper:            #F2F5F7;
+  --surface:          #FFFFFF;
+  --sunken:           #EAEFF3;
+  --hairline:         #E3E8ED;
+  --hairline-strong:  #BFC9D3;
+  --ink:              #0D1520;
+  --ink-2:            #54626F;
+  --ink-3:            #6E7C8A;   /* AA at 12px on --surface */
+
+  /* ---- brand: steel-blue. Doubles as the retrieved-evidence semantic ---- */
+  --steel:            #0F5C87;
+  --steel-hover:      #0B486B;
+  --brand-deep:       #0A3D5C;
+
+  /* ---- semantic triads: tint / border / deep text ----
+     EVERY semantic has all three. Omitting border+ink caused V1 drift. */
+  --steel-tint:       #E7F0F6;
+  --steel-bd:         #C5DCEA;
+  --steel-ink:        #0B486B;
+
+  --caution-bg:       #FFFAEB;
+  --caution-bd:       #F5D9A8;
+  --caution-ink:      #8A5A22;
+  --caution-fill:     #F79009;
+
+  --stable-bg:        #ECFDF3;
+  --stable-bd:        #B7E4C7;
+  --stable-ink:       #22684A;
+  --stable:           #067647;
+
+  --critical-bg:      #FEF3F2;
+  --critical-bd:      #F0C4BF;
+  --critical-ink:     #8C2018;
+  --critical:         #B42318;
+
+  /* ---- lightbox: the only dark surfaces in the product (§P1) ---- */
+  --lightbox:         #08090B;
+  --lightbox-chrome:  #1C222B;
+  --lightbox-bd:      #2E3742;
+  --lightbox-ink:     #C9D3DD;
+  --lightbox-ink-2:   #98A6B4;
+  --lightbox-ink-3:   #6B7885;
+
+  /* ---- ownership texture (§9) — .045 was invisible; .10 is the fix ---- */
+  --hatch: rgba(133, 147, 160, .10);
+
+  /* ---- spacing: THESE THREE ONLY for component padding (§6.4) ---- */
+  --pad-card:  16px;
+  --pad-tight: 12px;
+  --pad-page:  24px;
+
+  /* ---- elevation = dismissibility (§6.5) ---- */
+  --e1: 0 1px 2px rgba(13, 21, 32, .05);
+  --e2: 0 4px 12px rgba(13, 21, 32, .10);
+  --e3: 0 16px 40px rgba(13, 21, 32, .18);
+
+  /* ---- radius (§6.6) ---- */
+  --r-in:    2px;
+  --r-btn:   4px;
+  --r-card:  6px;
+  --r-modal: 8px;
+
+  /* ---- focus: a token. Never removed, never animated (§9) ---- */
+  --focus-ring:   2px solid var(--steel);
+  --focus-offset: 2px;
+
+  /* ---- layout (§6.7) ---- */
+  --sidebar:        240px;
+  --sidebar-rail:   64px;
+  --topbar:         56px;
+  --context-bar:    48px;
+  --report-col:     520px;
+  --evidence-rail:  360px;
+  --rail-collapsed: 44px;
+  --drawer:         460px;
+  --finalize-bar:   64px;
+
+  /* ---- motion (§10.9) ---- */
+  --t-hover:  120ms;
+  --t-state:  150ms;
+  --t-panel:  200ms;
+  --ease:     cubic-bezier(.2, 0, 0, 1);
+}
+
+/* Motion is functional. When it is unwelcome, it is off. (§10.9) */
+@media (prefers-reduced-motion: reduce) {
+  :root { --t-hover: 1ms; --t-state: 1ms; --t-panel: 1ms; }
+  *, *::before, *::after {
+    animation-duration: 1ms !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Focus is visible everywhere and never suppressed. */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}

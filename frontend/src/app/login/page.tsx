@@ -4,13 +4,15 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ApiError, getHealth, loginDoctor } from "@/lib/api-client";
+import { Button } from "@/components/ui/button";
 
 /**
- * Login (Phase 13b). Split layout per design_specification.md's actual
- * Login section (numbered 8.2 in that document, not 8.1 as
- * frontend/CLAUDE.md's citation says -- a citation slip, not a content
- * conflict, confirmed by reading the section directly): lightbox-style
- * panel left, form right.
+ * Login (Phase 13b, restyled Phase 14). Split layout per
+ * design_specification.md's actual Login section (§8.2 in that document,
+ * not §8.1 as frontend/CLAUDE.md's citation says -- a citation slip, not
+ * a content conflict, confirmed by reading the section directly): the
+ * lightbox-black panel left, form right, per §6.1's "Paper & Lightbox"
+ * direction (the lightbox is the only dark surface in the product).
  *
  * Service status strip (design spec: "FastAPI, Ollama, ChromaDB, GPU,
  * before authentication") is deliberately reduced to a single real
@@ -19,8 +21,7 @@ import { ApiError, getHealth, loginDoctor } from "@/lib/api-client";
  * endpoint that reports Ollama/ChromaDB/GPU reachability individually
  * (GET /health is liveness-only, per its own docstring), and fabricating
  * three more status dots with no real check behind them would show false
- * information rather than none. Flagged explicitly rather than silently
- * built as a fully-populated strip.
+ * information rather than none.
  *
  * Error copy follows the spec's "specific, does not apologise" rule:
  * the real 401 from POST /auth/login (InvalidCredentialsError,
@@ -64,43 +65,41 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen font-sans">
-      <div className="hidden flex-1 flex-col justify-between bg-black px-12 py-16 text-zinc-50 lg:flex">
+    <div className="flex min-h-screen">
+      <div className="hidden flex-1 flex-col justify-between bg-lightbox px-12 py-16 text-lightbox-ink lg:flex">
         <div>
-          <p className="text-sm font-medium tracking-wide text-zinc-400">RadAssist-RAG</p>
-          <h1 className="mt-4 max-w-md text-3xl font-semibold">
+          <p className="text-eyebrow uppercase text-lightbox-ink-2">RadAssist-RAG</p>
+          <h1 className="mt-4 max-w-md text-display text-white">
             Retrieval-grounded chest X-ray reporting.
           </h1>
         </div>
-        <p className="max-w-md text-sm text-zinc-500">
-          Every AI draft cites the retrieved cases it was grounded in. Nothing is finalised
-          without a radiologist.
+        <p className="max-w-md text-sm text-lightbox-ink-2">
+          Every AI draft cites the retrieved cases it was grounded in. 0 reports have ever been
+          finalised without a radiologist.
         </p>
       </div>
 
-      <div className="flex flex-1 flex-col items-center justify-center bg-zinc-50 px-6 py-16 dark:bg-black">
+      <div className="flex flex-1 flex-col items-center justify-center bg-paper px-page py-16">
         <div className="flex w-full max-w-sm flex-col gap-6">
           <div>
-            <h2 className="text-2xl font-semibold text-black dark:text-zinc-50">Sign in</h2>
-            <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-              RadAssist-RAG · Radiologist Workflow
-            </p>
+            <h2 className="text-h1 text-ink">Sign in</h2>
+            <p className="mt-1 text-sm text-ink-2">RadAssist-RAG &middot; Radiologist Workflow</p>
           </div>
 
-          <div className="flex items-center gap-2 rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-800 dark:bg-zinc-900">
+          <div className="flex items-center gap-2 rounded-card border border-hairline bg-surface px-3 py-2 text-sm">
             <span
               className={
-                "h-2 w-2 rounded-full " +
+                "h-1.5 w-1.5 rounded-full " +
                 (backendStatus === "ok"
-                  ? "bg-green-500"
+                  ? "bg-stable"
                   : backendStatus === "unreachable"
-                    ? "bg-red-500"
-                    : "bg-zinc-400")
+                    ? "bg-critical"
+                    : "bg-ink-3")
               }
             />
-            <span className="text-zinc-700 dark:text-zinc-300">
+            <span className="text-ink-2">
               Backend:{" "}
-              <span className="font-medium">
+              <span className="font-medium text-ink">
                 {backendStatus === "checking" ? "checking..." : backendStatus}
               </span>
             </span>
@@ -108,47 +107,41 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <label className="flex flex-col gap-1">
-              <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Email</span>
+              <span className="text-sm font-medium text-ink-2">Email</span>
               <input
                 required
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="rounded-md border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
+                className="h-10 rounded-btn border border-hairline-strong bg-surface px-3 text-ink"
               />
             </label>
 
             <label className="flex flex-col gap-1">
-              <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                Password
-              </span>
+              <span className="text-sm font-medium text-ink-2">Password</span>
               <input
                 required
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="rounded-md border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
+                className="h-10 rounded-btn border border-hairline-strong bg-surface px-3 text-ink"
               />
             </label>
 
-            <button
-              type="submit"
-              disabled={submitting}
-              className="mt-2 flex h-12 w-full items-center justify-center rounded-lg bg-black px-5 text-base font-medium text-white transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-white dark:text-black dark:hover:bg-zinc-200"
-            >
+            <Button type="submit" variant="primary" size="lg" block loading={submitting} className="mt-2">
               {submitting ? "Signing in..." : "Sign in"}
-            </button>
+            </Button>
           </form>
 
           {error && (
-            <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
+            <p className="rounded-card border border-critical-bd bg-critical-bg px-3 py-2 text-sm text-critical-ink">
               {error}
             </p>
           )}
 
-          <p className="text-center text-sm text-zinc-600 dark:text-zinc-400">
+          <p className="text-center text-sm text-ink-2">
             No account?{" "}
-            <Link href="/register" className="font-medium text-black underline dark:text-zinc-50">
+            <Link href="/register" className="font-medium text-ink underline">
               Register
             </Link>
           </p>

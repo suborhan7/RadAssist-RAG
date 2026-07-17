@@ -2,8 +2,17 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
-import { ApiError, getPatient, getReport } from "@/lib/api-client";
+import { useMemo, useState } from "react";
+import { useEffect } from "react";
+import { ApiError, getPatient, getReport, retrievalSessionImageUrl } from "@/lib/api-client";
+import { Card } from "@/components/ui/card";
+import { StatusChip } from "@/components/ui/chip";
+import { SimilarityBar } from "@/components/ui/similarity-bar";
+import { AgreementBadge } from "@/components/ui/agreement-badge";
+import { computeAgreement } from "@/lib/evidence-agreement";
+import { toChipReportStatus } from "@/lib/report-status";
+import { BUTTON_BASE, SIZE, VARIANT } from "@/components/ui/button";
+import { cn } from "@/lib/cn";
 import type { paths } from "@/lib/generated/api";
 
 type ReportDetailResponse =
@@ -22,22 +31,37 @@ const CONTENT_FIELDS: { key: keyof ReportDetailResponse["content"]; label: strin
 ];
 
 /**
- * Radiologist Workspace (Phase 12 Step 5) -- the report is a workspace,
- * not a viewer (frozen Consolidation Decision 3): Explainability and
- * Comparison are actions launched FROM here, not separate, disconnected
- * features. Retrieved evidence is an accordion here, not a separate page
- * (Consolidation Decision 2).
+ * Radiologist Workspace (Phase 12 Step 5, restyled Phase 14 per
+ * design_specification.md §8.12 -- frontend/CLAUDE.md cites this as §8.10,
+ * a citation slip; §8.10 is actually "Retrieval", a different screen).
+ * Explainability and Comparison are actions launched FROM here, not
+ * separate, disconnected features. Retrieved evidence is a rail here, not
+ * a separate page.
  *
- * Report detail fetch: GET /reports/{report_id} (Phase 12, added this
- * step -- see backend/app/services/report_detail_service.py's module
- * docstring for the full "no endpoint existed" reasoning). Patient
- * details are then fetched via the already-existing GET /patients/{patient_id}
- * (Step 3) using the patient_id GET /reports/{report_id} resolves --
- * composing two existing/new endpoints rather than duplicating patient-
- * fetch logic into the new report endpoint.
+ * Three registers, per §6.1/§8.12: the image sits in `--lightbox` (the
+ * only dark surface in the product), the report is paper/sans document
+ * typography, the evidence rail is paper but quieter/mono-heavy.
  *
- * patient_id may be null (a report's session predates patient linkage, or
- * was never given one) -- handled explicitly, not assumed present.
+ * NOT built, flagged explicitly rather than faked:
+ * - Citation markers linking specific report sentences to specific
+ *   retrieved cases (§8.12's "signature interaction"). The backend
+ *   returns report content as plain prose with no sentence-level
+ *   grounding markup at all -- building this would mean inventing a
+ *   citation-extraction feature with no backend support, not styling an
+ *   existing one. The report is rendered in the correct document
+ *   register; the hover-linking interaction is not implemented.
+ * - Window/level, zoom, pan, invert, prior-study thumbnails (§8.12's
+ *   Lightbox toolbar) -- real PACS-viewer engineering, not a styling
+ *   pass; not attempted here.
+ * - "Alternatives in retrieved evidence"'s (§10.3) "not present" column
+ *   requires the full label taxonomy, which no endpoint here exposes to
+ *   the frontend -- only the "present in the retrieved set" side is
+ *   real and shown; the "not present" side is omitted rather than
+ *   invented from a hardcoded label list.
+ * - Evidence Agreement's Strong/Mixed/Weak classification (§10.2) is
+ *   computed client-side from retrieved_cases (see lib/evidence-agreement.ts)
+ *   since ReportDetailResponse carries no voted_labels field -- a
+ *   documented re-derivation, not a second backend source of truth.
  */
 export default function ReportWorkspacePage() {
   const params = useParams<{ reportId: string }>();
@@ -46,6 +70,7 @@ export default function ReportWorkspacePage() {
   const [report, setReport] = useState<ReportDetailResponse | null>(null);
   const [patient, setPatient] = useState<PatientResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [railTab, setRailTab] = useState<"evidence" | "agreement" | "alternatives">("evidence");
 
   useEffect(() => {
     getReport(reportId)
@@ -56,9 +81,6 @@ export default function ReportWorkspacePage() {
             const patientResult = await getPatient(reportResult.patient_id);
             setPatient(patientResult);
           } catch {
-            // Patient fetch failing independently shouldn't block showing
-            // the report itself -- the workspace degrades to "no patient
-            // info shown," not a hard error for the whole page.
             setPatient(null);
           }
         }
@@ -68,10 +90,15 @@ export default function ReportWorkspacePage() {
       });
   }, [reportId]);
 
+  const agreement = useMemo(() => {
+    if (!report) return null;
+    return computeAgreement(report.retrieved_cases);
+  }, [report]);
+
   if (error) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-        <p className="rounded-md bg-red-50 px-4 py-3 text-red-700 dark:bg-red-950 dark:text-red-300">
+      <div className="flex min-h-screen items-center justify-center bg-paper">
+        <p className="rounded-card border border-critical-bd bg-critical-bg px-4 py-3 text-critical-ink">
           {error}
         </p>
       </div>
@@ -80,128 +107,175 @@ export default function ReportWorkspacePage() {
 
   if (!report) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-        <p className="text-zinc-500 dark:text-zinc-400">Loading report...</p>
+      <div className="flex min-h-screen items-center justify-center bg-paper">
+        <p className="text-ink-3">Loading report...</p>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex w-full max-w-2xl flex-col gap-6 px-6 py-16">
-        <h1 className="text-2xl font-semibold text-black dark:text-zinc-50">Radiologist Workspace</h1>
-
-        {/* Patient Information */}
-        <section className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950">
-          <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-            Patient Information
-          </h2>
+    <div className="flex min-h-screen flex-col bg-paper">
+      {/* Study context bar */}
+      <div className="flex h-context-bar items-center justify-between border-b border-hairline bg-surface px-page">
+        <div className="flex items-center gap-3">
+          <h1 className="text-h3 text-ink">Radiologist Workspace</h1>
           {patient ? (
-            <div className="flex flex-col gap-1">
-              <Link
-                href={`/patients/${patient.id}`}
-                className="font-medium text-black underline dark:text-zinc-50"
-              >
-                {patient.name}
-              </Link>
-              <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                {patient.patient_code} &middot; DOB {patient.date_of_birth} &middot; {patient.gender}
-              </p>
-            </div>
+            <Link href={`/patients/${patient.id}`} className="text-sm text-ink-2 underline">
+              {patient.name} &middot; {patient.patient_code}
+            </Link>
           ) : (
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">No patient linked to this report.</p>
+            <span className="text-sm text-ink-3">No patient linked to this report.</span>
           )}
-        </section>
+        </div>
+        <StatusChip status={toChipReportStatus(report.status)} />
+      </div>
 
-        {/* AI Report content */}
-        <section className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950">
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-            AI Report ({report.status}, {report.report_date})
-          </h2>
-          <dl className="flex flex-col gap-3">
+      <div className="flex flex-1 flex-col gap-4 p-page lg:flex-row">
+        {/* Lightbox -- the only black surface */}
+        <div className="flex min-h-[420px] flex-1 items-center justify-center rounded-card bg-lightbox lg:min-w-[420px]">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={retrievalSessionImageUrl(report.session_id)}
+            alt={`Chest X-ray, ${report.report_date}`}
+            className="max-h-[70vh] max-w-full object-contain"
+          />
+        </div>
+
+        {/* Report as document */}
+        <Card className="flex w-full flex-col gap-0 lg:w-report-col">
+          <div className="flex items-center justify-between border-b border-hairline p-tight px-card">
+            <h2 className="text-eyebrow uppercase text-ink-3">
+              AI Report &middot; {report.report_date}
+            </h2>
+          </div>
+          <div className="flex flex-col divide-y divide-hairline p-card">
             {CONTENT_FIELDS.map(({ key, label }) => (
-              <div key={key}>
-                <dt className="text-sm font-medium text-zinc-700 dark:text-zinc-300">{label}</dt>
-                <dd className="text-sm text-zinc-600 dark:text-zinc-400">
-                  {report.content[key] || "(none)"}
-                </dd>
-              </div>
-            ))}
-          </dl>
-        </section>
-
-        {/* Validation Warnings */}
-        <section
-          className={`rounded-lg border p-4 ${
-            report.validation.is_clean
-              ? "border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950"
-              : "border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950"
-          }`}
-        >
-          <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-            Validation
-          </h2>
-          {report.validation.is_clean ? (
-            <p className="text-sm text-green-700 dark:text-green-300">No validation warnings.</p>
-          ) : (
-            <ul className="list-inside list-disc text-sm text-amber-800 dark:text-amber-300">
-              {report.validation.warnings.map((warning, i) => (
-                <li key={i}>{warning}</li>
-              ))}
-            </ul>
-          )}
-        </section>
-
-        {/* Retrieved Evidence accordion (not a separate page) */}
-        <details className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950">
-          <summary className="cursor-pointer text-sm font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-            Retrieved Evidence ({report.retrieved_cases.length} cases)
-          </summary>
-          <div className="mt-3 flex flex-col gap-3">
-            {report.retrieved_cases.map((c) => (
-              <div
-                key={c.rank}
-                className="rounded-md border border-zinc-200 p-3 text-sm dark:border-zinc-800"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="font-medium text-zinc-700 dark:text-zinc-300">
-                    #{c.rank} &middot; {c.primary_label}
-                  </span>
-                  <span className="font-mono text-xs text-zinc-500 dark:text-zinc-400">
-                    similarity {c.similarity.toFixed(2)}
-                  </span>
-                </div>
-                <p className="mt-1 text-zinc-600 dark:text-zinc-400">{c.findings}</p>
-                <p className="text-zinc-600 dark:text-zinc-400">{c.impression}</p>
+              <div key={key} className="py-3 first:pt-0 last:pb-0">
+                <h3 className="text-h3 text-ink">{label}</h3>
+                <p className="mt-1 text-report text-ink-2">{report.content[key] || "(none)"}</p>
               </div>
             ))}
           </div>
-        </details>
 
-        {/* Actions */}
-        <div className="flex flex-wrap gap-3">
-          <Link
-            href={`/reports/${reportId}/explain`}
-            className="flex h-12 flex-1 items-center justify-center rounded-lg bg-black px-5 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200"
+          {/* Validation */}
+          <div
+            className={cn(
+              "m-card mt-0 rounded-card border p-tight",
+              report.validation.is_clean
+                ? "border-stable-bd bg-stable-bg"
+                : "border-caution-bd bg-caution-bg",
+            )}
           >
-            Explain Report
-          </Link>
-          <Link
-            href={`/reports/${reportId}/compare`}
-            className="flex h-12 flex-1 items-center justify-center rounded-lg border border-zinc-300 px-5 text-sm font-medium text-black transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-50 dark:hover:bg-zinc-900"
-          >
-            Compare Previous Report
-          </Link>
-          <button
-            type="button"
-            disabled
-            title="Out of scope for this thesis (frozen Phase 12 spec)"
-            className="flex h-12 flex-1 items-center justify-center rounded-lg border border-zinc-200 px-5 text-sm font-medium text-zinc-400 dark:border-zinc-800 dark:text-zinc-600"
-          >
-            Download PDF
-          </button>
-        </div>
-      </main>
+            <h3 className="text-eyebrow uppercase text-ink-3">Validation</h3>
+            {report.validation.is_clean ? (
+              <p className="mt-1 text-sm text-stable-ink">No validation warnings.</p>
+            ) : (
+              <ul className="mt-1 list-inside list-disc text-sm text-caution-ink">
+                {report.validation.warnings.map((warning, i) => (
+                  <li key={i}>{warning}</li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {/* Actions */}
+          <div className="flex flex-wrap gap-3 p-card pt-0">
+            <Link
+              href={`/reports/${reportId}/explain`}
+              className={cn(BUTTON_BASE, VARIANT.primary, SIZE.md, "flex-1")}
+            >
+              Explain Report
+            </Link>
+            <Link
+              href={`/reports/${reportId}/compare`}
+              className={cn(BUTTON_BASE, VARIANT.secondary, SIZE.md, "flex-1")}
+            >
+              Compare Previous Report
+            </Link>
+            <button
+              type="button"
+              disabled
+              title="Out of scope for this thesis (frozen Phase 12 spec)"
+              className={cn(BUTTON_BASE, VARIANT.ghost, SIZE.md, "flex-1")}
+            >
+              Download PDF
+            </button>
+          </div>
+        </Card>
+
+        {/* Evidence rail -- paper, quieter, mono-heavy */}
+        <Card className="flex w-full flex-col lg:w-evidence-rail">
+          <div className="flex border-b border-hairline">
+            {(["evidence", "agreement", "alternatives"] as const).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setRailTab(tab)}
+                className={cn(
+                  "flex-1 border-b-2 px-3 py-2 text-sm font-medium capitalize transition-colors duration-hover",
+                  railTab === tab
+                    ? "border-steel text-steel-ink"
+                    : "border-transparent text-ink-3 hover:text-ink",
+                )}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+
+          <div className="p-card">
+            {railTab === "evidence" && (
+              <div className="flex flex-col gap-3">
+                <h3 className="text-eyebrow uppercase text-ink-3">
+                  Retrieved evidence ({report.retrieved_cases.length} cases)
+                </h3>
+                {report.retrieved_cases.map((c) => (
+                  <div key={c.rank} className="rounded-card border border-hairline p-tight text-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium text-ink">
+                        #{c.rank} &middot; {c.primary_label}
+                      </span>
+                    </div>
+                    <SimilarityBar value={c.similarity * 100} className="mt-2" />
+                    <p className="mt-2 text-ink-2">{c.findings}</p>
+                    <p className="text-ink-2">{c.impression}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {railTab === "agreement" && agreement && (
+              <AgreementBadge level={agreement.level} factors={agreement.factors} />
+            )}
+
+            {railTab === "alternatives" && agreement && (
+              <div className="flex flex-col gap-3">
+                <h3 className="text-eyebrow uppercase text-ink-3">
+                  Present in the retrieved set
+                </h3>
+                <dl className="flex flex-col">
+                  {agreement.presentLabels.map(({ label, count, k }) => (
+                    <div
+                      key={label}
+                      className="flex items-center justify-between border-b border-hairline py-2 last:border-0"
+                    >
+                      <dt className="text-sm text-ink-2">{label}</dt>
+                      <dd className="font-mono text-data-sm text-ink">
+                        {count} of {k}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+                <p className="rounded-card bg-sunken p-tight text-sm text-ink-2">
+                  Absence from this list means no retrieved case carried the label. It is not an
+                  exclusion. The full set of labels the system could have retrieved is not shown
+                  here -- only labels present are reported, not a complete positive/negative
+                  taxonomy.
+                </p>
+              </div>
+            )}
+          </div>
+        </Card>
+      </div>
     </div>
   );
 }

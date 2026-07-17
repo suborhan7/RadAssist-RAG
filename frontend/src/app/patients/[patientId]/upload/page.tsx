@@ -1,39 +1,36 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ApiError,
   generateReport,
   getQuestionnaire,
+  retrievalSessionImageUrl,
   retrieveWithProgress,
 } from "@/lib/api-client";
 import { StepProgress, type StepStatus, type WorkflowStepDisplay } from "@/components/workflow/StepProgress";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { PhiRevealSlider } from "@/components/ui/phi-reveal-slider";
 import type { paths } from "@/lib/generated/api";
 
 type QuestionnaireResponse =
   paths["/questionnaire/{session_id}"]["get"]["responses"][200]["content"]["application/json"];
 
 /**
- * Upload -> Retrieval -> Questionnaire -> Generate (Phase 12 Step 4), one
- * guided flow per the frozen spec -- not separate routes, since a doctor
- * experiences this as one continuous action.
+ * Upload -> Retrieval -> Questionnaire -> Generate (Phase 12 Step 4, PHI
+ * slider added Phase 14), one guided flow per the frozen spec -- not
+ * separate routes, since a doctor experiences this as one continuous
+ * action.
  *
- * WorkflowStep progress states are wired to the REAL backend calls this
- * page makes, not simulated timing: "uploading" and "retrieving_evidence"
- * are two real, browser-reported milestones within the SAME real
- * POST /retrieve XHR (see retrieveWithProgress's own docstring for why
- * XHR, not fetch, is used here), "running_questionnaire" covers the real
- * GET /questionnaire/{session_id} call plus however long the doctor takes
- * filling it in (a real elapsed duration, not fake), and
- * "generating_report" covers the real POST /generate-report call --
- * exactly the latency Phase 7 (~6s single generation) and Phase 11
- * (60s+ chained) measured, made visible per-stage rather than hidden
- * behind one generic spinner.
- *
- * Questionnaire is genuinely optional (frozen Phase 9 design) -- "Skip
- * Questionnaire" proceeds straight to generation with
- * questionnaire_answers: null, exercised for real below.
+ * design_specification.md §8.9's PHI reveal slider: `originalObjectUrl`
+ * is built from the SAME File object already sitting in this component's
+ * state before upload (URL.createObjectURL, never re-uploaded or
+ * persisted) -- this system deliberately never stores the raw image
+ * (Phase 1/12's masking invariant), so this is the only "original" the
+ * slider can legitimately show. Revoked on unmount/file-change to avoid
+ * leaking the object URL.
  */
 type WorkflowStepId = "uploading" | "retrieving_evidence" | "running_questionnaire" | "generating_report";
 
@@ -68,18 +65,25 @@ export default function UploadFlowPage() {
   const patientId = params.patientId;
 
   const [file, setFile] = useState<File | null>(null);
+  const [originalObjectUrl, setOriginalObjectUrl] = useState<string | null>(null);
   const [phase, setPhase] = useState<"form" | "running">("form");
   const [steps, setSteps] = useState<Record<WorkflowStepId, StepState>>(initialSteps());
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [questionnaire, setQuestionnaire] = useState<QuestionnaireResponse | null>(null);
   const [answers, setAnswers] = useState<Record<string, string>>({});
-  // Real wall-clock moment the "running_questionnaire" step became active
-  // (right after GET /questionnaire/{session_id} resolves) -- read back in
-  // proceedToGeneration() to compute the step's real elapsed duration,
-  // including however long the doctor spent filling in or deciding to
-  // skip the form. A ref, not state, since it must survive re-renders
-  // without itself triggering one.
   const questionnaireStepStart = useRef<number>(0);
+
+  useEffect(() => {
+    return () => {
+      if (originalObjectUrl) URL.revokeObjectURL(originalObjectUrl);
+    };
+  }, [originalObjectUrl]);
+
+  function handleFileChange(selected: File | null) {
+    if (originalObjectUrl) URL.revokeObjectURL(originalObjectUrl);
+    setFile(selected);
+    setOriginalObjectUrl(selected ? URL.createObjectURL(selected) : null);
+  }
 
   function updateStep(id: WorkflowStepId, patch: Partial<StepState>) {
     setSteps((prev) => ({ ...prev, [id]: { ...prev[id], ...patch } }));
@@ -125,9 +129,6 @@ export default function UploadFlowPage() {
     try {
       const q = await getQuestionnaire(retrieveResult.session_id);
       setQuestionnaire(q);
-      // intentionally NOT marking this step "done" yet -- it stays
-      // "active" (real elapsed time still accruing) while the doctor
-      // fills in or skips the form; finalized in proceedToGeneration().
     } catch (err) {
       updateStep("running_questionnaire", {
         status: "error",
@@ -182,32 +183,28 @@ export default function UploadFlowPage() {
     detail: steps[id].detail,
   }));
 
+  const maskedReady = sessionId !== null && steps.retrieving_evidence.status === "done";
+
   return (
-    <div className="flex min-h-screen flex-col items-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex w-full max-w-lg flex-col gap-6 px-6 py-16">
-        <h1 className="text-2xl font-semibold text-black dark:text-zinc-50">New Examination</h1>
+    <div className="flex min-h-screen flex-col items-center bg-paper">
+      <main className="flex w-full max-w-lg flex-col gap-6 px-page py-16">
+        <h1 className="text-h1 text-ink">New Examination</h1>
 
         {phase === "form" && (
           <form onSubmit={handleStart} className="flex flex-col gap-4">
             <label className="flex flex-col gap-1">
-              <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                Chest X-ray Image
-              </span>
+              <span className="text-sm font-medium text-ink-2">Chest X-ray Image</span>
               <input
                 required
                 type="file"
                 accept="image/*"
-                onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-                className="rounded-md border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
+                onChange={(e) => handleFileChange(e.target.files?.[0] ?? null)}
+                className="rounded-btn border border-hairline-strong bg-surface px-3 py-2 text-ink"
               />
             </label>
-            <button
-              type="submit"
-              disabled={!file}
-              className="flex h-12 w-full items-center justify-center rounded-lg bg-black px-5 text-base font-medium text-white transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-white dark:text-black dark:hover:bg-zinc-200"
-            >
+            <Button type="submit" variant="primary" size="lg" block disabled={!file}>
               Start Examination
-            </button>
+            </Button>
           </form>
         )}
 
@@ -215,42 +212,50 @@ export default function UploadFlowPage() {
           <>
             <StepProgress steps={stepDisplays} />
 
+            {maskedReady && originalObjectUrl && sessionId && (
+              <Card className="p-card">
+                <h2 className="mb-2 text-eyebrow uppercase text-ink-3">PHI masking</h2>
+                <PhiRevealSlider
+                  maskedSrc={retrievalSessionImageUrl(sessionId)}
+                  originalSrc={originalObjectUrl}
+                />
+              </Card>
+            )}
+
             {questionnaire && (
-              <form
-                onSubmit={handleSubmitQuestionnaire}
-                className="flex flex-col gap-4 rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950"
-              >
-                <p className="text-sm text-zinc-600 dark:text-zinc-400">
+              <Card className="flex flex-col gap-4 p-card">
+                <p className="text-sm text-ink-2">
                   Optional clinical questions (based on top candidate label:{" "}
-                  <span className="font-medium">{questionnaire.based_on_label}</span>)
+                  <span className="font-medium text-ink">{questionnaire.based_on_label}</span>)
                 </p>
-                {questionnaire.questions.map((q) => (
-                  <label key={q.key} className="flex flex-col gap-1">
-                    <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">{q.text}</span>
-                    <input
-                      type="text"
-                      value={answers[q.key] ?? ""}
-                      onChange={(e) => setAnswers((prev) => ({ ...prev, [q.key]: e.target.value }))}
-                      className="rounded-md border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
-                    />
-                  </label>
-                ))}
-                <div className="flex gap-3 pt-2">
-                  <button
-                    type="submit"
-                    className="flex h-10 flex-1 items-center justify-center rounded-lg bg-black px-4 text-sm font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200"
-                  >
-                    Continue
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleSkipQuestionnaire}
-                    className="flex h-10 flex-1 items-center justify-center rounded-lg border border-zinc-300 px-4 text-sm font-medium text-black transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-50 dark:hover:bg-zinc-900"
-                  >
-                    Skip Questionnaire
-                  </button>
-                </div>
-              </form>
+                <form onSubmit={handleSubmitQuestionnaire} className="flex flex-col gap-4">
+                  {questionnaire.questions.map((q) => (
+                    <label key={q.key} className="flex flex-col gap-1">
+                      <span className="text-sm font-medium text-ink-2">{q.text}</span>
+                      <input
+                        type="text"
+                        value={answers[q.key] ?? ""}
+                        onChange={(e) => setAnswers((prev) => ({ ...prev, [q.key]: e.target.value }))}
+                        className="h-10 rounded-btn border border-hairline-strong bg-surface px-3 text-ink"
+                      />
+                    </label>
+                  ))}
+                  <div className="flex gap-3 pt-2">
+                    <Button type="submit" variant="primary" size="md" className="flex-1">
+                      Continue
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="md"
+                      className="flex-1"
+                      onClick={handleSkipQuestionnaire}
+                    >
+                      Skip Questionnaire
+                    </Button>
+                  </div>
+                </form>
+              </Card>
             )}
           </>
         )}

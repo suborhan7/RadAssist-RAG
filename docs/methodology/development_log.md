@@ -6973,3 +6973,294 @@ unauthenticated visitor away from e.g. the upload flow or Radiologist
 Workspace), which remains open for a later phase; Phase 14 (visual
 system pass) and Phase 15 (ownership UI), both still gated on this phase
 as planned.
+
+---
+
+## Phase 14 (Visual System Pass)
+
+Per `frontend/CLAUDE.md`'s Phase 14 section: extract `p0-design-system`
+into `frontend/src/`, apply `design_specification.md` §6 (tokens,
+typography, spacing, elevation) to every existing Phase 12/13b page, and
+apply six specifically named content/interaction items -- Evidence
+agreement wording, the Alternatives panel, the Comparison provenance
+split, the PHI reveal slider, the Radiologist Workspace's lightbox/
+citation-marker/evidence-rail aesthetic, and Explainability's drawer
+register. Gate: `npm run check:design` passes project-wide (0
+violations, not just new files) and screens visually match
+`radassist-v2-final.html`.
+
+**Five more citation slips in `frontend/CLAUDE.md`, same pattern as
+Phase 13b's Login section number, found and corrected in place, not
+treated as blocking conflicts:** "Alternatives" is design_specification.md
+§10.3, not §10.5 (§10.5 is "Doctor edit tracking," a different feature);
+"Comparison provenance split" is §8.14, not §8.12 (§8.12 is "Radiologist
+Workspace," a different screen); the PHI slider is §8.9, not §8.7 (§8.7
+is "Patient profile"); the Workspace's lightbox/citations/evidence rail
+is §8.12, not §8.10 (§8.10 is "Retrieval"); Explainability is §8.13, not
+§8.11 (§8.11 is "Questionnaire"). All five confirmed by reading the
+actual section at each real number before implementing against it, not
+assumed from the citation.
+
+### Implementation & Validation
+
+**Design system extraction.** `p0-design-system.tar.gz` (dropped into
+`frontend/` alongside `frontend/CLAUDE.md` v2, per the summary at the
+top of this session) contains a real, previously-unextracted P0 package:
+`tokens.css` (58 CSS custom properties, matching `design_specification.md`
+§6.2's literal values), a hand-authored `tailwind.config.ts` that
+*replaces* Tailwind's default color palette (deliberately, so
+`bg-blue-500` stops being a reachable class at all), IBM Plex Sans/Mono +
+Noto Sans Bengali via `next/font/google`, a `cn()` helper (clsx +
+tailwind-merge), seven UI primitives (`Button`, `Card`/`CardHeader`/
+`CardBody`, `StatusChip`/`OwnershipChip`/`ServiceChip`/`Tag`,
+`AgreementBadge`, `SimilarityBar`, `EmptyState`, `Skeleton`), a
+kitchen-sink demo page, and the real `check-design-tokens.mjs` gate
+script (seven rules: hex-literal, raw-padding, dead-shadow-token,
+below-type-floor, forbidden-word-confidence, outline-none,
+tailwind-default-palette). Extracted per the package's own `P0_README.md`
+install instructions into `frontend/src/styles/`, `src/lib/`,
+`src/components/ui/`, `src/app/dev/kitchen-sink/`, and `scripts/`;
+`clsx`/`tailwind-merge` installed for real; `check:design` added to
+`package.json`'s scripts. Confirmed the new files themselves are clean
+before touching anything else: `node scripts/check-design-tokens.mjs`
+scanned 27 files (the extracted set) with 0 violations from the
+extraction itself.
+
+**Tailwind v4 + a v3-style JS config, verified empirically rather than
+assumed compatible.** This project's Tailwind is v4 (CSS-first,
+`@import "tailwindcss"` + `@theme inline` in `globals.css`), but
+`tailwind.config.ts` is written in v3's JS-config style (a `theme.colors`
+object that must *replace*, not extend, the default palette). Tailwind
+v4 supports loading a legacy JS config via an `@config` directive;
+rather than assuming this "should work," `globals.css` was rewritten to
+`@import "tailwindcss"; @import "../styles/tokens.css"; @config
+"../../tailwind.config.ts";` and then verified with a real Playwright
+check of computed styles on a running page: `background: rgb(242, 245,
+247)` (`#F2F5F7`, `--paper`), `color: rgb(13, 21, 32)` (`#0D1520`,
+`--ink`), `font-family: "IBM Plex Sans", ...` -- the token pipeline
+genuinely resolves end-to-end, not merely present in source.
+
+**A real environment defect found and fixed along the way, unrelated to
+the design system itself:** repeated dev-server restarts across this
+session (via backgrounded `nohup npm run dev`) had left multiple
+concurrent `next dev` process trees running simultaneously, undetected
+because `pkill -f "next dev"` does not reliably match Windows process
+command lines the way it does on Linux -- confirmed via
+`Get-CimInstance Win32_Process`, which showed 9 live node processes, 6
+of them genuine orphaned `next dev`/`start-server.js` instances all
+pointed at this same project's `.next` cache directory. This caused a
+real, reproducible Turbopack cache corruption (`Failed to restore task
+data (corrupted database or bug)`), not a transient glitch -- deleting
+`.next` and restarting while orphans were still alive reproduced the
+identical corruption immediately. Resolved by scoping a process kill to
+only PIDs whose command line explicitly referenced this project's
+`frontend\node_modules\next\...` path (verified individually before
+killing, after an initial overly broad system-wide kill attempt was
+correctly blocked by the environment's own safety classifier), then a
+single clean `.next` removal and a single fresh server start.
+
+**Page-by-page token pass** (`page.tsx`, `patients/new`, `patients/search`,
+`patients/[patientId]`, `patients/[patientId]/upload`,
+`reports/[reportId]`, `reports/[reportId]/explain`,
+`reports/[reportId]/compare`, `StepProgress.tsx`, `login`, `register`,
+`globals.css`): every `dark:` variant removed (the design has no dark
+theme by design -- "a dark UI would destroy the signature" of the
+lightbox, §6.1 -- so `prefers-color-scheme: dark` support was deliberately
+dropped, not an oversight), every Tailwind-default-palette class replaced
+with a semantic token class, typography moved onto the `hero`/`display`/
+`h1`/`h2`/`h3`/`body`/`report`/`sm`/`label`/`eyebrow` scale. `Button`
+doesn't support polymorphic rendering (no Radix `asChild`) -- an initial
+attempt to nest `<Link>` inside `<Button asChild>` for navigation actions
+was caught before committing (would have silently passed an invalid
+`asChild` DOM attribute and produced a `<button><a>...</a></button>`, an
+accessibility/semantics regression) and fixed by exporting `Button`'s own
+`BUTTON_BASE`/`VARIANT`/`SIZE` class maps for `next/link` to reuse
+directly, rather than either forcing polymorphism into the primitive or
+duplicating its class strings by hand.
+
+**`AgreementBadge`'s `clinicalHistory: boolean` field, corrected before
+use, not worked around by guessing.** `GET /reports/{report_id}` (the
+only endpoint the Radiologist Workspace calls) carries no field
+indicating whether clinical history was supplied at generation time --
+passing a hardcoded `false` would have silently misrepresented real
+reports as history-free. Changed the shared component's prop type to
+`boolean | null` and render "Not recorded" for `null`, a small, honest
+correction to the extracted primitive rather than fabricating data to
+fit its existing contract.
+
+**Evidence Agreement and Alternatives, re-derived client-side from data
+already on the page, not a new backend call or a second source of
+truth.** `ReportDetailResponse` carries `retrieved_cases` (with
+`primary_label`/`similarity` per case) but no `voted_labels` -- that
+field exists only on `POST /retrieve`'s response, per the frozen
+contract, and is never persisted. `lib/evidence-agreement.ts` tallies
+`primary_label` occurrences across the same `retrieved_cases` array the
+page already has, computing the identical shape of result
+`LabelVotingService.vote()` produces server-side, documented explicitly
+as a client-side re-derivation. Strong/Mixed/Weak thresholds (`>=60%`/
+`>=30%`/below) are a stated, undisguised frontend display convenience,
+not a claimed clinical cutoff. The Alternatives tab's "not present"
+column (§10.3's other half) was deliberately not built -- it requires
+the full label taxonomy, which no endpoint exposes to the frontend, and
+inventing one from a hardcoded label list would have been exactly the
+kind of unfounded claim this project's own evidentiary discipline exists
+to prevent. The rail states this omission in its own copy, not just in
+this log.
+
+**The PHI reveal slider is real, not a mocked demo.** `originalSrc` is
+built via `URL.createObjectURL()` from the same `File` object already
+sitting in the upload page's own state before the real
+`POST /retrieve` call -- never a second upload, never persisted --
+because this system has never stored the raw image (Phase 1/12's
+masking invariant), so the browser's own in-memory file is the only
+"original" that can honestly back the slider's printed claim ("Original
+shown from this session only. Not stored."). `maskedSrc` is the real,
+already-existing `GET /retrieval-sessions/{session_id}/image` endpoint.
+A real ESLint error (`react-hooks/refs`: "Cannot access refs during
+render") was caught reading `containerRef.current?.clientWidth` inside
+a render path -- fixed by restructuring the reveal overlay with CSS
+(`absolute inset-0` + `object-contain` on both layers) instead of a
+JS-measured width, removing the ref read from render entirely rather
+than suppressing the lint rule.
+
+**Radiologist Workspace, Explainability, and Comparison restyled per
+§8.12/§8.13/§8.14**, with three things named as explicitly not built
+rather than silently absent: per-sentence citation-hover-linking between
+report prose and retrieved cases (the backend returns plain prose with
+no sentence-level grounding markup at all -- building this would be a
+new backend feature, not a style pass); window/level/zoom/pan/invert and
+prior-study thumbnails on the lightbox (real image-viewer engineering);
+and linked-viewer pan/zoom synchronisation on the Comparison page. The
+Comparison provenance split uses real, unembellished copy -- "Computed
+by ComparisonService · Deterministic" and "Narrative generated by an
+LLM from the deterministic diff above" -- deliberately not naming a
+specific model, since `ComparisonResponse` carries no `llm_model` field
+(that only exists on a different endpoint's response) and asserting one
+anyway would have been a small fabrication.
+
+**Real end-to-end verification, via a real headless browser against
+real running dev servers with real Ollama/ChromaDB, not screenshots of
+static markup:** registered a doctor, registered a patient, ran a
+complete upload -> retrieval -> questionnaire-skip -> generation cycle
+(confirming the PHI slider renders the real masked image against the
+real in-browser original), opened the Radiologist Workspace and both
+its Evidence/Agreement/Alternatives rail tabs, asked a real question via
+Explainability, ran a second real visit for the same patient and opened
+Comparison (confirming the real deterministic diff + LLM narrative +
+provenance captions), and viewed the Patient Profile with both real
+visits timelined newest-first. Zero console errors across the entire
+walkthrough. One test-script bug was found and isolated during this
+verification (a case-sensitive regex in a throwaway debug script
+falsely suggested the Agreement tab's click handler was broken); traced
+to the test, not the app, by re-testing with a case-insensitive locator
+before concluding anything about the app itself, matching this
+project's "verify the actual defect before proposing a fix" discipline.
+
+**Visual comparison against `radassist-v2-final.html`,** navigated via
+its own real in-page anchor links (`01 Login`, `11 Radiologist
+workspace`, `11b Rail · Agreement`, `13 Comparison`, etc.) rather than
+assumed from memory: Login's split lightbox/form layout, service-status
+strip position, and button styling match closely; the Workspace's
+three-column layout, rail-tab position, and steel similarity bars match
+closely; the Agreement tab's headline/fill-bar/factor-list/definition
+structure matches almost exactly (the reference's `Clinical history
+provided: Yes` is the one field this implementation correctly does NOT
+fabricate, rendering "Not recorded" instead); the Comparison page's
+interval-diff and provenance-caption concept matches, laid out somewhat
+differently (side-by-side full report content is shown here; the
+reference shows a compact diff panel only) as a defensible reuse of the
+existing page's working structure rather than a rebuild. Confirmed
+absent from this implementation, matching what was already stated
+in-code rather than a surprise found late: the global sidebar nav rail,
+the bilingual EN/বাংলা toggle, the response-time breakdown panel, and
+the "Accept into report"/"Regenerate" actions (which need the still-open
+Phase 13a finalize/edit gap to exist first).
+
+Full checks: `npx tsc --noEmit` clean, `npm run lint` clean, `npm run
+check:design` -- **0 violations, 30 files scanned, project-wide** (up
+from Phase 13b's 203 violations across 12 files).
+
+### How to Write This in Your Thesis
+
+*Methodology chapter, "Visual System" subsection:*
+
+> Phase 14 differed from every prior phase in this project in the kind of
+> artifact it began from: not a frozen architecture document written
+> alongside the code it specified, but a design system authored entirely
+> independently, arriving as a self-contained package with its own
+> install instructions, its own enforcement tooling, and its own internal
+> citations to a specification this implementation had already been
+> partially reconciling against a different document's incompatible
+> assumptions. Integrating it surfaced the same category of defect this
+> project has repeatedly found at the seams between independently
+> authored artifacts -- not a logic error, but a citation drift, five
+> section-number references in the build instructions that had silently
+> gone stale relative to the document they described, caught only because
+> each was checked against the actual numbered section before code was
+> written against it rather than trusted from the citing document alone.
+> A second, environment-level defect surfaced during this phase for
+> reasons specific to this phase's own iteration speed: repeated
+> background dev-server restarts, a pattern this project had used safely
+> in earlier phases, accumulated into concurrent orphaned processes on
+> this operating system specifically because a process-matching idiom
+> reliable on Linux is not reliable here, and the resulting cache
+> corruption was reproducible and immediate once diagnosed rather than
+> intermittent, a useful distinction when writing up why it was findable
+> at all. The phase's more interesting methodological tension was
+> deciding, repeatedly, what a design system extracted from a mockup is
+> actually entitled to claim once real backend data is behind it: a
+> shared `AgreementBadge` component built to display a clinical-history
+> boolean this specific endpoint has no way of knowing was not filled in
+> with a plausible guess but given a third, honest state; an
+> "Alternatives" panel whose more valuable half the specification itself
+> names (§10.3) was rendered only as far as real data supports it, not
+> completed with an invented taxonomy; and a narrative-attribution
+> caption stopped short of naming a specific model the response it was
+> captioning never actually names. None of these are omissions a visual
+> QA pass would catch, since each renders a plausible, complete-looking
+> screen -- they are visible only to someone checking what the screen
+> claims against what the system backing it can actually support, which
+> is the same discipline this project has applied to every clinical
+> claim since Phase 0, extended here to a claim's visual, not textual,
+> form.
+
+---
+
+## Phase 14 (Visual System Pass) — COMPLETE
+
+`p0-design-system` extracted into `frontend/src/` for real (tokens,
+Tailwind config replacing the default palette, IBM Plex fonts, seven UI
+primitives, the real gate script now aliased as `npm run check:design`).
+Every existing Phase 12/13b page retokenized -- zero `dark:` variants
+remain (no dark theme exists by design), zero Tailwind-default-palette
+classes remain. Six named content/interaction items delivered: Evidence
+agreement wording (client-side re-derived from real `retrieved_cases`,
+documented as such), the Alternatives panel (present-only, `not
+present` honestly omitted rather than invented), the Comparison
+provenance split (real, unembellished attribution copy), a genuinely
+real PHI reveal slider (in-browser original vs. real masked endpoint,
+never a second upload), the Radiologist Workspace's lightbox/evidence-rail
+aesthetic, and Explainability's document-register (non-chat) styling.
+Three things named as explicitly not built rather than silently absent:
+per-sentence citation-hover-linking, real image-viewer controls
+(window/level/zoom/pan/invert), and linked-viewer synchronisation on
+Comparison -- each requires real backend or engineering work beyond a
+styling pass. Five `frontend/CLAUDE.md` citation slips found and
+corrected in place (Alternatives, Comparison provenance, the PHI slider,
+the Workspace, and Explainability were all cited to the wrong section
+number). One real Turbopack cache-corruption defect (from accumulated
+orphaned dev-server processes, a Windows-specific process-matching gap)
+found and fixed. One real ESLint `react-hooks/refs` violation caught
+and fixed before it shipped. Full backend regression untouched this
+phase (frontend-only). Gate: `npm run check:design` -- **0 violations,
+30 files, project-wide** -- and a real, complete, two-visit end-to-end
+walkthrough (register -> patient -> upload with PHI slider ->
+questionnaire skip -> generation -> Workspace with all three rail tabs
+-> Explainability -> second visit -> Comparison -> Patient Profile),
+zero console errors throughout, run against real dev servers with real
+Ollama/ChromaDB, not mocked. Visually compared against
+`radassist-v2-final.html` via the reference file's own real anchor
+navigation. Not yet built, explicitly out of Phase 14 scope: Phase 15's
+ownership UI (chips, read-only banners, real per-doctor dashboard
+counts), global sidebar navigation, bilingual EN/বাংলা reporting, and
+the response-time breakdown panel.

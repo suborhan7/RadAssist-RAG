@@ -7,12 +7,15 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "generate-types": "openapi-typescript http://127.0.0.1:8000/openapi.json -o src/lib/generated/api.d.ts"
+    "generate-types": "openapi-typescript http://127.0.0.1:8000/openapi.json -o src/lib/generated/api.d.ts",
+    "check:design": "node scripts/check-design-tokens.mjs"
   },
   "dependencies": {
+    "clsx": "^2.1.1",
     "next": "16.2.10",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

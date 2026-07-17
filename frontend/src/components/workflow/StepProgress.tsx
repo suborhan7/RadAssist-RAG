@@ -12,6 +12,10 @@
  * duration the calling page measured around its own real fetch/XHR call
  * for that stage, not a simulated or estimated value -- this component
  * only renders whatever real numbers it's given.
+ *
+ * Phase 14: this is design_specification.md's PipelineProgress primitive
+ * (§7) -- spinner-to-check at 150ms, elapsed counting up in mono (§10.9's
+ * "signature motion" -- the only place waiting is honest work).
  */
 export type StepStatus = "pending" | "active" | "done" | "error" | "skipped";
 
@@ -26,20 +30,20 @@ export interface WorkflowStepDisplay {
 function StatusIcon({ status }: { status: StepStatus }) {
   switch (status) {
     case "done":
-      return <span className="text-green-600 dark:text-green-500">✓</span>;
+      return <span className="text-stable">✓</span>;
     case "error":
-      return <span className="text-red-600 dark:text-red-500">✗</span>;
+      return <span className="text-critical">✗</span>;
     case "active":
       return (
-        <span className="inline-block animate-spin text-zinc-500 dark:text-zinc-400" aria-hidden>
+        <span className="inline-block animate-spin text-ink-3" aria-hidden>
           ⏳
         </span>
       );
     case "skipped":
-      return <span className="text-zinc-400 dark:text-zinc-600">⏭</span>;
+      return <span className="text-ink-3">⏭</span>;
     case "pending":
     default:
-      return <span className="text-zinc-300 dark:text-zinc-700">○</span>;
+      return <span className="text-hairline-strong">○</span>;
   }
 }
 
@@ -49,37 +53,29 @@ export function StepProgress({ steps }: { steps: WorkflowStepDisplay[] }) {
       {steps.map((step) => (
         <li
           key={step.id}
-          className={`flex items-center gap-3 rounded-md border px-3 py-2 ${
+          className={`flex items-center gap-3 rounded-card border px-3 py-2 ${
             step.status === "error"
-              ? "border-red-300 bg-red-50 dark:border-red-900 dark:bg-red-950"
+              ? "border-critical-bd bg-critical-bg"
               : step.status === "active"
-                ? "border-zinc-300 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900"
-                : "border-zinc-200 dark:border-zinc-800"
+                ? "border-hairline-strong bg-sunken"
+                : "border-hairline"
           }`}
         >
           <StatusIcon status={step.status} />
-          <span
-            className={
-              step.status === "pending"
-                ? "text-zinc-400 dark:text-zinc-600"
-                : "text-zinc-800 dark:text-zinc-200"
-            }
-          >
+          <span className={step.status === "pending" ? "text-ink-3" : "text-ink"}>
             {step.label}
           </span>
           {step.status === "active" && (
-            <span className="ml-auto text-xs text-zinc-500 dark:text-zinc-400">running...</span>
+            <span className="ml-auto text-xs text-ink-3">running...</span>
           )}
           {step.status === "done" && step.elapsedMs !== undefined && (
-            <span className="ml-auto text-xs font-mono text-zinc-500 dark:text-zinc-400">
+            <span className="ml-auto font-mono text-data-sm text-ink-3">
               {(step.elapsedMs / 1000).toFixed(1)}s
             </span>
           )}
-          {step.status === "skipped" && (
-            <span className="ml-auto text-xs text-zinc-400 dark:text-zinc-600">skipped</span>
-          )}
+          {step.status === "skipped" && <span className="ml-auto text-xs text-ink-3">skipped</span>}
           {step.status === "error" && step.detail && (
-            <span className="ml-auto text-xs text-red-600 dark:text-red-400">{step.detail}</span>
+            <span className="ml-auto text-xs text-critical-ink">{step.detail}</span>
           )}
         </li>
       ))}

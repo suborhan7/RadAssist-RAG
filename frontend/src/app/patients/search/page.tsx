@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ApiError, searchPatients } from "@/lib/api-client";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import type { paths } from "@/lib/generated/api";
 
 type PatientResponse =
@@ -50,115 +52,103 @@ export default function SearchPatientsPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex w-full max-w-md flex-col gap-6 px-6 py-16">
-        <h1 className="text-2xl font-semibold text-black dark:text-zinc-50">Find Patient</h1>
+    <div className="flex min-h-screen flex-col items-center bg-paper">
+      <main className="flex w-full max-w-md flex-col gap-6 px-page py-16">
+        <h1 className="text-h1 text-ink">Find Patient</h1>
 
         <div className="flex gap-2">
-          <button
+          <Button
             type="button"
+            variant={mode === "code" ? "primary" : "secondary"}
+            size="sm"
             onClick={() => setMode("code")}
-            className={`rounded-md px-3 py-1.5 text-sm font-medium ${
-              mode === "code"
-                ? "bg-black text-white dark:bg-white dark:text-black"
-                : "border border-zinc-300 text-zinc-700 dark:border-zinc-700 dark:text-zinc-300"
-            }`}
           >
             By Patient Code
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant={mode === "name-dob" ? "primary" : "secondary"}
+            size="sm"
             onClick={() => setMode("name-dob")}
-            className={`rounded-md px-3 py-1.5 text-sm font-medium ${
-              mode === "name-dob"
-                ? "bg-black text-white dark:bg-white dark:text-black"
-                : "border border-zinc-300 text-zinc-700 dark:border-zinc-700 dark:text-zinc-300"
-            }`}
           >
             By Name + DOB
-          </button>
+          </Button>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           {mode === "code" ? (
             <label className="flex flex-col gap-1">
-              <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                Patient Code
-              </span>
+              <span className="text-sm font-medium text-ink-2">Patient Code</span>
               <input
                 required
                 placeholder="PAT-000001"
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
-                className="rounded-md border border-zinc-300 px-3 py-2 font-mono dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
+                className="h-10 rounded-btn border border-hairline-strong bg-surface px-3 font-mono text-ink"
               />
             </label>
           ) : (
             <>
               <label className="flex flex-col gap-1">
-                <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Name</span>
+                <span className="text-sm font-medium text-ink-2">Name</span>
                 <input
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="rounded-md border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
+                  className="h-10 rounded-btn border border-hairline-strong bg-surface px-3 text-ink"
                 />
               </label>
               <label className="flex flex-col gap-1">
-                <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                  Date of Birth
-                </span>
+                <span className="text-sm font-medium text-ink-2">Date of Birth</span>
                 <input
                   required
                   type="date"
                   value={dob}
                   onChange={(e) => setDob(e.target.value)}
-                  className="rounded-md border border-zinc-300 px-3 py-2 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
+                  className="h-10 rounded-btn border border-hairline-strong bg-surface px-3 text-ink"
                 />
               </label>
             </>
           )}
 
-          <button
-            type="submit"
-            disabled={searching}
-            className="mt-2 flex h-12 w-full items-center justify-center rounded-lg bg-black px-5 text-base font-medium text-white transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-white dark:text-black dark:hover:bg-zinc-200"
-          >
+          <Button type="submit" variant="primary" size="lg" block loading={searching} className="mt-2">
             {searching ? "Searching..." : "Search"}
-          </button>
+          </Button>
         </form>
 
         {state.kind === "error" && (
-          <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
+          <p className="rounded-card border border-critical-bd bg-critical-bg px-3 py-2 text-sm text-critical-ink">
             {state.message}
           </p>
         )}
 
         {state.kind === "zero-matches" && (
-          <p className="rounded-md bg-zinc-100 px-3 py-2 text-sm text-zinc-700 dark:bg-zinc-900 dark:text-zinc-300">
-            No patient found matching that search. This is a well-formed search that
-            simply found nothing -- not an error.
+          <p className="rounded-card border border-hairline bg-sunken px-3 py-2 text-sm text-ink-2">
+            No patient found matching that search. This is a well-formed search that simply found
+            nothing -- not an error.
           </p>
         )}
 
         {state.kind === "results" && (
           <div className="flex flex-col gap-2">
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            <p className="text-sm text-ink-2">
               {state.patients.length === 1
                 ? "1 match found:"
                 : `${state.patients.length} matches found -- select one:`}
             </p>
             {state.patients.map((patient) => (
-              <button
-                key={patient.id}
-                onClick={() => router.push(`/patients/${patient.id}`)}
-                className="flex flex-col items-start rounded-md border border-zinc-300 px-3 py-2 text-left transition-colors hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-900"
-              >
-                <span className="font-medium text-black dark:text-zinc-50">{patient.name}</span>
-                <span className="text-sm text-zinc-500 dark:text-zinc-400">
-                  {patient.patient_code} &middot; DOB {patient.date_of_birth} &middot; {patient.gender}
-                </span>
-              </button>
+              <Card key={patient.id} className="p-0">
+                <button
+                  onClick={() => router.push(`/patients/${patient.id}`)}
+                  className="flex w-full flex-col items-start px-card py-tight text-left transition-colors duration-hover hover:bg-sunken"
+                >
+                  <span className="font-medium text-ink">{patient.name}</span>
+                  <span className="text-sm text-ink-3">
+                    {patient.patient_code} &middot; DOB {patient.date_of_birth} &middot;{" "}
+                    {patient.gender}
+                  </span>
+                </button>
+              </Card>
             ))}
           </div>
         )}
