@@ -7,22 +7,13 @@ import { ApiError, createComparison, getCurrentDoctor, getReport, retrievalSessi
 import { StepProgress, type WorkflowStepDisplay } from "@/components/workflow/StepProgress";
 import { Card } from "@/components/ui/card";
 import { OwnerChip } from "@/components/ui/owner-chip";
+import { REPORT_CONTENT_FIELDS as CONTENT_FIELDS } from "@/components/report/report-document-view";
 import type { paths } from "@/lib/generated/api";
 
 type ReportDetailResponse =
   paths["/reports/{report_id}"]["get"]["responses"][200]["content"]["application/json"];
 type ComparisonResponse =
   paths["/comparisons"]["post"]["responses"][200]["content"]["application/json"];
-
-const CONTENT_FIELDS: { key: keyof ReportDetailResponse["content"]; label: string }[] = [
-  { key: "examination", label: "Examination" },
-  { key: "clinical_history", label: "Clinical History" },
-  { key: "technique", label: "Technique" },
-  { key: "findings", label: "Findings" },
-  { key: "impression", label: "Impression" },
-  { key: "recommendation", label: "Recommendation" },
-  { key: "disclaimer", label: "Disclaimer" },
-];
 
 /**
  * Comparison Workspace (Phase 12 Step 7, restyled Phase 14 per

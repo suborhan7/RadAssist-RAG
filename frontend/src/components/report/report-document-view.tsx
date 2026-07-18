@@ -29,6 +29,17 @@ export const REPORT_CONTENT_FIELDS: { key: keyof ReportContentResponse; label: s
  * (EditableReportSection) that wraps this same field list with
  * edit/commit behavior; this component is for contexts that are always
  * read-only regardless of ownership (the Preview screen, principally).
+ *
+ * Post-Phase-18 cleanup: REPORT_CONTENT_FIELDS is the single canonical
+ * 7-field label list -- app/reports/[reportId]/page.tsx and
+ * app/reports/[reportId]/compare/page.tsx each independently redeclared
+ * an identical (verified byte-for-byte identical before consolidating,
+ * not assumed) copy of this same list; both now import it from here
+ * instead. This file was picked as the canonical home over colocating
+ * with ReportContentKey in page.tsx (EDITABLE_REPORT_FIELDS's precedent)
+ * because it keeps the usual dependency direction -- route files import
+ * from shared components, not the reverse -- and this list was already
+ * exported and already reused once, by Phase 18's ReportDiffView.
  */
 export function ReportDocumentView({ content }: { content: ReportContentResponse }) {
   return (

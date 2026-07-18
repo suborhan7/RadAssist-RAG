@@ -25,6 +25,7 @@ import { cn } from "@/lib/cn";
 import { EditableReportSection } from "@/components/report/editable-report-section";
 import { FinalizePreview } from "@/components/report/finalize-preview";
 import { ReportDiffView } from "@/components/report/report-diff-view";
+import { REPORT_CONTENT_FIELDS as CONTENT_FIELDS } from "@/components/report/report-document-view";
 import { computeReportDiff } from "@/lib/report-diff";
 import type { paths } from "@/lib/generated/api";
 
@@ -52,16 +53,6 @@ export const EDITABLE_REPORT_FIELDS = [
 ] as const satisfies readonly ReportContentKey[];
 
 export type EditableReportField = (typeof EDITABLE_REPORT_FIELDS)[number];
-
-const CONTENT_FIELDS: { key: ReportContentKey; label: string }[] = [
-  { key: "examination", label: "Examination" },
-  { key: "clinical_history", label: "Clinical History" },
-  { key: "technique", label: "Technique" },
-  { key: "findings", label: "Findings" },
-  { key: "impression", label: "Impression" },
-  { key: "recommendation", label: "Recommendation" },
-  { key: "disclaimer", label: "Disclaimer" },
-];
 
 const EDITABLE_KEYS = new Set<ReportContentKey>(EDITABLE_REPORT_FIELDS);
 

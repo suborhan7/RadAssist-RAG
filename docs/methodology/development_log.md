@@ -8291,3 +8291,58 @@ about finalization never being possible. Explicitly still deferred,
 unaffected by this phase: section-level regeneration, "Accept into
 report" from Comparison, and the hallucination-heuristic validation
 warning.
+
+---
+
+## Post-Phase-18 Cleanup: 7-Field Label-Map Consolidation
+
+The triplication Phase 18's dev log entry noted but deliberately did not
+fix: `page.tsx`, `report-document-view.tsx`, and `compare/page.tsx` each
+independently declared the full 7-field
+(`examination`/`clinical_history`/`technique`/`findings`/`impression`/
+`recommendation`/`disclaimer`) label list. Same class of work as Phase
+18's `EDITABLE_REPORT_FIELDS` consolidation -- a pure refactor, no new
+feature, no architecture freeze needed.
+
+**Confirmed identical before touching anything, not assumed drifted or
+correct:** diffed all three verbatim -- same 7 keys, same order, same
+exact label text, character-for-character. A real behavioral difference
+(different wording, order, or a missing field) would have meant stopping
+to ask which copy was authoritative rather than silently picking one;
+none existed here.
+
+**Canonical home:** `report-document-view.tsx`'s existing, already-
+exported `REPORT_CONTENT_FIELDS` (already reused once, by Phase 18's
+`ReportDiffView`, filtered to 5 fields) -- chosen over colocating with
+`ReportContentKey` in `page.tsx` (which would have matched
+`EDITABLE_REPORT_FIELDS`'s own precedent) specifically to preserve the
+normal dependency direction: route files import from shared components,
+not the reverse. `page.tsx` and `compare/page.tsx` now import it
+(aliased to their existing local name, `CONTENT_FIELDS`, to minimize the
+diff at each of their many call sites) instead of redeclaring it.
+
+One unrelated environment hiccup mid-task: the C: drive hit 0 bytes
+free, causing a hard Vitest ENOSPC failure; flagged immediately, user
+freed space (42GB), full suite re-ran clean afterward.
+
+**Regression proof, not a manual check alone this time:** Vitest existed
+by this point (Phase 18), so a real test
+(`report-document-view.test.ts`) was written rather than falling back to
+a live-browser-only check the way Phase 18's restore-draft verification
+had to. Two assertions: (1) `REPORT_CONTENT_FIELDS` snapshot-matches the
+exact content verified identical across all three original copies,
+locking in the "before" state so an accidental future edit is caught;
+(2) a structural check reading `page.tsx`/`compare/page.tsx`'s raw
+source text directly, confirming the old `const CONTENT_FIELDS = [...]`
+declarations are actually gone (not left as unused dead code sitting
+next to the new import) and that both files genuinely import the
+canonical list. 7/7 tests passing (5 existing + 2 new).
+
+**Live browser pass on top, per explicit instruction not to rely on the
+automated test alone:** generated two real reports for the same patient
+via real Ollama calls. Workspace page: visually confirmed (screenshot)
+all 7 labels render in the exact original order. Compare page: an
+automated check across both the Previous-Report and Current-Report
+columns confirmed both render the exact 7 expected labels in order --
+`true` on both. `tsc`/`eslint`/`vitest` (7/7)/`check:design` (0
+violations, 41 files) all clean; backend untouched and unaffected.
