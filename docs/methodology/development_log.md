@@ -8012,3 +8012,282 @@ files). Explicitly deferred to Phase 18, not built here: section-level
 regeneration, "Accept into report" from Comparison, the word-level
 "Changes vs AI draft" diff UI, and hallucination-heuristic validation
 warnings.
+
+---
+
+## Screen Coverage Check & Post-Phase-17 Fixes
+
+Before scoping Phase 18, a systematic screen-by-screen audit was run
+against `design_specification.md` §8 -- not the 17 numbered markdown
+subsections (which undercounts), but the actual normative artifact,
+`radassist-v2-final.html`, which contains exactly 23 `<section
+class="sec" id="...">` blocks (`00`-`19`, with `11b`/`11c`/`12b`
+variants). Each of the 23 was checked against real route files and their
+own docstrings, not guessed: **2 BUILT, 14 PARTIALLY BUILT, 7 NOT
+BUILT.** Full breakdown, screen by screen, is not reproduced here (see
+the conversation transcript); the two real, actionable gaps it surfaced
+were fixed immediately, both small and low-risk, no architecture freeze
+needed:
+
+1. **No logout mechanism existed anywhere in the frontend** (screen 19,
+   "Profile menu" -- confirmed via a clean grep for "logout" across the
+   entire frontend, zero matches). Investigated before fixing, not
+   assumed: the Phase 13a auth cookie is set **server-side only**
+   (`_set_auth_cookie()`, `app/api/auth.py`), `httponly=True` -- frontend
+   JS cannot read OR write it, so a client-side cookie-clear would
+   silently do nothing. Built a real `POST /auth/logout` (no auth
+   dependency -- logging out an already-invalid session must still
+   succeed) that expires the cookie via a real `Set-Cookie` on a real
+   response, plus a new `LogoutBar` client component mounted once in the
+   root layout (a small fixed-corner control showing the doctor's real
+   name + a working logout link, hidden on `/login`/`/register` and
+   whenever unauthenticated) -- reachable from every authenticated
+   screen without building the full Profile menu/nav shell that screen
+   19 actually calls for. 2 new backend integration tests (a real
+   register -> authenticated call succeeds -> logout -> authenticated
+   call now real-401s round trip, plus logout-with-no-cookie still
+   succeeding). Verified live in a real browser: registered, confirmed
+   the bar showed the real name, clicked Log out, confirmed redirect to
+   `/login`, confirmed the dashboard no longer showed the name on
+   reload, and confirmed directly against the backend that `GET
+   /auth/me` now returns a real 401.
+2. **A stale, now-false claim in `settings/page.tsx`**, both in a code
+   comment and in **user-facing copy** shown to real doctors ("Preview
+   only -- no report has been finalised in this system yet.") -- true
+   when written in Phase 16, false since Phase 17 made finalization
+   real. Corrected both to state finalization is genuinely possible now,
+   while being precise that the signature preview still isn't wired to
+   any specific report (a separate, not-yet-requested task, not
+   conflated with the false claim being removed).
+
+Full backend suite after both fixes: **177 passed** (175 + 2 new).
+`tsc`/`eslint`/`check:design` clean (0 violations, 37 files).
+
+### How to Write This in Your Thesis
+
+*Methodology chapter, "Coverage Verification" subsection:*
+
+> Before committing to a next phase of new capability, this project ran
+> a systematic coverage audit of its own frontend against the frozen
+> design specification -- not a subjective impression of "roughly done,"
+> but a literal enumeration of every one of the 23 mockup screens the
+> specification actually defines, each checked against a real route file
+> or component rather than assumed from memory. This surfaced a
+> methodologically interesting discrepancy before the audit even began:
+> the specification's prose claimed 23 screens across only 17 numbered
+> subsections, and resolving that gap required reading the normative
+> HTML mockup directly rather than trusting its own section numbering.
+> The audit's real value was not the aggregate count but what it found
+> underneath it: a logout mechanism that had never been built at all,
+> invisible to any test suite because no test had ever been written to
+> require it, and a piece of user-facing copy that had quietly become
+> false the moment a prior phase shipped, without any mechanism to flag
+> that a claim's truth value had changed out from under it. Neither
+> defect would have been caught by type-checking, linting, or the
+> existing test suite -- both required someone to compare what the
+> system claims about itself against what it actually does.
+
+---
+
+## Phase 18 (Word-Level Diff View)
+
+Chosen deliberately over the other three deferred Phase 17 candidates
+(section-level regeneration, "Accept into report," the hallucination-
+heuristic warning) because it needed **zero new backend work** -- Phase
+17 already exposed both `ai_draft_content` and `final_content` on
+`ReportDetailResponse`, universally readable under the shared-read model
+frozen since Phase 13a. Frozen against
+`phase18_diff_view_architecture.md`. design_specification.md §10.6's
+original wording ("3 of 7 sections changed") predates Phase 17's real
+findings and was corrected in the frozen doc to "N of 5" -- only the 5
+user-editable fields are ever considered, matching Phase 17's real,
+frozen field count rather than copying the spec's guess uncritically.
+
+**Step 1, real finding, not assumed:** Phase 17 did not centralize its
+5-editable-field list. `EDITABLE_KEYS` (a `Set`) existed once in
+`page.tsx`, but `handleRestoreAiDraft()` in that **same file**
+independently re-listed the same 5 field names as a second, hardcoded
+object literal -- a real duplication, just not the cross-component kind
+the frozen doc guessed might have happened. Consolidated into one
+exported `EDITABLE_REPORT_FIELDS` constant (colocated with
+`ReportContentKey`'s existing type, per explicit instruction), with both
+call sites now deriving from it. Verified zero behavior change via a
+real edit -> restore round trip through a real Ollama generation
+(captured the exact original AI-draft text, edited it, restored, and
+confirmed byte-for-byte the restored text matched the original) --
+this project has no persisted frontend test for this specific behavior
+(zero `*.test.ts` files existed before this phase), so a live browser
+check was the honest substitute for a regression test that doesn't
+exist. The adjacent, separate triplication of the full 7-field label
+list (`page.tsx`, `report-document-view.tsx`, `compare/page.tsx`) was
+identified but deliberately left as a noted future-cleanup item, not
+fixed here -- a different list than the one this phase's decisions
+actually govern.
+
+**This phase's first-ever frontend test runner**, confirmed with the
+user before adding rather than silently choosing one (a real, lasting
+tooling decision, not a data assumption, but treated with the same
+"confirm before assuming" discipline): **Vitest**, for near-zero-config
+native ESM/TypeScript support matching this Next.js 16 App Router stack.
+One devDependency, one `vitest.config.ts` wiring the existing `@/*` path
+alias (Vitest runs on Vite, which doesn't read `tsconfig.json`'s `paths`
+the way Next's own bundler does), one `"test": "vitest run"` script.
+`diff` (jsdiff) confirmed NOT already a dependency before installing it
+(grepped `package.json`/`node_modules` directly) -- `diffWordsWithSpace`
+is the one tokenization function used for both the rendered diff and the
+percentage calculation, per the frozen doc's explicit requirement that
+these can never be allowed to silently diverge.
+
+### Implementation & Validation
+
+**`computeReportDiff`** (`lib/report-diff.ts`), a pure function, the
+Report Edit Percentage (REP) formula stated precisely because it is a
+candidate thesis evaluation metric: for each of the 5 editable fields,
+`diffWordsWithSpace(aiDraft[field], final[field])` produces the
+`Change[]` array used directly for both the rendered diff and the word
+count. "Word" is counted by splitting an already-diffed chunk's value on
+whitespace runs (`countWords()`) -- decomposing the tokenizer's own
+merged multi-token chunks back into real word tokens without a second,
+independent tokenizer; a pure-whitespace chunk naturally yields 0 this
+way, satisfying "exclude pure whitespace changes" without a separate
+special case. `changed` (feeding "N of 5 sections changed") is
+deliberately plain string inequality, NOT the same test as REP's word
+count -- a whitespace-only edit (e.g. a line break) is a real change
+worth showing in the diff view, it just contributes 0% to REP. Real
+jsdiff tokenization was verified directly in Node before any test was
+written, not assumed: punctuation is its own token, separate from the
+adjacent word (`"effusion."` diffs to unchanged `"effusion"` + a
+separately removed `"."`).
+
+**5/5 unit tests passing** (`npx vitest run`), including both edge cases
+the frozen doc required (punctuation-only, zero-word-denominator) plus a
+whitespace-only case added for extra rigor. Two real bugs surfaced in
+the FIRST draft of the tests themselves, not the implementation: (1) an
+"every word changed" test assumed 100% but got 191.67%, because its
+draft/final text shared an incidental word ("view") that jsdiff's real
+LCS-based diff correctly matched as unchanged rather than removed+added
+-- rebuilt with a verified zero-overlap 12-word vocabulary on both
+sides, confirming REP correctly computes to exactly **200%** for an
+equal-length full rewrite (a real, intentional, and worth-stating-
+precisely property of this formula: it is not a 0-100% similarity ratio,
+and a wholesale rewrite of equal length exceeds 100%, since both the
+removal and the addition are counted); (2) a test-setup bug in the
+zero-denominator case, where helper defaults leaked non-empty text into
+fields the test intended to keep empty, produced a false "5 sections
+changed" instead of 1 -- fixed by building the "final" object from the
+same all-empty base rather than the helper's defaults.
+
+**`ReportDiffView`** (`components/report/report-diff-view.tsx`):
+additions rendered in `--stable`, removals in `--critical` strikethrough
+-- the same semantic tokens Phase 14 already wired up for
+New/Persistent/Resolved in the Comparison workspace, no new colors.
+Reuses `ReportDocumentView`'s existing `REPORT_CONTENT_FIELDS` label map
+(filtered to the 5 editable fields) rather than a third independent
+label list. Only changed sections render; zero changed sections shows
+one "No edits made." message instead of five empty panels, per the
+frozen doc's single specified behavior.
+
+**Entry point** wired in two places per the frozen doc: a "Changes vs AI
+draft" toggle in the Workspace's context bar (visible to any doctor who
+can already read the report -- owner or not, pre- or post-finalize, no
+new permission logic since both fields are already universally
+readable), and a second toggle inside `FinalizePreview` so a doctor
+previewing before finalizing sees exactly what they changed as part of
+that same review moment.
+
+**Real end-to-end verification**, via a real headless browser, two
+independent browser contexts, real running dev servers, and a real
+Ollama `llama3:8b` generation call: (1) opened the diff view on a fresh,
+unedited `AI_DRAFT` report -- real "0 of 5 sections changed &middot;
+0.0% of the AI draft was edited" and the "No edits made." message, no
+crash; (2) fetched the report's real `ai_draft_content` via the API,
+hand-computed an independent REP expectation for a specific edit
+(replacing Findings with a fully disjoint 8-word string, verified
+against the real captured draft text to guarantee zero vocabulary
+overlap), performed that exact edit through the real UI, and confirmed
+the **rendered percentage (64.7%) matched the hand-computed expectation
+exactly** -- not just "a number appeared"; (3) opened `FinalizePreview`'s
+own diff toggle and confirmed it renders the identical summary and
+markup; (4) registered a second doctor in a fresh browser context,
+opened doctor A's report as a non-owner, and confirmed the diff view
+still renders correctly (same 64.7%/1-of-5), alongside the existing
+read-only banner, with edit/finalize controls correctly still absent.
+Zero console/page errors across every session. Full frontend gate sweep
+clean: `tsc`, `eslint`, `vitest` (5/5), `check:design` (0 violations, 40
+files). Full backend suite unaffected, as expected for a frontend-only
+phase: **177/177 passing**.
+
+### How to Write This in Your Thesis
+
+*Methodology chapter, "Word-Level Diff View" subsection:*
+
+> Phase 18 was scoped deliberately as a pure rendering problem over data
+> two prior phases had already made available, and its main
+> methodological contribution is the precise, reproducible definition of
+> a metric intended for the thesis's own evaluation chapter: the Report
+> Edit Percentage. A percentage of this kind is easy to compute
+> carelessly and hard to defend rigorously, because "how much of a
+> document changed" depends entirely on unstated choices -- what counts
+> as a word, whether punctuation is a word, whether a line break should
+> count as an edit, and what the percentage is a fraction of. Each of
+> those choices is stated exhaustively here rather than left implicit:
+> word boundaries are exactly whatever a single, named, off-the-shelf
+> tokenizer draws, applied identically to the number and the rendered
+> markup so the two can never diverge in a way a reader could not also
+> reproduce; whitespace-only changes are excluded from the numerator by
+> definition, not by special-casing, because they fall out naturally
+> from counting non-whitespace tokens; and the zero-word denominator is
+> a named rule, not an unhandled edge case that happens to return a safe
+> number. The formula's least intuitive property -- that a complete,
+> equal-length rewrite of a section scores 200%, not 100%, because both
+> the removed original and the added replacement are counted against the
+> original's word total -- was not discovered by inspection but by a
+> failing test whose own assumption turned out to be wrong, which is
+> itself the more general lesson this project has repeated at every
+> phase: a test that encodes an intuitive but unverified expectation is
+> exactly as likely to be wrong as the implementation it's checking, and
+> only real execution against real, verified tool behavior settles which
+> one was mistaken.
+
+---
+
+## Phase 18 (Word-Level Diff View) — COMPLETE
+
+Added a client-side, word-level diff between a report's immutable AI
+draft and its current content -- zero new backend work, since Phase 17
+already exposed both fields under the existing shared-read permission
+model. Step 1 found Phase 17 had NOT centralized its 5-editable-field
+list (a `Set` plus an independent duplicate hardcoded list in the same
+file's restore handler) and consolidated both into one exported
+`EDITABLE_REPORT_FIELDS` constant, verified via a real edit/restore
+browser round-trip to have zero behavior change. Introduced this
+project's first-ever frontend test runner (Vitest, confirmed with the
+user before adding) and its first-ever `*.test.ts` file. `computeReportDiff`
+implements the Report Edit Percentage (REP) formula precisely --
+`diffWordsWithSpace` as the single tokenization source for both the
+rendered diff and the percentage, whitespace-only changes excluded from
+the word count by definition, a named zero-denominator rule -- verified
+by 5 unit tests (including the required punctuation-only and zero-
+denominator edge cases), two of which caught real bugs in the tests'
+own first-draft assumptions rather than the implementation, including
+discovering that an equal-length full rewrite legitimately scores 200%,
+not 100%. `ReportDiffView` renders additions/removals in the existing
+`--stable`/`--critical` tokens (no new colors), omitting unchanged
+sections entirely per the frozen spec. Wired into both the Workspace
+context bar and `FinalizePreview`, visible to any doctor who can already
+read the report. Verified end-to-end via a real headless-browser
+walkthrough against real running servers and a real Ollama generation
+call, including a hand-computed percentage check that matched the
+rendered value exactly (64.7%), the zero-edit case, and a second
+doctor's non-owner read case. Full frontend gate sweep clean (`tsc`,
+`eslint`, 5/5 `vitest`, 0 `check:design` violations across 40 files);
+backend suite unaffected at 177/177. Preceded by a full 23-screen
+coverage audit against the real mockup file (2 built / 14 partially
+built / 7 not built) and two small fixes it surfaced: a previously
+entirely-missing logout mechanism (new `POST /auth/logout` + a minimal
+`LogoutBar`, since the httpOnly auth cookie can only be cleared
+server-side) and a stale, user-facing false claim in Settings/Profile
+about finalization never being possible. Explicitly still deferred,
+unaffected by this phase: section-level regeneration, "Accept into
+report" from Comparison, and the hallucination-heuristic validation
+warning.

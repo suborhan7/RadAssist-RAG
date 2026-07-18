@@ -409,6 +409,23 @@ export async function loginDoctor(body: LoginRequest): Promise<LoginResponse> {
   return response.json() as Promise<LoginResponse>;
 }
 
+/**
+ * The auth cookie is httpOnly (Phase 13a) -- frontend JS cannot read or
+ * clear it directly, so a real POST /auth/logout (which expires it via a
+ * real Set-Cookie response header) is the only mechanism that actually
+ * logs a doctor out, not a client-side `document.cookie` trick.
+ */
+export async function logoutDoctor(): Promise<void> {
+  const response = await fetch(`${API_URL}/auth/logout`, {
+    method: "POST",
+    credentials: "include",
+  });
+  if (!response.ok) {
+    const detail = await readErrorDetail(response);
+    throw new ApiError(response.status, detail ?? `POST /auth/logout failed: ${response.status}`);
+  }
+}
+
 type CurrentDoctorResponse =
   paths["/auth/me"]["get"]["responses"][200]["content"]["application/json"];
 

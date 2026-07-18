@@ -29,11 +29,15 @@ type SystemStatsResponse =
  * requirement, not softened into implying a real check happens.
  *
  * The "live signature preview" (§8.16: "showing exactly how the block
- * appears on a finalised report") is adapted, not built as specified --
- * no report is ever finalised in this system (Phase 13a's documented
- * finalize/edit/regenerate gap), so this renders a static preview of
- * name + BMDC number only, explicitly labelled as a preview, not tied to
- * any real report.
+ * appears on a finalised report") is adapted, not built as specified.
+ * Reports genuinely can be finalized now (Phase 17's PATCH
+ * /reports/{id}/finalize, which does set a real finalized_by/finalized_at
+ * on a report) -- but this preview still isn't wired to any specific
+ * report; it's a static, generic rendering of the name/BMDC signature
+ * format itself, not a live view of how a particular finalized document
+ * will look. Wiring it to a real report is a separate, not-yet-requested
+ * task -- for now this renders a static preview of name + BMDC number
+ * only, explicitly labelled as a preview, not tied to any real report.
  *
  * Workspace: five per-doctor defaults (K, language, questionnaire-skip,
  * rail state, export format), persisted via PATCH /auth/me onto the
@@ -189,8 +193,10 @@ export default function SettingsPage() {
                 </span>
               </label>
 
-              {/* Signature preview -- static, not tied to any real (finalised)
-                  report, since no report is ever finalised in this system yet. */}
+              {/* Signature preview -- static, a preview of the name/BMDC
+                  format only, not wired to any specific real (finalised)
+                  report. Reports can genuinely be finalized now (Phase 17),
+                  but this preview doesn't read from any particular one. */}
               <div className="rounded-card border border-hairline bg-sunken p-tight">
                 <p className="text-eyebrow uppercase text-ink-3">Signature preview</p>
                 <p className="mt-2 text-sm text-ink">
@@ -198,7 +204,7 @@ export default function SettingsPage() {
                   {bmdcNumber ? ` · BMDC ${bmdcNumber}` : ""}
                 </p>
                 <p className="mt-1 text-xs text-ink-3">
-                  Preview only -- no report has been finalised in this system yet.
+                  Preview only -- not tied to any specific report.
                 </p>
               </div>
             </CardBody>

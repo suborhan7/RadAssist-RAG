@@ -33,7 +33,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import AUTH_COOKIE_NAME, get_current_doctor, get_db
-from app.api.schemas import DoctorResponse, LoginResponse, RegisterResponse, UpdateProfileRequest
+from app.api.schemas import DoctorResponse, LoginResponse, LogoutResponse, RegisterResponse, UpdateProfileRequest
 from app.core.config import settings
 from app.domain.entities import Doctor
 from app.services.auth_service import AuthService
@@ -121,6 +121,20 @@ def login(
 
     _set_auth_cookie(response, token)
     return LoginResponse(token=token)
+
+
+@router.post("/auth/logout", response_model=LogoutResponse)
+def logout(response: Response) -> LogoutResponse:
+    # The auth cookie is httpOnly (mitigates XSS token theft, per this
+    # module's docstring) -- frontend JS genuinely cannot read OR write
+    # it, so a client-side "clear the cookie" attempt would silently do
+    # nothing. Expiring it here, via a real Set-Cookie on a real server
+    # response, is the only mechanism that actually logs the doctor out.
+    # No auth dependency on this route: an already-expired/invalid cookie
+    # should still be able to "log out" successfully rather than 401ing
+    # on its way out.
+    response.delete_cookie(key=AUTH_COOKIE_NAME)
+    return LogoutResponse(success=True)
 
 
 @router.get("/auth/me", response_model=DoctorResponse)

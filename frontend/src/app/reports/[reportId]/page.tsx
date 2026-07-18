@@ -24,13 +24,34 @@ import { BUTTON_BASE, SIZE, VARIANT } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import { EditableReportSection } from "@/components/report/editable-report-section";
 import { FinalizePreview } from "@/components/report/finalize-preview";
+import { ReportDiffView } from "@/components/report/report-diff-view";
+import { computeReportDiff } from "@/lib/report-diff";
 import type { paths } from "@/lib/generated/api";
 
 type ReportDetailResponse =
   paths["/reports/{report_id}"]["get"]["responses"][200]["content"]["application/json"];
 type PatientResponse =
   paths["/patients/{patient_id}"]["get"]["responses"][200]["content"]["application/json"];
-type ReportContentKey = keyof ReportDetailResponse["content"];
+export type ReportContentKey = keyof ReportDetailResponse["content"];
+
+// Phase 17 Step 7 / Phase 18 Decision 9: the single canonical list of the
+// 5 user-editable report sections -- examination/disclaimer stay AI-set/
+// read-only (exam-type metadata vs. free clinical narrative; fixed
+// compliance statement) and are deliberately excluded. Exported so Phase
+// 18's diff/section-counter/percentage logic imports this exact list
+// rather than redeclaring it -- found duplicated (this Set plus a second,
+// independent hardcoded object literal in handleRestoreAiDraft() below)
+// within this same file before this consolidation, not actually
+// centralized despite there being only one file involved.
+export const EDITABLE_REPORT_FIELDS = [
+  "clinical_history",
+  "technique",
+  "findings",
+  "impression",
+  "recommendation",
+] as const satisfies readonly ReportContentKey[];
+
+export type EditableReportField = (typeof EDITABLE_REPORT_FIELDS)[number];
 
 const CONTENT_FIELDS: { key: ReportContentKey; label: string }[] = [
   { key: "examination", label: "Examination" },
@@ -42,16 +63,7 @@ const CONTENT_FIELDS: { key: ReportContentKey; label: string }[] = [
   { key: "disclaimer", label: "Disclaimer" },
 ];
 
-// Phase 17 Step 7: examination/disclaimer stay AI-set/read-only per the
-// frozen doc's reasoning (exam-type metadata vs. free clinical narrative;
-// fixed compliance statement) -- only these 5 are ever user-editable.
-const EDITABLE_KEYS = new Set<ReportContentKey>([
-  "clinical_history",
-  "technique",
-  "findings",
-  "impression",
-  "recommendation",
-]);
+const EDITABLE_KEYS = new Set<ReportContentKey>(EDITABLE_REPORT_FIELDS);
 
 /**
  * Radiologist Workspace (Phase 12 Step 5, restyled Phase 14 per
@@ -131,6 +143,7 @@ export default function ReportWorkspacePage() {
   const [restoring, setRestoring] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [showDiff, setShowDiff] = useState(false);
   const [dirtyFields, setDirtyFields] = useState<Set<ReportContentKey>>(new Set());
 
   useEffect(() => {
@@ -157,6 +170,11 @@ export default function ReportWorkspacePage() {
   const agreement = useMemo(() => {
     if (!report) return null;
     return computeAgreement(report.retrieved_cases);
+  }, [report]);
+
+  const diffSummary = useMemo(() => {
+    if (!report) return null;
+    return computeReportDiff(report.ai_draft_content, report.content);
   }, [report]);
 
   const reportOwnerId = report?.doctor_id ?? null;
@@ -216,13 +234,14 @@ export default function ReportWorkspacePage() {
     setRestoring(true);
     setActionError(null);
     try {
-      const updated = await updateReport(reportId, {
-        clinical_history: report.ai_draft_content.clinical_history,
-        technique: report.ai_draft_content.technique,
-        findings: report.ai_draft_content.findings,
-        impression: report.ai_draft_content.impression,
-        recommendation: report.ai_draft_content.recommendation,
-      });
+      const restoreValues = EDITABLE_REPORT_FIELDS.reduce(
+        (acc, field) => {
+          acc[field] = report.ai_draft_content[field];
+          return acc;
+        },
+        {} as Record<EditableReportField, string>,
+      );
+      const updated = await updateReport(reportId, restoreValues);
       setReport(updated);
     } catch (err) {
       setActionError(err instanceof ApiError ? err.message : "Failed to restore AI draft.");
@@ -274,10 +293,27 @@ export default function ReportWorkspacePage() {
           )}
         </div>
         <div className="flex items-center gap-3">
+          {/* Phase 18: visible to any doctor who can already read this
+              report (Decision 7) -- owner or not, pre- or post-finalize.
+              Both ai_draft_content/content are already universally
+              readable, so no new permission logic is needed here. */}
+          <button
+            type="button"
+            onClick={() => setShowDiff((prev) => !prev)}
+            className="text-sm font-medium text-ink-2 underline decoration-hairline-strong underline-offset-2 hover:text-steel-ink"
+          >
+            {showDiff ? "Hide changes vs AI draft" : "Changes vs AI draft"}
+          </button>
           <OwnerChip ownerId={reportOwnerId} currentDoctorId={currentDoctorId} />
           <StatusChip status={toChipReportStatus(report.status)} />
         </div>
       </div>
+
+      {showDiff && diffSummary && (
+        <div className="border-b border-hairline bg-surface px-page py-4">
+          <ReportDiffView summary={diffSummary} />
+        </div>
+      )}
 
       {!isOwner && reportOwnerId !== null && (
         <div className="border-b border-hairline bg-sunken px-page py-3 text-sm text-ink-2">
@@ -474,10 +510,11 @@ export default function ReportWorkspacePage() {
         </Card>
       </div>
 
-      {showPreview && (
+      {showPreview && diffSummary && (
         <FinalizePreview
           report={report}
           reportDate={report.report_date}
+          diffSummary={diffSummary}
           onConfirm={handleFinalizeConfirm}
           onCancel={() => setShowPreview(false)}
         />

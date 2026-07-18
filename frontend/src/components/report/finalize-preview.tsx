@@ -5,6 +5,8 @@ import { Card } from "@/components/ui/card";
 import { BUTTON_BASE, SIZE, VARIANT } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import { ReportDocumentView } from "@/components/report/report-document-view";
+import { ReportDiffView } from "@/components/report/report-diff-view";
+import type { ReportDiffSummary } from "@/lib/report-diff";
 import type { paths } from "@/lib/generated/api";
 
 type ReportDetailResponse =
@@ -17,20 +19,28 @@ type ReportDetailResponse =
  * hospital-style rendering it will be read in afterward, before
  * committing. Reuses ReportDocumentView rather than a third rendering of
  * the same 7 fields.
+ *
+ * Phase 18 Decision 8: also surfaces the "Changes vs AI draft" diff here
+ * -- a doctor previewing before finalizing can see exactly what they
+ * changed as part of this same review moment, not as a separately-
+ * discovered feature elsewhere.
  */
 export function FinalizePreview({
   report,
   reportDate,
+  diffSummary,
   onConfirm,
   onCancel,
 }: {
   report: ReportDetailResponse;
   reportDate: string;
+  diffSummary: ReportDiffSummary;
   onConfirm: () => Promise<void>;
   onCancel: () => void;
 }) {
   const [finalizing, setFinalizing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showDiff, setShowDiff] = useState(false);
 
   async function handleConfirm() {
     setFinalizing(true);
@@ -54,13 +64,26 @@ export function FinalizePreview({
               Once finalized, this report cannot be edited further.
             </p>
           </div>
+          <button
+            type="button"
+            onClick={() => setShowDiff((prev) => !prev)}
+            className="shrink-0 text-sm font-medium text-ink-2 underline decoration-hairline-strong underline-offset-2 hover:text-steel-ink"
+          >
+            {showDiff ? "Hide changes vs AI draft" : "Changes vs AI draft"}
+          </button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-card">
-          <h3 className="text-eyebrow uppercase text-ink-3">Report &middot; {reportDate}</h3>
-          <div className="mt-2">
-            <ReportDocumentView content={report.content} />
-          </div>
+          {showDiff ? (
+            <ReportDiffView summary={diffSummary} />
+          ) : (
+            <>
+              <h3 className="text-eyebrow uppercase text-ink-3">Report &middot; {reportDate}</h3>
+              <div className="mt-2">
+                <ReportDocumentView content={report.content} />
+              </div>
+            </>
+          )}
         </div>
 
         {error && (

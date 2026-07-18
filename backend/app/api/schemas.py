@@ -250,6 +250,10 @@ class LoginResponse(BaseModel):
     token: str
 
 
+class LogoutResponse(BaseModel):
+    success: bool
+
+
 class DashboardStatsResponse(BaseModel):
     """Phase 15. Real counts, per frontend/CLAUDE.md's explicit
     instruction not to invent a placeholder stat."""
