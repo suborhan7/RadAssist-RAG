@@ -9,6 +9,7 @@ import {
   getCurrentDoctor,
   getPatient,
   getReport,
+  regenerateSection,
   retrievalSessionImageUrl,
   updateReport,
 } from "@/lib/api-client";
@@ -137,6 +138,18 @@ export default function ReportWorkspacePage() {
   const [showDiff, setShowDiff] = useState(false);
   const [dirtyFields, setDirtyFields] = useState<Set<ReportContentKey>>(new Set());
 
+  // Phase 19: only one section can be mid-regeneration/preview at a time --
+  // regeneratingField tracks the pending LLM call, regenerationResult
+  // holds the candidate once it returns (cleared on Accept or Discard).
+  const [regeneratingField, setRegeneratingField] = useState<EditableReportField | null>(null);
+  const [regenerationResult, setRegenerationResult] = useState<{
+    field: EditableReportField;
+    candidate: string;
+    contextIncomplete: boolean;
+  } | null>(null);
+  const [regenerationError, setRegenerationError] = useState<string | null>(null);
+  const [regenerationErrorField, setRegenerationErrorField] = useState<EditableReportField | null>(null);
+
   useEffect(() => {
     getReport(reportId)
       .then(async (reportResult) => {
@@ -239,6 +252,48 @@ export default function ReportWorkspacePage() {
     } finally {
       setRestoring(false);
     }
+  }
+
+  // Phase 19 Decision 6: builds the "before" record computeReportDiff needs
+  // from the report's current (already-possibly-edited) 5 editable fields
+  // -- reused for both the whole-report diff view (above) and, per-field,
+  // for a single regeneration candidate's preview.
+  function editableRecordFrom(content: ReportDetailResponse["content"]): Record<EditableReportField, string> {
+    return EDITABLE_REPORT_FIELDS.reduce(
+      (acc, field) => {
+        acc[field] = content[field];
+        return acc;
+      },
+      {} as Record<EditableReportField, string>,
+    );
+  }
+
+  async function handleRegenerate(field: EditableReportField) {
+    if (!report) return;
+    setRegeneratingField(field);
+    setRegenerationError(null);
+    setRegenerationErrorField(null);
+    setRegenerationResult(null);
+    try {
+      const result = await regenerateSection(reportId, field);
+      setRegenerationResult({ field, candidate: result.candidate, contextIncomplete: result.context_incomplete });
+    } catch (err) {
+      setRegenerationError(err instanceof ApiError ? err.message : "Failed to regenerate section.");
+      setRegenerationErrorField(field);
+    } finally {
+      setRegeneratingField(null);
+    }
+  }
+
+  async function handleAcceptRegeneration() {
+    if (!regenerationResult) return;
+    await handleCommit(regenerationResult.field, regenerationResult.candidate);
+    setRegenerationResult(null);
+  }
+
+  function handleDiscardRegeneration() {
+    // No request fired at all -- Decision 1's entire point.
+    setRegenerationResult(null);
   }
 
   async function handleFinalizeConfirm() {
@@ -350,18 +405,37 @@ export default function ReportWorkspacePage() {
             )}
           </div>
           <div className="flex flex-col divide-y divide-hairline p-card">
-            {CONTENT_FIELDS.map(({ key, label }) => (
-              <EditableReportSection
-                key={key}
-                label={label}
-                value={report.content[key] ?? ""}
-                isEdited={report.content[key] !== report.ai_draft_content[key]}
-                canEdit={!!canEdit && EDITABLE_KEYS.has(key)}
-                saving={savingField === key}
-                onCommit={(next) => handleCommit(key, next)}
-                onDirtyChange={(dirty) => handleDirtyChange(key, dirty)}
-              />
-            ))}
+            {CONTENT_FIELDS.map(({ key, label }) => {
+              const isRegeneratable = EDITABLE_KEYS.has(key);
+              const activePreview =
+                isRegeneratable && regenerationResult?.field === key
+                  ? computeReportDiff(editableRecordFrom(report.content), {
+                      ...editableRecordFrom(report.content),
+                      [key]: regenerationResult.candidate,
+                    }).sections.find((section) => section.field === key) ?? null
+                  : null;
+
+              return (
+                <EditableReportSection
+                  key={key}
+                  label={label}
+                  value={report.content[key] ?? ""}
+                  isEdited={report.content[key] !== report.ai_draft_content[key]}
+                  canEdit={!!canEdit && EDITABLE_KEYS.has(key)}
+                  saving={savingField === key}
+                  onCommit={(next) => handleCommit(key, next)}
+                  onDirtyChange={(dirty) => handleDirtyChange(key, dirty)}
+                  canRegenerate={isRegeneratable}
+                  regenerating={regeneratingField === key}
+                  regenerationPreview={activePreview}
+                  regenerationContextIncomplete={regenerationResult?.field === key && regenerationResult.contextIncomplete}
+                  regenerationError={regenerationErrorField === key ? regenerationError : null}
+                  onRegenerate={isRegeneratable ? () => handleRegenerate(key as EditableReportField) : undefined}
+                  onAcceptRegeneration={handleAcceptRegeneration}
+                  onDiscardRegeneration={handleDiscardRegeneration}
+                />
+              );
+            })}
           </div>
 
           {actionError && (

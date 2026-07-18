@@ -267,6 +267,28 @@ class ReportContent:
     disclaimer: str = ""
 
 
+class EditableReportField(str, Enum):
+    """Phase 17 Decision 2 / Phase 19: the 5 of ReportContent's 7 fields a
+    doctor may ever edit or regenerate -- examination/disclaimer stay
+    AI-set-once. Mirrors the frontend's EDITABLE_REPORT_FIELDS constant
+    (app/reports/[reportId]/page.tsx) on the Python side of the language
+    boundary -- unavoidably a second declaration across languages, but
+    the single canonical one on THIS side, consolidating what Phase 19
+    initially declared twice independently (a fresh Literal in
+    app/api/reports.py and a separate dict in prompt_builder.py -- found
+    duplicated, not derived from one another, before this consolidation).
+    `str, Enum` (not a plain Literal) to match ReportStatus's existing
+    idiom in this same module for "a closed set of string values" --
+    Pydantic/FastAPI validate and document it exactly like a Literal
+    would, with zero extra code at the API boundary."""
+
+    CLINICAL_HISTORY = "clinical_history"
+    TECHNIQUE = "technique"
+    FINDINGS = "findings"
+    IMPRESSION = "impression"
+    RECOMMENDATION = "recommendation"
+
+
 @dataclass
 class Report:
     id: str

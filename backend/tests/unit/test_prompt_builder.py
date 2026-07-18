@@ -317,3 +317,80 @@ def test_explanation_prompt_determinism_same_inputs_produce_byte_identical_outpu
     first = PromptBuilder().build_explanation_prompt(report, "Why?", ctx.evidence_summary)
     second = PromptBuilder().build_explanation_prompt(report, "Why?", ctx.evidence_summary)
     assert first == second
+
+
+# --- Phase 19: build_section_regeneration_prompt ---
+
+
+def test_section_regeneration_role_and_output_instructions_mention_the_field_label():
+    prompt = PromptBuilder().build_section_regeneration_prompt(_populated_context(), "en", "findings")
+    assert '"Findings"' in prompt
+    assert "OUTPUT FORMAT INSTRUCTIONS:" in prompt
+    assert "a JSON wrapper" in prompt  # forbidding JSON, not requesting it
+    # never asks for the full 7-field JSON schema -- a genuinely different
+    # output contract from build_generation_prompt()
+    assert "7 string fields" not in prompt
+
+
+def test_section_regeneration_reuses_evidence_grounding_and_confidence_sections():
+    """Same shared helpers build_generation_prompt() uses -- not a second,
+    divergent copy of evidence/grounding serialization."""
+    ctx = _populated_context()
+    prompt = PromptBuilder().build_section_regeneration_prompt(ctx, "en", "impression")
+    assert "GROUNDING INSTRUCTIONS:" in prompt
+    assert "CONFIDENCE / UNCERTAINTY INSTRUCTIONS:" in prompt
+    assert "EVIDENCE:" in prompt
+    assert "finding one" in prompt  # real evidence text made it through
+    assert "Pneumonia" in prompt  # real voted label made it through
+
+
+def test_section_regeneration_questionnaire_and_notes_conditionally_included():
+    ctx_without = _empty_context()
+    prompt_without = PromptBuilder().build_section_regeneration_prompt(ctx_without, "en", "findings")
+    assert "CLINICAL QUESTIONNAIRE:" not in prompt_without
+    assert "ADDITIONAL CLINICAL NOTES:" not in prompt_without
+
+    ctx_with = dataclasses.replace(
+        _empty_context(),
+        questionnaire_answers={"duration": "3 days"},
+        clinical_notes="Patient reports recent travel",
+    )
+    prompt_with = PromptBuilder().build_section_regeneration_prompt(ctx_with, "en", "findings")
+    assert "CLINICAL QUESTIONNAIRE:" in prompt_with
+    assert "- duration: 3 days" in prompt_with
+    assert "ADDITIONAL CLINICAL NOTES:" in prompt_with
+    assert "Patient reports recent travel" in prompt_with
+
+
+def test_section_regeneration_prompt_determinism_same_inputs_produce_byte_identical_output():
+    ctx = _populated_context()
+    first = PromptBuilder().build_section_regeneration_prompt(ctx, "en", "findings")
+    second = PromptBuilder().build_section_regeneration_prompt(ctx, "en", "findings")
+    assert first == second
+
+
+def test_section_regeneration_prompt_differs_by_field():
+    """A real, distinguishing property -- asking for 'findings' vs.
+    'impression' must not produce byte-identical prompts, since the whole
+    point is regenerating a SPECIFIC section."""
+    ctx = _populated_context()
+    findings_prompt = PromptBuilder().build_section_regeneration_prompt(ctx, "en", "findings")
+    impression_prompt = PromptBuilder().build_section_regeneration_prompt(ctx, "en", "impression")
+    assert findings_prompt != impression_prompt
+    assert '"Findings"' in findings_prompt
+    assert '"Impression"' in impression_prompt
+
+
+def test_section_field_labels_keys_match_editable_report_field():
+    """Consolidation proof: _SECTION_FIELD_LABELS' keys must exactly match
+    EditableReportField's members -- the single canonical Python-side
+    listing (app/domain/entities.py) both this dict and
+    app/api/reports.py's RegenerateSectionRequest now derive from, closing
+    the real duplication Phase 19 found (a fresh Literal and this dict
+    independently declaring the same 5 names before consolidation). If a
+    future field is ever added to EditableReportField without a matching
+    label here, this test catches the drift immediately."""
+    from app.domain.entities import EditableReportField
+    from app.services.prompt_builder import _SECTION_FIELD_LABELS
+
+    assert set(_SECTION_FIELD_LABELS.keys()) == set(EditableReportField)

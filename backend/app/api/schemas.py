@@ -191,6 +191,28 @@ class ReportDetailResponse(BaseModel):
     audit_log: list[ReportAuditLogEntryResponse] = []
 
 
+class RegenerateSectionResponse(BaseModel):
+    """Phase 19: POST /reports/{report_id}/regenerate-section. `candidate`,
+    not `content` -- this codebase already overloads "content" heavily
+    (ReportContent, final_content, ai_draft_content); naming this field
+    distinctly makes "not yet persisted" part of the name itself, not just
+    a comment (phase19_section_regeneration_architecture.md's Endpoints
+    section). Nothing about this call is written to final_content or
+    logged anywhere -- accepting the candidate is a normal
+    PATCH /reports/{report_id} call, made separately by the caller.
+
+    `context_incomplete` is true only when this report predates
+    questionnaire_answers/clinical_notes persistence (both NULL together,
+    Phase 19 Decision 4) -- the candidate was generated from retrieval
+    evidence alone, without whatever questionnaire answers or clinical
+    notes the ORIGINAL generation may have used. The frontend surfaces
+    this as an honest warning, not a silent gap."""
+
+    field: str
+    candidate: str
+    context_incomplete: bool
+
+
 class DoctorResponse(BaseModel):
     """Phase 13. Deliberately excludes password_hash -- never serialized
     back to any client, registering or otherwise.

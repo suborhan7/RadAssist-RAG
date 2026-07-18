@@ -13,6 +13,7 @@ from app.domain.entities import (
     ClinicalContext,
     ComparisonFacts,
     Doctor,
+    EditableReportField,
     EvidenceSummary,
     FormattedReport,
     Patient,
@@ -116,6 +117,19 @@ class IPromptBuilder(Protocol):
         zero LLM involvement) into readable language. The LLM converts facts
         to prose; it does not perform clinical reasoning of its own."""
         ...
+    def build_section_regeneration_prompt(
+        self, context: ClinicalContext, language: str, field: EditableReportField
+    ) -> str:
+        """Phase 19: asks for plain replacement text for ONE editable
+        section only (never a 7-field JSON object) -- a genuinely separate
+        prompt from build_generation_prompt(), not a mode-switch on it,
+        since the output contract itself differs (one string vs. a
+        schema-validated JSON blob). Reuses the same evidence/
+        questionnaire/clinical-notes/grounding building blocks
+        build_generation_prompt() already established -- see
+        prompt_builder.py's own docstring for exactly which helpers are
+        shared vs. new."""
+        ...
 
 
 @runtime_checkable
@@ -148,6 +162,15 @@ class ILLMOrchestrator(Protocol):
         is equally real here), but has NO content-retry/structural-
         validation loop -- free-text answers have no schema to validate
         against."""
+        ...
+
+    def generate_freeform(self, prompt: str) -> str:
+        """Phase 19: the transport-retry-only primitive answer_question()
+        itself is now a thin wrapper over (extracted from a private helper
+        so Phase 19's section-regeneration path -- also a real LLM call
+        with no content-retry/structural-validation loop, but not an
+        "answer" to a "question" -- has an honestly-named method to call
+        instead of reusing answer_question() for something it isn't)."""
         ...
 
 

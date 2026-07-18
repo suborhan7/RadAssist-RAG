@@ -1,8 +1,45 @@
+import type { Change } from "diff";
 import { REPORT_CONTENT_FIELDS } from "@/components/report/report-document-view";
 import type { ReportDiffSummary } from "@/lib/report-diff";
 import { cn } from "@/lib/cn";
 
 const FIELD_LABELS = new Map(REPORT_CONTENT_FIELDS.map(({ key, label }) => [key, label]));
+
+/**
+ * Phase 18 Step 3 / Phase 19 extraction: the actual word-diff markup
+ * (additions --stable, removals --critical strikethrough, per
+ * phase18_diff_view_architecture.md Decision 3) -- pulled out of
+ * ReportDiffView so Phase 19's single-section regeneration preview can
+ * reuse the identical rendering without a second, divergent copy. Phase
+ * 18's "N of 5 sections changed / X% of the AI draft" summary framing
+ * below does NOT extend to that use case (a regeneration candidate isn't
+ * being compared against "the AI draft," it's being compared against the
+ * current section content), so only this inner piece is shared, not the
+ * whole component.
+ */
+export function DiffMarkup({ diff }: { diff: Change[] }) {
+  return (
+    <p className="mt-1 whitespace-pre-wrap text-report text-ink-2">
+      {diff.map((change, i) => {
+        if (change.added) {
+          return (
+            <span key={i} className="rounded-in bg-stable-bg px-0.5 text-stable-ink">
+              {change.value}
+            </span>
+          );
+        }
+        if (change.removed) {
+          return (
+            <span key={i} className={cn("rounded-in bg-critical-bg px-0.5 text-critical-ink line-through")}>
+              {change.value}
+            </span>
+          );
+        }
+        return <span key={i}>{change.value}</span>;
+      })}
+    </p>
+  );
+}
 
 /**
  * Phase 18 Step 3: renders a ReportDiffSummary (Step 2's pure
@@ -44,28 +81,7 @@ export function ReportDiffView({ summary }: { summary: ReportDiffSummary }) {
           {changedSections.map((section) => (
             <div key={section.field} className="py-3 first:pt-0 last:pb-0">
               <h3 className="text-h3 text-ink">{FIELD_LABELS.get(section.field) ?? section.field}</h3>
-              <p className="mt-1 whitespace-pre-wrap text-report text-ink-2">
-                {section.diff.map((change, i) => {
-                  if (change.added) {
-                    return (
-                      <span key={i} className="rounded-in bg-stable-bg px-0.5 text-stable-ink">
-                        {change.value}
-                      </span>
-                    );
-                  }
-                  if (change.removed) {
-                    return (
-                      <span
-                        key={i}
-                        className={cn("rounded-in bg-critical-bg px-0.5 text-critical-ink line-through")}
-                      >
-                        {change.value}
-                      </span>
-                    );
-                  }
-                  return <span key={i}>{change.value}</span>;
-                })}
-              </p>
+              <DiffMarkup diff={section.diff} />
             </div>
           ))}
         </div>

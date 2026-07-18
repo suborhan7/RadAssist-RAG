@@ -42,6 +42,17 @@ immutable AI draft, for "Restore AI Draft"), finalized_at/finalized_by
 all assembled by ReportDetailService/ReportDetail, this route only
 serializes them. `content` itself already sources final_content (resolved
 before this step).
+
+Phase 19: POST /reports/{report_id}/regenerate-section -- produces a
+candidate only, no DB write (Decision 1: accepting one is a normal
+PATCH /reports/{report_id} call, made separately). Same ownership/
+already-final error mapping as the routes above, reusing the exact same
+ForbiddenError/ReportAlreadyFinalizedError types. No 422 mapping needed
+for an invalid `field` -- RegenerateSectionRequest's EditableReportField
+type makes Pydantic reject that before this function ever runs. Was a
+fresh, independent Literal here originally, duplicating
+prompt_builder.py's separate _SECTION_FIELD_LABELS dict keys -- both now
+derive from the single EditableReportField enum (app/domain/entities.py).
 """
 from __future__ import annotations
 
@@ -52,13 +63,14 @@ from sqlalchemy.orm import Session
 from app.api.dependencies import get_current_doctor, get_db
 from app.api.schemas import (
     GenerationMetadataResponse,
+    RegenerateSectionResponse,
     ReportAuditLogEntryResponse,
     ReportContentResponse,
     ReportDetailResponse,
     RetrievedCaseResponse,
     ValidationResponse,
 )
-from app.domain.entities import Doctor
+from app.domain.entities import Doctor, EditableReportField
 from app.services.exceptions import (
     ForbiddenError,
     ReportAlreadyFinalizedError,
@@ -69,6 +81,15 @@ from app.services.report_detail_service import ReportDetail, ReportDetailService
 from app.services.report_edit_service import ReportEditService
 
 router = APIRouter()
+
+
+class RegenerateSectionRequest(BaseModel):
+    # EditableReportField (app/domain/entities.py) is the single canonical
+    # 5-field type -- Pydantic validates/422s an invalid name at the API
+    # boundary automatically, before ReportEditService.regenerate_section()
+    # is ever called (that method trusts `field` is already valid rather
+    # than re-checking).
+    field: EditableReportField
 
 
 class ReportUpdateRequest(BaseModel):
@@ -224,3 +245,35 @@ def finalize_report(
     )
     detail = detail_service.get_report_detail(report_id)
     return _build_response(detail)
+
+
+@router.post("/reports/{report_id}/regenerate-section", response_model=RegenerateSectionResponse)
+def regenerate_section(
+    report_id: str,
+    request_body: RegenerateSectionRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_doctor: Doctor = Depends(get_current_doctor),
+) -> RegenerateSectionResponse:
+    edit_service = ReportEditService(
+        db=db,
+        vector_store=request.app.state.vector_store,
+        label_voting_service=request.app.state.label_voting_service,
+        context_builder=request.app.state.context_builder,
+        llm_orchestrator=request.app.state.llm_orchestrator,
+        prompt_builder=request.app.state.prompt_builder,
+    )
+    try:
+        candidate, context_incomplete = edit_service.regenerate_section(
+            report_id, request_body.field, current_doctor.id
+        )
+    except ReportNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ForbiddenError as exc:
+        raise HTTPException(status_code=403, detail=str(exc)) from exc
+    except ReportAlreadyFinalizedError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+    return RegenerateSectionResponse(
+        field=request_body.field, candidate=candidate, context_incomplete=context_incomplete
+    )

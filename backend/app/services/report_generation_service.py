@@ -91,6 +91,15 @@ class ReportGenerationService:
         # must be byte-identical to Phase 8's existing behavior -- see
         # test_no_questionnaire_data_produces_byte_identical_behavior_to_phase_8.
         questionnaire_answers = questionnaire_answers or {}
+        # Phase 19: clinical_notes gets the SAME normalization, added here
+        # (not just relied on via the API layer's non-Optional `str` type)
+        # so the two persisted columns are structurally guaranteed non-None
+        # together, regardless of caller -- not merely true for the one
+        # real caller today. Closes a real gap found during Phase 19: this
+        # line was missing, so the guarantee previously depended entirely
+        # on GenerateReportRequest's Pydantic type, not on this service's
+        # own code.
+        clinical_notes = clinical_notes or ""
 
         # Shared with QuestionnaireService (Phase 9) -- see
         # session_reconstruction.py's own docstring for why this is
@@ -134,6 +143,18 @@ class ReportGenerationService:
         # each call builds a genuinely independent dict, so there is no
         # shared-reference risk if either field is later mutated in place
         # rather than reassigned wholesale.
+        # Phase 19 Decision 4's resolution: persisted from here on, so an
+        # existing report's original generation context can be fully
+        # reconstructed for section regeneration. questionnaire_answers is
+        # already normalized to a real dict (never None) by line 93 above;
+        # clinical_notes is already guaranteed a real str (never None) by
+        # GenerateReportRequest's own non-Optional `str` typing at the API
+        # boundary (app/api/generation.py) -- so this write always
+        # persists two real, non-null values, never exactly one of them.
+        # Pre-migration rows stay NULL on both (no backfill, per that
+        # migration's own docstring); this is the only code path that ever
+        # writes either column, so the two can never independently drift
+        # to one-null-one-not.
         report_record = ReportRecord(
             session_id=retrieval_session.id,
             language=language,
@@ -147,6 +168,8 @@ class ReportGenerationService:
             embedding_model=retrieval_metadata.embedding_model,
             embedding_version=retrieval_metadata.embedding_version,
             collection_name=retrieval_metadata.collection_name,
+            questionnaire_answers=questionnaire_answers,
+            clinical_notes=clinical_notes,
         )
         self._db.add(report_record)
         try:

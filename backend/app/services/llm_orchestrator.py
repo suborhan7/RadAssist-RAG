@@ -13,13 +13,16 @@ Two independent retry budgets, per the frozen sequence diagram
 corrected after an initial gap found during implementation (see the dev
 log's Phase 7 Implementation & Validation entry): the transport-retry
 budget applies to EVERY real LLM call, not only the first one. A single
-`_call_llm_with_transport_retry(prompt)` helper owns "call the LLM, retry
-up to LLM_TRANSPORT_RETRY_COUNT times on transport failure, raise
-LLMTransportError if exhausted," and both the initial call and every
-content-retry's call go through this same helper -- each invocation gets
-its own fresh transport-retry budget, independent of how many content-
-retries have already happened. The content-retry budget and transport-
-retry budget remain fully independent of each other.
+`generate_freeform(prompt)` method (originally a private helper,
+`_call_llm_with_transport_retry`, promoted to a public, neutrally-named
+method in Phase 19 -- see that method's own docstring for why) owns "call
+the LLM, retry up to LLM_TRANSPORT_RETRY_COUNT times on transport failure,
+raise LLMTransportError if exhausted," and the initial call, every
+content-retry's call, answer_question(), and Phase 19's section
+regeneration all go through this same method -- each invocation gets its
+own fresh transport-retry budget, independent of how many content-retries
+have already happened. The content-retry budget and transport-retry
+budget remain fully independent of each other.
 
 build_generation_prompt is called exactly once, for the first attempt --
 structurally guaranteed by having exactly one call site for it, at the top
@@ -52,7 +55,7 @@ class LLMOrchestrator:
 
     def generate_draft(self, context: ClinicalContext, language: str) -> ReportContent:
         prompt = self._prompt_builder.build_generation_prompt(context, language)
-        last_raw_response = self._call_llm_with_transport_retry(prompt)
+        last_raw_response = self.generate_freeform(prompt)
         last_validation_errors: list[str] = []
 
         for attempt in range(self._content_retry_count + 1):
@@ -67,7 +70,7 @@ class LLMOrchestrator:
             retry_prompt = self._prompt_builder.build_retry_prompt(
                 context, language, last_raw_response, last_validation_errors
             )
-            last_raw_response = self._call_llm_with_transport_retry(retry_prompt)
+            last_raw_response = self.generate_freeform(retry_prompt)
 
         raise LLMGenerationValidationError(last_raw_response, last_validation_errors)
 
@@ -75,19 +78,29 @@ class LLMOrchestrator:
         """Phase 10 (Explainability Chat): free-text answer, no schema to
         validate against, so NO content-retry/StructuralValidator loop --
         deliberately the mirror image of generate_draft()'s two-loop
-        structure, reduced to just the transport-retry loop. Reuses the
-        exact same _call_llm_with_transport_retry helper introduced in
-        Phase 7 (not a reimplementation) -- a transport failure is exactly
-        as real here as it is for generate_draft()."""
-        return self._call_llm_with_transport_retry(prompt)
+        structure, reduced to just the transport-retry loop. Thin wrapper
+        over generate_freeform() (Phase 19 extraction) -- a transport
+        failure is exactly as real here as it is for generate_draft()."""
+        return self.generate_freeform(prompt)
 
-    def _call_llm_with_transport_retry(self, prompt: str) -> str:
-        """Owns the transport-retry budget for a single logical call: retries
+    def generate_freeform(self, prompt: str) -> str:
+        """Phase 19 extraction: this was originally a private helper
+        (_call_llm_with_transport_retry) that only answer_question() and
+        generate_draft()'s retry loop called internally. Promoted to a
+        public, neutrally-named method -- "generate_freeform," not
+        "answer_question" -- because Phase 19's section-regeneration path
+        needs the exact same transport-retry-only behavior (a real LLM
+        call, no content-retry/structural-validation loop) for a candidate
+        that is not an answer to a question at all. Renaming rather than
+        letting the new caller reuse answer_question() directly keeps each
+        method's name honest about what it's actually for.
+
+        Owns the transport-retry budget for a single logical call: retries
         up to transport_retry_count additional times on LLMTransportError,
         with the SAME prompt, before raising. Used for every real LLM call
-        this class makes -- the initial call and every content-retry call --
-        so transport protection is consistent regardless of when the call
-        happens, not only on the first attempt."""
+        this class makes -- generate_draft()'s initial and retry calls,
+        answer_question(), and now section regeneration -- so transport
+        protection is consistent regardless of caller."""
         last_error: LLMTransportError | None = None
         for _ in range(self._transport_retry_count + 1):
             try:

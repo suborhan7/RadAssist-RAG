@@ -253,6 +253,11 @@ def test_correct_sequencing_and_data_flow():
     assert record.embedding_model == settings.CHROMA_EMBEDDING_MODEL
     assert record.embedding_version == settings.CHROMA_EMBEDDING_VERSION
     assert record.collection_name == settings.CHROMA_COLLECTION_NAME
+    # Phase 19 Decision 4: persisted, not just passed to context_builder --
+    # {}/"" here (both real, non-None values), never NULL, since this call
+    # omitted both and generate() normalizes None -> {} before this point.
+    assert record.questionnaire_answers == {}
+    assert record.clinical_notes == ""
 
     # generation_metadata mirrors exactly what was persisted, not re-queried
     assert generation_metadata.llm_model == record.llm_model
@@ -456,10 +461,86 @@ def test_questionnaire_answers_and_notes_reach_context_builder_when_provided():
 
     answers = {"duration": "3 days", "fever": "yes"}
     notes = "Patient reports recent travel"
-    service.generate(str(session_id), "en", questionnaire_answers=answers, clinical_notes=notes)
+    report_id, _, _, _ = service.generate(
+        str(session_id), "en", questionnaire_answers=answers, clinical_notes=notes
+    )
 
     build_call = fakes["context_builder"].build_calls[0]
     assert build_call["questionnaire_answers"] == answers
     assert build_call["clinical_notes"] == notes
+
+    # Phase 19 Decision 4: also persisted onto the real row, not just
+    # forwarded to context_builder and then dropped on the floor at the
+    # DB-write step -- the real gap Step 1 found for existing reports.
+    record = db.query(ReportRecord).filter(ReportRecord.id == report_id).one()
+    assert record.questionnaire_answers == answers
+    assert record.clinical_notes == notes
+
+
+def test_questionnaire_answers_and_clinical_notes_are_never_null_for_one_but_not_the_other():
+    """Phase 19: proves the invariant the regenerate-section design relies
+    on -- questionnaire_answers and clinical_notes are always NULL/non-NULL
+    TOGETHER, never exactly one of them, for any report this service ever
+    creates. generate() normalizes BOTH on its own first two lines
+    (questionnaire_answers or {}, clinical_notes or "") -- structurally
+    guaranteed by this service's own code, not merely true because the API
+    layer's Pydantic type happens to forbid a null clinical_notes today
+    (see the next test, which proves this directly by bypassing that type
+    entirely)."""
+    engine = _make_engine()
+    SessionLocal = sessionmaker(bind=engine)
+    db = SessionLocal()
+
+    case_a = RetrievedCase(source_uid="u1", similarity=1.0, findings="fa", impression="ia", labels=("Pneumonia",))
+    voted = [VotedLabel(label="Pneumonia", vote_weight=1.0, agreement=0.5)]
+    context = ClinicalContext(retrieved_cases=(case_a,), voted_labels=tuple(voted), evidence_summary=_evidence_summary())
+    session_id = _seed_session(db, ["u1"])
+
+    service, fakes = _make_service(db, {"u1": case_a}, voted, context, llm_content=CONTENT)
+
+    # Both entirely omitted -- the "nothing provided" path.
+    report_id, _, _, _ = service.generate(str(session_id), "en")
+    record = db.query(ReportRecord).filter(ReportRecord.id == report_id).one()
+    assert record.questionnaire_answers is not None
+    assert record.clinical_notes is not None
+    # AND and OR agree here precisely because neither is ever null alone.
+    both_null = record.questionnaire_answers is None and record.clinical_notes is None
+    either_null = record.questionnaire_answers is None or record.clinical_notes is None
+    assert both_null == either_null == False
+
+
+def test_generate_normalizes_clinical_notes_even_if_a_caller_passes_none_directly():
+    """Real proof the guarantee lives in THIS service, not just in the API
+    layer's Pydantic type -- Python does not enforce type hints at
+    runtime, so nothing stops a direct caller (a future second endpoint,
+    a script, a test) from passing clinical_notes=None despite the `str`
+    annotation. Before this phase's fix, that would have persisted a real
+    NULL clinical_notes alongside a real questionnaire_answers dict --
+    exactly the asymmetric state the regenerate-section design's
+    context_incomplete check (AND, not OR) would have silently
+    under-reported as complete. Calling generate() with an explicit
+    clinical_notes=None here, bypassing the type hint entirely, is the
+    only way to actually prove the normalization runs regardless of
+    caller discipline."""
+    engine = _make_engine()
+    SessionLocal = sessionmaker(bind=engine)
+    db = SessionLocal()
+
+    case_a = RetrievedCase(source_uid="u1", similarity=1.0, findings="fa", impression="ia", labels=("Pneumonia",))
+    voted = [VotedLabel(label="Pneumonia", vote_weight=1.0, agreement=0.5)]
+    context = ClinicalContext(retrieved_cases=(case_a,), voted_labels=tuple(voted), evidence_summary=_evidence_summary())
+    session_id = _seed_session(db, ["u1"])
+
+    service, fakes = _make_service(db, {"u1": case_a}, voted, context, llm_content=CONTENT)
+
+    answers = {"duration": "3 days"}
+    report_id, _, _, _ = service.generate(
+        str(session_id), "en", questionnaire_answers=answers, clinical_notes=None,  # type: ignore[arg-type]
+    )
+
+    record = db.query(ReportRecord).filter(ReportRecord.id == report_id).one()
+    assert record.questionnaire_answers == answers  # real, non-empty dict
+    assert record.clinical_notes == ""  # normalized, NOT None
+    assert record.clinical_notes is not None
 
     db.close()

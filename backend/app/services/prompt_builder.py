@@ -29,6 +29,34 @@ param (default "REPORT CONTENT", preserving build_explanation_prompt's
 existing output byte-for-byte) so each call site can distinguish
 "PREVIOUS REPORT CONTENT" from "CURRENT REPORT CONTENT".
 
+build_section_regeneration_prompt (Phase 19) asks for ONE editable
+section's plain replacement text, never a 7-field JSON object -- a
+genuinely separate prompt from build_generation_prompt(), confirmed by
+real investigation before writing any of this (not assumed a mode-switch
+would do): _schema_instruction() hardcodes "exactly these 7 string
+fields," and generate_draft()'s content-retry loop parses a full 7-field
+JSON blob via IStructuralValidator -- neither applies to a single-field
+plain-text ask. What IS reused, unchanged: _language_instruction(),
+_grounding_instruction(), _confidence_instruction(), _evidence_section(),
+_questionnaire_section(), _clinical_notes_section() -- same evidence,
+same grounding rules, same formatting, regardless of whether the request
+is for a full report or one section. Only the role instruction and the
+output-format instruction are new. On the orchestrator side this pairs
+with LLMOrchestrator.generate_freeform() (Phase 19 extraction from
+answer_question()'s private helper), not generate_draft() -- no content-
+retry/structural-validation loop, since a single section's prose has no
+JSON schema to validate against, same reasoning as answer_question().
+
+Prompt-drift risk, named rather than left implicit (per
+phase19_section_regeneration_architecture.md's Risks section): if
+build_generation_prompt()'s grounding/confidence instructions are ever
+edited in a future phase, build_section_regeneration_prompt() reuses
+those exact same helper methods, so it updates automatically -- but the
+role/output instructions below are section-regeneration-specific and
+will NOT automatically track any future full-report-only prompt change.
+A future edit to the full-report role/schema instructions should
+prompt a deliberate check of whether these need a matching update.
+
 Determinism: every prompt is a pure function of its arguments -- no
 timestamps, no wall-clock reads, no random ordering. ClinicalContext's
 collections are already deterministically ordered by Phase 5; this module
@@ -39,6 +67,7 @@ from __future__ import annotations
 from app.domain.entities import (
     ClinicalContext,
     ComparisonFacts,
+    EditableReportField,
     EvidenceSummary,
     Report,
     ReportContent,
@@ -54,6 +83,24 @@ REPORT_CONTENT_FIELDS = (
     "recommendation",
     "disclaimer",
 )
+
+# Phase 19: keyed by EditableReportField (app/domain/entities.py), the
+# single canonical Python-side listing of the 5 regenerable fields --
+# found independently duplicated against app/api/reports.py's own fresh
+# Literal declaration before both were consolidated onto that one enum.
+# Still mirrors the frontend's separate EDITABLE_REPORT_FIELDS constant
+# (app/reports/[reportId]/page.tsx) across the Python/TypeScript language
+# boundary, which is unavoidable -- but on the Python side, this dict's
+# keys are tested directly against EditableReportField's members
+# (test_section_field_labels_keys_match_editable_report_field) so the two
+# can't silently drift apart from each other.
+_SECTION_FIELD_LABELS = {
+    EditableReportField.CLINICAL_HISTORY: "Clinical History",
+    EditableReportField.TECHNIQUE: "Technique",
+    EditableReportField.FINDINGS: "Findings",
+    EditableReportField.IMPRESSION: "Impression",
+    EditableReportField.RECOMMENDATION: "Recommendation",
+}
 
 NO_EVIDENCE_MESSAGE = "No retrieved evidence is available for this case."
 
@@ -148,11 +195,50 @@ class PromptBuilder:
         ]
         return "\n\n".join(sections)
 
+    def build_section_regeneration_prompt(
+        self, context: ClinicalContext, language: str, field: EditableReportField
+    ) -> str:
+        field_label = _SECTION_FIELD_LABELS.get(field, field)
+        sections = [
+            self._section_regeneration_role_instruction(field_label),
+            self._language_instruction(language),
+            self._grounding_instruction(),
+            self._confidence_instruction(context.voted_labels),
+            self._evidence_section(context.evidence_summary),
+        ]
+        # Same conditional-inclusion pattern as build_generation_prompt()
+        # (Phase 9 fix) -- only included when there's real content.
+        if context.questionnaire_answers:
+            sections.append(self._questionnaire_section(context.questionnaire_answers))
+        if context.clinical_notes.strip():
+            sections.append(self._clinical_notes_section(context.clinical_notes))
+        sections.append(self._section_regeneration_output_instruction(field_label))
+        return "\n\n".join(sections)
+
     @staticmethod
     def _explanation_role_instruction() -> str:
         return (
             "You are an AI radiology assistant answering a clinician's question "
             "about a previously generated chest X-ray report."
+        )
+
+    @staticmethod
+    def _section_regeneration_role_instruction(field_label: str) -> str:
+        return (
+            f"You are an AI radiology assistant regenerating ONLY the "
+            f'"{field_label}" section of a structured chest X-ray report. '
+            f"You are not revising, reviewing, or restating any other "
+            f"section -- just this one."
+        )
+
+    @staticmethod
+    def _section_regeneration_output_instruction(field_label: str) -> str:
+        return (
+            "OUTPUT FORMAT INSTRUCTIONS:\n"
+            f'Output ONLY the replacement text for the "{field_label}" section, '
+            "as plain prose. Do not include the section label, a JSON wrapper, "
+            "markdown formatting, quotation marks, or any other section's "
+            "content -- output the replacement text itself, and nothing else."
         )
 
     @staticmethod

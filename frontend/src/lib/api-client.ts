@@ -295,6 +295,38 @@ export async function finalizeReport(reportId: string): Promise<ReportDetailResp
   return response.json() as Promise<ReportDetailResponse>;
 }
 
+type RegenerateSectionRequest =
+  paths["/reports/{report_id}/regenerate-section"]["post"]["requestBody"]["content"]["application/json"];
+type RegenerateSectionResponse =
+  paths["/reports/{report_id}/regenerate-section"]["post"]["responses"][200]["content"]["application/json"];
+
+/**
+ * Phase 19: produces a candidate only -- nothing is persisted by this
+ * call (see app/api/reports.py's own docstring). Accepting a candidate
+ * is a normal updateReport() call with the candidate text, made
+ * separately by the caller; this function has no side effect on the
+ * report itself.
+ */
+export async function regenerateSection(
+  reportId: string,
+  field: RegenerateSectionRequest["field"],
+): Promise<RegenerateSectionResponse> {
+  const response = await fetch(`${API_URL}/reports/${reportId}/regenerate-section`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ field } satisfies RegenerateSectionRequest),
+  });
+  if (!response.ok) {
+    const detail = await readErrorDetail(response);
+    throw new ApiError(
+      response.status,
+      detail ?? `POST /reports/${reportId}/regenerate-section failed: ${response.status}`,
+    );
+  }
+  return response.json() as Promise<RegenerateSectionResponse>;
+}
+
 type ExplainRequest =
   paths["/reports/{report_id}/explain"]["post"]["requestBody"]["content"]["application/json"];
 type ExplainResponse =

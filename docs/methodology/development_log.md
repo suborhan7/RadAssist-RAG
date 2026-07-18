@@ -8346,3 +8346,299 @@ automated check across both the Previous-Report and Current-Report
 columns confirmed both render the exact 7 expected labels in order --
 `true` on both. `tsc`/`eslint`/`vitest` (7/7)/`check:design` (0
 violations, 41 files) all clean; backend untouched and unaffected.
+
+---
+
+## Phase 19 (Section-Level Regeneration): Architecture (FROZEN)
+
+Drafted as `frontend/phase19_section_regeneration_architecture.md`, named
+in the original design specification's component table before any of
+this was built (`ReportSection`'s speced states were `view · edit ·
+regenerating`) and explicitly deferred at Phase 17's freeze. That
+document's header originally read "PROPOSED, NOT YET FROZEN," amended in
+place as real implementation findings landed rather than left to drift
+out of sync with what was actually built, then frozen. Full reasoning
+lives in the source file; summarized here per this log's continuity
+convention:
+
+1. **Regeneration is two steps, never one atomic write.**
+   `POST /reports/{id}/regenerate-section` produces a candidate only,
+   persists nothing. Accepting it is not a new write path -- it **is**
+   Phase 17's existing `PATCH /reports/{id}`, called with the accepted
+   text as if the doctor had typed it. No new status-transition,
+   ownership, or audit-log logic; all three inherited for free.
+2. **Only the 5 fields `EDITABLE_REPORT_FIELDS` already names** are
+   regenerable. **Real finding:** no Python-side equivalent existed to
+   reuse -- `ReportUpdateRequest` is 5 separately-named Pydantic fields,
+   not a list. Consolidated into `EditableReportField(str, Enum)`
+   (`app/domain/entities.py`), matching `ReportStatus`'s existing idiom.
+3. Same ownership/finalized-state guard as `PATCH /reports/{id}` --
+   `ForbiddenError` (403) / `ReportAlreadyFinalizedError` (409), reused
+   rather than duplicated.
+4. **Resolved via Step 1's real investigation -- a mixed finding, scope
+   expanded narrowly in response, not silently.** Retrieved
+   evidence/labels/retrieval-metadata are fully reconstructable from
+   existing rows/columns. `questionnaire_answers`/`clinical_notes` are
+   not -- confirmed transient, written nowhere, permanently lost for any
+   pre-existing report. Decision: persist both going forward rather than
+   accept a regeneration path that is silently less-grounded than
+   original generation whenever questionnaire context existed.
+5. No doctor-steering instruction on regeneration in this phase --
+   plain regeneration from the same original context only.
+6. The candidate is previewed via a diff against current section
+   content, reusing Phase 18's `computeReportDiff` machinery.
+7. **Regeneration acceptance is intentionally indistinguishable from a
+   hand-typed edit in the audit log**, by design -- a direct consequence
+   of Decision 1 (both go through the same `PATCH`). Named as a real,
+   documented boundary: if "doctor-authored vs. AI-regenerated %" ever
+   becomes a thesis evaluation question, this design cannot answer it as
+   built.
+8. Regeneration is a real, potentially slow LLM call -- needs a real
+   pending state, reusing the existing generation loading-state pattern.
+9. **Confirmed, not assumed -- concurrency is plain last-write-wins.**
+   `ReportEditService.update_content()` was read directly: fresh
+   per-request DB reads (safe), but a plain read-merge-write with no
+   ETag/version column/row lock. Regeneration acceptance inherits this
+   exactly, because it *is* a call to `PATCH`. Not new, not fixed here.
+10. **NULL-vs-empty distinction on the two new columns.** `NULL` means
+    "predates this column, unknown"; `{}`/`""` means "doctor confirmed
+    empty." No backfill beyond `NULL`. Regenerating on a `NULL` report
+    still works, but the UI must show an explicit incomplete-context
+    notice. **The `IS NULL AND IS NULL` check was not actually guaranteed
+    until Step 4 made it so** -- `generate()` normalized
+    `questionnaire_answers` (`or {}`) but had no equivalent for
+    `clinical_notes`, so the two could only be relied on to stay
+    NULL-together because of the API layer's Pydantic typing, not the
+    service's own logic. Fixed by adding the matching
+    `clinical_notes = clinical_notes or ""` normalization, proved with a
+    test that calls `generate()` with `clinical_notes=None` directly,
+    bypassing the type hint.
+
+New entities: two nullable columns on `ReportRecord`
+(`questionnaire_answers: dict | None`, `clinical_notes: str | None`), no
+new table. New endpoint: `POST /reports/{id}/regenerate-section` ->
+`{ field, candidate, context_incomplete }` -- "candidate," not "content,"
+naming "not yet persisted" into the field itself in a codebase that
+already overloads "content" three ways.
+
+### Phase 19 — Implementation & Validation
+
+**Step 1 (hard gate) and Decision 9, investigated in parallel per
+instruction.** Step 1: traced `ReportGenerationService`'s context
+assembly and confirmed the mixed finding above -- evidence/labels/
+metadata reconstructable, questionnaire context not, driving Decision
+4's scope expansion (persist going forward) over the cheaper
+alternative (regenerate from retrieval-only context), which was
+considered and explicitly rejected as producing systematically
+lower-fidelity candidates than original generation. Decision 9: read
+`ReportEditService.update_content()` directly rather than assuming --
+confirmed plain last-write-wins, no guard, inherited without
+modification.
+
+**Step 2:** Alembic migration adding the two nullable columns, no
+backfill. Caught a real bug before ever running it against any
+database, real or throwaway: a stray literal `"""` inside the
+migration's own module docstring would have raised `SyntaxError` --
+found via `python -m py_compile`, fixed by rewording. Verified on a
+disposable copy of `dev.db` first (single-step `downgrade -1`/
+`upgrade head` round-trip, row-count preserved) before applying to the
+real database.
+
+**Step 3:** confirmed `PromptBuilder` needed a genuinely separate
+`build_section_regeneration_prompt()` (not a clean mode-switch on the
+existing full-report path) after inspecting `_schema_instruction()`'s
+7-field JSON contract, which a single-section prompt cannot satisfy
+as-is -- while still maximizing reuse of existing helper methods. Also
+confirmed, not assumed, that the new `questionnaire_answers`/
+`clinical_notes` columns were actually wired into context assembly, not
+just persisted and unused.
+
+**Step 4, two real findings, both proved rather than reasoned about, per
+explicit instruction:** (1) the NULL/non-NULL-together guarantee
+underlying `context_incomplete`'s `AND` check was not structurally
+enforced by `generate()` itself -- fixed as described above and proved
+with a test that bypasses the type hint; a separate, deliberately-kept
+test documents the asymmetric-state behavior for pre-fix or
+direct-DB-edit data, since `context_incomplete` would remain reachable
+via those paths even after the fix. (2) `RegenerateSectionRequest.field`
+was a fresh, independent `Literal`, duplicating `PromptBuilder`'s
+separate `_SECTION_FIELD_LABELS` dict keys rather than deriving from
+anything Phase 17 already had -- consolidated into the
+`EditableReportField` enum described in Decision 2, with a test proving
+the dict's keys and the enum's members can't silently drift apart. Per
+a shape change requested before Step 4: extracted
+`LLMOrchestrator`'s private transport-retry loop into a public,
+neutrally-named `generate_freeform(prompt) -> str`, with
+`answer_question()` reduced to a thin wrapper over it -- confirmed
+`answer_question()`'s own existing tests pass unchanged after the
+extraction, before the new regenerate-section caller was added.
+
+**Step 5 (frontend):** regenerated `frontend/src/lib/generated/api.d.ts`
+against a real running backend to confirm the new endpoint/enum/response
+shape landed correctly. Extracted `DiffMarkup` out of `ReportDiffView`
+(Phase 18) as a standalone exported component so the single-section
+regeneration preview reuses the identical word-diff rendering rather
+than a second, divergent copy -- `ReportDiffView`'s own "N of 5 sections
+changed / X% of the AI draft" framing does not semantically fit a
+single-section "current vs. candidate" comparison, so only the inner
+markup piece is shared, not the whole component. The single-section
+diff is computed by swapping just the one field into an otherwise-
+identical copy of the current record and running the existing
+`computeReportDiff` unmodified, rather than writing a second diff
+function. `EditableReportSection` gained a second per-section
+affordance ("Regenerate," gated on the same `canEdit` permission as
+"Edit") with a pending state, a preview panel (diff + Decision 10's
+incomplete-context notice + Accept/Discard), reusing `handleCommit`'s
+existing `PATCH` path for Accept and firing no request at all for
+Discard, per Decision 1.
+
+**A real bug in this session's own not-yet-tested code, caught before
+any test or browser check ran, not after:** the initial wiring
+computed whether to show a regeneration error as
+`regenerationResult?.field === key || regeneratingField === key`, but
+`handleRegenerate`'s `finally` block always clears `regeneratingField`
+regardless of success or failure, and `regenerationResult` is only ever
+set on success -- so after a failed regenerate call completed, neither
+half of that condition could be true, and the error message set in the
+`catch` block would never actually render. Fixed by adding a dedicated
+`regenerationErrorField` state, set alongside the error message in the
+`catch` block and cleared at the start of every new attempt, with the
+render condition changed to check it directly. Full frontend gate sweep
+clean after the fix: `tsc` (0 errors), `eslint` (0 errors), `vitest`
+(7/7), `check:design` (0 violations, 41 files).
+
+**Step 8 -- real end-to-end verification, real running servers (FastAPI
++ Next.js), real Ollama `llama3:8b`, real dev.db, no simulated steps:**
+
+- **Discard persists nothing.** Regenerated a section on a freshly
+  generated, real post-migration report (`questionnaire_answers`/
+  `clinical_notes` genuinely populated), previewed, discarded. A fresh,
+  direct `GET /reports/{id}` (bypassing client cache entirely) confirmed
+  `content.findings === ai_draft_content.findings`, byte-for-byte,
+  status unchanged.
+- **Accept fires a real `PATCH` with a real audit row.** Regenerated
+  again, accepted -- network log shows a genuine
+  `PATCH /reports/{id} -> 200`. Direct DB read confirmed
+  `status = DOCTOR_EDITED`, `final_content` matching the candidate
+  exactly, and a new `report_audit_log` row (`action = "EDITED"`,
+  correct `doctor_id`).
+- **403/409 are real HTTP responses.** A second, non-owning doctor's
+  real request to `regenerate-section` returned 403. Finalizing the
+  report and retrying as the owner returned 409.
+- **Second regeneration's baseline is the just-accepted text, not the
+  stale AI draft -- confirmed empirically, not by code-reading alone.**
+  Accepted one regenerated `impression`, then regenerated `impression`
+  again. Ollama runs at `temperature = 0.0`, so the second candidate came
+  back byte-identical to the just-accepted text -- an unplanned but
+  clean proof: the rendered preview showed zero added/removed diff
+  spans. Had the frontend been diffing against the stale
+  `ai_draft_content` (which reads completely differently from the
+  accepted text), a near-total rewrite would have rendered instead.
+- **Concurrency: a real overlapping-request race, not reasoning.** Fired
+  two genuinely simultaneous `PATCH` requests (Python threads released
+  by a shared `threading.Barrier`, so the OS actually overlaps them) --
+  one applying a regenerated candidate, one a distinct second-session
+  edit. Both returned 200, no lock/conflict error; the DB shows whichever
+  write landed last surviving, with both requests still independently
+  logging their own `EDITED` audit row. Matches Decision 9's finding
+  exactly, observed rather than assumed.
+- **Incomplete-context warning on a genuine NULL row, not a constructed
+  test case.** Used a real, pre-existing report from earlier in this
+  same session (predates this phase's persistence), confirmed
+  `questionnaire_answers IS NULL AND clinical_notes IS NULL` directly in
+  `dev.db`. Minted a correctly-signed JWT for its actual owning doctor
+  via the app's own `JWTHandler` (no password reset, no fabricated data)
+  and drove a real browser session: `regenerate-section` returned
+  `context_incomplete: true`, and the UI rendered the real warning
+  banner, confirmed by screenshot.
+
+No redesign-triggering bugs surfaced during Step 8 -- every real finding
+matched what the frozen, amended doc already expected. Full backend
+suite: **194/194 passing** (fresh run). Full frontend gate sweep clean.
+
+### How to Write This in Your Thesis
+
+*Methodology chapter, "Section-Level Regeneration" subsection:*
+
+> Phase 19's central methodological contribution is not the regeneration
+> feature itself but the discipline applied to a question that could
+> easily have been assumed away: whether an existing report's original
+> generation context could be faithfully reconstructed for a later
+> regeneration. Rather than assuming reconstructability or building
+> against a degraded substitute silently, the system's actual context-
+> assembly code was traced directly, producing a mixed finding --
+> retrieved evidence and label votes are durable and reconstructable,
+> but doctor-supplied questionnaire context was, until this phase,
+> transient by construction and permanently unrecoverable for any report
+> generated earlier. This is presented as a case study in a general
+> principle worth stating explicitly in a thesis methodology chapter:
+> that a system's fidelity guarantees are only as strong as what it
+> actually persists, and that discovering a gap of this kind after
+> the fact, through direct investigation rather than specification
+> review, is the more reliable way to find it. The chosen response --
+> expanding persistence scope rather than accepting a lower-fidelity
+> regeneration path by default -- is defensible precisely because the
+> alternative was named and rejected on stated grounds (a human review
+> step does not substitute for grounding fidelity), not chosen by
+> default. The phase's concurrency finding is presented the same way:
+> rather than assuming that reusing an existing, tested write path
+> (`PATCH /reports/{id}`) also inherits that path's concurrency
+> properties, the claim was verified with a real, engineered race
+> between two overlapping requests, observing -- not assuming -- that
+> the system exhibits plain last-write-wins with no conflict detection.
+> Both findings illustrate the same methodological stance repeated
+> throughout this project: a claim about system behavior is only as
+> good as the real execution that was run to test it, and "this should
+> work because of how the code is structured" is treated as a hypothesis
+> to verify, not a conclusion to state.
+
+---
+
+## Phase 19 (Section-Level Regeneration) — COMPLETE
+
+Added per-section AI regeneration (`POST /reports/{id}/regenerate-
+section`) as a candidate-only operation -- nothing persists until the
+doctor explicitly accepts through Phase 17's existing
+`PATCH /reports/{id}`, inheriting its ownership check, finalized-state
+guard, and audit logging for free. Step 1's real investigation of
+`ReportGenerationService`'s context assembly found a mixed
+reconstructability picture (evidence/labels durable, questionnaire
+context transient and unrecoverable for pre-existing reports), driving
+a scope expansion to persist `questionnaire_answers`/`clinical_notes`
+going forward with an explicit NULL-vs-empty distinction and an
+incomplete-context UI warning for reports that predate it. Consolidated
+two independent backend duplications surfaced along the way: a fresh
+`Literal` and a separate prompt-builder dict both re-listing the 5
+editable fields, unified into one `EditableReportField(str, Enum)`;
+and extracted `LLMOrchestrator`'s transport-retry loop into a shared,
+public `generate_freeform()` used by both the existing
+`answer_question()` and the new regeneration path, with
+`answer_question()`'s own tests confirmed unchanged after the
+extraction. A real gap was found and fixed in `context_incomplete`'s
+NULL/non-NULL-together guarantee (`generate()` normalized
+`questionnaire_answers` but not `clinical_notes`), proved with a test
+that bypasses the type hint to call `generate()` with
+`clinical_notes=None` directly. Frontend reuses Phase 18's diff
+machinery via a newly extracted `DiffMarkup` component for the
+single-section preview, with Accept/Discard and Decision 10's
+incomplete-context notice wired to a real `context_incomplete` field. A
+real display bug in this phase's own not-yet-tested frontend code was
+caught and fixed before verification: a failed regeneration's error
+message could never render, due to a state-clearing order bug, fixed
+via a dedicated `regenerationErrorField`. Verified end-to-end against
+real running servers, real Ollama, and real `dev.db` data: discard
+persists nothing (fresh-`GET`-confirmed), accept fires a real `PATCH`
+with a real audit row, 403/409 blocks are real HTTP responses, a second
+regeneration's diff baseline is empirically confirmed to be the
+just-accepted text (not the stale AI draft, via an unplanned
+zero-diff proof at `temperature=0`), a genuinely raced pair of
+overlapping `PATCH` requests confirmed plain last-write-wins with no
+conflict detection, and the incomplete-context warning was confirmed
+against a real, pre-existing NULL-context report using a legitimately
+minted JWT for its actual owner. Full backend suite: 194/194 passing.
+Full frontend gate sweep clean (`tsc`, `eslint`, 7/7 `vitest`, 0
+`check:design` violations). Explicitly still deferred, unaffected by
+this phase: doctor-steering instructions on regeneration, distinguishing
+regenerated-and-accepted edits from hand-typed ones in the audit log,
+"Accept into report" from Comparison, and the hallucination-heuristic
+validation warning.

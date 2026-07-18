@@ -23,6 +23,18 @@ ai_draft_content. `finalized_at`/`finalized_by` are new, both nullable
 (only set once, by PATCH /reports/{id}/finalize -- see that route for
 why a denormalized finalized_by is worth keeping despite always equaling
 session.doctor_id under the current ownership model).
+
+Phase 19 Decision 4's resolution: `questionnaire_answers`/`clinical_notes`
+are new, both nullable, with a deliberate NULL-vs-empty distinction --
+NULL means "this report predates context capture, the real original
+value is genuinely unknown" (every row that existed before this
+migration, backfilled as NULL on purpose, not a placeholder); an empty
+`{}`/`""` means "we know for a fact nothing was provided." Going
+forward, `ReportGenerationService.generate()` always writes a real
+value (never NULL) for every newly-generated report -- see that
+service for why this was previously accepted as a request-body-only
+parameter with no persistence at all, which made an existing report's
+original generation context impossible to fully reconstruct.
 """
 from __future__ import annotations
 
@@ -68,5 +80,7 @@ class ReportRecord(Base):
     finalized_by: Mapped[uuid.UUID | None] = mapped_column(
         Uuid, ForeignKey("doctors.id"), nullable=True
     )
+    questionnaire_answers: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    clinical_notes: Mapped[str | None] = mapped_column(String, nullable=True)
 
     session: Mapped["RetrievalSession"] = relationship()
