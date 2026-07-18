@@ -143,6 +143,8 @@ def test_generate_report_full_real_chain(client, real_session_id):
         assert record.embedding_version == generation_metadata["embedding_version"]
         assert record.collection_name == generation_metadata["collection_name"]
         assert record.validation_warnings == validation["warnings"]
-        assert record.ai_content == formatted_report["content"]
+        assert record.ai_draft_content == formatted_report["content"]
+        # Phase 17: final_content starts as a deep copy of ai_draft_content
+        assert record.final_content == formatted_report["content"]
     finally:
         db.close()

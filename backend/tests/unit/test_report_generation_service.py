@@ -241,10 +241,11 @@ def test_correct_sequencing_and_data_flow():
     assert report_id == record.id
     assert record.language == "en"
     assert record.status == ReportStatus.AI_DRAFT
-    assert record.ai_content == {
+    assert record.ai_draft_content == {
         "examination": "e", "clinical_history": "c", "technique": "t",
         "findings": "f", "impression": "i", "recommendation": "r", "disclaimer": "d",
     }
+    assert record.final_content == record.ai_draft_content
     assert record.validation_warnings == ["some warning"]
     assert record.report_date == today
     assert record.llm_model == settings.OLLAMA_MODEL

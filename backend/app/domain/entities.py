@@ -273,7 +273,7 @@ class Report:
     study_id: str
     language: Language
     status: ReportStatus
-    ai_content: ReportContent
+    ai_draft_content: ReportContent
     final_content: ReportContent
     evidence: tuple[RetrievedCase, ...] = field(default_factory=tuple)
     created_at: Optional[datetime] = None

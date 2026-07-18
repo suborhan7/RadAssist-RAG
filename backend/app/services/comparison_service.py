@@ -15,7 +15,7 @@ second, independently-written history query -- filtering out
 current_report_id, then taking the last (most recent) remaining entry
 (get_history() returns ascending chronological order). Whichever report_id
 is resolved this way, the actual ReportRecord row (needed for report_date
-and ai_content, neither of which the Report domain entity from
+and final_content, neither of which the Report domain entity from
 get_history() alone is sufficient for -- report_date is not one of its
 fields) is then fetched the same way current_report_id's own row is, via
 the shared _fetch_report_record() helper -- one lookup path regardless of
@@ -93,9 +93,14 @@ class ComparisonService:
         )
         previous_report = build_report_domain_entity(previous_record)
 
+        # Phase 17 (pre-Step-6 resolution): a longitudinal comparison
+        # answers "what does this report currently say" for both sides of
+        # the pair -- diffing/narrating final_content (the doctor's
+        # current, possibly-edited version), not the immutable AI draft.
+        # Explicit user decision, not a silent default.
         facts = self._deterministic_comparator.compare(
-            previous_report.ai_content,
-            current_report.ai_content,
+            previous_report.final_content,
+            current_report.final_content,
             previous_record.report_date,
             current_record.report_date,
             str(previous_record.id),
@@ -103,7 +108,7 @@ class ComparisonService:
         )
 
         prompt = self._prompt_builder.build_comparison_prompt(
-            facts, previous_report.ai_content, current_report.ai_content
+            facts, previous_report.final_content, current_report.final_content
         )
         narrative = self._llm_orchestrator.answer_question(prompt)
 

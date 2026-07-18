@@ -251,14 +251,25 @@ def test_build_retry_prompt_carries_questionnaire_and_notes_through():
 
 
 def _report() -> Report:
-    content = ReportContent(
+    # ai_draft_content and final_content are deliberately DIFFERENT here
+    # (not just one populated/one empty) so the assertions below can prove
+    # which field build_explanation_prompt actually reads, per Phase 17's
+    # pre-Step-6 resolution: explanation chat grounds its answer in
+    # final_content (what the report currently says, including any
+    # doctor edits), never the immutable ai_draft_content.
+    draft_content = ReportContent(
         examination="Chest X-ray", clinical_history="Cough", technique="PA view",
         findings="Right upper lobe opacity.", impression="Findings concerning for pneumonia.",
         recommendation="Clinical correlation, consider follow-up imaging.", disclaimer="AI-generated draft",
     )
+    final_content = ReportContent(
+        examination="Chest X-ray", clinical_history="Cough", technique="PA view",
+        findings="Right upper lobe opacity, doctor-confirmed.", impression="Consistent with early pneumonia.",
+        recommendation="Start antibiotics, repeat imaging in 2 weeks.", disclaimer="AI-generated draft",
+    )
     return Report(
-        id="r1", study_id="s1", language=Language.ENGLISH, status=ReportStatus.AI_DRAFT,
-        ai_content=content, final_content=ReportContent(),
+        id="r1", study_id="s1", language=Language.ENGLISH, status=ReportStatus.DOCTOR_EDITED,
+        ai_draft_content=draft_content, final_content=final_content,
     )
 
 
@@ -275,9 +286,13 @@ def test_explanation_grounding_instruction_present_and_at_least_as_strong():
 def test_explanation_report_content_appears_in_output():
     report = _report()
     prompt = PromptBuilder().build_explanation_prompt(report, "Why?", _empty_context().evidence_summary)
-    assert report.ai_content.findings in prompt
-    assert report.ai_content.impression in prompt
-    assert report.ai_content.recommendation in prompt
+    assert report.final_content.findings in prompt
+    assert report.final_content.impression in prompt
+    assert report.final_content.recommendation in prompt
+    # proves final_content, not the immutable ai_draft_content, is what
+    # actually gets grounded into the prompt
+    assert report.ai_draft_content.findings not in prompt
+    assert report.ai_draft_content.impression not in prompt
 
 
 def test_explanation_evidence_appears_in_output():

@@ -249,6 +249,52 @@ export async function getReport(reportId: string): Promise<ReportDetailResponse>
   return response.json() as Promise<ReportDetailResponse>;
 }
 
+type ReportUpdateRequest =
+  paths["/reports/{report_id}"]["patch"]["requestBody"]["content"]["application/json"];
+
+/**
+ * Phase 17 Step 7: partial-PATCH semantics -- only send the fields that
+ * actually changed. Reused by both a single-section commit (one key) and
+ * "Restore AI Draft" (all 5 keys at once), same endpoint either way, per
+ * the frozen doc's explicit "no new endpoint" decision for restore.
+ */
+export async function updateReport(
+  reportId: string,
+  body: ReportUpdateRequest,
+): Promise<ReportDetailResponse> {
+  const response = await fetch(`${API_URL}/reports/${reportId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(body),
+  });
+  if (!response.ok) {
+    const detail = await readErrorDetail(response);
+    throw new ApiError(response.status, detail ?? `PATCH /reports/${reportId} failed: ${response.status}`);
+  }
+  return response.json() as Promise<ReportDetailResponse>;
+}
+
+/**
+ * 409 (already finalized) and 422 (empty findings/impression) are both
+ * real, distinct failure modes a caller needs to distinguish -- see
+ * app/api/reports.py's finalize_report() error mapping.
+ */
+export async function finalizeReport(reportId: string): Promise<ReportDetailResponse> {
+  const response = await fetch(`${API_URL}/reports/${reportId}/finalize`, {
+    method: "PATCH",
+    credentials: "include",
+  });
+  if (!response.ok) {
+    const detail = await readErrorDetail(response);
+    throw new ApiError(
+      response.status,
+      detail ?? `PATCH /reports/${reportId}/finalize failed: ${response.status}`,
+    );
+  }
+  return response.json() as Promise<ReportDetailResponse>;
+}
+
 type ExplainRequest =
   paths["/reports/{report_id}/explain"]["post"]["requestBody"]["content"]["application/json"];
 type ExplainResponse =

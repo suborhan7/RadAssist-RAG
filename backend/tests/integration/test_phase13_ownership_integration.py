@@ -14,19 +14,18 @@ doctor A's actions are done overwrites the auth cookie from A's token to
 B's -- exactly the mechanism this test uses to act "as" each doctor in
 turn (A's actions all happen before B is ever registered).
 
-Scope note (adapted gate, per explicit user decision): the frozen doc's
-Step 8 also specifies "doctor B attempts to finalize [the report] (403)".
-No finalize/edit/regenerate endpoint exists anywhere in this codebase
-(ReportStatus is AI_DRAFT-only, no PATCH/PUT/DELETE route exists at all --
-a pre-existing gap from Phase 8/12, unrelated to Phase 13, see
-phase13_auth_architecture.md's Risks section). There is currently no
-ownership-guarded write endpoint anywhere in this system to exercise a 403
-against, since creation is universal (any authenticated doctor may create
-a session/comparison/explanation; the creator is simply tagged as owner)
-and read is universal. This test therefore proves creation-time ownership
-tagging and universal read only -- NOT write-rejection, which has no real
-code path to test yet. Add a write-rejection case here once the first
-ownership-guarded mutation (e.g. report finalize) is built.
+Scope note (RESOLVED, Phase 17 Step 9): the frozen doc's Step 8 also
+specifies "doctor B attempts to finalize [the report] (403)". At Phase 13a
+this was deferred -- no finalize/edit/regenerate endpoint existed anywhere
+in this codebase yet (ReportStatus was AI_DRAFT-only, no PATCH/PUT/DELETE
+route existed at all), so there was no ownership-guarded write endpoint to
+exercise a 403 against; creation and read were both universal. Phase 17
+built the first one (PATCH /reports/{id}/finalize), so this test now
+includes the originally-deferred write-rejection case directly, closing
+this note rather than leaving it as a permanent gap. See
+test_phase17_edit_finalize_ownership_gate below for the fuller edit/
+finalize lifecycle gate (audit log, DOCTOR_EDITED transition, 409-when-
+final) that Phase 17 added as its own dedicated test.
 
 Requires Ollama running locally with settings.OLLAMA_MODEL pulled (only
 POST /generate-report needs it) -- the client fixture checks reachability
@@ -132,6 +131,15 @@ def test_two_doctor_shared_patient_ownership_gate(client):
     read_response = client.get(f"/reports/{report_a_id}")
     assert read_response.status_code == 200, f"doctor B's read of doctor A's report failed: {read_response.text}"
     assert read_response.json()["report_id"] == report_a_id
+
+    # Phase 17 Step 9: the frozen doc's original Step 8 write-rejection
+    # case, closed now that PATCH /reports/{id}/finalize exists -- doctor B
+    # attempts to finalize doctor A's report: real 403 (see this file's
+    # module docstring, "Scope note", for why this was deferred at Phase 13a).
+    finalize_attempt = client.patch(f"/reports/{report_a_id}/finalize")
+    assert finalize_attempt.status_code == 403, (
+        f"doctor B's finalize attempt on doctor A's report should be forbidden: {finalize_attempt.text}"
+    )
 
     # doctor B creates their OWN new session against the SAME shared patient: 200
     with open(image_b, "rb") as f:
@@ -241,3 +249,116 @@ def test_ownership_exposed_via_api_and_real_dashboard_counts(client):
     assert stats_b_body["my_patients"] == 1  # doctor B's own new session on this patient
     assert stats_b_body["total_reports"] == stats_a_before_body["total_reports"]
     assert stats_b_body["total_patients"] == stats_a_before_body["total_patients"]
+
+
+def test_phase17_edit_finalize_ownership_gate(client):
+    """
+    Phase 17 Step 8: the full edit/finalize ownership gate, extending this
+    phase's own two-doctor fixture -- closes the write-rejection gap this
+    file's own docstring flagged above ("no ownership-guarded write
+    endpoint exists yet to exercise a 403 against... add a write-rejection
+    case here once the first ownership-guarded mutation (e.g. report
+    finalize) is built").
+
+    Depends on the module-scoped `client` fixture purely for its Ollama-
+    reachability check and real table setup/teardown -- the two doctors in
+    THIS test get their own independent TestClient instances, NOT the
+    single-shared-cookie-jar-switching trick the tests above use. Those
+    tests do all of doctor A's work BEFORE doctor B is ever registered, so
+    switching one jar from A's cookie to B's was fine. This sequence
+    genuinely interleaves A and B's actions (B's forbidden edit attempt
+    happens WHILE the report is still mid-lifecycle for A, and B reads
+    again after A finalizes), so each doctor needs their own persistent,
+    independent session alive at the same time.
+    """
+    client_a = TestClient(app, raise_server_exceptions=False)
+    client_b = TestClient(app, raise_server_exceptions=False)
+
+    doctor_a_id = _register(client_a, "Dr. Phase17 A")
+    doctor_b_id = _register(client_b, "Dr. Phase17 B")
+    assert doctor_a_id != doctor_b_id
+
+    patient_response = client_a.post(
+        "/patients",
+        json={"name": "Phase17 Ownership Patient", "date_of_birth": "1975-03-03", "gender": "M"},
+    )
+    assert patient_response.status_code == 200, patient_response.text
+    patient_id = patient_response.json()["id"]
+
+    image_a = _sample_images(1)[0]
+
+    with open(image_a, "rb") as f:
+        retrieve_response = client_a.post(
+            "/retrieve",
+            files={"file": (image_a.name, f, "image/png")},
+            data={"top_k": "5", "min_similarity": "0.0", "patient_id": patient_id},
+        )
+    assert retrieve_response.status_code == 200, retrieve_response.text
+    session_id = retrieve_response.json()["session_id"]
+
+    generate_response = client_a.post("/generate-report", json={"session_id": session_id, "language": "en"})
+    assert generate_response.status_code == 200, generate_response.text
+    report_id = generate_response.json()["report_id"]
+
+    # doctor B attempts to edit doctor A's report: real 403
+    forbidden_edit = client_b.patch(f"/reports/{report_id}", json={"findings": "hijacked"})
+    assert forbidden_edit.status_code == 403, forbidden_edit.text
+
+    # doctor A edits for real: DOCTOR_EDITED + first audit log row
+    first_edit = client_a.patch(f"/reports/{report_id}", json={"findings": "Doctor A's first edit."})
+    assert first_edit.status_code == 200, first_edit.text
+    first_edit_body = first_edit.json()
+    assert first_edit_body["status"] == "doctor_edited"
+    assert first_edit_body["content"]["findings"] == "Doctor A's first edit."
+    audit_after_first = first_edit_body["audit_log"]
+    assert len(audit_after_first) == 1
+    assert audit_after_first[0]["doctor_id"] == doctor_a_id
+    assert audit_after_first[0]["action"] == "EDITED"
+
+    # doctor A edits again: a SECOND, distinct audit log row -- proving no overwrite
+    second_edit = client_a.patch(f"/reports/{report_id}", json={"findings": "Doctor A's second edit."})
+    assert second_edit.status_code == 200, second_edit.text
+    second_edit_body = second_edit.json()
+    audit_after_second = second_edit_body["audit_log"]
+    assert len(audit_after_second) == 2
+    assert audit_after_second[0]["id"] != audit_after_second[1]["id"]
+    assert second_edit_body["content"]["findings"] == "Doctor A's second edit."
+
+    # doctor A finalizes: real 200, finalized_by/finalized_at set
+    finalize_response = client_a.patch(f"/reports/{report_id}/finalize")
+    assert finalize_response.status_code == 200, finalize_response.text
+    finalize_body = finalize_response.json()
+    assert finalize_body["status"] == "final"
+    assert finalize_body["finalized_by"] == doctor_a_id
+    assert finalize_body["finalized_at"] is not None
+
+    # doctor A attempts a second edit post-finalize: real 409
+    post_finalize_edit = client_a.patch(f"/reports/{report_id}", json={"findings": "too late"})
+    assert post_finalize_edit.status_code == 409, post_finalize_edit.text
+
+    # doctor B's read still works -- read is universal, unaffected by
+    # ownership or finalize state
+    doctor_b_read = client_b.get(f"/reports/{report_id}")
+    assert doctor_b_read.status_code == 200, doctor_b_read.text
+    assert doctor_b_read.json()["status"] == "final"
+
+    # separately: finalize a fresh, unedited AI_DRAFT report directly --
+    # no PATCH first. Valid from AI_DRAFT, not gated on having been edited.
+    with open(image_a, "rb") as f:
+        retrieve_response_2 = client_a.post(
+            "/retrieve",
+            files={"file": (image_a.name, f, "image/png")},
+            data={"top_k": "5", "min_similarity": "0.0", "patient_id": patient_id},
+        )
+    assert retrieve_response_2.status_code == 200, retrieve_response_2.text
+    session_id_2 = retrieve_response_2.json()["session_id"]
+
+    generate_response_2 = client_a.post(
+        "/generate-report", json={"session_id": session_id_2, "language": "en"}
+    )
+    assert generate_response_2.status_code == 200, generate_response_2.text
+    report_id_2 = generate_response_2.json()["report_id"]
+
+    direct_finalize = client_a.patch(f"/reports/{report_id_2}/finalize")
+    assert direct_finalize.status_code == 200, direct_finalize.text
+    assert direct_finalize.json()["status"] == "final"

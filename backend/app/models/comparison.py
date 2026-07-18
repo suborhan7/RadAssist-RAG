@@ -12,7 +12,7 @@ without them being distinguishable by column, which they already are here
 by attribute name).
 
 deterministic_facts (JSON) stores asdict(ComparisonFacts) -- same
-pattern as ReportRecord.ai_content storing asdict(ReportContent).
+pattern as ReportRecord.ai_draft_content storing asdict(ReportContent).
 
 Column name is `llm_narrative` per the frozen schema, while the domain
 entity's field is `narrative` (app/domain/entities.py Comparison) --

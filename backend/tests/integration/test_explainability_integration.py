@@ -9,7 +9,7 @@ another test module's fixtures across files) -- then a real
 POST /reports/{report_id}/explain with a real question against that real
 report_id, exercising the entire real chain: real DB fetch of the
 ReportRecord, real reconstruct_session_evidence, real Report/ReportContent
-reconstruction from persisted ai_content, real
+reconstruction from persisted ai_draft_content, real
 PromptBuilder.build_explanation_prompt, real LLMOrchestrator.answer_question
 (a real Ollama call), real persistence.
 

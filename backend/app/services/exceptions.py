@@ -112,4 +112,24 @@ class ForbiddenError(Exception):
     frozen Phase 13 shared-registry decision) -- this is an authorization
     failure on a real, located resource, mapped to 403, never 404 (a 404
     here would incorrectly suggest the report doesn't exist rather than
-    that this doctor may not write to it)."""
+    that this doctor may not write to it). First real caller: Phase 17's
+    ReportEditService.update_content()/finalize()."""
+
+
+class ReportAlreadyFinalizedError(Exception):
+    """Phase 17: raised by ReportEditService when either update_content()
+    or finalize() targets a report whose status is already FINAL. ONE
+    type for both call sites (not split) -- editing a signed report and
+    re-finalizing an already-finalized one are the same underlying
+    violation ("this report is immutable"), not two distinct failure
+    modes. Maps to 409 at the API layer: the report and the request are
+    both well-formed, but the resource's current state conflicts with the
+    requested mutation."""
+
+
+class ReportValidationError(Exception):
+    """Phase 17: raised by ReportEditService.finalize() when
+    final_content's findings or impression is empty/whitespace-only.
+    Distinct from ReportAlreadyFinalizedError (a state-conflict, 409) --
+    this is a content-shape failure on an otherwise-valid, non-finalized
+    report, mapped to 422."""

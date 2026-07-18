@@ -95,14 +95,22 @@ def _build_history_response(report: Report, doctor_id: str | None) -> PatientHis
         id=report.id,
         language=report.language.value,
         status=report.status.value,
+        # Phase 17 (pre-Step-6 resolution): "what does this report
+        # currently say" -> SOURCE is final_content (the doctor's current,
+        # possibly-edited version), not the immutable AI draft -- explicit
+        # user decision. The response schema's own field name stays
+        # `ai_content` though -- a known, minor naming inconsistency left
+        # for future cleanup, not fixed this phase (renaming a public
+        # response field is a separate API-contract change this step
+        # doesn't authorize).
         ai_content=ReportContentResponse(
-            examination=report.ai_content.examination,
-            clinical_history=report.ai_content.clinical_history,
-            technique=report.ai_content.technique,
-            findings=report.ai_content.findings,
-            impression=report.ai_content.impression,
-            recommendation=report.ai_content.recommendation,
-            disclaimer=report.ai_content.disclaimer,
+            examination=report.final_content.examination,
+            clinical_history=report.final_content.clinical_history,
+            technique=report.final_content.technique,
+            findings=report.final_content.findings,
+            impression=report.final_content.impression,
+            recommendation=report.final_content.recommendation,
+            disclaimer=report.final_content.disclaimer,
         ),
         created_at=report.created_at.isoformat() if report.created_at else "",
         doctor_id=doctor_id,

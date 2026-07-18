@@ -132,7 +132,8 @@ def _seed_report(db, session_id: uuid.UUID) -> uuid.UUID:
     db.add(
         ReportRecord(
             id=report_id, session_id=session_id, language="en", status=ReportStatus.AI_DRAFT,
-            ai_content=asdict(CONTENT), validation_warnings=[], report_date="2026-07-13",
+            ai_draft_content=asdict(CONTENT), final_content=asdict(CONTENT),
+            validation_warnings=[], report_date="2026-07-13",
             llm_model="llama3:8b", llm_temperature=0.0, embedding_model="biomedclip",
             embedding_version="v1", collection_name="iu_cxr_biomedclip_v1_train",
         )
@@ -195,7 +196,7 @@ def test_correct_sequencing_and_data_flow():
     report_arg, question_arg, evidence_summary_arg = fakes["prompt_builder"].build_explanation_prompt_calls[0]
     assert question_arg == question
     assert evidence_summary_arg is context.evidence_summary
-    assert report_arg.ai_content == CONTENT
+    assert report_arg.ai_draft_content == CONTENT
     assert report_arg.study_id == str(session_id)  # documented substitution, see module docstring
 
     # llm_orchestrator.answer_question called with the built prompt

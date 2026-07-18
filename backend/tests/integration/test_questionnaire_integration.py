@@ -250,6 +250,6 @@ def test_questionnaire_answers_reach_real_generated_prompt(client, real_session_
         report_id = uuid.UUID(body["report_id"])
         record = db2.query(ReportRecord).filter(ReportRecord.id == report_id).one()
         assert str(record.session_id) == real_session_id
-        assert record.ai_content == body["formatted_report"]["content"]
+        assert record.ai_draft_content == body["formatted_report"]["content"]
     finally:
         db2.close()

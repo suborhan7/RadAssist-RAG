@@ -2,9 +2,16 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useMemo, useState } from "react";
-import { useEffect } from "react";
-import { ApiError, getCurrentDoctor, getPatient, getReport, retrievalSessionImageUrl } from "@/lib/api-client";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  ApiError,
+  finalizeReport,
+  getCurrentDoctor,
+  getPatient,
+  getReport,
+  retrievalSessionImageUrl,
+  updateReport,
+} from "@/lib/api-client";
 import { Card } from "@/components/ui/card";
 import { StatusChip } from "@/components/ui/chip";
 import { SimilarityBar } from "@/components/ui/similarity-bar";
@@ -15,14 +22,17 @@ import { toChipReportStatus } from "@/lib/report-status";
 import { useDoctorName } from "@/lib/use-doctor-name";
 import { BUTTON_BASE, SIZE, VARIANT } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
+import { EditableReportSection } from "@/components/report/editable-report-section";
+import { FinalizePreview } from "@/components/report/finalize-preview";
 import type { paths } from "@/lib/generated/api";
 
 type ReportDetailResponse =
   paths["/reports/{report_id}"]["get"]["responses"][200]["content"]["application/json"];
 type PatientResponse =
   paths["/patients/{patient_id}"]["get"]["responses"][200]["content"]["application/json"];
+type ReportContentKey = keyof ReportDetailResponse["content"];
 
-const CONTENT_FIELDS: { key: keyof ReportDetailResponse["content"]; label: string }[] = [
+const CONTENT_FIELDS: { key: ReportContentKey; label: string }[] = [
   { key: "examination", label: "Examination" },
   { key: "clinical_history", label: "Clinical History" },
   { key: "technique", label: "Technique" },
@@ -31,6 +41,17 @@ const CONTENT_FIELDS: { key: keyof ReportDetailResponse["content"]; label: strin
   { key: "recommendation", label: "Recommendation" },
   { key: "disclaimer", label: "Disclaimer" },
 ];
+
+// Phase 17 Step 7: examination/disclaimer stay AI-set/read-only per the
+// frozen doc's reasoning (exam-type metadata vs. free clinical narrative;
+// fixed compliance statement) -- only these 5 are ever user-editable.
+const EDITABLE_KEYS = new Set<ReportContentKey>([
+  "clinical_history",
+  "technique",
+  "findings",
+  "impression",
+  "recommendation",
+]);
 
 /**
  * Radiologist Workspace (Phase 12 Step 5, restyled Phase 14 per
@@ -64,16 +85,37 @@ const CONTENT_FIELDS: { key: keyof ReportDetailResponse["content"]; label: strin
  *   computed client-side from retrieved_cases (see lib/evidence-agreement.ts)
  *   since ReportDetailResponse carries no voted_labels field -- a
  *   documented re-derivation, not a second backend source of truth.
+ * - Per-section Regenerate (§8.12) and the word-level "Changes vs AI
+ *   draft" diff (§10.5) -- explicitly deferred to Phase 18, per the
+ *   frozen Phase 17 scope.
  *
  * Phase 15: OwnershipChip (via OwnerChip) in the context bar, and a
  * read-only banner (§8.15, adapted copy -- no "signed" language, since
- * finalize doesn't exist, and no "your access has been recorded" clause,
- * since no access-log table exists, per frontend/CLAUDE.md's explicit
- * instruction). Read is universal (Phase 13a): the banner is purely
- * informational and does not gate Explain/Compare, which any
- * authenticated doctor may use on any report regardless of ownership --
- * there is no edit/finalize control anywhere in this UI to disable in
- * the first place.
+ * finalize didn't exist yet at that phase, and no "your access has been
+ * recorded" clause, since no access-log table exists, per
+ * frontend/CLAUDE.md's explicit instruction).
+ *
+ * Phase 17 Step 7: real edit/finalize. Each of the 5 editable sections
+ * (EditableReportSection) commits independently via PATCH /reports/{id}
+ * as soon as the doctor presses Enter or blurs the field -- there is no
+ * page-level "Save" button, matching the per-section-commit design.
+ * `content` (rendered here) sources final_content -- what the report
+ * currently says, doctor edits included; `ai_draft_content` (fetched but
+ * not directly rendered outside Restore) is the immutable original.
+ * "Edited" is a per-field, client-computed signal
+ * (content[key] !== ai_draft_content[key]), not a stored flag -- no
+ * backend field-level tracking exists, so this is the honest thing to
+ * derive. Editing/finalizing is gated on isOwner AND status !== "final";
+ * a non-owner or a finalized report renders every section exactly like
+ * before (EditableReportSection degrades to plain read-only text when
+ * canEdit is false). Finalize opens FinalizePreview (Preview screen)
+ * rather than a bare confirm, reusing ReportDocumentView for the actual
+ * document -- see that component's own docstring for why extracting it
+ * was necessary (nothing reusable existed before this step). The
+ * unsaved-changes guard is frontend-only: beforeunload covers tab
+ * close/refresh/external navigation; the in-app Explain/Compare/patient
+ * links are individually guarded with a confirm() since Next.js App
+ * Router has no built-in route-change-intercept event to hook globally.
  */
 export default function ReportWorkspacePage() {
   const params = useParams<{ reportId: string }>();
@@ -84,6 +126,12 @@ export default function ReportWorkspacePage() {
   const [error, setError] = useState<string | null>(null);
   const [railTab, setRailTab] = useState<"evidence" | "agreement" | "alternatives">("evidence");
   const [currentDoctorId, setCurrentDoctorId] = useState<string | null>(null);
+
+  const [savingField, setSavingField] = useState<ReportContentKey | null>(null);
+  const [restoring, setRestoring] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
+  const [dirtyFields, setDirtyFields] = useState<Set<ReportContentKey>>(new Set());
 
   useEffect(() => {
     getReport(reportId)
@@ -114,6 +162,80 @@ export default function ReportWorkspacePage() {
   const reportOwnerId = report?.doctor_id ?? null;
   const isOwner = reportOwnerId !== null && currentDoctorId !== null && reportOwnerId === currentDoctorId;
   const otherOwnerName = useDoctorName(isOwner ? null : reportOwnerId);
+  const finalizedByName = useDoctorName(report?.finalized_by ?? null);
+
+  const canEdit = isOwner && report?.status !== "final";
+  const hasUnsavedChanges = dirtyFields.size > 0;
+
+  const handleDirtyChange = useCallback((key: ReportContentKey, dirty: boolean) => {
+    setDirtyFields((prev) => {
+      const next = new Set(prev);
+      if (dirty) next.add(key);
+      else next.delete(key);
+      return next;
+    });
+  }, []);
+
+  // beforeunload -- covers tab close/refresh/typed-URL navigation. This is
+  // the one part of the guard the browser itself enforces; everything
+  // else below is a best-effort in-app interception only.
+  useEffect(() => {
+    function handler(e: BeforeUnloadEvent) {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    }
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [hasUnsavedChanges]);
+
+  function guardedNavigate(e: React.MouseEvent) {
+    if (hasUnsavedChanges && !window.confirm("You have an unsaved edit in progress. Leave without saving?")) {
+      e.preventDefault();
+    }
+  }
+
+  async function handleCommit(key: ReportContentKey, nextValue: string) {
+    if (!report) return;
+    setSavingField(key);
+    setActionError(null);
+    try {
+      const updated = await updateReport(reportId, { [key]: nextValue });
+      setReport(updated);
+    } catch (err) {
+      setActionError(err instanceof ApiError ? err.message : "Failed to save edit.");
+    } finally {
+      setSavingField(null);
+    }
+  }
+
+  async function handleRestoreAiDraft() {
+    if (!report) return;
+    if (!window.confirm("Replace your edits with the original AI draft? This cannot be undone.")) return;
+    setRestoring(true);
+    setActionError(null);
+    try {
+      const updated = await updateReport(reportId, {
+        clinical_history: report.ai_draft_content.clinical_history,
+        technique: report.ai_draft_content.technique,
+        findings: report.ai_draft_content.findings,
+        impression: report.ai_draft_content.impression,
+        recommendation: report.ai_draft_content.recommendation,
+      });
+      setReport(updated);
+    } catch (err) {
+      setActionError(err instanceof ApiError ? err.message : "Failed to restore AI draft.");
+    } finally {
+      setRestoring(false);
+    }
+  }
+
+  async function handleFinalizeConfirm() {
+    const updated = await finalizeReport(reportId);
+    setReport(updated);
+    setShowPreview(false);
+  }
 
   if (error) {
     return (
@@ -140,7 +262,11 @@ export default function ReportWorkspacePage() {
         <div className="flex items-center gap-3">
           <h1 className="text-h3 text-ink">Radiologist Workspace</h1>
           {patient ? (
-            <Link href={`/patients/${patient.id}`} className="text-sm text-ink-2 underline">
+            <Link
+              href={`/patients/${patient.id}`}
+              onClick={guardedNavigate}
+              className="text-sm text-ink-2 underline"
+            >
               {patient.name} &middot; {patient.patient_code}
             </Link>
           ) : (
@@ -174,18 +300,48 @@ export default function ReportWorkspacePage() {
         {/* Report as document */}
         <Card className="flex w-full flex-col gap-0 lg:w-report-col">
           <div className="flex items-center justify-between border-b border-hairline p-tight px-card">
-            <h2 className="text-eyebrow uppercase text-ink-3">
-              AI Report &middot; {report.report_date}
-            </h2>
+            <div>
+              <h2 className="text-eyebrow uppercase text-ink-3">
+                {report.status === "final" ? "Finalized Report" : "AI Report"} &middot; {report.report_date}
+              </h2>
+              {report.status === "final" && report.finalized_at && (
+                <p className="mt-0.5 text-sm text-ink-3">
+                  Finalized by {finalizedByName ?? "this doctor"} on{" "}
+                  {new Date(report.finalized_at).toLocaleDateString()}
+                </p>
+              )}
+            </div>
+            {canEdit && (
+              <button
+                type="button"
+                onClick={handleRestoreAiDraft}
+                disabled={restoring}
+                className={cn(BUTTON_BASE, VARIANT.ghost, SIZE.sm)}
+              >
+                {restoring ? "Restoring…" : "Restore AI Draft"}
+              </button>
+            )}
           </div>
           <div className="flex flex-col divide-y divide-hairline p-card">
             {CONTENT_FIELDS.map(({ key, label }) => (
-              <div key={key} className="py-3 first:pt-0 last:pb-0">
-                <h3 className="text-h3 text-ink">{label}</h3>
-                <p className="mt-1 text-report text-ink-2">{report.content[key] || "(none)"}</p>
-              </div>
+              <EditableReportSection
+                key={key}
+                label={label}
+                value={report.content[key] ?? ""}
+                isEdited={report.content[key] !== report.ai_draft_content[key]}
+                canEdit={!!canEdit && EDITABLE_KEYS.has(key)}
+                saving={savingField === key}
+                onCommit={(next) => handleCommit(key, next)}
+                onDirtyChange={(dirty) => handleDirtyChange(key, dirty)}
+              />
             ))}
           </div>
+
+          {actionError && (
+            <div className="m-card mt-0 rounded-card border border-critical-bd bg-critical-bg p-tight text-sm text-critical-ink">
+              {actionError}
+            </div>
+          )}
 
           {/* Validation */}
           <div
@@ -212,16 +368,27 @@ export default function ReportWorkspacePage() {
           <div className="flex flex-wrap gap-3 p-card pt-0">
             <Link
               href={`/reports/${reportId}/explain`}
+              onClick={guardedNavigate}
               className={cn(BUTTON_BASE, VARIANT.primary, SIZE.md, "flex-1")}
             >
               Explain Report
             </Link>
             <Link
               href={`/reports/${reportId}/compare`}
+              onClick={guardedNavigate}
               className={cn(BUTTON_BASE, VARIANT.secondary, SIZE.md, "flex-1")}
             >
               Compare Previous Report
             </Link>
+            {canEdit && (
+              <button
+                type="button"
+                onClick={() => setShowPreview(true)}
+                className={cn(BUTTON_BASE, VARIANT.primary, SIZE.md, "flex-1")}
+              >
+                Finalize
+              </button>
+            )}
             <button
               type="button"
               disabled
@@ -306,6 +473,15 @@ export default function ReportWorkspacePage() {
           </div>
         </Card>
       </div>
+
+      {showPreview && (
+        <FinalizePreview
+          report={report}
+          reportDate={report.report_date}
+          onConfirm={handleFinalizeConfirm}
+          onCancel={() => setShowPreview(false)}
+        />
+      )}
     </div>
   );
 }

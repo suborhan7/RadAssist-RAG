@@ -127,11 +127,19 @@ class ReportGenerationService:
 
         formatted_report = self._report_formatter.format(content, language, report_date)
 
+        # Phase 17: ai_draft_content is the immutable AI draft; final_content
+        # starts as a deep copy (Decision 3) that PATCH /reports/{id} is the
+        # only thing that ever touches. asdict(content) is called twice
+        # deliberately, not once with the result assigned to both fields --
+        # each call builds a genuinely independent dict, so there is no
+        # shared-reference risk if either field is later mutated in place
+        # rather than reassigned wholesale.
         report_record = ReportRecord(
             session_id=retrieval_session.id,
             language=language,
             status=ReportStatus.AI_DRAFT,
-            ai_content=asdict(content),
+            ai_draft_content=asdict(content),
+            final_content=asdict(content),
             validation_warnings=list(validation_result.warnings),
             report_date=report_date,
             llm_model=settings.OLLAMA_MODEL,

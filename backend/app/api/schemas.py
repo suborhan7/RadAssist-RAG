@@ -146,18 +146,38 @@ class ComparisonResponse(BaseModel):
     doctor_id: str | None = None
 
 
+class ReportAuditLogEntryResponse(BaseModel):
+    """Phase 17: one row per successful PATCH /reports/{id} edit. Nested on
+    ReportDetailResponse rather than a separate endpoint -- same "embed the
+    related list on the detail response" convention this schema already
+    uses for retrieved_cases, not a new precedent."""
+
+    id: str
+    doctor_id: str
+    action: str
+    at: str
+
+
 class ReportDetailResponse(BaseModel):
     """Phase 12: GET /reports/{report_id} -- reuses ReportContentResponse/
     ValidationResponse/GenerationMetadataResponse/RetrievedCaseResponse
     rather than duplicating their field definitions, same discipline as
     every prior schema reuse in this project. patient_id is nullable --
     a report's underlying RetrievalSession may predate Phase 11's patient
-    linkage, or may never have had a patient_id supplied."""
+    linkage, or may never have had a patient_id supplied.
+
+    Phase 17 additions (additive only): `content` now sources
+    final_content (what the report currently says); `ai_draft_content` is
+    new, the immutable AI draft, for the frontend's "Restore AI Draft"
+    action. `finalized_at`/`finalized_by` are nullable -- only set once a
+    report has actually been finalized. `audit_log` is the edit history,
+    oldest first."""
 
     report_id: str
     session_id: str
     patient_id: str | None
     content: ReportContentResponse
+    ai_draft_content: ReportContentResponse
     language: str
     status: str
     validation: ValidationResponse
@@ -166,6 +186,9 @@ class ReportDetailResponse(BaseModel):
     created_at: str
     retrieved_cases: list[RetrievedCaseResponse]
     doctor_id: str | None = None
+    finalized_at: str | None = None
+    finalized_by: str | None = None
+    audit_log: list[ReportAuditLogEntryResponse] = []
 
 
 class DoctorResponse(BaseModel):

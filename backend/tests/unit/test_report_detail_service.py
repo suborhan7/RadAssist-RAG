@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import asdict
+from datetime import datetime
 
 import pytest
 from sqlalchemy import create_engine
@@ -20,6 +21,7 @@ from sqlalchemy.pool import StaticPool
 from app.database.base import Base
 from app.domain.entities import ReportContent, ReportStatus, RetrievedCase, VotedLabel
 from app.models.report import ReportRecord
+from app.models.report_audit_log import ReportAuditLog
 from app.models.retrieval_session import RetrievalSession
 from app.models.retrieved_evidence import RetrievedEvidence
 from app.services.exceptions import ReportNotFoundError
@@ -89,7 +91,8 @@ def _seed_report(db, session_id: uuid.UUID, validation_warnings=None) -> uuid.UU
     db.add(
         ReportRecord(
             id=report_id, session_id=session_id, language="en", status=ReportStatus.AI_DRAFT,
-            ai_content=asdict(CONTENT), validation_warnings=validation_warnings or [],
+            ai_draft_content=asdict(CONTENT), final_content=asdict(CONTENT),
+            validation_warnings=validation_warnings or [],
             report_date="2026-07-13", llm_model="llama3:8b", llm_temperature=0.0,
             embedding_model="biomedclip", embedding_version="v1",
             collection_name="iu_cxr_biomedclip_v1_train",
@@ -129,12 +132,66 @@ def test_correct_data_flow_with_patient_and_evidence():
     assert detail.session_id == str(session_id)
     assert detail.patient_id == str(patient_id)
     assert detail.content == CONTENT
+    assert detail.ai_draft_content == CONTENT
     assert detail.language == "en"
     assert detail.status == ReportStatus.AI_DRAFT
     assert detail.validation_warnings == ("Mentions 'X' which is not supported",)
     assert detail.llm_model == "llama3:8b"
     assert detail.retrieved_cases == (case_a,)
     assert fakes["vector_store"].get_by_ids_calls == [["u1"]]
+    # a fresh, never-edited/finalized report has no finalized_at/by and no audit log
+    assert detail.finalized_at is None
+    assert detail.finalized_by is None
+    assert detail.audit_log == ()
+
+    db.close()
+
+
+def test_edited_and_finalized_report_surfaces_audit_log_and_finalized_fields():
+    engine = _make_engine()
+    db = sessionmaker(bind=engine)()
+
+    case_a = RetrievedCase(source_uid="u1", similarity=0.9, findings="fa", impression="ia", labels=())
+    session_id = _seed_session(db, ["u1"], patient_id=None)
+    report_id = _seed_report(db, session_id)
+
+    doctor_id = uuid.uuid4()
+    edited_content = ReportContent(
+        examination="e", clinical_history="c", technique="t", findings="edited findings",
+        impression="i", recommendation="r", disclaimer="d",
+    )
+    finalized_at = datetime(2026, 7, 14, 10, 0, 0)
+    report_record = db.query(ReportRecord).filter(ReportRecord.id == report_id).one()
+    report_record.final_content = asdict(edited_content)
+    report_record.status = ReportStatus.FINAL
+    report_record.finalized_at = finalized_at
+    report_record.finalized_by = doctor_id
+    db.add(
+        ReportAuditLog(
+            report_id=report_id, doctor_id=doctor_id, action="EDITED",
+            at=datetime(2026, 7, 14, 9, 0, 0),
+        )
+    )
+    db.add(
+        ReportAuditLog(
+            report_id=report_id, doctor_id=doctor_id, action="EDITED",
+            at=datetime(2026, 7, 14, 9, 30, 0),
+        )
+    )
+    db.commit()
+
+    service, _ = _make_service(db, {"u1": case_a}, [])
+    detail = service.get_report_detail(str(report_id))
+
+    assert detail.content == edited_content
+    assert detail.ai_draft_content == CONTENT  # immutable original, untouched by the edit
+    assert detail.status == ReportStatus.FINAL
+    assert detail.finalized_at == finalized_at.isoformat()
+    assert detail.finalized_by == str(doctor_id)
+    assert len(detail.audit_log) == 2
+    # oldest first
+    assert detail.audit_log[0].at < detail.audit_log[1].at
+    assert all(entry.doctor_id == str(doctor_id) and entry.action == "EDITED" for entry in detail.audit_log)
 
     db.close()
 

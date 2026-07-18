@@ -119,9 +119,17 @@ class PromptBuilder:
     def build_explanation_prompt(
         self, report: Report, question: str, evidence_summary: EvidenceSummary | None
     ) -> str:
+        # Phase 17 (pre-Step-6 resolution): explanation chat grounds its
+        # answer in final_content -- what the report currently says to the
+        # doctor reading it, including any edits already made -- not the
+        # immutable AI draft. Confirmed usage: this call site is Phase 10's
+        # Explainability Chat (a doctor's follow-up question about a
+        # specific report), never comparison narrative generation (that's
+        # build_comparison_prompt(), which takes plain ReportContent args
+        # already resolved by ComparisonService). Explicit user decision.
         sections = [
             self._explanation_role_instruction(),
-            self._report_content_section(report.ai_content),
+            self._report_content_section(report.final_content),
             self._evidence_section(evidence_summary),
             self._explanation_grounding_instruction(),
             self._question_section(question),

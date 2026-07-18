@@ -8,6 +8,7 @@ from app.models.doctor import DoctorRecord
 from app.models.explanation import Explanation
 from app.models.patient import PatientRecord
 from app.models.report import ReportRecord
+from app.models.report_audit_log import ReportAuditLog
 from app.models.retrieval_session import RetrievalSession
 from app.models.retrieved_evidence import RetrievedEvidence
 
@@ -16,6 +17,7 @@ __all__ = [
     "DoctorRecord",
     "Explanation",
     "PatientRecord",
+    "ReportAuditLog",
     "ReportRecord",
     "RetrievalSession",
     "RetrievedEvidence",

@@ -7714,3 +7714,301 @@ honestly. Nothing in this phase wires the new workspace defaults into
 any other flow yet (e.g. the upload flow does not pre-fill K from
 `default_top_k`) -- stated explicitly as a known gap, not a silent
 inconsistency.
+
+---
+
+## Phase 17 (Finalize / Edit Workflow)
+
+Chosen over the other two remaining deferred items (a standalone Studies
+registry, an access-log table/UI) by explicit user reasoning: closing
+Phase 13a's deferred finalize/edit ownership gap is both the largest real
+capability gap left in the system and the prerequisite for this project's
+single highest-value demo moment -- an AI draft has an issue, a doctor
+catches it, edits it, and signs it. Frozen against
+`phase17_finalize_edit_architecture.md`, amended in the same round the
+document was frozen (Preview screen replacing a bare confirmation dialog,
+an append-only `report_audit_log` table plus `finalized_by`/`finalized_at`
+columns, a frontend-only unsaved-changes guard, and keyboard-operable/
+subtle-indicator editing requirements). Permission model reconfirmed
+unchanged since Phase 13a before any code was written: shared read access
+on patients/reports/comparisons/explanations for any authenticated doctor;
+owner-only write on reports specifically (edit + finalize), enforced via
+`report.session_id -> retrieval_sessions.doctor_id`, 403 on violation,
+reads unaffected.
+
+**Every assumption the frozen document made was verified against the real
+system before being built on, not trusted at face value:**
+1. **What column holds the generated report text, and is `ReportGenerationService`'s
+   return type structured or a blob?** Real runtime introspection
+   (`dataclasses.fields()`) plus a real persisted report's JSON confirmed a
+   7-field structured `ReportContent` dataclass (`examination`,
+   `clinical_history`, `technique`, `findings`, `impression`,
+   `recommendation`, `disclaimer`) -- `technique` genuinely exists and is
+   genuinely populated, not the document's guessed 5-field shape. 5 of the
+   7 are user-editable; `examination`/`disclaimer` stay AI-set/read-only
+   (exam-type metadata vs. free clinical narrative; fixed compliance
+   statement).
+2. **Does `reports.status` already exist as a real column, or only as a
+   Python `ReportStatus` type with nothing behind it?** Confirmed via real
+   `PRAGMA table_info` inspection: a real, already-existing
+   `VARCHAR(13) NOT NULL` column, present since Phase 8. The migration
+   therefore never touches `status` at all -- it only starts writing real
+   values (`DOCTOR_EDITED`, `FINAL`) to a column that already existed but
+   had only ever held `AI_DRAFT`.
+3. **Grepping every existing `ReportStatus` reference surfaced a real,
+   pre-existing frontend bug, not anticipated by the frozen document:**
+   `toChipReportStatus()` (`frontend/src/lib/report-status.ts`) mapped the
+   literal string `"edited"` to a chip state, but the backend actually
+   serializes `ReportStatus.DOCTOR_EDITED.value` as `"doctor_edited"` -- a
+   real `DOCTOR_EDITED` report would have silently fallen through to the
+   function's default branch and rendered incorrect "AI Draft" styling.
+   Confirmed real, approved in scope for Step 6 rather than deferred.
+
+**The two-state (functionally three-state) status machine reuses the
+existing 4-value `ReportStatus` enum** (`AI_DRAFT`, `UNDER_REVIEW`,
+`DOCTOR_EDITED`, `FINAL`) rather than inventing a new type; only
+`AI_DRAFT -> DOCTOR_EDITED -> FINAL` is ever reachable.
+`UNDER_REVIEW` stays permanently defined-but-unreachable -- a deliberate
+rejection of the design spec's original 5-second-dwell-timer mechanism,
+consistent with this project's standing "no unverifiable mechanisms"
+principle. `is_edited` is not a stored flag anywhere; `status ==
+DOCTOR_EDITED` is the single source of truth.
+
+### Implementation & Validation
+
+**Migration** (`d8ff7f78ff6a`, chained after Phase 16's `4da4e9df3c23`):
+renamed `ai_content -> ai_draft_content` (`batch_alter_table`, since it
+already WAS the immutable AI draft, not a duplicate concept); added
+`final_content` (JSON, backfilled from `ai_draft_content` for all 15
+existing rows, then set `NOT NULL`), `finalized_at` (nullable
+`DateTime`), `finalized_by` (nullable FK to `doctors.id`); created
+`report_audit_log` (`id`, `report_id` FK, `doctor_id` FK, `action`, `at`
+server-default `CURRENT_TIMESTAMP`), append-only by service-layer
+convention, no DB-level immutability constraint. Verified against a
+disposable throwaway copy of real `dev.db`: real `PRAGMA` inspection of
+every new column/table/FK, 0-of-15 real rows differing between
+`ai_draft_content`/`final_content` post-backfill, single-step
+`downgrade -1` and full `downgrade base -> upgrade head` round-trips both
+clean, before applying to the real file.
+
+**`ReportGenerationService`** now sets both `ai_draft_content` and
+`final_content` at generation time (`asdict(content)` called twice
+deliberately, not once with the result assigned to both fields, so
+there is no shared-reference risk if either is later mutated in place).
+`build_report_domain_entity()` now populates real `final_content`
+(previously always an empty placeholder, since nothing existed yet to
+give it real data).
+
+**`PATCH /reports/{report_id}`** (Step 4) and **`PATCH
+/reports/{report_id}/finalize`** (Step 5): a new `ReportEditService`
+(not folded into `ReportGenerationService` or `ReportDetailService`,
+since edit/finalize is a third, genuinely distinct use case) derives
+ownership identically to Phase 15's read-side derivation
+(`session_id -> retrieval_sessions.doctor_id`), raising the Phase 13
+`ForbiddenError` type for its first real caller (defined then, never
+used until now) -> 403. Two new exceptions:
+`ReportAlreadyFinalizedError` (one type covering both edit-on-final and
+finalize-on-final, since both are the same underlying "this report is
+immutable" violation) -> 409, and `ReportValidationError`
+(empty findings/impression at finalize) -> 422. `final_content` is
+reassigned as a brand-new dict on every update, never mutated in place
+(SQLAlchemy's JSON column only detects reassignment). `ReportUpdateRequest`
+is a separate, narrower 5-field partial-PATCH schema (all `Optional[str] =
+None`) -- only fields actually present and non-`None` are applied,
+matching the per-section independent-commit design. Finalize is valid from
+both `AI_DRAFT` and `DOCTOR_EDITED`, not gated on having been edited
+first.
+
+**Read-source resolution (before Step 6), all four call sites decided
+explicitly, not silently:** "what does this report currently say" now
+reads `final_content` in `report_detail_service.py` (`ReportDetail.content`),
+`patients.py` (`PatientHistoryReportResponse.ai_content`'s source
+attribute -- the response field's own name deliberately kept as
+`ai_content`, a known minor naming inconsistency left for future cleanup,
+not fixed this phase), and `comparison_service.py` (both the deterministic
+diff and the comparison narrative prompt). `prompt_builder.py`'s
+`build_explanation_prompt()` call site was investigated before being
+touched: it is Phase 10's Explainability Chat exclusively (a doctor's
+follow-up question about one report), never comparison narrative
+generation (`build_comparison_prompt()` takes plain `ReportContent`
+args already resolved by `ComparisonService`, reading nothing off the
+domain entity directly) -- confirmed, then switched to `final_content`
+so a doctor's question is answered against what they are currently
+looking at, edits included.
+
+**`ReportDetailResponse`** (Step 6) gained `ai_draft_content` (for
+"Restore AI Draft"), `finalized_at`/`finalized_by` (nullable), and
+`audit_log` (a new `ReportAuditLogEntryResponse` list, oldest first,
+nested on the detail response -- the same "embed the related list"
+convention `retrieved_cases` already established, not a new endpoint).
+`toChipReportStatus()`'s bug fixed: all four real backend values now map
+correctly (`ai_draft`/`under_review`/`doctor_edited`/`final` ->
+`draft`/`review`/`edited`/`final`).
+
+**Frontend (Step 7):** before writing any editor code, checked whether
+Phase 15's "cross-doctor read-only view" was a real, separate, reusable
+renderer as the frozen document assumed -- it was not. The read-only
+document rendering was inline JSX inside the single Workspace page
+component; every viewer, owner or not, already saw the identical markup,
+distinguished only by an informational banner. Flagged to the user
+before building anything (more scope than the step assumed), who
+confirmed: extract it into a shared `ReportDocumentView` component so the
+new Preview screen and the existing Workspace page render from one
+source of truth rather than two copies that could drift. Built:
+`EditableReportSection` (one component for all 7 fields, `canEdit=false`
+for the 2 AI-set-only ones, degrading gracefully to the same read-only
+rendering) -- hover-revealed `Edit`, Tab between sections (each
+focusable when editable), Enter starts/commits, Shift+Enter inserts a
+newline, Escape cancels and reverts to the last-saved value. A ref-based
+commit guard (not a state flag) prevents Enter's commit and the
+textarea's subsequent blur-triggered commit from double-firing, since
+state updates are async and blur can still observe a stale `editing`
+closure otherwise. The "Edited" indicator is a dot + small
+uppercase label (client-computed as `content[key] !== ai_draft_content[key]`,
+no backend field-level tracking exists) -- never a badge/border, per this
+project's reserved-for-real-semantic-states color discipline.
+`FinalizePreview` reuses `ReportDocumentView` for the actual document,
+not a third rendering. "Restore AI Draft" sends all 5 editable fields
+from `ai_draft_content` through the same `PATCH /reports/{id}`
+endpoint in one call, gated by a lightweight `window.confirm`. The
+unsaved-changes guard is frontend-only and honestly scoped as such:
+`beforeunload` genuinely covers tab close/refresh/typed-URL navigation;
+the in-app Explain/Compare/patient links are individually
+confirm-guarded, since Next.js App Router has no global route-change-
+intercept event to hook the way the Pages Router once did.
+
+**New backend test coverage:** `test_report_edit_service.py` (10 unit
+tests -- merge-only-provided-fields, a second edit produces a second
+distinct audit row proving no overwrite, non-owner -> `ForbiddenError`,
+edit/finalize-on-`FINAL` -> `ReportAlreadyFinalizedError`, malformed/
+missing `report_id` -> `ReportNotFoundError`, both valid finalize entry
+states, double-finalize -> 409, empty-findings -> 422), one new
+`test_report_detail_service.py` case (an edited-and-finalized report
+surfaces its audit log in the correct oldest-first order alongside real
+`finalized_at`/`finalized_by`), and a new
+`test_phase17_edit_finalize_ownership_gate` integration test extending
+Phase 13a's fixture -- **two independent `TestClient` instances**
+against the same real `app` (not the earlier tests' single-shared-
+cookie-jar-switching trick, since this sequence genuinely interleaves
+both doctors' actions rather than sequencing all of A's work before B is
+ever introduced): doctor B's edit attempt on doctor A's report (403),
+doctor A's first edit (`DOCTOR_EDITED` + one real audit row), a second
+edit (a second, distinct audit row proving no overwrite), finalize (200,
+real `finalized_by`/`finalized_at`), a post-finalize edit attempt (409),
+doctor B's read still succeeding (200, universal read unaffected), and a
+separate fresh `AI_DRAFT` report finalized directly with no prior edit
+(200). Full backend suite: **175 passed** (163 at end of Phase 16 + 12
+new).
+
+**Step 9 -- closed a note this project had left open since Phase 13a:**
+the frozen `phase13_auth_architecture.md` gate's original Step 8 also
+specified "doctor B attempts to finalize [the report] (403)", explicitly
+deferred at the time because no ownership-guarded write endpoint existed
+anywhere in the system yet to exercise a 403 against.
+`test_two_doctor_shared_patient_ownership_gate` (`test_phase13_ownership_integration.py`)
+now includes that exact write-rejection case for real, and the file's own
+"Scope note" docstring was rewritten from a deferral into a resolution
+rather than left stale.
+
+**Real end-to-end verification, via a real headless browser against
+real running dev servers and a real Ollama `llama3:8b` call, not
+mocked or assumed from the API tests alone:** registered a doctor
+through the real `/register` UI, created a real patient, uploaded a
+real masked chest X-ray through the real upload flow (`/retrieve`,
+skipped the questionnaire, a genuine `/generate-report` LLM call), and
+landed on the real Radiologist Workspace for a freshly generated
+report. From there: hovered "Findings" (the `Edit` affordance
+appeared), clicked into edit mode, typed a real replacement, pressed
+Enter (a real `PATCH` persisted it, the status chip switched to real
+"Doctor Edited" -- proving the `toChipReportStatus()` fix live against
+the actual backend value -- and the subtle "Edited" dot appeared);
+re-entered edit mode, typed different text, pressed Escape (reverted to
+the last *committed* value, not the AI draft, with no spurious request
+fired); clicked "Restore AI Draft" (confirmed, reverted Findings to the
+original AI text via one real `PATCH`); clicked "Finalize" (the Preview
+screen opened, rendering through `ReportDocumentView`, backdrop dimming
+the workspace behind it); clicked "Confirm Finalize" (real 200; the
+header switched to "Finalized Report" with "Finalized by Dr. Phase17
+Verify on 7/18/2026" -- real, not fabricated, data); confirmed zero
+`Edit` affordances remained anywhere in the document on hover
+afterward. Zero browser console/page errors across the entire run.
+`npx tsc --noEmit`, `eslint`, and `npm run check:design` (**0
+violations, 36 files**) all clean -- one real gate violation
+(`outline-none` on the section wrapper and textarea, stripping focus
+entirely rather than replacing it with a visible ring) caught and fixed
+before the gate passed clean.
+
+### How to Write This in Your Thesis
+
+*Methodology chapter, "Finalize and Edit Workflow" subsection:*
+
+> Phase 17 closed the largest remaining capability gap in the system --
+> the ability for a radiologist to actually correct and sign a
+> generated report -- and its central methodological discipline was
+> refusing to let a frozen architecture document stand in for verified
+> fact about the system it was written against. Every load-bearing
+> assumption the document made (which column held report content,
+> whether that content was structured or a blob, whether a status
+> column already existed) was independently confirmed against the real
+> database and the real service layer before a single migration was
+> written, and one of those checks surfaced a genuine, previously
+> undetected frontend defect -- a status-chip mapping function that
+> would have silently mis-rendered a doctor's own edit as an untouched
+> AI draft. The phase also chose, deliberately, not to build the
+> literal mechanism its design specification originally called for: a
+> five-second dwell timer standing in for a "the doctor has reviewed
+> this" state, replaced instead with a status machine that only ever
+> transitions on a real, verifiable action -- an edit or a finalize --
+> because a system whose audit trail depends on how long a cursor sat
+> still is not one whose claims can be defended. Verification itself
+> had to be genuinely end-to-end to count: rather than trusting a
+> passing test suite in isolation, this phase's UI work was exercised
+> through an actual headless browser against actual running servers and
+> an actual local language model, driving the full clinical path from
+> upload through generation, editing, cancellation, restoration, and
+> finalization, because a component that type-checks and a feature that
+> works are not the same claim.
+
+---
+
+## Phase 17 (Finalize / Edit Workflow) — COMPLETE
+
+Closed Phase 13a's deferred finalize/edit ownership gap end to end.
+Backend: `ai_content` renamed to `ai_draft_content` (it already was the
+immutable AI draft) alongside new `final_content`/`finalized_at`/
+`finalized_by` columns and an append-only `report_audit_log` table;
+`PATCH /reports/{id}` (ownership check, 409-when-final, `DOCTOR_EDITED`
+transition, per-edit audit row) and `PATCH /reports/{id}/finalize`
+(ownership, non-empty findings/impression validation, 409-when-already-
+final, sets `finalized_by`/`finalized_at`) both built on a new
+`ReportEditService`. The "what does this report currently say" read-
+source question was resolved explicitly at all four call sites
+(`report_detail_service.py`, `patients.py`, `comparison_service.py`,
+`prompt_builder.py`'s explanation-chat prompt) to read `final_content`,
+confirming each site's real usage before switching rather than assuming.
+`ReportDetailResponse` gained `ai_draft_content`/`finalized_at`/
+`finalized_by`/`audit_log`; a real pre-existing frontend bug
+(`toChipReportStatus()` never matching the real `"doctor_edited"` value)
+found and fixed. Frontend: five independently editable sections
+(`EditableReportSection`, keyboard-operable, subtle "Edited" indicators,
+no backend field-level tracking needed), "Restore AI Draft", and a new
+Preview screen before finalize -- built by extracting the Workspace
+page's previously-inline read-only rendering into a shared
+`ReportDocumentView` component (flagged to the user first: no such
+reusable component existed before this phase, contrary to the frozen
+document's assumption) rather than duplicating it. Full backend suite:
+**175/175 passing** (163 at end of Phase 16 + 10 new
+`ReportEditService` unit tests + 1 new `ReportDetailService` test + 1
+new two-independent-doctor integration test covering the full edit ->
+audit-log -> finalize -> 409 -> cross-doctor-read lifecycle). Phase
+13a's own originally-deferred write-rejection case (doctor B attempting
+to finalize doctor A's report) closed in its original gate test, not
+left as a permanent scope note. Verified via a real headless-browser
+walkthrough against real running servers and a real Ollama
+`llama3:8b` generation call -- register, create patient, upload, real
+LLM generation, edit, escape-cancel, restore, finalize, and confirmed
+immutability -- zero console errors, zero `check:design` violations (36
+files). Explicitly deferred to Phase 18, not built here: section-level
+regeneration, "Accept into report" from Comparison, the word-level
+"Changes vs AI draft" diff UI, and hallucination-heuristic validation
+warnings.

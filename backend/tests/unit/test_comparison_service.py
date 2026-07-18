@@ -125,7 +125,8 @@ def _seed_report(db, patient_id, created_at: datetime, report_date: str, content
     db.add(
         ReportRecord(
             id=report_id, session_id=session_id, language="en", status=ReportStatus.AI_DRAFT,
-            ai_content=asdict(content), validation_warnings=[], report_date=report_date,
+            ai_draft_content=asdict(content), final_content=asdict(content),
+            validation_warnings=[], report_date=report_date,
             llm_model="llama3:8b", llm_temperature=0.0, embedding_model="biomedclip",
             embedding_version="v1", collection_name="iu_cxr_biomedclip_v1_train",
             created_at=created_at,
@@ -138,7 +139,7 @@ def _seed_report(db, patient_id, created_at: datetime, report_date: str, content
 def _domain_report(report_id: uuid.UUID, content: ReportContent = CONTENT) -> Report:
     return Report(
         id=str(report_id), study_id="s", language=Language.ENGLISH, status=ReportStatus.AI_DRAFT,
-        ai_content=content, final_content=ReportContent(),
+        ai_draft_content=content, final_content=ReportContent(),
     )
 
 

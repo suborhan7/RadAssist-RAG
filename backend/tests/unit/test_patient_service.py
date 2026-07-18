@@ -54,7 +54,8 @@ def _seed_report(db, session_id: uuid.UUID, created_at: datetime) -> uuid.UUID:
     db.add(
         ReportRecord(
             id=report_id, session_id=session_id, language="en", status=ReportStatus.AI_DRAFT,
-            ai_content=asdict(CONTENT), validation_warnings=[], report_date="2026-07-13",
+            ai_draft_content=asdict(CONTENT), final_content=asdict(CONTENT),
+            validation_warnings=[], report_date="2026-07-13",
             llm_model="llama3:8b", llm_temperature=0.0, embedding_model="biomedclip",
             embedding_version="v1", collection_name="iu_cxr_biomedclip_v1_train",
             created_at=created_at,
