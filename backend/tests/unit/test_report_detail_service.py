@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import asdict
-from datetime import datetime
+from datetime import date, datetime
 
 import pytest
 from sqlalchemy import create_engine
@@ -20,6 +20,7 @@ from sqlalchemy.pool import StaticPool
 
 from app.database.base import Base
 from app.domain.entities import ReportContent, ReportStatus, RetrievedCase, VotedLabel
+from app.models.patient import PatientRecord
 from app.models.report import ReportRecord
 from app.models.report_audit_log import ReportAuditLog
 from app.models.retrieval_session import RetrievalSession
@@ -67,13 +68,13 @@ def _make_engine():
     return engine
 
 
-def _seed_session(db, study_uids: list[str], patient_id=None) -> uuid.UUID:
+def _seed_session(db, study_uids: list[str], patient_id=None, doctor_id=None) -> uuid.UUID:
     session_id = uuid.uuid4()
     db.add(
         RetrievalSession(
             id=session_id, query_image_path="query.png", top_k=len(study_uids),
             min_similarity=0.0, num_results=len(study_uids), retrieval_time_ms=10,
-            patient_id=patient_id,
+            patient_id=patient_id, doctor_id=doctor_id,
         )
     )
     db.add_all(
@@ -86,19 +87,26 @@ def _seed_session(db, study_uids: list[str], patient_id=None) -> uuid.UUID:
     return session_id
 
 
-def _seed_report(db, session_id: uuid.UUID, validation_warnings=None) -> uuid.UUID:
+def _seed_report(
+    db, session_id: uuid.UUID, validation_warnings=None, status=ReportStatus.AI_DRAFT,
+    created_at=None, final_content=None,
+) -> uuid.UUID:
     report_id = uuid.uuid4()
-    db.add(
-        ReportRecord(
-            id=report_id, session_id=session_id, language="en", status=ReportStatus.AI_DRAFT,
-            ai_draft_content=asdict(CONTENT), final_content=asdict(CONTENT),
-            validation_warnings=validation_warnings or [],
-            report_date="2026-07-13", llm_model="llama3:8b", llm_temperature=0.0,
-            embedding_model="biomedclip", embedding_version="v1",
-            collection_name="iu_cxr_biomedclip_v1_train",
-        )
+    record = ReportRecord(
+        id=report_id, session_id=session_id, language="en", status=status,
+        ai_draft_content=asdict(CONTENT), final_content=asdict(final_content or CONTENT),
+        validation_warnings=validation_warnings or [],
+        report_date="2026-07-13", llm_model="llama3:8b", llm_temperature=0.0,
+        embedding_model="biomedclip", embedding_version="v1",
+        collection_name="iu_cxr_biomedclip_v1_train",
     )
+    db.add(record)
     db.commit()
+    if created_at is not None:
+        # created_at has a server_default -- only settable via a real
+        # post-insert UPDATE, not the constructor above.
+        record.created_at = created_at
+        db.commit()
     return report_id
 
 
@@ -233,4 +241,89 @@ def test_malformed_report_id_raises_report_not_found_error():
         service.get_report_detail("not-a-uuid")
 
     assert fakes["vector_store"].get_by_ids_calls == []
+    db.close()
+
+
+# --- list_reports_for_doctor() (Priority 4: Dashboard recent-activity table) ---
+
+
+def test_list_reports_for_doctor_scoped_ordered_and_never_queries_vector_store():
+    engine = _make_engine()
+    db = sessionmaker(bind=engine)()
+    doctor_id = uuid.uuid4()
+    patient_id = uuid.uuid4()
+    db.add(PatientRecord(
+        id=patient_id, patient_code="PAT-000001", name="Jane Doe",
+        date_of_birth=date(1990, 1, 1), gender="F",
+    ))
+    db.commit()
+
+    session_id = _seed_session(db, ["u1"], patient_id=patient_id, doctor_id=doctor_id)
+    older_id = _seed_report(db, session_id, created_at=datetime(2026, 7, 1, 10, 0, 0))
+    newer_id = _seed_report(db, session_id, created_at=datetime(2026, 7, 2, 10, 0, 0))
+
+    service, fakes = _make_service(db, {}, [])
+    items = service.list_reports_for_doctor(str(doctor_id), limit=10)
+
+    assert [item.report_id for item in items] == [str(newer_id), str(older_id)]
+    assert items[0].patient_name == "Jane Doe"
+    assert items[0].patient_code == "PAT-000001"
+    assert items[0].content == CONTENT
+    assert items[0].ai_draft_content == CONTENT
+    # the whole point of this method existing separately from
+    # get_report_detail(): zero vector-store round trips for a list.
+    assert fakes["vector_store"].get_by_ids_calls == []
+
+    db.close()
+
+
+def test_list_reports_for_doctor_excludes_other_doctors_reports():
+    engine = _make_engine()
+    db = sessionmaker(bind=engine)()
+    doctor_a = uuid.uuid4()
+    doctor_b = uuid.uuid4()
+
+    session_a = _seed_session(db, ["u1"], doctor_id=doctor_a)
+    _seed_report(db, session_a)
+    session_b = _seed_session(db, ["u2"], doctor_id=doctor_b)
+    _seed_report(db, session_b)
+
+    service, _ = _make_service(db, {}, [])
+    items_a = service.list_reports_for_doctor(str(doctor_a), limit=10)
+
+    assert len(items_a) == 1
+
+    db.close()
+
+
+def test_list_reports_for_doctor_respects_limit():
+    engine = _make_engine()
+    db = sessionmaker(bind=engine)()
+    doctor_id = uuid.uuid4()
+    session_id = _seed_session(db, ["u1"], doctor_id=doctor_id)
+    for _ in range(3):
+        _seed_report(db, session_id)
+
+    service, _ = _make_service(db, {}, [])
+    items = service.list_reports_for_doctor(str(doctor_id), limit=2)
+
+    assert len(items) == 2
+
+    db.close()
+
+
+def test_list_reports_for_doctor_patient_fields_none_without_patient():
+    engine = _make_engine()
+    db = sessionmaker(bind=engine)()
+    doctor_id = uuid.uuid4()
+    session_id = _seed_session(db, ["u1"], patient_id=None, doctor_id=doctor_id)
+    _seed_report(db, session_id)
+
+    service, _ = _make_service(db, {}, [])
+    items = service.list_reports_for_doctor(str(doctor_id), limit=10)
+
+    assert items[0].patient_id is None
+    assert items[0].patient_name is None
+    assert items[0].patient_code is None
+
     db.close()

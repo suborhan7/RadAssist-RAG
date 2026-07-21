@@ -62,6 +62,27 @@ function countWords(value: string): number {
  * percentage isn't understated relative to what a doctor could actually
  * change.
  */
+/**
+ * Extracts just the 5 editable fields from any 7-field report content
+ * shape (ReportContentResponse and friends all carry examination/
+ * disclaimer too) into the flat record computeReportDiff() expects.
+ * Shared here rather than duplicated per caller -- originally local to
+ * reports/[reportId]/page.tsx (Phase 19's regeneration preview), the
+ * Dashboard's recent-activity table (Priority 4) needed the identical
+ * extraction for its own edited% column.
+ */
+export function editableRecordFrom(
+  content: Record<EditableReportField, string>,
+): Record<EditableReportField, string> {
+  return EDITABLE_REPORT_FIELDS.reduce(
+    (acc, field) => {
+      acc[field] = content[field];
+      return acc;
+    },
+    {} as Record<EditableReportField, string>,
+  );
+}
+
 export function computeReportDiff(
   aiDraft: Record<EditableReportField, string>,
   final: Record<EditableReportField, string>,

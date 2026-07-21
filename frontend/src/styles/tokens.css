@@ -88,6 +88,16 @@
   --t-state:  150ms;
   --t-panel:  200ms;
   --ease:     cubic-bezier(.2, 0, 0, 1);
+
+  /* ---- §16.1 reopening: decorative synthetic radiograph SVG ----
+     §6.2's stated exception -- "the only exception is the four values
+     inside the synthetic radiograph SVG, which are image data" -- these
+     ARE those four values. Not UI chrome, not a semantic color; never
+     reference these outside chest-xray-illustration.tsx. */
+  --illustration-vignette-center: #20262E;
+  --illustration-vignette-edge:   #08090B;
+  --illustration-highlight-start: rgba(224, 235, 246, .40);
+  --illustration-highlight-end:   rgba(224, 235, 246, .26);
 }
 
 /* Motion is functional. When it is unwelcome, it is off. (§10.9) */

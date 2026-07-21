@@ -32,4 +32,8 @@ def get_dashboard_stats(
         total_reports=stats.total_reports,
         my_patients=stats.my_patients,
         total_patients=stats.total_patients,
+        examinations_today=stats.examinations_today,
+        awaiting_review=stats.awaiting_review,
+        oldest_awaiting_review_report_id=stats.oldest_awaiting_review_report_id,
+        oldest_awaiting_review_report_date=stats.oldest_awaiting_review_report_date,
     )

@@ -118,6 +118,20 @@ def validate(
     return ValidationResult(passed=len(errors) == 0, errors=errors, warnings=warnings)
 
 
+def _clean_text_field(row: pd.Series, column: str) -> str:
+    """NaN-safe text extraction. `row.get(column, "") or ""` looks like a
+    safe default but silently fails for a genuinely-missing (NaN) value:
+    `float('nan') or ""` evaluates to `nan` itself, not `""`, since NaN is
+    truthy in Python -- `or` only falls through for falsy values (0, "",
+    None, False), and NaN is none of those. That's exactly how the literal
+    string "nan" ended up written into Chroma metadata (str(nan) == "nan")
+    and rendered verbatim in the Radiologist Workspace's evidence cards for
+    any retrieved case missing this field.
+    """
+    value = row.get(column)
+    return str(value) if pd.notna(value) else ""
+
+
 def build_metadata_records(train_df: pd.DataFrame, cfg: dict, indexed_at: str) -> list[dict]:
     records = []
     for _, row in train_df.iterrows():
@@ -129,8 +143,8 @@ def build_metadata_records(train_df: pd.DataFrame, cfg: dict, indexed_at: str) -
             "primary_label": str(row["primary_label"]),
             "label_set": str(row.get("label_set", "")),
             "is_normal": bool(row["primary_label"] == "Normal"),
-            "findings": str(row.get("findings_clean", "") or ""),
-            "impression": str(row.get("impression_clean", "") or ""),
+            "findings": _clean_text_field(row, "findings_clean"),
+            "impression": _clean_text_field(row, "impression_clean"),
             "dataset": "IU_XRay",
             "embedding_model": str(row.get("embedding_model", "biomedclip")),
             "embedding_version": str(row.get("embedding_version", "v1")),

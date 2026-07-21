@@ -56,7 +56,7 @@ derive from the single EditableReportField enum (app/domain/entities.py).
 """
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -67,6 +67,7 @@ from app.api.schemas import (
     ReportAuditLogEntryResponse,
     ReportContentResponse,
     ReportDetailResponse,
+    ReportListItemResponse,
     RetrievedCaseResponse,
     ValidationResponse,
 )
@@ -162,6 +163,51 @@ def _build_response(detail: ReportDetail) -> ReportDetailResponse:
             for entry in detail.audit_log
         ],
     )
+
+
+@router.get("/reports", response_model=list[ReportListItemResponse])
+def list_reports(
+    request: Request,
+    limit: int = Query(10, ge=1, le=100),
+    db: Session = Depends(get_db),
+    current_doctor: Doctor = Depends(get_current_doctor),
+) -> list[ReportListItemResponse]:
+    service = ReportDetailService(
+        db=db,
+        vector_store=request.app.state.vector_store,
+        label_voting_service=request.app.state.label_voting_service,
+    )
+    items = service.list_reports_for_doctor(current_doctor.id, limit)
+    return [
+        ReportListItemResponse(
+            report_id=item.report_id,
+            patient_id=item.patient_id,
+            patient_name=item.patient_name,
+            patient_code=item.patient_code,
+            status=item.status.value,
+            report_date=item.report_date,
+            created_at=item.created_at,
+            content=ReportContentResponse(
+                examination=item.content.examination,
+                clinical_history=item.content.clinical_history,
+                technique=item.content.technique,
+                findings=item.content.findings,
+                impression=item.content.impression,
+                recommendation=item.content.recommendation,
+                disclaimer=item.content.disclaimer,
+            ),
+            ai_draft_content=ReportContentResponse(
+                examination=item.ai_draft_content.examination,
+                clinical_history=item.ai_draft_content.clinical_history,
+                technique=item.ai_draft_content.technique,
+                findings=item.ai_draft_content.findings,
+                impression=item.ai_draft_content.impression,
+                recommendation=item.ai_draft_content.recommendation,
+                disclaimer=item.ai_draft_content.disclaimer,
+            ),
+        )
+        for item in items
+    ]
 
 
 @router.get("/reports/{report_id}", response_model=ReportDetailResponse)

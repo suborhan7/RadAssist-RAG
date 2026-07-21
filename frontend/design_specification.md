@@ -754,6 +754,16 @@ Open questions from earlier revisions are all resolved: masked image persistence
 
 **Begin P0.**
 
+### 16.1 Reopened (post-implementation, real user walkthrough)
+
+The freeze held through Phases 12-19. A real, hands-on walkthrough of the built product surfaced two things this document had already specified but that were never actually built — §8.1 Landing (no route existed at all) and §8.2 Login's full four-service status strip (only one of the four checks was ever wired up on the backend) — plus concrete structural gaps this document never covered in the first place: no persistent authenticated navbar anywhere in the app, doctor Settings sitting inside the Dashboard's clinical Quick Actions, and the Dashboard's own breadcrumb label reading "Dashboard" instead of "Home."
+
+**What is reopened:** building the specced-but-missing Landing page and the full service strip (backed by real Ollama/ChromaDB/GPU health checks, not decoration), plus the structural navbar/Settings/breadcrumb fixes above.
+
+**What is NOT reopened:** the token system (§6), the gate script (§13), and the P1-P4 design principles are unchanged — no new color, no new hex literal, no change to the type scale or elevation system. The richer result comes from finishing what was already specified (Landing, the full strip) and using type-scale/illustration allowances that already existed but were never exercised (the `hero` scale, the synthetic-radiograph-SVG carve-out in §6.2/§13) — not from loosening the restraint §6.1's "Paper &amp; Lightbox" direction argues for.
+
+See `docs/methodology/development_log.md`'s corresponding entry for implementation and validation detail.
+
 ---
 
 *RadAssist-RAG · Brac University · Department of Computer Science and Engineering · Supervisor: Md. Shahriar Rahman*

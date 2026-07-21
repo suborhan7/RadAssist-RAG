@@ -58,11 +58,18 @@ from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_current_doctor, get_db
-from app.api.schemas import HealthResponse, RetrievedCaseResponse, RetrieveResponse, VotedLabelResponse
+from app.api.schemas import (
+    HealthResponse,
+    RetrievedCaseResponse,
+    RetrieveResponse,
+    ServiceStatusResponse,
+    VotedLabelResponse,
+)
 from app.core.config import settings
 from app.domain.entities import Doctor, RetrievedCase, VotedLabel
 from app.models.retrieval_session import RetrievalSession
 from app.models.retrieved_evidence import RetrievedEvidence
+from app.services.service_health_service import ServiceHealthService
 
 router = APIRouter()
 
@@ -126,10 +133,22 @@ def _build_response(
 
 
 @router.get("/health", response_model=HealthResponse)
-def health() -> HealthResponse:
-    """Liveness only -- no DB/Chroma reachability check (a documented
-    future improvement, not required now)."""
-    return HealthResponse(status="ok")
+def health(request: Request) -> HealthResponse:
+    """§16.1 (design_specification.md): fulfills this route's own former
+    comment ("no DB/Chroma reachability check, a documented future
+    improvement") -- real FastAPI/Ollama/ChromaDB/GPU checks via
+    ServiceHealthService, backing §8.2's four-service status strip.
+    Stays public/unauthenticated exactly as before; `status` (the only
+    field prior callers read) is untouched."""
+    service = ServiceHealthService(vector_store=request.app.state.vector_store)
+    health = service.check_all()
+    return HealthResponse(
+        status="ok",
+        fastapi=ServiceStatusResponse(status=health.fastapi.status, detail=health.fastapi.detail),
+        ollama=ServiceStatusResponse(status=health.ollama.status, detail=health.ollama.detail),
+        chromadb=ServiceStatusResponse(status=health.chromadb.status, detail=health.chromadb.detail),
+        gpu=ServiceStatusResponse(status=health.gpu.status, detail=health.gpu.detail),
+    )
 
 
 @router.post("/retrieve", response_model=RetrieveResponse)

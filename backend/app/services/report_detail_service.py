@@ -43,8 +43,10 @@ from sqlalchemy.orm import Session
 
 from app.domain.entities import ReportContent, ReportStatus, RetrievedCase
 from app.domain.interfaces import ILabelVoter, IVectorStore
+from app.models.patient import PatientRecord
 from app.models.report import ReportRecord
 from app.models.report_audit_log import ReportAuditLog
+from app.models.retrieval_session import RetrievalSession
 from app.services.exceptions import ReportNotFoundError
 from app.services.report_reconstruction import build_report_domain_entity
 from app.services.session_reconstruction import reconstruct_session_evidence
@@ -96,11 +98,69 @@ class ReportDetail:
     audit_log: tuple[ReportAuditLogEntry, ...] = ()
 
 
+@dataclass(frozen=True)
+class ReportListItem:
+    """One row of GET /reports's ownership-scoped, recency-ordered list.
+
+    Deliberately excludes retrieved_cases/evidence -- unlike
+    get_report_detail() below, list_reports_for_doctor() never calls
+    reconstruct_session_evidence(), which does a real vector-store query
+    per report. A list endpoint doing that per row would cost N
+    vector-store round trips on every dashboard load; content/
+    ai_draft_content cost nothing beyond the row already fetched, since
+    build_report_domain_entity() only deserializes JSON columns already
+    in memory. This is exactly why "agreement" is a named omission from
+    the Dashboard's recent-activity table (see development_log.md) rather
+    than plumbed through here -- reusing this list for that would require
+    paying that per-row cost for every consumer, not just the Dashboard.
+    """
+
+    report_id: str
+    patient_id: str | None
+    patient_name: str | None
+    patient_code: str | None
+    status: ReportStatus
+    report_date: str
+    created_at: str
+    content: ReportContent
+    ai_draft_content: ReportContent
+
+
 class ReportDetailService:
     def __init__(self, db: Session, vector_store: IVectorStore, label_voting_service: ILabelVoter) -> None:
         self._db = db
         self._vector_store = vector_store
         self._label_voting_service = label_voting_service
+
+    def list_reports_for_doctor(self, doctor_id: str, limit: int) -> list[ReportListItem]:
+        doctor_uuid = uuid.UUID(doctor_id)
+        rows = (
+            self._db.query(ReportRecord, PatientRecord)
+            .join(RetrievalSession, ReportRecord.session_id == RetrievalSession.id)
+            .outerjoin(PatientRecord, RetrievalSession.patient_id == PatientRecord.id)
+            .filter(RetrievalSession.doctor_id == doctor_uuid)
+            .order_by(ReportRecord.created_at.desc())
+            .limit(limit)
+            .all()
+        )
+
+        items: list[ReportListItem] = []
+        for report_record, patient in rows:
+            report = build_report_domain_entity(report_record)
+            items.append(
+                ReportListItem(
+                    report_id=str(report_record.id),
+                    patient_id=str(patient.id) if patient else None,
+                    patient_name=patient.name if patient else None,
+                    patient_code=patient.patient_code if patient else None,
+                    status=report.status,
+                    report_date=report_record.report_date,
+                    created_at=report.created_at.isoformat() if report.created_at else "",
+                    content=report.final_content,
+                    ai_draft_content=report.ai_draft_content,
+                )
+            )
+        return items
 
     def get_report_detail(self, report_id: str) -> ReportDetail:
         try:

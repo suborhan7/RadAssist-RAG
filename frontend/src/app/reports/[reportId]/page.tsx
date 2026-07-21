@@ -27,7 +27,7 @@ import { EditableReportSection } from "@/components/report/editable-report-secti
 import { FinalizePreview } from "@/components/report/finalize-preview";
 import { ReportDiffView } from "@/components/report/report-diff-view";
 import { REPORT_CONTENT_FIELDS as CONTENT_FIELDS } from "@/components/report/report-document-view";
-import { computeReportDiff } from "@/lib/report-diff";
+import { computeReportDiff, editableRecordFrom } from "@/lib/report-diff";
 import type { paths } from "@/lib/generated/api";
 
 type ReportDetailResponse =
@@ -254,19 +254,6 @@ export default function ReportWorkspacePage() {
     }
   }
 
-  // Phase 19 Decision 6: builds the "before" record computeReportDiff needs
-  // from the report's current (already-possibly-edited) 5 editable fields
-  // -- reused for both the whole-report diff view (above) and, per-field,
-  // for a single regeneration candidate's preview.
-  function editableRecordFrom(content: ReportDetailResponse["content"]): Record<EditableReportField, string> {
-    return EDITABLE_REPORT_FIELDS.reduce(
-      (acc, field) => {
-        acc[field] = content[field];
-        return acc;
-      },
-      {} as Record<EditableReportField, string>,
-    );
-  }
 
   async function handleRegenerate(field: EditableReportField) {
     if (!report) return;

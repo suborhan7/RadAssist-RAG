@@ -45,6 +45,31 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * The rarer case middleware.ts can't catch: a cookie that's present but
+ * expired/invalid (middleware only checks presence, per its own
+ * docstring). Redirects instead of letting a raw 401 propagate to
+ * whatever ad-hoc catch block happens to be in each page. Deliberately
+ * NOT applied to loginDoctor/registerDoctor (a 401 there is a real
+ * "wrong credentials" answer each of those pages already shows
+ * specially, not an expired session) or getCurrentDoctor (its 401 is
+ * already a documented non-error "not logged in" case, not a thrown
+ * error this needs to intercept).
+ */
+function redirectToLoginOn401(status: number): void {
+  if (status !== 401) return;
+  if (typeof window === "undefined") return;
+  if (window.location.pathname === "/login") return;
+  const target = window.location.pathname + window.location.search;
+  window.location.href = `/login?redirect=${encodeURIComponent(target)}`;
+}
+
+async function throwApiError(response: Response, fallbackMessage: string): Promise<never> {
+  const detail = await readErrorDetail(response);
+  redirectToLoginOn401(response.status);
+  throw new ApiError(response.status, detail ?? fallbackMessage);
+}
+
 async function readErrorDetail(response: Response): Promise<string | null> {
   try {
     const data: unknown = await response.json();
@@ -92,8 +117,7 @@ export async function createPatient(body: CreatePatientRequest): Promise<Patient
     body: JSON.stringify(body),
   });
   if (!response.ok) {
-    const detail = await readErrorDetail(response);
-    throw new ApiError(response.status, detail ?? `POST /patients failed: ${response.status}`);
+    await throwApiError(response, `POST /patients failed: ${response.status}`);
   }
   return response.json() as Promise<PatientResponse>;
 }
@@ -116,8 +140,7 @@ export async function searchPatients(
     credentials: "include",
   });
   if (!response.ok) {
-    const detail = await readErrorDetail(response);
-    throw new ApiError(response.status, detail ?? `GET /patients/search failed: ${response.status}`);
+    await throwApiError(response, `GET /patients/search failed: ${response.status}`);
   }
   return response.json() as Promise<SearchPatientsResponse>;
 }
@@ -128,8 +151,7 @@ type GetPatientResponse =
 export async function getPatient(patientId: string): Promise<GetPatientResponse> {
   const response = await fetch(`${API_URL}/patients/${patientId}`, { credentials: "include" });
   if (!response.ok) {
-    const detail = await readErrorDetail(response);
-    throw new ApiError(response.status, detail ?? `GET /patients/${patientId} failed: ${response.status}`);
+    await throwApiError(response, `GET /patients/${patientId} failed: ${response.status}`);
   }
   return response.json() as Promise<GetPatientResponse>;
 }
@@ -140,11 +162,7 @@ type PatientHistoryResponse =
 export async function getPatientHistory(patientId: string): Promise<PatientHistoryResponse> {
   const response = await fetch(`${API_URL}/patients/${patientId}/history`, { credentials: "include" });
   if (!response.ok) {
-    const detail = await readErrorDetail(response);
-    throw new ApiError(
-      response.status,
-      detail ?? `GET /patients/${patientId}/history failed: ${response.status}`,
-    );
+    await throwApiError(response, `GET /patients/${patientId}/history failed: ${response.status}`);
   }
   return response.json() as Promise<PatientHistoryResponse>;
 }
@@ -193,6 +211,7 @@ export function retrieveWithProgress(
         } catch {
           // response body wasn't JSON -- fall through to the generic message
         }
+        redirectToLoginOn401(xhr.status);
         reject(new ApiError(xhr.status, detail ?? `POST /retrieve failed: ${xhr.status}`));
       }
     };
@@ -207,11 +226,7 @@ type QuestionnaireResponse =
 export async function getQuestionnaire(sessionId: string): Promise<QuestionnaireResponse> {
   const response = await fetch(`${API_URL}/questionnaire/${sessionId}`, { credentials: "include" });
   if (!response.ok) {
-    const detail = await readErrorDetail(response);
-    throw new ApiError(
-      response.status,
-      detail ?? `GET /questionnaire/${sessionId} failed: ${response.status}`,
-    );
+    await throwApiError(response, `GET /questionnaire/${sessionId} failed: ${response.status}`);
   }
   return response.json() as Promise<QuestionnaireResponse>;
 }
@@ -231,10 +246,28 @@ export async function generateReport(
     body: JSON.stringify(body),
   });
   if (!response.ok) {
-    const detail = await readErrorDetail(response);
-    throw new ApiError(response.status, detail ?? `POST /generate-report failed: ${response.status}`);
+    await throwApiError(response, `POST /generate-report failed: ${response.status}`);
   }
   return response.json() as Promise<GenerateReportResponse>;
+}
+
+type ReportListItemResponse =
+  paths["/reports"]["get"]["responses"][200]["content"]["application/json"][number];
+
+/**
+ * Ownership-scoped, recency-ordered -- general enough to later back a
+ * full My Reports page, not a Dashboard-only shape (see
+ * app/api/schemas.py's ReportListItemResponse docstring). Deliberately
+ * carries no retrieved_cases/agreement -- see development_log.md's
+ * Priority 4 entry for the real per-row vector-store cost that would
+ * impose on every caller, not just the Dashboard.
+ */
+export async function listReports(limit = 10): Promise<ReportListItemResponse[]> {
+  const response = await fetch(`${API_URL}/reports?limit=${limit}`, { credentials: "include" });
+  if (!response.ok) {
+    await throwApiError(response, `GET /reports failed: ${response.status}`);
+  }
+  return response.json() as Promise<ReportListItemResponse[]>;
 }
 
 type ReportDetailResponse =
@@ -243,8 +276,7 @@ type ReportDetailResponse =
 export async function getReport(reportId: string): Promise<ReportDetailResponse> {
   const response = await fetch(`${API_URL}/reports/${reportId}`, { credentials: "include" });
   if (!response.ok) {
-    const detail = await readErrorDetail(response);
-    throw new ApiError(response.status, detail ?? `GET /reports/${reportId} failed: ${response.status}`);
+    await throwApiError(response, `GET /reports/${reportId} failed: ${response.status}`);
   }
   return response.json() as Promise<ReportDetailResponse>;
 }
@@ -269,8 +301,7 @@ export async function updateReport(
     body: JSON.stringify(body),
   });
   if (!response.ok) {
-    const detail = await readErrorDetail(response);
-    throw new ApiError(response.status, detail ?? `PATCH /reports/${reportId} failed: ${response.status}`);
+    await throwApiError(response, `PATCH /reports/${reportId} failed: ${response.status}`);
   }
   return response.json() as Promise<ReportDetailResponse>;
 }
@@ -286,11 +317,7 @@ export async function finalizeReport(reportId: string): Promise<ReportDetailResp
     credentials: "include",
   });
   if (!response.ok) {
-    const detail = await readErrorDetail(response);
-    throw new ApiError(
-      response.status,
-      detail ?? `PATCH /reports/${reportId}/finalize failed: ${response.status}`,
-    );
+    await throwApiError(response, `PATCH /reports/${reportId}/finalize failed: ${response.status}`);
   }
   return response.json() as Promise<ReportDetailResponse>;
 }
@@ -318,11 +345,7 @@ export async function regenerateSection(
     body: JSON.stringify({ field } satisfies RegenerateSectionRequest),
   });
   if (!response.ok) {
-    const detail = await readErrorDetail(response);
-    throw new ApiError(
-      response.status,
-      detail ?? `POST /reports/${reportId}/regenerate-section failed: ${response.status}`,
-    );
+    await throwApiError(response, `POST /reports/${reportId}/regenerate-section failed: ${response.status}`);
   }
   return response.json() as Promise<RegenerateSectionResponse>;
 }
@@ -349,11 +372,7 @@ export async function explainReport(reportId: string, question: string): Promise
     body: JSON.stringify(body),
   });
   if (!response.ok) {
-    const detail = await readErrorDetail(response);
-    throw new ApiError(
-      response.status,
-      detail ?? `POST /reports/${reportId}/explain failed: ${response.status}`,
-    );
+    await throwApiError(response, `POST /reports/${reportId}/explain failed: ${response.status}`);
   }
   return response.json() as Promise<ExplainResponse>;
 }
@@ -382,8 +401,7 @@ export async function createComparison(
     body: JSON.stringify(body),
   });
   if (!response.ok) {
-    const detail = await readErrorDetail(response);
-    throw new ApiError(response.status, detail ?? `POST /comparisons failed: ${response.status}`);
+    await throwApiError(response, `POST /comparisons failed: ${response.status}`);
   }
   return response.json() as Promise<ComparisonResponse>;
 }
@@ -489,8 +507,7 @@ type DoctorPublicResponse =
 export async function getDoctor(doctorId: string): Promise<DoctorPublicResponse> {
   const response = await fetch(`${API_URL}/doctors/${doctorId}`, { credentials: "include" });
   if (!response.ok) {
-    const detail = await readErrorDetail(response);
-    throw new ApiError(response.status, detail ?? `GET /doctors/${doctorId} failed: ${response.status}`);
+    await throwApiError(response, `GET /doctors/${doctorId} failed: ${response.status}`);
   }
   return response.json() as Promise<DoctorPublicResponse>;
 }
@@ -506,8 +523,7 @@ type DashboardStatsResponse =
 export async function getDashboardStats(): Promise<DashboardStatsResponse> {
   const response = await fetch(`${API_URL}/dashboard/stats`, { credentials: "include" });
   if (!response.ok) {
-    const detail = await readErrorDetail(response);
-    throw new ApiError(response.status, detail ?? `GET /dashboard/stats failed: ${response.status}`);
+    await throwApiError(response, `GET /dashboard/stats failed: ${response.status}`);
   }
   return response.json() as Promise<DashboardStatsResponse>;
 }
@@ -530,8 +546,7 @@ export async function updateProfile(body: UpdateProfileRequest): Promise<UpdateP
     body: JSON.stringify(body),
   });
   if (!response.ok) {
-    const detail = await readErrorDetail(response);
-    throw new ApiError(response.status, detail ?? `PATCH /auth/me failed: ${response.status}`);
+    await throwApiError(response, `PATCH /auth/me failed: ${response.status}`);
   }
   return response.json() as Promise<UpdateProfileResponse>;
 }
@@ -543,8 +558,7 @@ type SystemStatsResponse =
 export async function getSystemStats(): Promise<SystemStatsResponse> {
   const response = await fetch(`${API_URL}/system/stats`, { credentials: "include" });
   if (!response.ok) {
-    const detail = await readErrorDetail(response);
-    throw new ApiError(response.status, detail ?? `GET /system/stats failed: ${response.status}`);
+    await throwApiError(response, `GET /system/stats failed: ${response.status}`);
   }
   return response.json() as Promise<SystemStatsResponse>;
 }

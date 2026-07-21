@@ -37,7 +37,7 @@ export default function RegisterPage() {
 
     try {
       await registerDoctor({ email, password, full_name: fullName });
-      router.push("/");
+      router.push("/dashboard");
     } catch (err) {
       if (err instanceof ApiError && err.status === 409) {
         setError("An account with this email already exists.");

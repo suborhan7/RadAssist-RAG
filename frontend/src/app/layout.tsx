@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { fontVars } from "@/lib/fonts";
-import { LogoutBar } from "@/components/auth/logout-bar";
+import { AppNavbar } from "@/components/layout/app-navbar";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -16,7 +16,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${fontVars} h-full antialiased`}>
       <body className="flex min-h-full flex-col bg-paper font-sans text-body text-ink">
-        <LogoutBar />
+        <AppNavbar />
         {children}
       </body>
     </html>

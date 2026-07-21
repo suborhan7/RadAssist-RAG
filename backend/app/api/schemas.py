@@ -18,8 +18,21 @@ from __future__ import annotations
 from pydantic import BaseModel
 
 
+class ServiceStatusResponse(BaseModel):
+    status: str  # "ok" | "degraded" | "unreachable"
+    detail: str | None = None
+
+
 class HealthResponse(BaseModel):
     status: str
+    # Priority §16.1 (design_specification.md): real backend-half of the
+    # §8.2 four-service status strip. Optional/nullable so existing
+    # callers reading only `status` (e.g. the Dashboard's simple ok/
+    # unreachable indicator) are unaffected -- purely additive.
+    fastapi: ServiceStatusResponse | None = None
+    ollama: ServiceStatusResponse | None = None
+    chromadb: ServiceStatusResponse | None = None
+    gpu: ServiceStatusResponse | None = None
 
 
 class RetrievedCaseResponse(BaseModel):
@@ -191,6 +204,27 @@ class ReportDetailResponse(BaseModel):
     audit_log: list[ReportAuditLogEntryResponse] = []
 
 
+class ReportListItemResponse(BaseModel):
+    """GET /reports -- ownership-scoped, recency-ordered list. General
+    enough to later back a full My Reports page, not a Dashboard-only
+    shape: no evidence/agreement (that needs a real vector-store query
+    per report, a real cost a list endpoint shouldn't impose on every
+    caller -- see ReportListItem's own docstring), but content/
+    ai_draft_content are both included so a caller can compute Phase 18's
+    Report Edit Percentage via the existing computeReportDiff() with zero
+    new logic."""
+
+    report_id: str
+    patient_id: str | None
+    patient_name: str | None
+    patient_code: str | None
+    status: str
+    report_date: str
+    created_at: str
+    content: ReportContentResponse
+    ai_draft_content: ReportContentResponse
+
+
 class RegenerateSectionResponse(BaseModel):
     """Phase 19: POST /reports/{report_id}/regenerate-section. `candidate`,
     not `content` -- this codebase already overloads "content" heavily
@@ -284,6 +318,10 @@ class DashboardStatsResponse(BaseModel):
     total_reports: int
     my_patients: int
     total_patients: int
+    examinations_today: int
+    awaiting_review: int
+    oldest_awaiting_review_report_id: str | None = None
+    oldest_awaiting_review_report_date: str | None = None
 
 
 class SystemStatsResponse(BaseModel):

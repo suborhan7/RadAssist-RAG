@@ -5,23 +5,40 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ApiError, getHealth, loginDoctor } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
+import { ServiceChip } from "@/components/ui/chip";
+import { ChestXrayIllustration } from "@/components/ui/chest-xray-illustration";
+import type { paths } from "@/lib/generated/api";
+
+type HealthResponse = paths["/health"]["get"]["responses"][200]["content"]["application/json"];
+type ServiceStatus = { status: string; detail?: string | null } | null | undefined;
+
+function toChipState(status: string | undefined): "online" | "degraded" | "offline" {
+  if (status === "ok") return "online";
+  if (status === "degraded") return "degraded";
+  return "offline";
+}
+
+function serviceValue(service: ServiceStatus): string {
+  if (!service) return "--";
+  return service.detail ?? service.status;
+}
 
 /**
- * Login (Phase 13b, restyled Phase 14). Split layout per
- * design_specification.md's actual Login section (§8.2 in that document,
- * not §8.1 as frontend/CLAUDE.md's citation says -- a citation slip, not
- * a content conflict, confirmed by reading the section directly): the
+ * Login (Phase 13b, restyled Phase 14, given the real §8.2 treatment
+ * under §16.1's reopening). Split layout per design_specification.md's
+ * actual Login section (§8.2 in that document, not §8.1 as
+ * frontend/CLAUDE.md's citation says -- a citation slip, not a content
+ * conflict, confirmed by reading the section directly): the
  * lightbox-black panel left, form right, per §6.1's "Paper & Lightbox"
  * direction (the lightbox is the only dark surface in the product).
  *
  * Service status strip (design spec: "FastAPI, Ollama, ChromaDB, GPU,
- * before authentication") is deliberately reduced to a single real
- * "Backend" check here, reusing the same GET /health call the existing
- * Dashboard (src/app/page.tsx) already makes -- there is no backend
- * endpoint that reports Ollama/ChromaDB/GPU reachability individually
- * (GET /health is liveness-only, per its own docstring), and fabricating
- * three more status dots with no real check behind them would show false
- * information rather than none.
+ * before authentication") is now genuinely all four -- previously
+ * reduced to a single "Backend" check because GET /health had no per-
+ * service reachability logic (its own former comment called this "a
+ * documented future improvement"); §16.1 built that improvement
+ * (ServiceHealthService) rather than fabricate three more status dots
+ * with nothing real behind them.
  *
  * Error copy follows the spec's "specific, does not apologise" rule:
  * the real 401 from POST /auth/login (InvalidCredentialsError,
@@ -35,14 +52,13 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [backendStatus, setBackendStatus] = useState<"checking" | "ok" | "unreachable">(
-    "checking",
-  );
+  const [health, setHealth] = useState<HealthResponse | null>(null);
+  const [healthUnreachable, setHealthUnreachable] = useState(false);
 
   useEffect(() => {
     getHealth()
-      .then((response) => setBackendStatus(response.status === "ok" ? "ok" : "unreachable"))
-      .catch(() => setBackendStatus("unreachable"));
+      .then(setHealth)
+      .catch(() => setHealthUnreachable(true));
   }, []);
 
   async function handleSubmit(event: React.FormEvent) {
@@ -52,7 +68,15 @@ export default function LoginPage() {
 
     try {
       await loginDoctor({ email, password });
-      router.push("/");
+      // Read directly from window.location rather than useSearchParams() --
+      // avoids the Suspense-boundary requirement that hook imposes, for a
+      // value only ever needed once, after a real user submit.
+      const redirectParam = new URLSearchParams(window.location.search).get("redirect");
+      const destination =
+        redirectParam && redirectParam.startsWith("/") && !redirectParam.startsWith("//")
+          ? redirectParam
+          : "/dashboard";
+      router.push(destination);
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
         setError("Email or password is incorrect.");
@@ -66,17 +90,26 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen">
-      <div className="hidden flex-1 flex-col justify-between bg-lightbox px-12 py-16 text-lightbox-ink lg:flex">
-        <div>
+      <div className="relative hidden flex-1 flex-col justify-between overflow-hidden bg-lightbox px-12 py-16 text-lightbox-ink lg:flex">
+        <ChestXrayIllustration className="pointer-events-none absolute inset-0 h-full w-full opacity-50" />
+        <div className="relative">
           <p className="text-eyebrow uppercase text-lightbox-ink-2">RadAssist-RAG</p>
           <h1 className="mt-4 max-w-md text-display text-white">
             Retrieval-grounded chest X-ray reporting.
           </h1>
         </div>
-        <p className="max-w-md text-sm text-lightbox-ink-2">
-          Every AI draft cites the retrieved cases it was grounded in. 0 reports have ever been
-          finalised without a radiologist.
-        </p>
+        <div className="relative flex flex-col gap-4">
+          <p className="max-w-md text-sm text-lightbox-ink-2">
+            Every AI draft cites the retrieved cases it was grounded in. 0 reports have ever been
+            finalised without a radiologist.
+          </p>
+          <div className="max-w-md rounded-card border border-lightbox-bd bg-lightbox-chrome px-3 py-2">
+            <p className="font-mono text-data-sm uppercase text-caution-fill">Research prototype</p>
+            <p className="mt-1 text-sm text-lightbox-ink-2">
+              Not for clinical use. Every report requires review by a qualified radiologist.
+            </p>
+          </div>
+        </div>
       </div>
 
       <div className="flex flex-1 flex-col items-center justify-center bg-paper px-page py-16">
@@ -86,23 +119,18 @@ export default function LoginPage() {
             <p className="mt-1 text-sm text-ink-2">RadAssist-RAG &middot; Radiologist Workflow</p>
           </div>
 
-          <div className="flex items-center gap-2 rounded-card border border-hairline bg-surface px-3 py-2 text-sm">
-            <span
-              className={
-                "h-1.5 w-1.5 rounded-full " +
-                (backendStatus === "ok"
-                  ? "bg-stable"
-                  : backendStatus === "unreachable"
-                    ? "bg-critical"
-                    : "bg-ink-3")
-              }
-            />
-            <span className="text-ink-2">
-              Backend:{" "}
-              <span className="font-medium text-ink">
-                {backendStatus === "checking" ? "checking..." : backendStatus}
-              </span>
-            </span>
+          <div className="rounded-card border border-hairline bg-surface px-3 py-1">
+            <p className="pt-1.5 text-eyebrow uppercase text-ink-3">System status</p>
+            {healthUnreachable ? (
+              <p className="py-2 text-sm text-critical-ink">Backend unreachable.</p>
+            ) : (
+              <>
+                <ServiceChip name="FastAPI" value={serviceValue(health?.fastapi)} state={toChipState(health?.fastapi?.status)} />
+                <ServiceChip name="Ollama" value={serviceValue(health?.ollama)} state={toChipState(health?.ollama?.status)} />
+                <ServiceChip name="ChromaDB" value={serviceValue(health?.chromadb)} state={toChipState(health?.chromadb?.status)} />
+                <ServiceChip name="GPU" value={serviceValue(health?.gpu)} state={toChipState(health?.gpu?.status)} />
+              </>
+            )}
           </div>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">

@@ -50,9 +50,18 @@ def client():
 
 
 def test_health_returns_ok(client):
+    """§16.1 (design_specification.md): /health now also carries real
+    fastapi/ollama/chromadb/gpu service checks (ServiceHealthService) --
+    `status` stays the top-level liveness signal every existing caller
+    reads; the strict full-dict equality this test used before `status`
+    was the only field would break on every future additive extension,
+    so this checks the fields' presence/shape instead of an exact dict."""
     response = client.get("/health")
     assert response.status_code == 200
-    assert response.json() == {"status": "ok"}
+    body = response.json()
+    assert body["status"] == "ok"
+    for service in ("fastapi", "ollama", "chromadb", "gpu"):
+        assert body[service]["status"] in ("ok", "degraded", "unreachable")
 
 
 def test_retrieve_with_real_image_returns_full_contract(client):
