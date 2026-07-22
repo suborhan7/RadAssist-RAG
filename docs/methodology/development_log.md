@@ -9568,51 +9568,91 @@ metrics" as a category.
 
 ---
 
-## Finding: CheXbert Detects Zero Case-Level Overlap for Fracture in Findings Text, Despite Balanced Support
+## Finding: The Fracture Anomaly Is a Retrieval-Attribution Grounding Failure, Not Labeler Noise
 
 While reviewing Tier 3's per-label F1 breakdown, several conditions
 scored 0.0 F1 in one or both fields. Most are explained by genuine
 rarity in this 460-case sample (e.g. Pneumonia in findings: only 1
 reference-positive case; Pneumothorax: 1-3) -- a single-case label
 can't produce a meaningful F1 either way. Fracture in findings is
-different, and was checked specifically rather than folded into the
-same "small sample" explanation by default: it has **18
-reference-positive cases and 18 generated-positive cases** -- balanced,
-non-trivial support on both sides.
+different: it has **18 reference-positive cases and 18
+generated-positive cases** -- balanced, non-trivial support on both
+sides -- and the two sets of 18 study_uids are **completely disjoint**
+(checked directly against the real study_uids, not inferred from the
+matching totals). A follow-up investigation was run specifically to
+distinguish a genuine generation/retrieval problem from a CheXbert
+labeler quirk, in the order most consequential for the thesis's core
+claim first.
 
-The real case-level overlap was pulled and checked directly, not
-inferred from the matching totals: the two sets of 18 study_uids are
-**completely disjoint**.
-```
-ref_positive:  {147, 1551, 2070, 2095, 2138, 2181, 224, 2420, 2456,
-                2578, 2998, 3073, 3126, 3165, 3278, 3408, 3796, 3858}
-gen_positive:  {1378, 2380, 2580, 259, 2728, 2867, 2888, 3052, 3117,
-                3177, 3494, 3512, 3546, 3616, 3769, 3979, 618, 943}
-intersection:  {}  (0 of 18)
-```
-The model (CheXbert, applied to the *generated* findings text) flags
-Fracture as present in exactly as many cases as the reference does --
-18 -- but never the same 18. This is not a rarity artifact (support is
-balanced) and not a labeler-noise artifact in the ordinary sense
-(random per-case disagreement would be expected to produce *some*
-overlap by chance with 18-vs-18 out of 460). A real, structural
-explanation is more likely: either the generation system produces
-fracture-positive language keyed to different case content than where
-fractures are actually documented in the reference (a genuine
-generation/retrieval mismatch), or CheXbert itself is picking up on
-different textual triggers for "fracture" in generated vs. reference
-phrasing (a labeler-side artifact). Distinguishing between these two
-explanations was not attempted here -- it would require reading the 36
-individual report texts involved, a real follow-up worth doing before
-this goes into the thesis as more than a flagged observation.
+### 1a. Grounding-attribution failure in retrieved evidence (the headline)
 
-**Framing for the thesis**: report this as a specific, named,
-verified anomaly (zero overlap on balanced 18-vs-18 support), not
-folded into a general statement about "rare-label noise" -- it is
-the single most striking per-label result in Tier 3 and deserves its
-own sentence, the same way the BLEU short-text finding and the
-BERTScore anisotropy finding each got their own sections rather than
-being absorbed into summary prose.
+For all 18 generated-positive cases, the real backend session behind
+each generation was located (matched by exact `ai_draft_content` text
+against `backend/dev.db`'s `reports` table -- all 18 matched exactly,
+not inferred), and the real `retrieved_evidence` rows for that session
+were pulled and cross-referenced against `master_metadata.csv`'s real
+`findings_clean`/`impression_clean` text for the retrieved studies.
+
+**Result: 18 of 18 generated-positive cases had at least one
+fracture-mentioning study in their real top-5 retrieved evidence.**
+This is not hallucination from nothing -- but it is a real, more
+serious failure than a labeler quirk: **the fracture finding belongs to
+a retrieved neighbor case, not to the actual query patient**, whose own
+true reference report has no fracture (independently confirmed --
+every one of the 18 references reads as clear of any fracture
+language). The fracture-mentioning neighbor is not reliably the
+top-ranked, most-similar retrieved case either -- it appears at rank 1
+in several cases and at rank 4-5 in others -- meaning the system will
+incorporate a specific incidental finding from *any* retrieved
+neighbor into the generated report for a different patient, not only
+from its single closest match.
+
+This points to a real gap in the generation pipeline's grounding: image
+retrieval similarity (BiomedCLIP) does not guarantee that an incidental
+finding like an old healed rib fracture is specific to the query
+patient, and nothing in the generation step currently verifies that a
+finding present in retrieved evidence text actually belongs to the case
+being reported on before stating it as fact. This is the headline
+result of the Fracture investigation -- a genuine attribution failure
+in the retrieval-augmented generation pipeline, not a metric artifact.
+
+### 1b. Generation omission on the reference-positive side (related, secondary)
+
+For the 18 reference-positive cases, the actual generated findings text
+was read directly (not inferred from labels): **in all 18, the
+generated text contains zero fracture-related language whatsoever** --
+not alternate phrasing CheXbert failed to recognize, but complete
+absence. This is consistent with 1a's mechanism: when retrieval happens
+not to surface a fracture-positive neighbor for a given case, the
+system has no basis to generate the finding, producing a real recall
+gap rather than a labeler-detection miss.
+
+### 1c. A minor, separately-confirmed CheXbert negation bug
+
+Rereading the 18 reference texts surfaced something distinct worth
+recording on its own, smaller scale: **5 of the 18 "reference-positive"
+cases are not real positive fracture mentions -- they are negated ones
+CheXbert mislabeled as positive.** Verbatim, study_uids 1551/3126/3796
+all contain the identical phrase *"No acute, displaced rib fractures"*,
+and 2998/3073 contain *"No displaced rib fracture(s)... identified."*
+All five are explicit negations; CheXbert scored every one
+Fracture=Positive. This is a real, reproducible labeler-side error on
+this specific negation phrasing -- but it accounts for only 5 of the
+18 reference-positive cases, not the majority of the anomaly, and does
+not touch the generated-positive side (1a) at all.
+
+**Net picture, in order of what matters for the thesis**: the
+18-vs-18-zero-overlap result is a composite of (1a) a genuine retrieval-
+attribution grounding failure affecting all 18 generated-positive
+cases -- the headline, and a real system-quality finding, not a metric-
+validity one; (1b) a related generation recall gap affecting all 18
+true reference-positive cases; and (1c) a minor, independently
+confirmed CheXbert negation-detection bug affecting 5 of the 18
+reference-positive cases. Unlike the BLEU and BERTScore findings
+elsewhere in this phase, 1a and 1b are findings about the *system's*
+behavior, not about which metric can validate it -- they belong in the
+thesis's discussion of the RAG pipeline's limitations, not only in its
+evaluation-methodology section.
 
 ---
 
@@ -9654,19 +9694,29 @@ is a stated, verified deviation from the source paper -- confirmed
 instead against a real precedent for this different (generated-vs-
 reference) task by reading Miura et al. 2021's actual published
 evaluation code directly, not assumed from a description of it. Tier
-3's per-label results also surfaced a striking, specifically-verified
-anomaly: Fracture in the findings field has balanced, non-trivial
-support on both sides (18 reference-positive, 18 generated-positive
-cases) yet **zero case-level overlap** between which 18 cases each
-side flags -- checked directly against the real study_uids, not
-inferred from the matching totals, and reported as its own named
-finding rather than folded into a general "rare-label noise" story.
+3's per-label results also surfaced Fracture in the findings field:
+balanced, non-trivial support on both sides (18 reference-positive, 18
+generated-positive cases) yet **zero case-level overlap** between
+which 18 cases each side flags -- checked directly against the real
+study_uids, not inferred from the matching totals. A follow-up
+investigation (retrieved evidence traced through the real backend
+sessions, not inferred) found this is **not** a metric artifact:
+18 of 18 generated-positive cases had a fracture-mentioning study in
+their real retrieved evidence, but that finding belonged to a retrieved
+neighbor case, not the actual query patient -- a genuine
+retrieval-attribution grounding failure in the RAG pipeline itself.
 
-Neither Tier 2's negative result nor Tier 3's per-label anomaly is
-presented as a system-quality problem; all three tiers' findings are
-scoped explicitly as being about metric validity and behavior on this
-dataset, not about the generated reports' underlying quality. Every
-real number in this phase -- purity gate, eligible-N, bootstrap CIs,
-failure counts and root cause, random-baseline comparisons, per-label
-overlap counts -- was computed from live data or real execution, never
-assumed or estimated in advance of running it.
+Tier 2's negative result is accurately a metric-validity finding --
+BERTScore, as configured, cannot demonstrate this dataset's generated
+reports differ from random pairing, which is a statement about the
+metric, not the reports. Tier 3's Fracture finding is different in
+kind and should not be read the same way: it **is** a genuine
+system-quality problem -- the generation pipeline stating a specific
+clinical finding (an old healed rib fracture) drawn from a
+retrieved-but-different patient's evidence, not verified against the
+actual case being reported on -- surfaced through Tier 3's evaluation
+rather than being a limitation of Tier 3 itself. Every real number in
+this phase -- purity gate, eligible-N, bootstrap CIs, failure counts
+and root cause, random-baseline comparisons, per-label overlap counts,
+retrieved-evidence attribution -- was computed from live data or real
+execution, never assumed or estimated in advance of running it.
