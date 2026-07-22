@@ -133,7 +133,7 @@ class PromptBuilder:
             sections.append(self._questionnaire_section(context.questionnaire_answers))
         if context.clinical_notes.strip():
             sections.append(self._clinical_notes_section(context.clinical_notes))
-        sections.append("Now generate the JSON report.")
+        sections.append("Now generate the report using the field markers above.")
         return "\n\n".join(sections)
 
     def build_retry_prompt(
@@ -153,9 +153,9 @@ class PromptBuilder:
             "---\n"
             "RETRY INSTRUCTIONS:\n"
             "Your previous response failed validation and could not be accepted. "
-            "You must correct every issue listed below and output a new, complete, "
-            "valid JSON object following all the instructions above exactly. Do not "
-            "repeat the same mistakes.\n\n"
+            "You must correct every issue listed below and output a new, complete "
+            "response following all the instructions above exactly, using the "
+            "field markers, not JSON. Do not repeat the same mistakes.\n\n"
             "PREVIOUS RESPONSE (rejected):\n"
             f"{previous_response}\n\n"
             "VALIDATION ERRORS (must all be fixed):\n"
@@ -346,19 +346,25 @@ class PromptBuilder:
 
     @staticmethod
     def _schema_instruction() -> str:
-        field_lines = "\n".join(f'  "{name}": "<string>",' for name in REPORT_CONTENT_FIELDS)
-        # trim the trailing comma on the final field so the example reads as valid JSON
-        field_lines = field_lines.rsplit(",", 1)[0] if field_lines.endswith(",") else field_lines
+        # Delimiter-marker format, not JSON -- changed after Phase 20's real
+        # generation-quality evaluation traced every one of 17 real content-
+        # validation failures to the same cause: the LLM inconsistently
+        # quoting label names inside the disclaimer field's JSON string
+        # value, breaking the backend's json.loads() at that boundary
+        # (development_log.md, "Finding: All 17 Generation Failures Share
+        # One Root Cause"). A marker-delimited format has no nested-string
+        # boundary for a stray quote character to ever break.
+        marker_lines = "\n".join(f"###{name.upper()}###\n<{name} text>" for name in REPORT_CONTENT_FIELDS)
         return (
             "OUTPUT FORMAT INSTRUCTIONS:\n"
-            "You must output ONLY a single JSON object and nothing else. Do not "
-            "wrap the JSON in markdown code fences (no ``` characters), and do not "
-            "include any explanation, preamble, or trailing text outside the JSON "
-            "object. The JSON object must contain exactly these 7 string fields, in "
-            "this shape:\n"
-            "{\n"
-            f"{field_lines}\n"
-            "}"
+            "You must output ONLY plain text using the field markers below, and "
+            "nothing else. Do NOT use JSON, a JSON wrapper, or markdown code "
+            "fences (no ``` characters). Do not include any explanation, "
+            "preamble, or trailing text outside the marked fields. Output "
+            "exactly these 7 fields, in this exact order, each marker on its "
+            "own line immediately followed by that field's plain text (no "
+            "surrounding quotation marks needed):\n"
+            f"{marker_lines}"
         )
 
     @staticmethod

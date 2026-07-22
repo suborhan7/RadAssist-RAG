@@ -74,7 +74,7 @@ def test_schema_instruction_lists_all_seven_report_content_fields():
     real_field_names = [f.name for f in dataclasses.fields(ReportContent)]
     assert len(real_field_names) == 7
     for field_name in real_field_names:
-        assert f'"{field_name}"' in prompt
+        assert f"###{field_name.upper()}###" in prompt
 
 
 def test_language_instruction_reflects_en_and_bn():
@@ -93,9 +93,14 @@ def test_grounding_instruction_present():
     assert "Do not invent, infer, or hallucinate" in prompt
 
 
-def test_output_only_json_no_markdown_instruction_present():
+def test_output_only_markers_no_json_no_markdown_instruction_present():
+    """Delimiter-marker format, not JSON -- changed after Phase 20's real
+    generation-quality evaluation traced all 17 real content-validation
+    failures to the same JSON-escaping bug at the disclaimer field
+    (development_log.md, "Finding: All 17 Generation Failures Share One
+    Root Cause")."""
     prompt = PromptBuilder().build_generation_prompt(_populated_context(), "en")
-    assert "ONLY a single JSON object" in prompt
+    assert "Do NOT use JSON" in prompt
     assert "markdown code fences" in prompt
 
 
@@ -124,7 +129,7 @@ def test_empty_evidence_summary_produces_no_evidence_message_without_raising():
     assert NO_EVIDENCE_MESSAGE in prompt
     # still fully-formed: schema/grounding sections still present, no crash
     assert "GROUNDING INSTRUCTIONS" in prompt
-    assert '"examination"' in prompt
+    assert "###EXAMINATION###" in prompt
 
 
 def test_none_evidence_summary_produces_no_evidence_message_without_raising():
@@ -135,8 +140,8 @@ def test_none_evidence_summary_produces_no_evidence_message_without_raising():
 
 def test_build_retry_prompt_includes_previous_response_and_validation_errors_verbatim():
     ctx = _populated_context()
-    previous_response = '{"examination": "chest x-ray"}'
-    validation_errors = ["missing required field: impression", "findings must not be empty"]
+    previous_response = "###EXAMINATION###\nchest x-ray"
+    validation_errors = ["missing required field marker: ###IMPRESSION###", "findings must not be empty"]
 
     prompt = PromptBuilder().build_retry_prompt(ctx, "en", previous_response, validation_errors)
 
@@ -145,7 +150,7 @@ def test_build_retry_prompt_includes_previous_response_and_validation_errors_ver
         assert error in prompt
     # re-includes full schema/grounding context, not just an isolated error message
     assert "GROUNDING INSTRUCTIONS" in prompt
-    assert '"examination"' in prompt
+    assert "###EXAMINATION###" in prompt
     assert "please try again" not in prompt.lower()
 
 
@@ -188,7 +193,7 @@ def test_empty_questionnaire_and_notes_produce_byte_identical_prompt():
         pb._grounding_instruction(),
         pb._confidence_instruction(ctx.voted_labels),
         pb._evidence_section(ctx.evidence_summary),
-        "Now generate the JSON report.",
+        "Now generate the report using the field markers above.",
     ])
 
     assert actual == expected
