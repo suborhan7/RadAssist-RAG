@@ -1,0 +1,84 @@
+{
+  "findings": {
+    "n": 460,
+    "micro_f1": 0.3014623172103487,
+    "micro_f1_ci": [
+      0.2584361882587726,
+      0.3437590213625865
+    ],
+    "macro_f1": 0.1510955257737658,
+    "macro_f1_ci": [
+      0.1132087060389451,
+      0.18955187704551646
+    ],
+    "per_label_f1": {
+      "Enlarged Cardiomediastinum": 0.1379310344827586,
+      "Cardiomegaly": 0.2727272727272727,
+      "Lung Opacity": 0.35616438356164387,
+      "Lung Lesion": 0.04545454545454545,
+      "Edema": 0.18181818181818182,
+      "Consolidation": 0.0,
+      "Pneumonia": 0.0,
+      "Atelectasis": 0.225,
+      "Pneumothorax": 0.0,
+      "Pleural Effusion": 0.2580645161290323,
+      "Pleural Other": 0.11764705882352942,
+      "Fracture": 0.0,
+      "Support Devices": 0.07142857142857142,
+      "No Finding": 0.44910179640718556
+    },
+    "random_baseline_micro_f1": 0.1777277840269966,
+    "random_baseline_macro_f1": 0.0743866091768467,
+    "random_baseline_macro_f1_ci": [
+      0.05058984480590043,
+      0.10092906925018394
+    ],
+    "real_minus_baseline_macro_f1_diff": 0.07670891659691911,
+    "real_minus_baseline_macro_f1_diff_ci": [
+      0.03400931394177593,
+      0.12173783480458103
+    ],
+    "real_minus_baseline_excludes_zero": true
+  },
+  "impression": {
+    "n": 460,
+    "micro_f1": 0.5390070921985816,
+    "micro_f1_ci": [
+      0.4937756230210818,
+      0.5845252857893699
+    ],
+    "macro_f1": 0.1808388460065757,
+    "macro_f1_ci": [
+      0.1346629469581083,
+      0.22106492954251428
+    ],
+    "per_label_f1": {
+      "Enlarged Cardiomediastinum": 0.0,
+      "Cardiomegaly": 0.3018867924528302,
+      "Lung Opacity": 0.202020202020202,
+      "Lung Lesion": 0.07142857142857142,
+      "Edema": 0.28571428571428575,
+      "Consolidation": 0.0,
+      "Pneumonia": 0.1818181818181818,
+      "Atelectasis": 0.16666666666666669,
+      "Pneumothorax": 0.0,
+      "Pleural Effusion": 0.38461538461538464,
+      "Pleural Other": 0.1818181818181818,
+      "Fracture": 0.0,
+      "Support Devices": 0.0,
+      "No Finding": 0.7557755775577557
+    },
+    "random_baseline_micro_f1": 0.4295845997973658,
+    "random_baseline_macro_f1": 0.07142813486052259,
+    "random_baseline_macro_f1_ci": [
+      0.0539870877541438,
+      0.09153770096721481
+    ],
+    "real_minus_baseline_macro_f1_diff": 0.10941071114605312,
+    "real_minus_baseline_macro_f1_diff_ci": [
+      0.06156559144658223,
+      0.1537645179692222
+    ],
+    "real_minus_baseline_excludes_zero": true
+  }
+}

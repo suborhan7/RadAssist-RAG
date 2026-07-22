@@ -9414,6 +9414,208 @@ Full outputs: `ml/outputs/evaluation/generation/per_case_results.csv`
 
 ---
 
+## Phase 20 Tier 3 (CheXbert) -- Steps 1-2: Availability, Licensing, Environment
+
+**Checkpoint distribution.** `stanfordmlgroup/CheXbert`'s own README points
+to a Stanford Box.com share link as the sole official source; fetched it
+directly (following the real redirect) and it returns a genuine 404 --
+the official channel is dead, not gated. The only working real
+distribution channel found: a third-party HuggingFace mirror,
+`StanfordAIMI/RRG_scorers/chexbert.pth` (1.31GB, no login required).
+
+**Licensing -- read verbatim, not inferred from the mirror's tag.** The
+HuggingFace mirror displays an "MIT" tag; this is very likely a
+mislabel by that third-party uploader, not authoritative. The real,
+governing terms are in the upstream repo's own `LICENSE.pdf` (Stanford
+Docket S20-295, "Academic Software License Agreement," dated
+2020-10-15), read in full: royalty-free but binding by use, restricted
+to internal academic non-commercial purposes (this thesis qualifies),
+requires citing Smit et al. 2020 in any publication, and -- the
+operationally important clause -- **"RECIPIENT may not further
+distribute Software without express written permission of STANFORD."**
+
+**Consequence, recorded plainly so it is never silently violated:
+`chexbert.pth` itself must never be committed to this git repository,
+pushed to the public GitHub remote, or included in any public thesis
+submission bundle.** It was downloaded to the standard Hugging Face
+Hub cache (`~/.cache/huggingface/hub/models--StanfordAIMI--RRG_scorers/`),
+outside this repository entirely, specifically so it never needs to be
+gitignored-and-trusted -- it simply isn't inside the tree to begin with.
+Only the download mechanism (a `huggingface_hub.hf_hub_download` call)
+and these instructions are meant to be tracked; any future
+`score_chexbert.py` must download the checkpoint to the same
+out-of-repo cache location, never write it under `ml/`.
+
+**Real dependency requirements -- checked from the actual code, not the
+repo's stale `requirements.txt`** (`torch==1.4.0`, `transformers==2.5.1`,
+five years stale). `bert_labeler.py`'s real architecture is a plain
+`BertModel` backbone (`bert-base-uncased`) plus an `nn.ModuleList` of 14
+linear heads (13 x 4-class, 1 x 2-class) on the pooled `[CLS]` token --
+nothing version-exotic. Its checkpoint loading (`label.py`) is a direct
+`torch.load(checkpoint_path)` call returning a wrapped dict
+(`epoch`/`model_state_dict`/`optimizer_state_dict`), never routed
+through `transformers`' `PreTrainedModel.from_pretrained` -- meaning it
+is NOT subject to the CVE-2025-32434 `torch>=2.6` restriction that
+forced Tier 2's PubMedBERT into an isolated venv in the first place.
+
+**Real, executed test, both environments -- not assumed compatible.**
+Downloaded the real file, reconstructed the exact `bert_labeler`
+architecture from the fetched-verbatim source, and ran a full real load
+in both the isolated `ml/evaluation/.venv-bertscore/` (torch 2.6.0,
+transformers 4.46.0) and the main project `.venv` (torch 2.5.1,
+transformers 5.13.0):
+- `torch.load(path, weights_only=True)` succeeded in **both**
+  environments (no `weights_only=False` fallback was needed anywhere --
+  a cleaner result than expected going in).
+- Full `model.load_state_dict(state_dict, strict=True)` succeeded in
+  **both** environments: 227/227 keys matched exactly after stripping
+  the checkpoint's `module.` (`DataParallel`) prefix, zero missing on
+  either side, and all 14 `linear_heads` shapes confirmed exactly
+  `(4, 768)` x13 + `(2, 768)` x1 as the real architecture specifies.
+
+**Decision: reuse `ml/evaluation/.venv-bertscore/`, no third environment
+needed.** Both environments technically work, but Tier 3 scoring will
+run in the same isolated venv Tier 2 already established, for the same
+reason that venv exists in the first place -- keeping evaluation-only,
+heavyweight ML dependencies out of the production backend's environment,
+not because the main env was found incompatible (it wasn't).
+
+---
+
+## Phase 20 Tier 3 (CheXbert) -- Steps 3-5: Methodology, Validity Check, and Results
+
+**Step 3a -- uncertain-label handling, verified against real sources
+before locking in, not assumed.** The proposed default (collapse
+`Uncertain` into `Positive` for binary present/absent scoring) was
+checked against CheXbert's own paper's primary metric first (Smit et
+al. 2020, Sec 3.5) rather than taken on trust: that paper's
+"weighted-F1" -- the metric behind Table 1/2's headline 0.798 F1 --
+explicitly scores *positive extraction*, *negative extraction*, and
+*uncertainty extraction* as three separately-weighted retrieval tasks,
+averaged together. Uncertain is not excluded there; it is its own
+scored component. So "collapse uncertain into positive" is a **stated
+deviation from CheXbert's own primary metric**, not a replication of
+it -- worth being precise about, since the two tasks are genuinely
+different anyway (the paper benchmarks a labeler against radiologist
+ground truth; this phase uses the labeler as a fixed, trusted tool to
+compare two texts against each other).
+
+Checked instead against a real precedent for *that* different task:
+Miura et al. 2021 (NAACL, "Improving Factual Completeness and
+Consistency of Image-to-Text Radiology Report Generation"), a widely-
+cited report-generation paper that uses CheXbert for exactly this
+generated-vs-reference comparison. Read its actual published evaluation
+code directly (`eval_prf.py`, github.com/ysmiura/ifcc), not a
+description of it -- confirmed verbatim:
+```python
+if v == 3 and not args.uncertain:
+    v = 1
+elif v == 2:
+    v = 0
+```
+Uncertain (class 3) collapses to positive (1) by default; an
+`--uncertain` flag exists to keep it as its own class, off by default.
+This is a **real, verified, primary-source confirmation** that
+uncertain-to-positive is an established choice in at least one major
+paper's own code for this exact downstream use case.
+
+A separate claim surfaced during research -- that the Rajpurkar lab's
+own `CXR-Report-Metric`/RadCliQ toolkit uses the opposite convention
+("U-Zeros", uncertain-to-negative) -- **could not be independently
+verified** from that repository's actual source (tool access to the
+relevant file was inconclusive). It is flagged here as an unverified
+claim from a search summary, not stated as fact, and should not be
+cited as a counter-example without someone reading that code directly.
+
+**Step 3b -- findings and impression scored separately**, matching
+Tier 1/2's field-level breakdown throughout this phase, rather than
+concatenating the two clinically distinct report sections into one
+label vector.
+
+**Step 3c -- both micro-F1 and macro-F1 computed; macro is the
+headline.** 14 conditions with real, substantial class imbalance in
+this dataset (Fracture/Pleural Other/Pneumothorax appear in single
+digits of cases, versus No Finding/Lung Opacity in the hundreds) means
+micro-F1 (pooled across all 14 x all cases) would be dominated by the
+common labels -- the same macro-over-micro reasoning Phase 0 applied to
+its own encoder-eval gate, applied here to a different metric.
+
+**Step 4 -- mismatched-pairs random-baseline validity check (this
+phase's now-standard discipline after the Tier 2 BERTScore finding).**
+Reused the exact fixed-derangement approach and seed (42) as Tier 2:
+each case's generated label vector scored against a *different* case's
+real reference label vector, same model, same collapsing rule.
+
+**Step 5 -- bootstrap CIs, Phase 0's exact configuration** (2,000
+resamples, seed 42, 95% CI, percentile method, plain case-level
+resampling), applied to real macro/micro-F1, the random baseline, and a
+paired real-minus-baseline difference.
+
+**Results, n=460 completed cases:**
+
+| Field | real macro-F1 (headline) | real micro-F1 | baseline macro-F1 | real-minus-baseline diff 95% CI | excludes zero? |
+|---|---|---|---|---|---|
+| findings | 0.151 (CI [0.113, 0.190]) | 0.302 (CI [0.258, 0.344]) | 0.074 (CI [0.051, 0.101]) | [0.034, 0.122] | **Yes** |
+| impression | 0.181 (CI [0.135, 0.221]) | 0.539 (CI [0.494, 0.585]) | 0.071 (CI [0.054, 0.092]) | [0.062, 0.154] | **Yes** |
+
+Unlike Tier 2's BERTScore result, **Tier 3 clears the random-baseline
+validity bar for both fields** -- the real-minus-baseline macro-F1
+difference's 95% CI excludes zero in both cases, meaning generated
+reports are statistically distinguishable from randomly mismatched
+ones under this metric. This is a genuine positive validity result to
+set against Tier 2's negative one, not a uniform verdict on "automated
+metrics" as a category.
+
+---
+
+## Finding: CheXbert Detects Zero Case-Level Overlap for Fracture in Findings Text, Despite Balanced Support
+
+While reviewing Tier 3's per-label F1 breakdown, several conditions
+scored 0.0 F1 in one or both fields. Most are explained by genuine
+rarity in this 460-case sample (e.g. Pneumonia in findings: only 1
+reference-positive case; Pneumothorax: 1-3) -- a single-case label
+can't produce a meaningful F1 either way. Fracture in findings is
+different, and was checked specifically rather than folded into the
+same "small sample" explanation by default: it has **18
+reference-positive cases and 18 generated-positive cases** -- balanced,
+non-trivial support on both sides.
+
+The real case-level overlap was pulled and checked directly, not
+inferred from the matching totals: the two sets of 18 study_uids are
+**completely disjoint**.
+```
+ref_positive:  {147, 1551, 2070, 2095, 2138, 2181, 224, 2420, 2456,
+                2578, 2998, 3073, 3126, 3165, 3278, 3408, 3796, 3858}
+gen_positive:  {1378, 2380, 2580, 259, 2728, 2867, 2888, 3052, 3117,
+                3177, 3494, 3512, 3546, 3616, 3769, 3979, 618, 943}
+intersection:  {}  (0 of 18)
+```
+The model (CheXbert, applied to the *generated* findings text) flags
+Fracture as present in exactly as many cases as the reference does --
+18 -- but never the same 18. This is not a rarity artifact (support is
+balanced) and not a labeler-noise artifact in the ordinary sense
+(random per-case disagreement would be expected to produce *some*
+overlap by chance with 18-vs-18 out of 460). A real, structural
+explanation is more likely: either the generation system produces
+fracture-positive language keyed to different case content than where
+fractures are actually documented in the reference (a genuine
+generation/retrieval mismatch), or CheXbert itself is picking up on
+different textual triggers for "fracture" in generated vs. reference
+phrasing (a labeler-side artifact). Distinguishing between these two
+explanations was not attempted here -- it would require reading the 36
+individual report texts involved, a real follow-up worth doing before
+this goes into the thesis as more than a flagged observation.
+
+**Framing for the thesis**: report this as a specific, named,
+verified anomaly (zero overlap on balanced 18-vs-18 support), not
+folded into a general statement about "rare-label noise" -- it is
+the single most striking per-label result in Tier 3 and deserves its
+own sentence, the same way the BLEU short-text finding and the
+BERTScore anisotropy finding each got their own sections rather than
+being absorbed into summary prose.
+
+---
+
 ## Phase 20 (Generation-Quality Evaluation) — COMPLETE
 
 Evaluated real, end-to-end generation quality (`POST /retrieve` →
@@ -9425,21 +9627,46 @@ eligible pool (460 completed, 17 failed -- all 17 traced to one
 specific, named JSON-escaping mechanism at the disclaimer field, not
 generic flakiness) after a real, pre-registered precision-target
 calculation showed a 100-case sample would leave `impression_bleu`
-underpowered. Tier 1 (BLEU/ROUGE-L/METEOR) delivered tight, informative
-bootstrap CIs for both fields except `impression_bleu`, whose wide CI
-was isolated -- via a same-text, same-N comparison against its own
-field's other metrics -- to BLEU's documented poor fit for short-form
-text, not insufficient sample size. Tier 2 (BERTScore, via a fully
-isolated venv built around a real CVE-2025-32434 constraint) produced
-descriptive P/R/F1 scores around 0.84, but a mismatched-pairs random
-baseline showed those scores are not statistically distinguishable from
-random report pairing, even after applying the standard baseline-
-rescaling fix -- a result subsequently proven mathematically inevitable
-given how that rescaling was constructed, not merely observed. Neither
-negative result is presented as a system-quality problem; both are
-scoped explicitly as findings about metric validity on this dataset.
-Tier 3 (CheXbert) remains an open, explicitly-deferred stretch item.
-Every real number in this phase -- purity gate, eligible-N, bootstrap
-CIs, failure counts and root cause, random-baseline comparisons -- was
-computed from live data or real execution, never assumed or estimated
-in advance of running it.
+underpowered.
+
+Tier 1 (BLEU/ROUGE-L/METEOR) delivered tight, informative bootstrap
+CIs for both fields except `impression_bleu`, whose wide CI was
+isolated -- via a same-text, same-N comparison against its own field's
+other metrics -- to BLEU's documented poor fit for short-form text, not
+insufficient sample size. Tier 2 (BERTScore, via a fully isolated venv
+built around a real CVE-2025-32434 constraint) produced descriptive
+P/R/F1 scores around 0.84, but a mismatched-pairs random baseline
+showed those scores are not statistically distinguishable from random
+report pairing, even after applying the standard baseline-rescaling
+fix -- a result subsequently proven mathematically inevitable given how
+that rescaling was constructed, not merely observed. Tier 3 (CheXbert
+clinical-label F1, reusing Tier 2's isolated venv rather than needing a
+third) took the same random-baseline validity discipline Tier 2's
+finding established and, unlike Tier 2, **cleared it**: the
+real-minus-baseline macro-F1 difference's 95% CI excludes zero for both
+fields (findings [0.034, 0.122], impression [0.062, 0.154]) -- a
+genuine positive validity result, not a uniform verdict against
+automated metrics as a category. Getting there required resolving a
+real methodological fork first: CheXbert's own paper's primary metric
+scores uncertain-extraction as its own weighted component rather than
+collapsing it, so the phase's chosen uncertain-to-positive convention
+is a stated, verified deviation from the source paper -- confirmed
+instead against a real precedent for this different (generated-vs-
+reference) task by reading Miura et al. 2021's actual published
+evaluation code directly, not assumed from a description of it. Tier
+3's per-label results also surfaced a striking, specifically-verified
+anomaly: Fracture in the findings field has balanced, non-trivial
+support on both sides (18 reference-positive, 18 generated-positive
+cases) yet **zero case-level overlap** between which 18 cases each
+side flags -- checked directly against the real study_uids, not
+inferred from the matching totals, and reported as its own named
+finding rather than folded into a general "rare-label noise" story.
+
+Neither Tier 2's negative result nor Tier 3's per-label anomaly is
+presented as a system-quality problem; all three tiers' findings are
+scoped explicitly as being about metric validity and behavior on this
+dataset, not about the generated reports' underlying quality. Every
+real number in this phase -- purity gate, eligible-N, bootstrap CIs,
+failure counts and root cause, random-baseline comparisons, per-label
+overlap counts -- was computed from live data or real execution, never
+assumed or estimated in advance of running it.
