@@ -9720,3 +9720,48 @@ this phase -- purity gate, eligible-N, bootstrap CIs, failure counts
 and root cause, random-baseline comparisons, per-label overlap counts,
 retrieved-evidence attribution -- was computed from live data or real
 execution, never assumed or estimated in advance of running it.
+
+---
+
+## Note: This Session's Disk-Space Incidents Were One Recurring Mechanism, Not Unrelated Flakiness
+
+Several separate-seeming moments during Option A's implementation (a
+commit warning about a failed "geometric repack," a mid-edit write
+failure, a repeatedly near-full C: drive) traced back to a single real
+mechanism, not independent bad luck: git's automatic background
+maintenance (on by default since git 2.30+, confirmed still default in
+the 2.54.0 installed here) periodically attempts a "geometric repack"
+of this repo's pack files after commands like `git commit`. This
+repo's real pack data is 21.86 GiB (`git count-objects -v -H`,
+confirmed, not estimated) -- a repack needs scratch space on that
+order to build a new consolidated pack before swapping it in. Disk
+space had been genuinely tight all session (real ML artifacts:
+Phase 20's isolated BERTScore venv, the downloaded CheXbert checkpoint,
+evaluation outputs), and every time free space dipped below what a
+repack needed, the attempt failed partway through -- and critically,
+**git does not clean up its own failed repack output**. Three separate
+failures (dated Jul 11, Jul 18, Jul 22 via the orphaned files'
+timestamps, confirmed directly, not inferred from this session's own
+two visible incidents) had silently left three oversized orphaned
+`tmp_pack_*` files behind, together accounting for ~55.4 GiB that
+`git count-objects` itself labeled `garbage` once found -- a
+self-reinforcing cycle, since each failure's leftover garbage made the
+next automatic repack attempt even more likely to fail too.
+
+Verified this was genuinely garbage, not a corruption risk, before
+deleting anything: `git fsck --full` before and after removal showed
+the identical 43,563 dangling blobs/trees and zero `missing`/`broken`/
+`fatal` entries in both runs -- the repo's real history was never at
+risk, only orphaned scratch files were ever in question.
+
+**`git config maintenance.auto false` was set deliberately as a result**
+(confirmed via `git config maintenance.auto` -> `false`): with a
+21.86 GiB real pack and a recurring pattern of genuine disk pressure
+from real ML artifacts in this repo's workflow, predictable manual
+control (`git gc` run deliberately, when there's known headroom) was
+judged to beat an automatic process that had already failed three
+times and does not clean up after itself on failure. This trades away
+git's own automatic repo hygiene on purpose -- a future reader of this
+repo's config should not mistake `maintenance.auto=false` for an
+accidental or default setting; it is a reasoned response to a real,
+repeated, diagnosed failure mode, not an arbitrary preference.
