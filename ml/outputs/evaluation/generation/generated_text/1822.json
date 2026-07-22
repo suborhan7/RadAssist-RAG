@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Standard PA view",
+    "findings": "Normal cardiomediastinal silhouette, no focal consolidation, no pleural effusion or pneumothorax, mild degenerative changes of the spine.",
+    "impression": "No radiographic evidence of acute cardiopulmonary disease.",
+    "recommendation": "None",
+    "disclaimer": "Based on available evidence and agreement score of 0.80."
+  },
+  "ground_truth": {
+    "findings": "The heart is normal in size and contour. There is no mediastinal widening. No focal air space disease. Prominent hilar [REDACTED]. No large pleural effusion or pneumothorax. The [REDACTED] are intact.",
+    "impression": "No acute cardiopulmonary abnormalities."
+  }
+}

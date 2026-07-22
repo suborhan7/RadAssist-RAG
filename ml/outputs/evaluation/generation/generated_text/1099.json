@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The heart size and cardiomediastinal silhouette are normal. There is no focal air space opacity, pleural effusion, or pneumothorax. The osseous structures are intact with mild degenerative changes in thoracic spine.",
+    "impression": "No acute cardiopulmonary finding",
+    "recommendation": "None",
+    "disclaimer": "The presence of a bullet in the posterior soft tissues of the left chest wall is stable compared to prior examination, but its significance is unknown."
+  },
+  "ground_truth": {
+    "findings": "There are changes of [REDACTED] sternotomy and CABG. Heart size is within normal limits. No focal airspace consolidation, pleural effusions or pneumothorax. No acute bony abnormalities.",
+    "impression": "No acute cardiopulmonary findings."
+  }
+}

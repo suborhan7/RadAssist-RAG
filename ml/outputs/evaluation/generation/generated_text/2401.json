@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "PA and lateral views the chest were obtained. The cardiomediastinal silhouette is normal in size and configuration.",
+    "findings": "The lungs are clear bilaterally, with no evidence of focal consolidation, pneumothorax, or pleural effusion. Cardio mediastinal silhouette is unremarkable. Visualized osseous structures of the thorax are without acute abnormality.",
+    "impression": "No acute cardiopulmonary disease",
+    "recommendation": "None",
+    "disclaimer": "The report is based on the provided evidence and does not include any findings or impressions that are not directly supported by the data."
+  },
+  "ground_truth": {
+    "findings": "Cardiomediastinal silhouette is within normal limits of size and appearance. The pulmonary vascularity is unremarkable. Lungs are expanded and clear airspace disease. Negative for pneumothorax, pleural effusion, or pneumoperitoneum. Limited bone evaluation reveals no acute abnormality.",
+    "impression": "1. No acute cardiopulmonary abnormality."
+  }
+}

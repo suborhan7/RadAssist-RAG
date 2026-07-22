@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Previous granulomatous infection",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The heart size and pulmonary vascularity appear within normal limits. The lungs are free of focal airspace disease. No pleural effusion or pneumothorax is seen. Calcified granuloma is present in the right lung base. Bibasilar bandlike opacities are present.",
+    "impression": "Evidence of previous granulomatous infection",
+    "recommendation": "Follow-up imaging as clinically indicated",
+    "disclaimer": "The findings and impression are based on the available evidence and may not be comprehensive or definitive"
+  },
+  "ground_truth": {
+    "findings": "The heart size and pulmonary vascularity appear within normal limits. Vascular calcification is identified. Calcified granuloma is present in the right lower lobe. No [REDACTED] nodules are seen. No pneumothorax or pleural effusion is seen. No focal airspace disease is identified.",
+    "impression": "1. No evidence of active disease."
+  }
+}

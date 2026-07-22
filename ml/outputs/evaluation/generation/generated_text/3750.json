@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Lung Opacity, Cardiomegaly, Interstitial opacities, Patchy bibasilar airspace opacities, Nodular opacity in the left lung and right lung, Bilateral pleural effusions",
+    "impression": "Cardiomegaly with mild interstitial edema and posterior pleural effusion. The nodular opacities could be followed up radiographically after treatment of edema, or could be further characterized with CT.",
+    "recommendation": "Follow-up radiography or CT to characterize the nodular opacities",
+    "disclaimer": "The findings are uncertain due to low agreement score (0.80)"
+  },
+  "ground_truth": {
+    "findings": "There is stable cardiomegaly. Right pleural effusion is slightly increased in size. Pulmonary vasculature is persistently enlarged. Prominent interstitium is stable. No [REDACTED] focal infiltrate. No pneumothorax. Visualized osseous structures intact.",
+    "impression": "Stable cardiomegaly and [REDACTED] of interstitial edema with small but increasing right pleural effusion."
+  }
+}

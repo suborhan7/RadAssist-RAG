@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The lungs are clear without evidence of focal airspace disease. There are calcified granulomas in the left lower lobe. No pneumothorax or large pleural effusion is present. The cardiac and mediastinal contours are within normal limits.",
+    "impression": "No radiographic evidence of acute cardiopulmonary disease.",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty exists due to low agreement score (0.60)"
+  },
+  "ground_truth": {
+    "findings": "Normal cardiac contours. Clear lung [REDACTED] bilaterally. No pneumothorax or pleural effusion.",
+    "impression": "No acute cardiopulmonary abnormalities."
+  }
+}

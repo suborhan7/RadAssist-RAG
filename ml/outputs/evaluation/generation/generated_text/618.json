@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The lungs are clear bilaterally with no evidence of focal consolidation, pneumothorax, or pleural effusion. The heart and mediastinum are normal. Visualized osseous structures demonstrate healed, remote bilateral rib fractures without acute abnormality.",
+    "impression": "No acute pulmonary disease",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty: Low"
+  },
+  "ground_truth": {
+    "findings": "The heart, pulmonary [REDACTED] and mediastinum are within normal limits. There is no pleural effusion or pneumothorax. There is no focal air space opacity to suggest a pneumonia. There is no pulmonary nodule identified. There is a left humerus prosthesis partly demonstrated.",
+    "impression": "No acute cardiopulmonary disease. No evidence for metastatic disease by radiographic evaluation."
+  }
+}

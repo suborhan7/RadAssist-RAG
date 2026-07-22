@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Frontal and lateral views",
+    "findings": "Stable mild cardiomegaly, clear lungs without focal consolidation or pleural effusion/pneumothorax.",
+    "impression": "Normal chest with stable mild cardiomegaly.",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty exists due to low agreement score (0.60)."
+  },
+  "ground_truth": {
+    "findings": "Cardiomediastinal silhouette stable and within normal limits for size with unchanged atherosclerosis and tortuosity thoracic aorta. There is no focal consolidation, pneumothorax, or effusion. No acute bony abnormality. Stable left proximal humeral enchondroma versus remote bony infarct. Stable multilevel degenerative disc disease of the thoracic spine. Calcified granuloma seen anteriorly on lateral view is stable since [REDACTED].",
+    "impression": "No acute cardiopulmonary abnormality."
+  }
+}

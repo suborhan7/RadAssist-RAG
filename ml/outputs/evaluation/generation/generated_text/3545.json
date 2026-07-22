@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Retrocardiac soft tissue density with air, possibly representing hiatal hernia; vascular calcification; calcified granuloma; bandlike opacity in the left lung base, potentially representing atelectasis.",
+    "impression": "The chest X-ray shows signs of calcinosis/atherosclerosis with possible hiatal hernia and atelectasis. No acute cardiopulmonary disease is seen.",
+    "recommendation": "Further evaluation or follow-up imaging may be necessary to confirm the presence and extent of these findings.",
+    "disclaimer": "The agreement score for this report is 0.60, indicating moderate confidence in the findings."
+  },
+  "ground_truth": {
+    "findings": "[REDACTED] opacities in the lung bases are slightly worse [REDACTED] compared to prior study. Lung volumes are low. Heart size and pulmonary [REDACTED] are normal. There no focal airspace opacities to suggest pneumonia. The patient is status post [REDACTED] sternotomy. There calcifications of the thoracic aorta.",
+    "impression": "1. Worsening bibasilar subpleural interstitial opacities suggestive of interstitial lung disease. High-resolution [REDACTED] would be recommended to evaluate these findings 2. No evidence of acute pneumonia"
+  }
+}

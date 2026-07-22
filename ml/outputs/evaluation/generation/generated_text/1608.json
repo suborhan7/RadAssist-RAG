@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The heart is normal in size and contour. The lungs are hyperexpanded with scattered granuloma, but no focal airspace disease or large pleural effusion or pneumothorax.",
+    "impression": "No acute cardiopulmonary abnormalities.",
+    "recommendation": "None",
+    "disclaimer": "The agreement score is low (0.40), and the findings should be interpreted with caution."
+  },
+  "ground_truth": {
+    "findings": "The cardiac silhouette, upper mediastinum and pulmonary vasculature are within normal limits. There is no acute air space infiltrate, pleural effusion or pneumothorax. No pulmonary nodules are identified.",
+    "impression": "No acute process. No definite pulmonary nodules are seen. If clinically indicated, further evaluation with CT of the thorax can be performed to identify a small nodule. Correlation with prior radiographs would be helpful to identify the location of the previously described nodule."
+  }
+}

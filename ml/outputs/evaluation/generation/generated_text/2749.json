@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "AP and lateral views",
+    "findings": "Normal heart size, clear lungs, degenerative disease within the spine, prosthetic right shoulder, possible [REDACTED] body in the axillary recess of the left shoulder, and degenerative left glenohumeral osteoarthritis.",
+    "impression": "No acute pulmonary findings.",
+    "recommendation": "None",
+    "disclaimer": "The radiologist's interpretation is based on the provided evidence only."
+  },
+  "ground_truth": {
+    "findings": "The heart is normal in size. The mediastinum is unremarkable. The lungs are clear. There is no pleural effusion or pneumothorax. Old right-sided rib deformities are noted.",
+    "impression": "No acute disease."
+  }
+}

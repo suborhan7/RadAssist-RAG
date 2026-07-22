@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The heart size is normal. The mediastinal contour is within normal limits. The lungs are free of any focal infiltrates. There is redemonstration of a calcified granuloma within the left upper lobe. Probable old lateral right rib fractures.",
+    "impression": "No acute radiographic cardiopulmonary process. Findings consistent with persistent partial middle lobe atelectasis and infiltrate seen.",
+    "recommendation": "Follow-up imaging as clinically indicated",
+    "disclaimer": "Clinical uncertainty exists due to low agreement score (0.40) for the top-voted label 'Atelectasis'."
+  },
+  "ground_truth": {
+    "findings": "Heart size and mediastinal contours are unchanged. Stable right upper lobe scarring with pleural thickening. No [REDACTED] consolidation. No visible pleural effusion or pneumothorax.",
+    "impression": "Stable chest. No acute cardiopulmonary abnormality."
+  }
+}

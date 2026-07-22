@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Digital Chest Radiography",
+    "findings": "Cardiomegaly, persistent patchy infiltrate in the right middle lobe, and normal pulmonary vasculature.",
+    "impression": "Moderate cardiomegaly with no focal airspace disease.",
+    "recommendation": "Further evaluation recommended to determine underlying cause of cardiomegaly.",
+    "disclaimer": "Clinical uncertainty exists due to low agreement score."
+  },
+  "ground_truth": {
+    "findings": "The lungs are clear. There is no pleural effusion or pneumothorax. There has been [REDACTED] [REDACTED] sternotomy. The heart and mediastinum are normal. The skeletal structures are normal.",
+    "impression": "No acute pulmonary disease."
+  }
+}

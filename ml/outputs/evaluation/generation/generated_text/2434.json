@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown clinical history with calcified granulomas in the right upper lobe.",
+    "technique": "Frontal and lateral radiographs of the chest",
+    "findings": "Both lungs are clear and expanded. Heart and mediastinum normal. Calcified granulomas seen in the right upper lobe. No pneumothorax or pleural effusion.",
+    "impression": "No active disease. The top candidate label 'Granuloma' has a low agreement score of 0.40, indicating clinical uncertainty.",
+    "recommendation": "CT chest with contrast is recommended to further evaluate the left cardiophrenic density and clarify the nature of the calcified granulomas.",
+    "disclaimer": "The diagnosis of Granuloma is uncertain due to the low agreement score (0.40) from similar cases."
+  },
+  "ground_truth": {
+    "findings": "The heart is normal in size. The mediastinum is unremarkable. There is [REDACTED] biapical scarring. The lungs are otherwise clear.",
+    "impression": "No acute disease."
+  }
+}

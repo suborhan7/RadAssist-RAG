@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Stable right upper lobe calcified granuloma, normal heart size and pulmonary vasculature, no pneumothorax, pleural effusion or airspace consolidation.",
+    "impression": "No acute cardiopulmonary abnormality. Old pleural scar with blunting of the right costophrenic angle.",
+    "recommendation": "Further evaluation recommended to determine the cause of the granuloma.",
+    "disclaimer": "The findings are based on the provided evidence and may not be comprehensive or definitive."
+  },
+  "ground_truth": {
+    "findings": "The heart size is within normal limits. Prominent right paratracheal soft tissues [REDACTED] representing adenopathy. No focal airspace consolidation, pleural effusions or pneumothorax. No acute bony abnormalities.",
+    "impression": "1. Clear lungs. 2. Prominent right paratracheal opacities [REDACTED] representing adenopathy."
+  }
+}

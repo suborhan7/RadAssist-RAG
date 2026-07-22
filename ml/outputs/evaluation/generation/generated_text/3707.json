@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Heart size is normal, lungs are clear, and there is flattening of hemidiaphragms with prominent interstitial markings. No focal consolidation to suggest pneumonia or atherosclerotic institutions of the aorta.",
+    "impression": "Normal chest",
+    "recommendation": "None",
+    "disclaimer": ""
+  },
+  "ground_truth": {
+    "findings": "There may be a subtle airspace opacity in the right base near the midclavicular line. There is no pleural effusion or pneumothorax. The heart and mediastinum are normal. The skeletal structures are normal.",
+    "impression": "Possible area of pneumonitis right lower lobe."
+  }
+}

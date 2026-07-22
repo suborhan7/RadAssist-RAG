@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Severe emphysema, possible scarring or atelectasis in lung bases, and pulmonary nodules.",
+    "technique": "Posteroanterior (PA) chest radiograph",
+    "findings": "Lung Opacity: Hyperinflated lungs with interstitial changes of severe emphysema. Ill-defined pleural-parenchymal opacity in the left upper lobe, possibly representing scarring or atelectasis. Mild [REDACTED] scarring and/or atelectasis in lung bases. No pneumothorax or pleural effusion.",
+    "impression": "Severe emphysema with possible scarring or atelectasis in the left upper lobe. Malignancy cannot be confidently excluded on the available images.",
+    "recommendation": "Comparison with more remote outside imaging, if available, to determine long-term stability. If none are available, recommend short-term follow-up in 3 to 4 months.",
+    "disclaimer": "Due to incomplete evaluation and lack of coronal and sagittal reformats, the opacity in the left upper lobe may not be fully characterized."
+  },
+  "ground_truth": {
+    "findings": "Left-sided medication injection [REDACTED] has its tip projecting at the cavoatrial junction. The trachea is midline. Extensive bilateral bronchiectasis, cystic changes, and scarring represents sequela from the patient's cystic fibrosis. No evidence of focal pulmonary infiltrate or pleural effusion. No large pneumothorax has developed in the interim. The overlying bony structures reveal no acute abnormalities. The heart size is normal.",
+    "impression": "1. Extensive pulmonary bronchiectasis and scarring from cystic fibrosis, not significantly [REDACTED] from prior. 2. Left-sided medication injection [REDACTED] has its tip projecting over the cavoatrial junction."
+  }
+}

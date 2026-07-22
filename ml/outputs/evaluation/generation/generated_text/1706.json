@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown clinical history",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Cardiac and mediastinal contours are within normal limits. The lungs are clear. Bony structures are intact.",
+    "impression": "No acute cardiopulmonary disease identified, consistent with the top-voted label 'Normal' with an agreement score of 0.80.",
+    "recommendation": "None",
+    "disclaimer": "Based on available evidence"
+  },
+  "ground_truth": {
+    "findings": "Cardiac silhouette and mediastinal contours are within normal limits. There are low lung volumes. There is no focal opacities. No pneumothorax. No large pleural effusion.",
+    "impression": "Low lung volumes without acute cardiopulmonary disease."
+  }
+}

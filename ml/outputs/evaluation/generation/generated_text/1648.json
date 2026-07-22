@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The heart is normal size. The mediastinum is unremarkable. There is no pleural effusion, pneumothorax, or focal airspace disease.",
+    "impression": "No acute cardiopulmonary abnormality",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty: The agreement score is moderate (0.60), indicating some uncertainty in the findings and impression."
+  },
+  "ground_truth": {
+    "findings": "The lungs are mildly hyperexpanded. There is no focal airspace consolidation. No suspicious pulmonary mass or nodule is identified. Heart size and mediastinal contour are within normal limits. There are degenerative changes of the spine.",
+    "impression": "1. No focal airspace consolidation. 2. Mildly hyperexpanded lungs, suggestive of emphysema."
+  }
+}

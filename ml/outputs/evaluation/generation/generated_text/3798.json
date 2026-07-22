@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown clinical history",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The heart and lungs have normal size and shape. Both lungs are clear and expanded. Heart and mediastinum are normal. Scattered calcified granulomas are present.",
+    "impression": "No active disease",
+    "recommendation": "None",
+    "disclaimer": "Uncertainty exists due to low agreement score (0.60)"
+  },
+  "ground_truth": {
+    "findings": "The heart is normal in size. The pulmonary vascularity is within normal limits in appearance. No pneumothorax or pleural effusion. Patchy right lower lung opacification is noted.",
+    "impression": "Right basilar airspace disease."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Lung Opacity, minimal atelectasis in the left base, no effusion or pneumothorax, normal heart and mediastinum.",
+    "impression": "No acute cardiopulmonary abnormality. No evidence of tuberculosis. Probable large retrocardiac hiatal hernia.",
+    "recommendation": "Further evaluation recommended to determine cause of lung opacity.",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.40) for the top-voted label 'Lung Opacity'."
+  },
+  "ground_truth": {
+    "findings": "There has been interval performance of CABG with multiple [REDACTED] sternotomy [REDACTED], surgical clips, and CABG markers. All of the [REDACTED] sternotomy [REDACTED] are broken, and a fragment at a sternotomy [REDACTED] appears to [REDACTED] within the left posterior pleural space. Stable cardiomegaly and central pulmonary vascular prominence. No focal consolidation, pneumothorax, or effusion. Relative elevation of the left hemidiaphragm noted. No acute bony abnormality.",
+    "impression": "Cardiomegaly with surgical changes of CABG, with numerous broken [REDACTED] sternotomy [REDACTED] and a sternotomy [REDACTED] fragment noted [REDACTED] in the posterior left pleural space."
+  }
+}

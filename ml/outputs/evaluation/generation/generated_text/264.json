@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "AP and lateral views",
+    "findings": "Left chest support device with tip in the mid superior vena cava, intact [REDACTED], clear lungs, normal cardiac contours, no pneumothorax or pleural effusions, and atherosclerotic calcifications.",
+    "impression": "No acute cardiopulmonary abnormalities. Left venous catheter in superior vena cava.",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.60)"
+  },
+  "ground_truth": {
+    "findings": "Heart [REDACTED], mediastinum, [REDACTED], bony structures and lung [REDACTED] are unremarkable. No significant interval change compared to prior study, no [REDACTED] infiltrates noted.",
+    "impression": "No radiographic evidence of acute cardiopulmonary disease"
+  }
+}

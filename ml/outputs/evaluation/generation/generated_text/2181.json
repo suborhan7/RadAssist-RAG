@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Standard PA view",
+    "findings": "Calcified granuloma in the left upper lobe, mild right hemidiaphragm elevation with bronchovascular crowding, and indistinct vascular margination. No definite focal alveolar consolidation or pleural effusion.",
+    "impression": "Old granulomatous disease. No acute pulmonary disease.",
+    "recommendation": "Further evaluation not indicated at this time.",
+    "disclaimer": "Clinical uncertainty exists due to low agreement score (0.20) for the label 'Edema/Congestion'."
+  },
+  "ground_truth": {
+    "findings": "Heart size is moderately enlarged. The pulmonary [REDACTED] and mediastinum are within normal limits. There is no pleural effusion or pneumothorax. There is suspected right lower lobe airspace opacity [REDACTED] demonstrated on the lateral study. There is a fracture of superior sternotomy [REDACTED] unchanged.",
+    "impression": "Possible right lower lobe pneumonia. Cardiomegaly"
+  }
+}

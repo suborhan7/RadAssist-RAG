@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "",
+    "technique": "Standard technique",
+    "findings": "Lung Opacity, low lung volumes with opacities consistent with focal atelectasis",
+    "impression": "Low lung volumes with opacities consistent with focal atelectasis, clinical uncertainty due to low agreement score (0.40)",
+    "recommendation": "",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.40)"
+  },
+  "ground_truth": {
+    "findings": "There are no focal areas of consolidation. No suspicious pulmonary opacities. Heart size within normal limits. No pleural effusions. There is no evidence of pneumothorax. Degenerative changes of the thoracic spine.",
+    "impression": "No acute cardiopulmonary abnormality."
+  }
+}

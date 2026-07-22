@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Prominence of the left hilum, possibly representing adenopathy or engorged vasculature. Cardiac silhouette is within normal limits. No pneumothorax or large pleural effusion.",
+    "impression": "Prominence of the left hilum may be secondary to adenopathy or enlarged pulmonary vasculature. Chest CT with contrast may be helpful for further clarification.",
+    "recommendation": "Consider chest CT with contrast for further evaluation",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.60)"
+  },
+  "ground_truth": {
+    "findings": "Stable cardiomediastinal silhouette. No focal pulmonary opacity, pleural effusion or pneumothorax. No acute bony abnormality.",
+    "impression": "No acute cardiopulmonary abnormality."
+  }
+}

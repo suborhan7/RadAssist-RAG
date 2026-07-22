@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Frontal and lateral radiographs of the chest",
+    "findings": "The heart and lungs are normal, with no focal consolidation, pleural effusion, or pneumothorax identified. Old healed left 5th and 6th rib fractures are seen laterally. There is streaky opacity within the left lung base representing atelectasis.",
+    "impression": "No active disease. Clear lungs. No acute cardiopulmonary abnormality.",
+    "recommendation": "",
+    "disclaimer": ""
+  },
+  "ground_truth": {
+    "findings": "Heart size, cardiomediastinal silhouette, and pulmonary vasculature are within normal limits. There are no infiltrates, effusions, or pneumothorax.",
+    "impression": "No acute cardiopulmonary process."
+  }
+}

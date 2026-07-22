@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior and lateral views",
+    "findings": "The cardiomediastinal silhouette is normal in size and contour. The lungs are clear, with minimal sclerotic change overlying the midthoracic spine on the lateral view. There may be chronic subsegmental atelectasis in the left lung base.",
+    "impression": "Low lung volumes, otherwise clear",
+    "recommendation": "Further evaluation is needed to confirm the presence of atelectasis and exclude other possible causes.",
+    "disclaimer": "The agreement score for the top-voted label (Atelectasis) is low, so this finding should be considered uncertain."
+  },
+  "ground_truth": {
+    "findings": "Frontal and lateral views of the chest show normal size and configuration of the cardiac silhouette. There is aortic [REDACTED] vascular calcification. And there is a hyper left lung calcified granuloma. Normal mediastinal contour, pulmonary [REDACTED] and vasculature, central airways and lung volumes. No pleural effusion. There are vascular and skeletal senescent changes.",
+    "impression": "No acute or active cardiac, pulmonary or pleural disease."
+  }
+}

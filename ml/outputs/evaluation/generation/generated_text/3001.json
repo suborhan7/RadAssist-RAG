@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Heart size within normal limits. Negative for focal pulmonary consolidation, pleural effusion, or pneumothorax. No pulmonary nodules identified.",
+    "impression": "No acute abnormality. No pulmonary nodule identified.",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty: None"
+  },
+  "ground_truth": {
+    "findings": "Frontal and lateral views of the chest show an unchanged cardiomediastinal silhouette. Normal mediastinal contour, pulmonary [REDACTED] and vasculature, central airways and aeration of the lungs. The inferior posterior sulcus is excluded.",
+    "impression": "No acute or active cardiac or pulmonary disease process. Cannot exclude small pleural effusions."
+  }
+}

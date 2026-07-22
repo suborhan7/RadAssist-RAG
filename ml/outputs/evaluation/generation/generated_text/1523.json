@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "PA and lateral views",
+    "findings": "Both lungs are clear and expanded. Heart and mediastinum normal. Right hemidiaphragm elevation.",
+    "impression": "No acute cardiopulmonary process identified, with some uncertainty due to low agreement score.",
+    "recommendation": "Follow-up imaging or clinical evaluation as clinically indicated.",
+    "disclaimer": "Due to low agreement score, some uncertainty exists in the findings and impression."
+  },
+  "ground_truth": {
+    "findings": "Heart size, cardiomediastinal silhouette, and pulmonary vasculature are within normal limits. There are no infiltrates, effusions, or pneumothorax.",
+    "impression": "No acute cardiopulmonary process."
+  }
+}

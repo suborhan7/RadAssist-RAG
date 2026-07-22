@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The heart is normal in size. The mediastinum is unremarkable. The lungs are clear.",
+    "impression": "No acute disease.",
+    "recommendation": "None",
+    "disclaimer": "Low confidence due to limited clinical information"
+  },
+  "ground_truth": {
+    "findings": "The mediastinal and hilar lymph [REDACTED] are less prominent than previously. Heart size remains normal. Lungs are clear.",
+    "impression": "Decreasing bilateral hilar adenopathy. Continued clear lungs."
+  }
+}

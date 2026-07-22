@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The heart is normal in size, mediastinum is unremarkable, and lungs are clear. Mild tortuosity to the descending thoracic aorta is noted.",
+    "impression": "No acute disease or active cardiopulmonary abnormality.",
+    "recommendation": "No additional imaging indicated at this time.",
+    "disclaimer": "Clinical uncertainty exists due to low agreement score (0.60)."
+  },
+  "ground_truth": {
+    "findings": "Heart size and vascularity normal. These contour normal. Lungs clear. No pleural effusions or pneumothoraces.",
+    "impression": "Normal chest."
+  }
+}

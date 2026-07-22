@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray examination",
+    "clinical_history": "",
+    "technique": "Standard chest X-ray technique",
+    "findings": "Heart size normal, prominent epicardial fat, lungs are clear, no pleural effusion or pneumothorax, stable right lower lobe calcified granuloma, mild degenerative changes of the thoracic spine.",
+    "impression": "Unremarkable examination of the chest",
+    "recommendation": "",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.40)"
+  },
+  "ground_truth": {
+    "findings": "The cardiomediastinal silhouette is within normal limits for size and contour. The lungs are normally inflated without evidence of focal airspace disease, pleural effusion, or pneumothorax. Osseous structures are within normal limits for patient age.",
+    "impression": "1. No active disease. Specifically, no radiographic evidence for tuberculosis."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Digital Chest Radiography",
+    "findings": "Cardiac and mediastinal contours are within normal limits. The lungs are clear bilaterally. Bony structures are intact.",
+    "impression": "No acute cardiopulmonary disease.",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty: Low"
+  },
+  "ground_truth": {
+    "findings": "Heart size and mediastinal contour are normal. Pulmonary vascularity is normal. Lungs are clear. No pleural effusions or pneumothoraces.",
+    "impression": "Normal chest."
+  }
+}

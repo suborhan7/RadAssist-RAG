@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Standard PA view",
+    "findings": "Cardiac and mediastinal contours are within normal limits. The lungs are clear. Bony structures are intact.",
+    "impression": "Normal chest X-ray with no acute disease or sequelae of old granulomatous disease.",
+    "recommendation": "No further imaging is necessary at this time.",
+    "disclaimer": "Clinical uncertainty exists due to low agreement score (0.60)."
+  },
+  "ground_truth": {
+    "findings": "The heart is normal in size. The mediastinum is unremarkable. The chest [REDACTED] is in satisfactory position. There is no pneumothorax. The lungs are clear.",
+    "impression": "No acute disease."
+  }
+}

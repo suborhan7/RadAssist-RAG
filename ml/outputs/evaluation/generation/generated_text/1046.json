@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Lung Opacity, patchy right base airspace disease",
+    "impression": "No evidence of active disease, no acute cardiopulmonary abnormality",
+    "recommendation": "Consider oblique images to exclude true nodule",
+    "disclaimer": "Uncertainty in findings due to low agreement score (0.40)"
+  },
+  "ground_truth": {
+    "findings": "Heart and mediastinum within normal limits. Negative for focal pulmonary consolidation, pleural effusion, or pneumothorax.",
+    "impression": "No acute abnormality."
+  }
+}

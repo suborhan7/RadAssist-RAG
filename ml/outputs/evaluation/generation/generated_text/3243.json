@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Heart size within normal limits. Negative for focal pulmonary consolidation, pleural effusion, or pneumothorax. No pulmonary nodules identified. Clear lungs. Normal heart mediastinum. No pneumothorax. No pleural effusion.",
+    "impression": "No acute abnormality. No pulmonary nodule identified.",
+    "recommendation": "None",
+    "disclaimer": "Low confidence due to agreement score of 0.60"
+  },
+  "ground_truth": {
+    "findings": "Normal heart size. Diffuse bilateral reticulonodular interstitial opacities. There are no [REDACTED] of a large pleural effusion. There is no evidence of pneumothorax. Heart is not enlarged. [REDACTED] are unremarkable.",
+    "impression": "Compared to [REDACTED], there are [REDACTED] extensive bilateral reticulonodular interstitial opacities, concerning for atypical infection. Result notification [REDACTED] Primordial."
+  }
+}

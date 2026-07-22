@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Frontal and lateral views of the chest show normal size and configuration of the cardiac silhouette. Normal mediastinal contour, pulmonary [REDACTED] and vasculature, central airways and lung volumes. No pleural effusion.",
+    "findings": "The lungs are clear. The heart and pulmonary [REDACTED] are normal. The pleural spaces are clear. Mediastinal contours are normal.",
+    "impression": "Stable appearing chest. No acute airspace disease or effusions. Stable mediastinal contour. No acute cardiopulmonary abnormality identified.",
+    "recommendation": "None",
+    "disclaimer": "The report is based on the provided evidence and may not reflect the actual clinical situation."
+  },
+  "ground_truth": {
+    "findings": "Heart size, mediastinal contour, and pulmonary vascularity are within normal limits. No focal consolidation, suspicious pulmonary opacity, large pleural effusion, or pneumothorax is identified. There is a rounded lucency seen above the diaphragm on lateral view, suggestive of small hiatal hernia. Visualized osseous structures appear intact. Degenerative changes of the thoracic spine seen.",
+    "impression": "No acute cardiopulmonary abnormality. Small hiatal hernia noted."
+  }
+}

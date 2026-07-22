@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Mild cardiomegaly, low lung volumes without focal consolidation or pleural effusion. Basilar atelectasis is present.",
+    "impression": "No acute cardiopulmonary findings. Mild cardiomegaly without heart failure.",
+    "recommendation": "Further evaluation recommended to determine the cause of mild cardiomegaly and basilar atelectasis.",
+    "disclaimer": "The radiologist's report may not be comprehensive or definitive, as the agreement score for the top-voted label is low (0.40)."
+  },
+  "ground_truth": {
+    "findings": "Heart size and pulmonary vascularity appear within normal limits. The patient is status post CABG. A few [REDACTED] opacities are present in the left base, the appearance which [REDACTED] scarring or atelectasis. No pneumothorax or pleural effusion is seen. Degenerative changes are present in the spine.",
+    "impression": "1. [REDACTED] opacities in the left base, the appearance which [REDACTED] scarring or atelectasis. Otherwise, clear."
+  }
+}

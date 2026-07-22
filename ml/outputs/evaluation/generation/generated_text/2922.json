@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) and lateral views",
+    "findings": "The heart is normal in size, mediastinum unremarkable, lungs grossly clear with underlying emphysematous changes noted. No focal airspace disease, pneumothorax, or pleural effusion.",
+    "impression": "Emphysema without acute disease",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty exists due to low agreement score (0.40)"
+  },
+  "ground_truth": {
+    "findings": "Hyperinflated lungs with flattened diaphragm and increased retrosternal airspace. No alveolar consolidation, no findings of pleural effusion or pulmonary edema. Heart size within normal limits. Right hilar calcification suggests a previous granulomatous process.",
+    "impression": "Hyperinflated lungs, air trapping versus inspiratory [REDACTED]."
+  }
+}

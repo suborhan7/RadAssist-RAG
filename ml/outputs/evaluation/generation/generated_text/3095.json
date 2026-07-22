@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Stable cardiomegaly with bilateral lower lobe airspace disease",
+    "technique": "Two images",
+    "findings": "The heart is large, and the pulmonary vessels are engorged. No infiltrates. Moderate-to-marked enlargement of the cardiac silhouette, mild bilateral posterior sulcus blunting, interstitial and alveolar opacities greatest in the central lungs and bases with indistinct vascular margination. No focal consolidation, pleural effusion, or pneumothorax identified.",
+    "impression": "Cardiomegaly and pulmonary venous hypertension. Bibasilar airspace disease may represent infection or mild edema.",
+    "recommendation": "Clinical correlation recommended",
+    "disclaimer": "Uncertainty exists due to low agreement score (0.60)"
+  },
+  "ground_truth": {
+    "findings": "Heart size is mildly enlarged. There are diffusely increased interstitial opacities bilaterally. No focal consolidation, pneumothorax, or pleural effusion. No acute bony abnormality.",
+    "impression": "Findings concerning for interstitial edema or infection."
+  }
+}

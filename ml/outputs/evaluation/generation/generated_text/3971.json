@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "PA and lateral views",
+    "findings": "The cardiomediastinal silhouette is within normal limits for size and contour. The lungs are normally inflated without evidence of focal airspace disease, pleural effusion, or pneumothorax. No acute osseous abnormality.",
+    "impression": "No acute cardiopulmonary process.",
+    "recommendation": "None",
+    "disclaimer": "Based on the provided evidence."
+  },
+  "ground_truth": {
+    "findings": "The heart size and cardiomediastinal silhouette are normal. There is no focal airspace opacity, pleural effusion or pneumothorax. The bony structures are normal.",
+    "impression": "No acute cardiopulmonary finding."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The heart is normal in size. The mediastinum is unremarkable. The lungs are hypoinflated but clear.",
+    "impression": "No acute cardiopulmonary abnormality.",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty: Agreement score of 0.60"
+  },
+  "ground_truth": {
+    "findings": "Heart and mediastinal contour normal. Pulmonary vascularity normal. Lungs clear. No pleural effusions or pneumothoraces.",
+    "impression": "Normal chest."
+  }
+}

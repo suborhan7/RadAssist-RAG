@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Heart size normal, lungs are clear, no pneumonia, effusions, edema, pneumothorax, adenopathy, nodules or masses. Atherosclerotic changes of the aorta and arthritic changes of the skeletal structures are noted.",
+    "impression": "Normal chest",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty exists due to low agreement score (0.40)"
+  },
+  "ground_truth": {
+    "findings": "Lungs are [REDACTED] without focal airspace disease. No pleural effusions or pneumothoraces. heart size is normal status post [REDACTED] sternotomy. Degenerative changes in the thoracic spine. incidental note is [REDACTED] of previous left rotator [REDACTED] repair.",
+    "impression": "[REDACTED] lungs without focal consolidation."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The heart is normal in size, and the mediastinum is unremarkable. The lungs are clear without evidence of focal airspace disease, pleural effusion, or pneumothorax.",
+    "impression": "No acute disease.",
+    "recommendation": "None",
+    "disclaimer": "Based on available evidence."
+  },
+  "ground_truth": {
+    "findings": "Heart size, mediastinal and aortic contours are within normal limits. Normal pulmonary vasculature. The lungs are clear. No visible pneumothorax or large pleural effusion. Elevated right hemidiaphragm. Mild degenerative changes of the spine.",
+    "impression": "1. Elevated right hemidiaphragm. 2. No evidence of active disease."
+  }
+}

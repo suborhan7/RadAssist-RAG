@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "PA and lateral views of the chest",
+    "findings": "Heart size and pulmonary vascularity appear within normal limits. There is mild tortuosity to the descending thoracic aorta. The lungs are free of focal airspace disease. No pleural effusion or pneumothorax is seen. No discrete nodules or adenopathy are noted. Degenerative changes are present in the spine.",
+    "impression": "No acute cardiopulmonary process",
+    "recommendation": "None",
+    "disclaimer": "Due to a low agreement score (0.40) for the top candidate label 'Other Abnormality', there is clinical uncertainty."
+  },
+  "ground_truth": {
+    "findings": "Normal heart size mediastinal contours. No focal airspace consolidation. No pleural effusion or pneumothorax. Degenerative disc disease in the thoracic spine with osteophyte formation bridging.",
+    "impression": "No acute cardiopulmonary abnormalities."
+  }
+}

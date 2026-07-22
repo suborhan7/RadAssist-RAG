@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Interval development of left lower lobe airspace disease, aorta calcification and tortuosity compatible with atherosclerotic disease.",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Calcified and tortuous aorta. Interval development of left lower lobe airspace disease. Right lung is clear. Some interstitial markings in the central lungs and bases, right greater than left.",
+    "impression": "Interval development of left lower lobe airspace disease, which may be due to atelectasis or infiltrate. Atherosclerotic changes are also present.",
+    "recommendation": "Further evaluation recommended to determine cause of left lower lobe airspace disease.",
+    "disclaimer": "Clinical uncertainty exists regarding the exact nature and significance of the findings."
+  },
+  "ground_truth": {
+    "findings": "Low lung volumes with bibasilar subsegmental atelectasis. No focal consolidations, pleural effusions, or pneumothoraces. Cardiomediastinal silhouette is within normal limits. Degenerative changes of the thoracic spine.",
+    "impression": "No acute cardiopulmonary abnormality."
+  }
+}

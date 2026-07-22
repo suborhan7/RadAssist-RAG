@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "PA and lateral views of the chest were obtained. Tracheostomy tube.",
+    "findings": "Probable mild cardiomegaly, prominence of central vasculature, stable widening of upper mediastinum, prominent mitral annular calcification. No pneumothorax, pleural effusion or airspace consolidation.",
+    "impression": "No acute cardiopulmonary disease. Stable mild cardiomegaly. Prominent central vasculature.",
+    "recommendation": "Unknown",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.60)"
+  },
+  "ground_truth": {
+    "findings": "There is a moderate amount of retained contrast within the distal esophagus. There is no evidence of aspiration. A 3.0 cm nodule is present within the right hilum. No moderate to large pleural effusion or pneumothorax is identified. The cardiomediastinal silhouette is within normal limits. The pulmonary vasculature is normal.",
+    "impression": "1. Retained contrast in the distal esophagus. 2. Unchanged right hilar mass."
+  }
+}

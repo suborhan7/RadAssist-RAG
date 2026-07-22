@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Heart size is normal. No focal consolidations. No pneumothorax or pleural effusion.",
+    "impression": "Negative chest, no acute cardiopulmonary findings.",
+    "recommendation": "None",
+    "disclaimer": "No active disease identified."
+  },
+  "ground_truth": {
+    "findings": "Lungs are clear. No pleural effusion or pneumothorax. Cardiomediastinal silhouette is normal. There are minimal degenerative changes of the spine.",
+    "impression": "No evidence of active disease."
+  }
+}

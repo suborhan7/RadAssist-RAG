@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "PA and lateral views",
+    "findings": "The cardiomediastinal silhouette is normal in size and configuration. The lungs are well aerated. No pneumothorax, pleural effusion, or focal air space consolidation. Probable DISH of the thoracic spine.",
+    "impression": "No acute cardiopulmonary disease",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty: The agreement score is low (0.40), so this impression should be considered uncertain."
+  },
+  "ground_truth": {
+    "findings": "No focal consolidation. No visualized pneumothorax. Heart size is normal. Cardiac and mediastinal silhouette is grossly unremarkable.",
+    "impression": "1. No acute cardiopulmonary findings."
+  }
+}

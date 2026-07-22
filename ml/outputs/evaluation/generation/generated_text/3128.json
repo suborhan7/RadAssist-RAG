@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior and lateral views",
+    "findings": "The trachea is midline, with a normal cardiomediastinal silhouette and clear lungs. No acute infiltrate or effusion is seen. There is no pneumothorax, and the visualized bony structures show no acute abnormalities. Mild degenerative changes are noted in the thoracic spine on lateral view.",
+    "impression": "No acute cardiopulmonary abnormality",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty exists due to low agreement score (0.40)"
+  },
+  "ground_truth": {
+    "findings": "Calcified left hilar lymph [REDACTED] [REDACTED] from prior granulomatous disease. The cardiomediastinal silhouette is within normal limits for size. Pulmonary vasculature is within normal limits. No focal consolidations, effusions, or pneumothoraces. No acute bony abnormality.",
+    "impression": "No acute cardiopulmonary abnormality."
+  }
+}

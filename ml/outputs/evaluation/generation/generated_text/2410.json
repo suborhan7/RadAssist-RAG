@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Heart size is within normal limits. 8mm calcified granuloma in the right base. No focal airspace consolidations, pneumothorax, or effusion.",
+    "impression": "No acute cardiopulmonary findings.",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.40)"
+  },
+  "ground_truth": {
+    "findings": "The heart size is normal and cardiomediastinal silhouette has normal contour. The left hilar calcified lymph [REDACTED] appear stable. There is persistence of a left lower lobe calcified nodule [REDACTED] representing a granuloma. The lungs are hyperinflated but otherwise clear bilaterally.",
+    "impression": "1. Severe hyperinflation. 2. Stable left calcified hilar lymph [REDACTED]."
+  }
+}

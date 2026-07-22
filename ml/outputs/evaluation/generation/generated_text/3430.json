@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown clinical history with low lung volumes and bibasilar atelectasis, possibly due to chronic respiratory disease.",
+    "technique": "AP portable technique",
+    "findings": "The cardiomediastinal silhouette is normal. The lungs are clear bilaterally. There is no pneumothorax or pneumomediastinum. Visualized bony structures are normal. Low lung volumes causing bibasilar atelectasis and bronchovascular crowding.",
+    "impression": "Bibasilar atelectasis, likely due to low lung volumes. No acute cardiopulmonary abnormality. A 38 mm lucency in the right humeral head with geographic margins is noted, possibly representing a large geode.",
+    "recommendation": "Further imaging may be helpful for further characterization of the right humeral head lesion",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.40)"
+  },
+  "ground_truth": {
+    "findings": "Heart size mildly to moderately enlarged, distal tip dual-lumen catheter near the caval atrial junction. Mild vascular cephalization, no definite interstitial changes of pulmonary edema, no focal alveolar consolidation. No pleural effusion [REDACTED] demonstrated.",
+    "impression": "1. Mild to moderate cardiomegaly. 2. Vascular redistribution without definite findings of pulmonary edema"
+  }
+}

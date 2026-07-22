@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior view",
+    "findings": "Levoscoliosis of the thoracic spine, minimal subsegmental atelectasis posteriorly. The lungs are well-aerated and there is no pneumothorax, pleural effusion or focal consolidation.",
+    "impression": "No acute cardiopulmonary disease. No radiographic evidence of active disease or visible cardiopulmonary injuries.",
+    "recommendation": "Further evaluation and clinical correlation recommended due to uncertainty in the presence of 'Other Abnormality' with a low agreement score (0.40).",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.40) for the top candidate label 'Other Abnormality'."
+  },
+  "ground_truth": {
+    "findings": "Normal heart size. Stable tortuous thoracic aorta. Prior granulomatous disease. Healed rib fractures appear stable. Focal opacity is noted in the left midlung overlying the 9th posterior rib which [REDACTED] represents healing rib callus. No pneumothorax or pleural effusion.",
+    "impression": "No acute abnormality seen."
+  }
+}

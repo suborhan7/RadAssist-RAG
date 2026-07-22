@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The cardiomediastinal silhouette is within normal limits for appearance. No focal areas of pulmonary consolidation. No pneumothorax. No pleural effusion. The thoracic spine appears intact.",
+    "impression": "No acute intrathoracic abnormality.",
+    "recommendation": "None",
+    "disclaimer": "This report is based on the provided evidence and does not imply a clinical diagnosis."
+  },
+  "ground_truth": {
+    "findings": "PA and lateral views. The cardiomediastinal silhouette is normal. The lungs are clear. No effusions, consolidation or pneumothorax.",
+    "impression": "Normal chest xray."
+  }
+}

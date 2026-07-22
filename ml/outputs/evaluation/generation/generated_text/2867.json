@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Old left rib fractures, bilateral hilar adenopathy",
+    "technique": "Standard anterior-posterior view",
+    "findings": "Lungs are clear. No pleural effusions or pneumothoraces. Heart and mediastinum of normal size and contour. Old left rib fractures. Calcified left hilar lymph nodes/granulomas present. Right lower lobe scarring.",
+    "impression": "Stable bilateral hilar adenopathy, no acute cardiopulmonary abnormalities",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty exists due to low agreement score (0.40) for the top candidate label 'Degenerative/Bone'"
+  },
+  "ground_truth": {
+    "findings": "The trachea is midline. The cardiomediastinal silhouette is normal. The superior thoracic spine is again noted, unchanged from prior. Lucent pulmonary parenchyma is consistent appearance with emphysema and appears unchanged from prior examinations. No evidence of pneumothorax. No focal airspace disease or pleural effusion. Vague density in the medial right lung apex most [REDACTED] representing overlying shadows of bony structures, which is stable.",
+    "impression": "1. No acute cardiopulmonary abnormalities. 2. Emphysema and chronic bony abnormalities are unchanged from prior exams."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Digital Chest Radiograph",
+    "findings": "The heart size and cardiomediastinal silhouette are normal. There is no focal airspace opacity, pleural effusion, or pneumothorax. Moderate degenerative changes in the thoracic spine are noted. Postsurgical clips in the right upper quadrant are seen.",
+    "impression": "No acute cardiopulmonary findings",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty exists due to low agreement score (0.60)"
+  },
+  "ground_truth": {
+    "findings": "The lungs are clear. There is no pneumonia. The heart and pulmonary [REDACTED] are normal. Pleural spaces are clear. Mediastinal contours appear normal. Bony overlap in the lung apices could obscure a small pulmonary nodule.",
+    "impression": "No acute cardiopulmonary disease. No evidence of pneumonia."
+  }
+}

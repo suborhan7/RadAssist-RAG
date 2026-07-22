@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Heart size is normal and cardiomediastinal contours are normal. Lungs are otherwise clear bilaterally without effusion or pneumothorax. Bony structures and soft tissues are unremarkable.",
+    "impression": "No acute cardiopulmonary abnormality.",
+    "recommendation": "None",
+    "disclaimer": "Low agreement score (0.40) for the top-voted label 'Normal'."
+  },
+  "ground_truth": {
+    "findings": "The heart is is at the upper limits of normal in size. The pulmonary vascularity is within normal limits in appearance. No focal air space opacities. No pleural effusions or pneumothorax. No acute bony abnormalities.",
+    "impression": "No acute cardiopulmonary abnormalities."
+  }
+}

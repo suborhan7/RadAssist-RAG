@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "No clinical history provided",
+    "technique": "Standard chest X-ray technique",
+    "findings": "Lungs are clear without focal consolidation, effusion, or pneumothorax. Normal heart size. Bony thorax grossly unremarkable.",
+    "impression": "No acute cardiopulmonary abnormality. No evidence of active tuberculosis.",
+    "recommendation": "None",
+    "disclaimer": "Based on the provided evidence and agreement score"
+  },
+  "ground_truth": {
+    "findings": "The cardiac contours are normal. The lungs are hyperinflated with flattening of the diaphragms and tapering of the distal pulmonary vasculature. There is no focal consolidation. Thoracic spondylosis.",
+    "impression": "Emphysema without superimposed pneumonia."
+  }
+}

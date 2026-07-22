@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The cardiomediastinal silhouette is within normal limits for size and contour. The lungs are normally inflated without evidence of focal airspace disease, pleural effusion, or pneumothorax. No acute osseous abnormality.",
+    "impression": "No acute cardiopulmonary process",
+    "recommendation": "None",
+    "disclaimer": "The presence of a well-circumscribed 11 mm right upper lobe nodule, unchanged from previous examination 7 years ago, is noted. However, this finding does not suggest an acute cardiopulmonary abnormality."
+  },
+  "ground_truth": {
+    "findings": "Heart size and cardiomediastinal silhouette are normal. Lungs are clear without focal airspace opacity, pleural effusion, or pneumothorax. Osseous structures are grossly intact.",
+    "impression": "Negative for acute cardiopulmonary findings."
+  }
+}

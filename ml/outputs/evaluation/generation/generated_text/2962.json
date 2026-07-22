@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Frontal and lateral views",
+    "findings": "The heart is unremarkable, lung volumes are low, no focal consolidation, pneumothorax, or large pleural effusion. Bony structures are within normal limits.",
+    "impression": "No radiographic evidence of acute cardiopulmonary disease",
+    "recommendation": "",
+    "disclaimer": ""
+  },
+  "ground_truth": {
+    "findings": "Stable mild thoracic levoscoliosis. Stable cardiomegaly. Multiple scattered round calcific densities [REDACTED] represent old granulomatous disease. No pneumothorax or pleural effusion. No focal consolidation. Moderate degenerative changes of the thoracic spine.",
+    "impression": "Stable cardiomegaly with no focal airspace disease."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior and lateral views",
+    "findings": "Patchy airspace disease is present in the lateral view, probably within the right lower lobe, with severe underlying emphysema. The aorta is calcified. There are small bilateral pleural effusions. No pneumothorax. Heart and mediastinum are stable with normal size heart. Degenerative changes are present in the spine.",
+    "impression": "COPD with probable right basilar scarring, possibly representing a chronic process.",
+    "recommendation": "Recommend further evaluation to assess disease progression",
+    "disclaimer": "The findings and impression are based on the evidence provided, but the clinical history is unknown."
+  },
+  "ground_truth": {
+    "findings": "The heart is normal in size. The cardiomediastinal contours are stable. There are stable bilateral pleural effusions with partial right-sided loculation. Biapical scarring and pleural thickening appears stable. There is again right-sided superior hilar retraction and mild rightward [REDACTED] deviation. No acute infiltrate is appreciated.",
+    "impression": "1. Stable bilateral pleural effusions and pleural thickening, right worse than left, with mild right-sided loculation. 2. Stable appearance of right apical thickening/atelectasis with volume loss, possibly related to prior radiation or surgery. Suggest clinical correlation."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown clinical history with a pulmonary nodule identified in the left lateral midlung.",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The heart, pulmonary [REDACTED] and mediastinum are within normal limits. There is no pleural effusion or pneumothorax. There is no focal air space opacity to suggest a pneumonia. An 8mm nodule is identified within the left lateral midlung, partially overlying the posterior left 7th rib. Mild degenerative changes of the spine are also noted.",
+    "impression": "Left midlung pulmonary nodule. Comparison to a previous [REDACTED] would be most helpful alternatively a noncontrast chest CT could be performed in the nonemergent setting for further characterization. No acute disease.",
+    "recommendation": "Consider follow-up imaging or additional evaluation",
+    "disclaimer": "Due to the low agreement score (0.20), there is clinical uncertainty regarding the diagnosis."
+  },
+  "ground_truth": {
+    "findings": "Heart size and mediastinal contour within normal limits. No focal airspace consolidation, pneumothorax, or large pleural effusion. No acute osseous abnormality.",
+    "impression": "No acute cardiopulmonary abnormality."
+  }
+}

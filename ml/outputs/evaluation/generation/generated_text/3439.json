@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Frontal and lateral views",
+    "findings": "Normal size and configuration of the cardiac silhouette, normal mediastinal contour, pulmonary [REDACTED] and vasculature, central airways and lung volumes. No pleural effusion or pneumothorax. Scattered calcified granulomas.",
+    "impression": "No acute or active cardiac, pulmonary or pleural disease.",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty: The agreement score is moderate (0.60), indicating some uncertainty in the findings and impression."
+  },
+  "ground_truth": {
+    "findings": "Normal heart size. Clear lungs. No pneumothorax or pleural effusion.",
+    "impression": "No acute findings."
+  }
+}

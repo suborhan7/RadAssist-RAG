@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The cardiac silhouette and mediastinum size are within normal limits. There is no pulmonary edema, focal consolidation, pneumothorax, or pleural effusion.",
+    "impression": "No acute cardiopulmonary disease identified",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty exists due to low agreement score (0.60)"
+  },
+  "ground_truth": {
+    "findings": "The heart is normal in size. The mediastinum is unremarkable. Emphysematous changes are identified. The lungs are otherwise grossly clear.",
+    "impression": "Emphysema without acute disease."
+  }
+}

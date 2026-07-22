@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray examination consists of frontal and lateral radiographs of the chest",
+    "clinical_history": "Unknown clinical history",
+    "technique": "Frontal and lateral radiographs of the chest",
+    "findings": "The heart and lungs have [REDACTED] [REDACTED] in the interval. Both lungs are clear and expanded. Heart and mediastinum normal. No focal consolidation, pleural effusion, or pneumothorax identified.",
+    "impression": "No acute cardiopulmonary abnormality identified. Heart size, mediastinal silhouette, pulmonary vascularity are within normal limits. There is no focal air space consolidation to suggest acute pneumonia or active tuberculous infection. No pleural effusion or pneumothorax.",
+    "recommendation": "None",
+    "disclaimer": "Based on available evidence with an agreement score of 0.80"
+  },
+  "ground_truth": {
+    "findings": "Heart size and cardiomediastinal contours are normal. Lungs are clear without focal airspace opacity, pleural effusion, or pneumothorax. No displaced rib fracture.",
+    "impression": "Negative for acute cardiopulmonary findings."
+  }
+}

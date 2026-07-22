@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Heart size is within normal limits. 8mm calcified granuloma in the right base. No focal airspace consolidations, pneumothorax, or effusion.",
+    "impression": "No acute cardiopulmonary findings.",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty: The agreement score is moderate (0.60), so some uncertainty exists in the interpretation of these findings."
+  },
+  "ground_truth": {
+    "findings": "Heart size and mediastinal contour within normal limits. Aortic atherosclerotic calcifications. Emphysematous changes. Nodular densities projecting over right anterior fifth and six ribs. No focal airspace consolidation, pneumothorax, or large pleural effusion. No acute osseous abnormality.",
+    "impression": "Nodular densities projecting over right 5th and 6th ribs may healing rib fracture; [REDACTED] recommended to rule-out underlying pulmonary nodule. [REDACTED] level Veriphy message was sent [REDACTED]. [REDACTED] regarding possible lung nodules at [REDACTED] hours [REDACTED]/[REDACTED]."
+  }
+}

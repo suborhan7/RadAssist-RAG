@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "PA and lateral views of the chest",
+    "findings": "The heart is normal in size and contour, with mild calcification of the transverse [REDACTED]. The lungs are clear, without evidence of infiltrate. There is no pneumothorax or effusion. Degenerative changes of the midthoracic spine are noted.",
+    "impression": "No acute cardiopulmonary disease",
+    "recommendation": "",
+    "disclaimer": ""
+  },
+  "ground_truth": {
+    "findings": "Heart size is normal. Aorta is tortuous and ectatic. Cardiomediastinal contours are normal. Lungs are clear without evidence of fibrosis. Pleural effusions or pneumothorax. Endplate sclerotic changes are present in the thoracic spine.",
+    "impression": "Ectatic aorta. No acute cardiopulmonary abnormality."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Heart size is normal, lungs are clear without focal consolidation, effusion, or pneumothorax. No acute osseus abnormality.",
+    "impression": "No acute cardiopulmonary findings.",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty: Low"
+  },
+  "ground_truth": {
+    "findings": "The trachea is midline. Cardiomediastinal silhouette is normal. There is a calcified density in the left mid lung, most [REDACTED] a calcified granuloma. Lungs are otherwise clear, without evidence of acute infiltrate or effusion. Specifically, there is no evidence of tuberculous disease. There is no pneumothorax. The bony structures show no acute abnormalities.",
+    "impression": "No acute cardiopulmonary abnormalities. No active pulmonary disease."
+  }
+}

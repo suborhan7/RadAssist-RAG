@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Heart size within normal limits. No alveolar consolidation, no findings of pleural effusion or pulmonary edema. No pneumothorax.",
+    "impression": "No acute findings",
+    "recommendation": "None",
+    "disclaimer": "Low confidence in the absence of additional clinical information"
+  },
+  "ground_truth": {
+    "findings": "The lungs are clear without focal consolidation, effusion, or pneumothorax. Normal heart size. Bony thorax unremarkable.",
+    "impression": "Negative for acute cardiopulmonary abnormality."
+  }
+}

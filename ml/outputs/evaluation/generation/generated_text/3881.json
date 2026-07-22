@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Postoperative changes of right mastectomy, central catheter tip in mid SVC",
+    "technique": "Digital Chest Radiography",
+    "findings": "Biapical opacities, possibly scarring. Lungs otherwise appear clear. No focal airspace consolidation. No pleural effusion or pneumothorax. Heart size and mediastinal contour are within normal limits.",
+    "impression": "No acute findings. Biapical opacities, possibly scarring.",
+    "recommendation": "",
+    "disclaimer": ""
+  },
+  "ground_truth": {
+    "findings": "The heart size and pulmonary vascularity appear within normal limits. Right hemidiaphragm remains elevated. No pleural effusion is seen. No pneumothorax is identified. No discrete nodules or adenopathy are noted. Degenerative changes are present in the spine. Right [REDACTED]-a-[REDACTED] has been inserted since the previous study. The tip projects over the lower superior [REDACTED] [REDACTED].",
+    "impression": "1. No evidence of active disease."
+  }
+}

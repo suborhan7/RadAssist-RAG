@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "AP and lateral views",
+    "findings": "The lungs are well-expanded and clear. No pleural effusion or pneumothorax is seen. The cardiomediastinal contour is normal. Mild spondylosis.",
+    "impression": "No active pulmonary disease. No acute findings.",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.40)"
+  },
+  "ground_truth": {
+    "findings": "The cardiac contours are normal. The lungs are hyperinflated with flattened diaphragms. No acute pulmonary findings. Thoracic spondylosis.",
+    "impression": "No acute process."
+  }
+}

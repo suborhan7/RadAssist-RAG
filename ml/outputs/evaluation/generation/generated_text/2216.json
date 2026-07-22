@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The heart is normal in size. The mediastinum is unremarkable. There is a nodular density at the left lung base. Lungs are otherwise clear. No pleural effusions or pneumothoraces.",
+    "impression": "Lungs are clear. No parenchymal infiltrates. No pulmonary edema. No acute cardiopulmonary disease.",
+    "recommendation": "CT scan without IV contrast could be performed for further evaluation",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.80)"
+  },
+  "ground_truth": {
+    "findings": "Heart size and mediastinal contours are within normal limits. Pulmonary vasculature is unremarkable. No focal airspace consolidation. There is mild elevation right hemidiaphragm. No visible pleural effusion or pneumothorax. There are mild degenerative changes along the thoracic spine.",
+    "impression": "1. Mildly elevated right hemidiaphragm. Otherwise no acute cardiopulmonary abnormality seen."
+  }
+}

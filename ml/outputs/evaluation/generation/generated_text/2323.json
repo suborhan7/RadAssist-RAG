@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Standard AP view",
+    "findings": "Heart size and pulmonary vascularity appear within normal limits. The lungs are free of focal airspace disease. No pleural effusion or pneumothorax is seen.",
+    "impression": "No evidence of active disease.",
+    "recommendation": "None",
+    "disclaimer": "Please note that fractures may not be demonstrated and consider additional imaging as clinically warranted."
+  },
+  "ground_truth": {
+    "findings": "Lungs are clear bilaterally with no focal infiltrate, pleural effusion, or pneumothoraces. Cardiomediastinal silhouette is within normal limits. No acute bony or soft tissue abnormality.",
+    "impression": "No acute cardiopulmonary abnormality."
+  }
+}

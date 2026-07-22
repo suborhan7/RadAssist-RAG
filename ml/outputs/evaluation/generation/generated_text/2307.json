@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Hyperinflated lungs, subtle scarring in the lateral right base, and atherosclerotic changes of the aorta. No pneumothorax, pleural effusion, or acute cardiopulmonary abnormality.",
+    "impression": "Hyperinflated lungs with probable chronic obstructive pulmonary disease (COPD) and right basilar scarring. No acute pulmonary disease identified.",
+    "recommendation": "Further evaluation and clinical correlation recommended.",
+    "disclaimer": "Clinical uncertainty exists due to low agreement score."
+  },
+  "ground_truth": {
+    "findings": "The heart is normal in size. The mediastinum is unremarkable. The lungs are hyperinflated with [REDACTED] [REDACTED] opacities compatible with pleural-parenchymal scarring. There is no acute infiltrate or effusion.",
+    "impression": "Emphysema and scarring without acute disease"
+  }
+}

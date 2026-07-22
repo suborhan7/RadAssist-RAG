@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The lungs are clear. The heart and pulmonary [REDACTED] appear normal. Pleural spaces are clear. The mediastinal contours are normal. Bony overlap in the lung apices could obscure a small pulmonary nodule.",
+    "impression": "No acute cardiopulmonary disease",
+    "recommendation": "None",
+    "disclaimer": "Based on available evidence, no acute abnormality is suspected."
+  },
+  "ground_truth": {
+    "findings": "No focal consolidation. No visualized pneumothorax. The heart size is normal. No large pleural effusions. The cardiomediastinal silhouette is grossly unremarkable.",
+    "impression": "1. No acute cardiopulmonary findings."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Normal heart size, hyperexpanded lungs without focal consolidation, pneumothorax or large pleural effusion. Left nipple silhouette visualized. Negative for acute bone abnormality.",
+    "impression": "Hyperexpanded lungs, otherwise normal.",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.40)"
+  },
+  "ground_truth": {
+    "findings": "Normal cardiomediastinal contours. Hyperexpansion of the lungs with flattening of the diaphragm. No focal lung consolidation, pneumothorax or pleural effusions.",
+    "impression": "No cardiopulmonary abnormality."
+  }
+}

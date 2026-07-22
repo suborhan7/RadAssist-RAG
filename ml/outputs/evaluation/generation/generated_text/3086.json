@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Low lung volumes, minimal right basilar atelectasis, normal heart size and upper mediastinum, no pulmonary vascular congestion or large effusion/pneumothorax.",
+    "impression": "Normal chest X-ray with small amount of right basilar atelectasis. No acute consolidation or pneumothorax.",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty: The agreement score is high, but the evidence suggests that the findings are normal."
+  },
+  "ground_truth": {
+    "findings": "No airspace disease, effusion or noncalcified nodule. Calcified granuloma seen bilaterally. Normal heart size. Elevated right hemidiaphragm, with a nodular soft tissue contour, containing liver. Degenerative changes demonstrated within the visualized thoracic spine. There is neurostimulator, overlying the mid and lower thoracic spine.",
+    "impression": "1. No acute cardiopulmonary abnormality. 2. Elevation of the right [REDACTED] diaphragm, containing liver."
+  }
+}

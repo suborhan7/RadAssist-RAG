@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) and lateral views",
+    "findings": "Hypoinflation of the lungs. Vague area of airspace disease identified within the right midlung on PA view, not well-demonstrated on lateral view. No pneumothorax or effusion.",
+    "impression": "No acute pulmonary abnormality. The vague area of focal airspace disease within the right midlung raises concern for pneumonia.",
+    "recommendation": "Followup imaging after treatment",
+    "disclaimer": "Uncertainty in findings due to low agreement score (0.40)"
+  },
+  "ground_truth": {
+    "findings": "Right mid lung nodule stable [REDACTED]; etiology not determined. This is noncalcified, and is stable since a CT examination from [REDACTED] and is [REDACTED] benign etiology. The lungs are well inflated and without focal consolidation. The cardiomediastinal silhouette appears unremarkable. Costophrenic [REDACTED] clear. Visualized spine vertebrae appear normal in [REDACTED] and alignment. Overlying leads.",
+    "impression": "Stable radiographic view of chest."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Prior granulomatous disease, possible lung cancer risk",
+    "technique": "Standard chest radiography",
+    "findings": "Stable cardiomegaly and persistent bibasilar opacities possibly due to atelectasis and/or infiltrate. Right heart [REDACTED] appears obscured with streaky right medial basilar airspace opacities.",
+    "impression": "Stable retrocardiac airspace opacity",
+    "recommendation": "Consider CT scan if patient is at high risk for lung cancer",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.60)"
+  },
+  "ground_truth": {
+    "findings": "No focal lung consolidation. Heart size and pulmonary vascularity are within normal limits. No pneumothorax or pleural effusion. Minimal degenerative changes of the thoracic spine. There is anterior fusion [REDACTED] at the cervicothoracic junction.",
+    "impression": "No acute cardiopulmonary process."
+  }
+}

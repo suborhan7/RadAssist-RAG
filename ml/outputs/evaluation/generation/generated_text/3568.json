@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The lungs are clear without evidence of focal airspace disease. There are calcified granulomas in the left lower lobe. No pneumothorax or large pleural effusion is seen. The cardiac and mediastinal contours are within normal limits.",
+    "impression": "No radiographic evidence of acute cardiopulmonary disease. Calcified granulomas are present, consistent with prior granulomatous disease.",
+    "recommendation": "Further evaluation not recommended at this time due to low agreement score (0.60) for the top-voted label 'Granuloma'.",
+    "disclaimer": "Clinical uncertainty exists due to low agreement score (0.60) for the top-voted label 'Granuloma'."
+  },
+  "ground_truth": {
+    "findings": "The heart size is normal with stable appearance of the cardiomediastinal silhouette. The lungs are clear without focal airspace opacity, pleural effusion, or pneumothorax. There are stable calcified right peritracheal lymph [REDACTED]. The osseous structures are intact.",
+    "impression": "No acute cardiopulmonary finding."
+  }
+}

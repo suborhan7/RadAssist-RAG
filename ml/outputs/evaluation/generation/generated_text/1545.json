@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The lungs are clear, with no focal pulmonary consolidation, pleural effusion, or pneumothorax. The heart and mediastinum appear normal. Mild spine curvature is noted.",
+    "impression": "No acute cardiopulmonary disease",
+    "recommendation": "None",
+    "disclaimer": "Low agreement score (0.40) for the label 'Normal', so some uncertainty exists in the findings"
+  },
+  "ground_truth": {
+    "findings": "No focal areas of consolidation. No pneumothorax. Heart size within normal limits. No pleural effusions. Osseous structures intact.",
+    "impression": "No acute cardiopulmonary abnormality."
+  }
+}

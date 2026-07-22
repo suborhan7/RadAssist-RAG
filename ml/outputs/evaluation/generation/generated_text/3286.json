@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "PA and lateral views",
+    "findings": "Borderline enlargement of the heart, normal vascular markings, left basilar retrocardiac opacity, mild right hemidiaphragm elevation with mild bronchovascular crowding, indistinct vascular margination.",
+    "impression": "Cardiomegaly, possible mild pulmonary edema or atypical infection/inflammation. No acute cardiopulmonary abnormality identified.",
+    "recommendation": "Further evaluation recommended to determine the cause of cardiomegaly and left basilar opacity.",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.60)."
+  },
+  "ground_truth": {
+    "findings": "Lung volumes are low. The heart is large, the pulmonary [REDACTED] are engorged. No infiltrates. [REDACTED] opacity is present in the left midlung.",
+    "impression": "Hypoinflation with cardiomegaly and pulmonary venous hypertension. Left mid lung focal atelectasis."
+  }
+}

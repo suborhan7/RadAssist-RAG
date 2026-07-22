@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Pulmonary fibrosis",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The cardiomediastinal silhouette and vasculature are within normal limits for size and contour. The lungs are normally inflated and clear. Osseous structures are within normal limits for patient age. Heart size is slightly enlarged, with pulmonary veins engorged. No infiltrates or pleural effusions. Aorta is somewhat tortuous. Degenerative disc disease is present in the thoracic spine.",
+    "impression": "Cardiomegaly and mild pulmonary venous hypertension",
+    "recommendation": "Follow-up imaging as clinically indicated",
+    "disclaimer": "Clinical uncertainty exists due to low agreement score (0.40) for the label 'Cardiomegaly'."
+  },
+  "ground_truth": {
+    "findings": "Cardiomegaly. There is no pulmonary edema. There is no focal consolidation. There are no [REDACTED] of pleural effusion. There is no evidence of pneumothorax.",
+    "impression": "Cardiomegaly similar to prior examination. Negative for evidence of acute pulmonary disease."
+  }
+}

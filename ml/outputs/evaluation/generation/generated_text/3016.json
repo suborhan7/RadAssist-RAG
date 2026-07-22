@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Heart size within normal limits, no focal airspace disease, no pneumothorax or pleural effusion. Low lung volumes with bronchovascular crowding at the bases. No focal opacity, pneumothorax, or large pleural effusion.",
+    "impression": "No acute cardiopulmonary findings. No displaced fractures.",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty: The agreement score is moderate (0.60), indicating some uncertainty in the findings and impression."
+  },
+  "ground_truth": {
+    "findings": "Cardiac and mediastinal contours are within normal limits. Prior granulomatous disease. The lungs are clear. Thoracic spondylosis.",
+    "impression": "No acute findings."
+  }
+}

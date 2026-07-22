@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Cardiomegaly with pulmonary vascular congestion, early interstitial edema",
+    "technique": "Frontal and lateral chest X-ray",
+    "findings": "Moderate cardiomegaly with bilateral interstitial opacities, increased since the previous exam. No focal airspace consolidation, pleural effusions or pneumothorax.",
+    "impression": "Persistent cardiomegaly with suggestion of left atrial enlargement as evidenced by cardiac contour on the lateral image and density on the frontal image. The lungs are clear. No visible pleural effusion or pneumothorax.",
+    "recommendation": "",
+    "disclaimer": ""
+  },
+  "ground_truth": {
+    "findings": "Cardiomegaly. No focal consolidation, effusion, or pneumothorax. Mild unfolding of the thoracic aorta. Bony thorax and soft tissues grossly unremarkable.",
+    "impression": "Cardiomegaly without acute cardiopulmonary abnormality."
+  }
+}

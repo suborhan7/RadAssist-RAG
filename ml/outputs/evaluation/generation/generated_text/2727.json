@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The lungs are clear, with no pleural effusion or pneumothorax. The heart and mediastinum are normal, and the skeletal structures are intact.",
+    "impression": "No acute pulmonary disease.",
+    "recommendation": "Clinical correlation recommended.",
+    "disclaimer": "This report is based on a limited dataset and may not reflect the full clinical picture."
+  },
+  "ground_truth": {
+    "findings": "Heart size is normal. Cardiomediastinal silhouette stable. No pneumothorax, pleural effusion, or focal airspace disease. Nodular densities consistent with chronic granulomatous disease. Bony structures appear intact. Emphysema.",
+    "impression": "Negative for acute cardiopulmonary disease. No pulmonary nodules identified."
+  }
+}

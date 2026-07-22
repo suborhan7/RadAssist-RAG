@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Innumerable bilateral lung nodules, normal heart size and pulmonary vascularity, no superimposed focal airspace disease, scoliosis present.",
+    "impression": "Continued innumerable bilateral small lung nodules. No change.",
+    "recommendation": "Follow-up study and 4 to 6 weeks could be considered to evaluate for resolution.",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.40)"
+  },
+  "ground_truth": {
+    "findings": "there is a rounded opacity in the right lower zone measuring 2.0 cm which is [REDACTED] to be in the posterobasal segment. There is of uncertain etiology but would benefit from followup at [REDACTED] some concern for neoplasm. A [REDACTED] is recommended. No airspace disease, effusion or cavitary nodule. Normal heart size and mediastinum. Visualized [REDACTED] of the chest [REDACTED] are within normal limits.",
+    "impression": "2 cm noncalcified nodule in the right lower lobe would benefit from a [REDACTED]."
+  }
+}

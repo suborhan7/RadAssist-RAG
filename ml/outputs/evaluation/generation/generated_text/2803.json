@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) and lateral views",
+    "findings": "The heart and lungs have [REDACTED] [REDACTED] in the interval. Both lungs are clear and expanded. Heart and mediastinum normal.",
+    "impression": "No active disease.",
+    "recommendation": "",
+    "disclaimer": ""
+  },
+  "ground_truth": {
+    "findings": "There are low lung volumes. The cardiac silhouette, upper mediastinum pulmonary vasculature are within normal limits. There is no acute pulmonary consolidation, pleural effusion or pneumothorax.",
+    "impression": "No acute cardiopulmonary process."
+  }
+}

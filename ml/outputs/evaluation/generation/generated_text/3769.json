@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Status post vertebroplasty at multiple levels, with kyphotic deformity and prior fractures of thoracic vertebral bodies and sternum.",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Severe kyphotic deformity of the chest involving prior fractures of thoracic vertebral bodies and the sternum. Multiple fractures identified involving upper thoracic vertebral bodies and a single upper lumbar vertebral body. Right-sided chest opacity, with distal tip in the upper right atrium. Mediastinal contours appear normal.",
+    "impression": "Changes consistent with kyphotic deformity and prior fractures, with no evidence of acute cardiopulmonary disease.",
+    "recommendation": "Clinical correlation recommended to assess for any potential complications related to the kyphotic deformity and prior fractures.",
+    "disclaimer": "No evidence of pulmonary consolidation, large pleural effusion/pneumothorax."
+  },
+  "ground_truth": {
+    "findings": "The lung volumes are low. However as compared to the prior study, there are increased perihilar opacities bilaterally. Stable dextroscoliosis of the lower thoracic spine with limited evaluation of the spinal [REDACTED]. The tracheostomy tube is in unchanged position.",
+    "impression": "Low lung volumes with slightly increased perihilar opacities bilaterally, [REDACTED] infectious etiology."
+  }
+}

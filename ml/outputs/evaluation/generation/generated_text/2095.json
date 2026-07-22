@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown clinical history with possible left retrocardiac airspace disease and small pleural effusion.",
+    "technique": "Posteroanterior (PA) and lateral views",
+    "findings": "Mild cardiomegaly, tortuous aorta. No focal infiltrate or pneumothorax. Soft tissue density identified in the medial right apex which is asymmetric compared to left. The lungs are clear bilaterally with no large pleural effusion.",
+    "impression": "Clinical uncertainty due to low agreement score (0.40). Asymmetric right medial apical opacity may be attributable to the sternoclavicular joint, but upper lobe airspace disease or pulmonary nodule is not entirely excluded.",
+    "recommendation": "Further imaging recommended to evaluate the asymmetric right medial apical opacity and possible left retrocardiac airspace disease.",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.40)"
+  },
+  "ground_truth": {
+    "findings": "Patchy subsegmental atelectasis is seen bibasilar region, no evidence of pneumothorax or pleural effusion is present. The cardiomediastinal silhouette is unremarkable. Old fractures seen the left 9th rib.",
+    "impression": "No acute cardiopulmonary abnormalities."
+  }
+}

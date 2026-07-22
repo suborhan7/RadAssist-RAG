@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown clinical history with possible scarring or atelectasis in the left lung base and incomplete evaluation of a 1 cm focal opacity in the right lung apex.",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The heart, pulmonary vessels, and mediastinum are within normal limits. There is no pleural effusion or pneumothorax. Minimal left basilar opacity compatible with scarring or atelectasis. A 1 cm focal opacity in the right lung apex incompletely evaluated by this exam. Calcified granulomas noted.",
+    "impression": "Atelectasis, possibly scarring, in the left lung base. Incomplete evaluation of a 1 cm focal opacity in the right lung apex. No acute pulmonary disease.",
+    "recommendation": "Noncontrast CT scan is indicated for further characterization of the right lung apex opacity.",
+    "disclaimer": "Clinical uncertainty exists due to low agreement score (0.40) and incomplete evaluation of the right lung apex opacity."
+  },
+  "ground_truth": {
+    "findings": "The heart is normal in size. The mediastinum is unremarkable. There are [REDACTED] opacities in both lung bases compatible with scarring or atelectasis. Calcified granuloma in the left upper lung is noted as well as right retrocardiac calcified nodule. No significant pleural effusion is seen.",
+    "impression": "Mild [REDACTED] [REDACTED] opacities with scarring; no acute disease."
+  }
+}

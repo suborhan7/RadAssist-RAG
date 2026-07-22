@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Frontal and lateral radiographs of the chest",
+    "findings": "Lungs are clear, heart size normal, no focal air space opacities, no pleural effusions or pneumothorax, no acute bony abnormalities.",
+    "impression": "No acute cardiopulmonary finding.",
+    "recommendation": "None",
+    "disclaimer": "Normal chest"
+  },
+  "ground_truth": {
+    "findings": "Lungs are clear. No pneumothorax or pleural effusion. Normal heart and mediastinal contours. Normal pulmonary vasculature. Bony thorax intact.",
+    "impression": "No acute cardiopulmonary abnormality."
+  }
+}

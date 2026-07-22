@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Heart size is normal. Lungs are clear. No pneumothorax or pleural effusion.",
+    "impression": "No acute cardiopulmonary findings.",
+    "recommendation": "None",
+    "disclaimer": "Low confidence due to limited clinical information"
+  },
+  "ground_truth": {
+    "findings": "Chest. No focal consolidation. No visualized pneumothorax. No large pleural effusions. The heart size is normal. No focal thoracic bony findings. Hand. There is also cortical and trabecular irregularity through the [REDACTED] of the scaphoid. There is a small cortical lucency through the base of the fourth metacarpal that may be a vascular [REDACTED].",
+    "impression": "Hand 1. Minimally displaced fracture through the [REDACTED] of the scaphoid. 2. Lucency through the base of the fourth metacarpal. This may represent a vascular [REDACTED] or if [REDACTED] tenderness exists over this location then fracture is more [REDACTED]. Chest 1. No acute cardiopulmonary findings."
+  }
+}

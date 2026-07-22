@@ -9,6 +9,11 @@ venv/
 *.egg-info/
 .pytest_cache/
 
+# Isolated Phase 20 Tier 2 environment (torch/transformers/bert_score) --
+# real, working, and documented in ml/evaluation/requirements-bertscore.txt,
+# but a ~1.7GB installed venv has no place in git.
+ml/evaluation/.venv-bertscore/
+
 # =============================================================================
 # ML datasets & outputs -- large, regeneratable from raw source + scripts.
 # Never commit images, embeddings, or masked outputs to git.

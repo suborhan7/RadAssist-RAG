@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior and lateral views",
+    "findings": "The trachea is midline, cardiomediastinal silhouette is normal, lungs are clear without evidence of acute infiltrate or effusion. No pneumothorax, mild degenerative changes of the thoracic spine on lateral view.",
+    "impression": "No acute cardiopulmonary abnormalities",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.60)"
+  },
+  "ground_truth": {
+    "findings": "The cardiomediastinal contours are within normal limits. Pulmonary vasculature is unremarkable. There is no focal airspace opacity. No pleural effusion or pneumothorax is seen. Multiple healed bilateral rib fractures. No acute bony abnormality is identified.",
+    "impression": "No acute cardiopulmonary abnormality."
+  }
+}

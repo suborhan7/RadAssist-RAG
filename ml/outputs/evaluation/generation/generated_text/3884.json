@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Increased opacity within the right upper lobe with possible mass and associated area of atelectasis or focal consolidation. [REDACTED] opacity in the left midlung overlying the posterior left 5th rib may represent focal airspace disease.",
+    "impression": "Focal consolidation or mass lesion with atelectasis in the right upper lobe, possibly representing a benign process. Recommend chest CT for further evaluation.",
+    "recommendation": "Chest CT",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.40)"
+  },
+  "ground_truth": {
+    "findings": "Diffuse, right greater than left, interstitial opacities. Central vascular congestion. No pneumothorax or focal consolidation. No pleural effusion. Heart size normal.",
+    "impression": "Bilateral interstitial opacities and central vascular congestion [REDACTED] interstitial edema."
+  }
+}

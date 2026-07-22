@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Both lungs are clear and expanded. Heart and mediastinum normal.",
+    "impression": "No active disease.",
+    "recommendation": "None",
+    "disclaimer": "Normal chest X-ray with no acute pulmonary abnormality."
+  },
+  "ground_truth": {
+    "findings": "The heart size is normal. The mediastinal contour is within normal limits. The lungs are free of any focal infiltrates. There are no nodules or masses. No visible pneumothorax. No visible pleural fluid. The [REDACTED] are grossly normal. There is no visible free intraperitoneal air under the diaphragm. Surgical clips are seen the right upper quadrant.",
+    "impression": "1. No acute radiographic cardiopulmonary process."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Prior granulomatous disease, thoracic spondylosis",
+    "technique": "Normal technique",
+    "findings": "The cardiac contours are normal. The lungs are clear. Thoracic spondylosis.",
+    "impression": "No acute process. No active disease.",
+    "recommendation": "",
+    "disclaimer": ""
+  },
+  "ground_truth": {
+    "findings": "Lungs are overall hyperexpanded consistent with obstructive lung disease. Lungs are clear without focal consolidation. No suspicious pulmonary nodules or masses are noted. No pleural effusions or pneumothoraces. heart size is upper limits of normal.",
+    "impression": "Hyperexpanded but clear lungs."
+  }
+}

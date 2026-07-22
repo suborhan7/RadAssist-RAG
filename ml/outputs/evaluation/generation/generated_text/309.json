@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior and lateral views",
+    "findings": "Apparent cardiomegaly partially accentuated by low lung volumes, stable right infrahilar nodular density (lateral view), calcified granuloma at the right base. No focal consolidation, pneumothorax or large pleural effusion.",
+    "impression": "No acute disease",
+    "recommendation": "Further evaluation recommended to assess cardiac status and rule out any potential underlying conditions.",
+    "disclaimer": "Clinical uncertainty exists due to low agreement score (0.60) for the label 'Normal'."
+  },
+  "ground_truth": {
+    "findings": "Normal and stable cardiomediastinal contours. No pneumothorax or pleural effusions. No focal lung consolidation.",
+    "impression": "No acute cardiopulmonary abnormality."
+  }
+}

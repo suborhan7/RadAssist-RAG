@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Heart size within normal limits. No alveolar consolidation, no findings of pleural effusion or pulmonary edema. No pneumothorax. Cardiac and mediastinal contours are within normal limits. The lungs are clear. Mild spondylosis.",
+    "impression": "No acute cardiopulmonary abnormalities.",
+    "recommendation": "None",
+    "disclaimer": "The radiologist's interpretation is based on the provided evidence and may not reflect the actual clinical situation."
+  },
+  "ground_truth": {
+    "findings": "The cardiac contours are normal. Atherosclerotic aorta. The lungs are clear. Thoracic spondylosis.",
+    "impression": "No acute process."
+  }
+}

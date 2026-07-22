@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Normal heart size, normal mediastinal silhouette, low lung volumes. No focal consolidation, effusion or pneumothorax. Prominent left epicardial fat.",
+    "impression": "No radiographic evidence of acute cardiopulmonary disease. Normal heart size and pulmonary vasculature. Lung parenchyma is clear.",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.60)"
+  },
+  "ground_truth": {
+    "findings": "Heart and mediastinum within normal limits. Negative for focal pulmonary consolidation, pleural effusion, or pneumothorax.",
+    "impression": "No acute abnormality."
+  }
+}

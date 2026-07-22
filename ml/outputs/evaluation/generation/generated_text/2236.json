@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown clinical history",
+    "technique": "Frontal view and other views as necessary",
+    "findings": "The cardiomediastinal silhouette is normal in size and contour. No focal consolidation, pneumothorax or large pleural effusion. The lungs are clear bilaterally with no evidence of focal consolidation, pneumothorax, or pleural effusion. Cardiomediastinal silhouette is unremarkable. Visualized osseous structures of the thorax are without acute abnormality.",
+    "impression": "Negative for acute abnormality",
+    "recommendation": "Clinical correlation recommended to rule out infection and follow up to resolution",
+    "disclaimer": "Uncertainty exists due to low agreement score (0.60)"
+  },
+  "ground_truth": {
+    "findings": "The cardiac silhouette, mediastinum, and pulmonary vasculature are within normal limits. Lungs are clear. No pleural fluid or pneumothorax is appreciated.",
+    "impression": "Unremarkable chest x-[REDACTED]."
+  }
+}

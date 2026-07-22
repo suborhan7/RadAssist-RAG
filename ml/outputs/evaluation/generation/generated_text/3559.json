@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) and lateral radiograph",
+    "findings": "Patchy right base airspace disease, stable bilateral calcified granulomas/lymph, and a bullet in the posterior soft tissues of the left chest wall. Vague density in the right mid lung, possibly related to scapular tip and superimposed ribs.",
+    "impression": "Stable cardiomediastinal silhouette with patchy right base airspace disease, likely chronic granulomatous disease.",
+    "recommendation": "Oblique images may be considered to exclude a true nodule in the right mid lung.",
+    "disclaimer": "Clinical uncertainty exists due to low agreement score (0.40) for the top-voted label 'Lung Opacity'."
+  },
+  "ground_truth": {
+    "findings": "Heart size within normal limits. Negative for focal pulmonary consolidation, pleural effusion, or pneumothorax. Mild levocurvature of thoracic spine. A 9 mm pulmonary nodule is noted partially overlying the posterior 6th right rib on the frontal view.",
+    "impression": "No acute abnormality."
+  }
+}

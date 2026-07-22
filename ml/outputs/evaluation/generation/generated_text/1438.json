@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Previous history of granulomatous disease",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Mild streakiness in the right base, calcified granulomatous disease noted, and evidence of healed granulomatous disease in the right hemithorax. The lungs are clear without focal airspace consolidation, large pleural effusion or pneumothorax.",
+    "impression": "No acute abnormality with previous history of granulomatous disease",
+    "recommendation": "Further evaluation with CT may be necessary to further characterize the left lower lobe nodule",
+    "disclaimer": "Clinical uncertainty exists due to low agreement score (0.40) for the top-voted label 'Granuloma'"
+  },
+  "ground_truth": {
+    "findings": "The lungs are clear bilaterally. Specifically, no evidence of focal consolidation, pneumothorax, or pleural effusion.. Cardio mediastinal silhouette is unremarkable. Visualized osseous structures of the thorax are without acute abnormality.",
+    "impression": "No acute cardiopulmonary abnormality.. Specifically, no evidence of active tuberculous process."
+  }
+}

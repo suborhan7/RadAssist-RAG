@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Standard PA view",
+    "findings": "The lungs are clear bilaterally, with no evidence of focal consolidation, pneumothorax, or pleural effusion. Cardiomediastinal silhouette is unremarkable. Tortuosity of the thoracic aorta. Visualized osseous structures of the thorax are without acute abnormality.",
+    "impression": "No acute cardiopulmonary abnormality",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty: The agreement score is low, and there may be underlying conditions not detected by this examination."
+  },
+  "ground_truth": {
+    "findings": "Borderline heart size. Tortuous calcified aorta. No active pulmonary disease. Mild spondylosis.",
+    "impression": "No acute process."
+  }
+}

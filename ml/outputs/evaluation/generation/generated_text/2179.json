@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Frontal and lateral views",
+    "findings": "Right lung base airspace disease, left lung base atelectasis, mild wedge deformity of T12, hypoinflated lungs",
+    "impression": "Right lung base airspace disease and left base atelectasis",
+    "recommendation": "Further evaluation recommended",
+    "disclaimer": "Clinical uncertainty due to low agreement score"
+  },
+  "ground_truth": {
+    "findings": "Flattening of the bilateral hemidiaphragms. Lungs are clear. Soft tissues and bony structures unremarkable. No pneumothorax or effusion.",
+    "impression": "Mild hyperexpansion. No acute process."
+  }
+}

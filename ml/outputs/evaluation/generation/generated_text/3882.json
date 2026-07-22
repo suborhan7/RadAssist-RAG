@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Normal heart size, normal mediastinal silhouette, no pneumothorax or pleural effusion. Lung volumes are low.",
+    "impression": "Low lung volumes with focal atelectasis, no visible active cardiopulmonary disease.",
+    "recommendation": "Further evaluation recommended to determine underlying cause of hypoinflation and atelectasis",
+    "disclaimer": "Due to low agreement score (0.40), the findings and impression should be considered uncertain."
+  },
+  "ground_truth": {
+    "findings": "Eventration of the left diaphragm is noted. Question left basilar atelectasis versus infiltrate. No evidence of pneumothorax. Generalized lung volumes. No definite pleural effusions. Heart size within normal limits. Osseous structures intact.",
+    "impression": "Generalized low lung lungs with eventration of the left hemidiaphragm. Question concomitant left basilar opacity, may represent atelectasis or infiltrate."
+  }
+}

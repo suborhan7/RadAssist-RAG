@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Standard PA view",
+    "findings": "The cardiomediastinal silhouette is within normal limits for size and contour. The lungs are normally inflated without evidence of focal airspace disease, pleural effusion, or pneumothorax. Osseous structures are within normal limits for patient age.",
+    "impression": "Chest radiograph. No acute radiographic cardiopulmonary process.",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty: The agreement score is moderate (0.60), indicating some degree of uncertainty in the findings and impression."
+  },
+  "ground_truth": {
+    "findings": "The heart is upper limits of normal in size. Mild tortuosity of the thoracic aorta. The lungs are clear without infiltrate. There is no effusion or pneumothorax.",
+    "impression": "1. No acute cardiopulmonary disease."
+  }
+}

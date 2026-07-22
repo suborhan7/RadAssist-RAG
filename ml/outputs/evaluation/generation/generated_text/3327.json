@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Postsurgical changes of the chest including CABG procedure, stable.",
+    "technique": "Standard anterior-posterior view",
+    "findings": "The lungs are clear. There is no pleural effusion or pneumothorax. Some atherosclerotic changes of the aorta are seen. The skeletal structures are normal.",
+    "impression": "No acute pulmonary disease. Minimal atelectasis right base. No evidence of tuberculosis. Heart size is normal.",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty exists due to low agreement score (0.40) for top candidate label 'Calcinosis/Atherosclerosis'."
+  },
+  "ground_truth": {
+    "findings": "There is enlargement of the cardiac silhouette. There is a focal opacity within the right upper lung. There is dense calcification of the thoracic aorta. There is no pneumothorax. There is no large pleural effusion.",
+    "impression": "1. Right upper lobe opacity. Without comparisons, this may represent a focal area of infection/pneumonia. However, correlation should be [REDACTED] for possible tuberculosis exposure as tuberculosis infection could have this appearance. If discordant from clinical suspicion, or does not resolve on follow up imaging, consider further evaluation with [REDACTED] scan. 2. Enlargement of the cardiac silhouette."
+  }
+}

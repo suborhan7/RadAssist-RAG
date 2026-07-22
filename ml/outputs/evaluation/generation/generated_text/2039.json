@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Standard PA view",
+    "findings": "The cardiac contours are normal. The lungs are clear. Thoracic spondylosis is present.",
+    "impression": "No acute cardiopulmonary disease",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty: Low"
+  },
+  "ground_truth": {
+    "findings": "Cardiac and mediastinal contours are within normal limits. Large calcified granulomas in the right hilum. The lungs are otherwise clear. Prior anterior cervical fusion.",
+    "impression": "No acute pulmonary findings."
+  }
+}

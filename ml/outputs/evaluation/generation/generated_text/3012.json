@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Frontal and lateral views",
+    "findings": "Normal size and configuration of the cardiac silhouette, normal mediastinal contour, pulmonary vasculature, central airways, and lung volumes. No pleural effusion.",
+    "impression": "Heart size is normal and the lungs are clear. No acute or active cardiac, pulmonary, or pleural disease.",
+    "recommendation": "None",
+    "disclaimer": "No acute radiographic cardiopulmonary process"
+  },
+  "ground_truth": {
+    "findings": "The cardiomediastinal silhouette is normal in size and contour. The lungs are clear without focal airspace opacity, pleural effusion, or pneumothorax. The osseous structures are intact.",
+    "impression": "No acute cardiopulmonary process."
+  }
+}

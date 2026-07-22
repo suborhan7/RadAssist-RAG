@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Patient with degenerative spine disease, prosthetic right shoulder, and possible [REDACTED] body in the axillary recess of the left shoulder.",
+    "technique": "Standard chest X-ray",
+    "findings": "Clear lungs. Calcified granulomas seen in the posterior right lower lobe. Small area of scarring or atelectasis in the left base. Degenerative changes of the spine.",
+    "impression": "No acute pulmonary findings. Minimal small area scarring of the left base. No acute radiographic cardiopulmonary process. Clinical uncertainty exists due to low agreement score (0.40) for the top-voted label 'Granuloma'.",
+    "recommendation": "Follow-up imaging not indicated at this time.",
+    "disclaimer": ""
+  },
+  "ground_truth": {
+    "findings": "The heart is normal in size. The mediastinum is unremarkable. Right chest [REDACTED] is visualized with tip at cavoatrial junction. There is no pneumothorax. The lungs are clear.",
+    "impression": "No acute disease."
+  }
+}

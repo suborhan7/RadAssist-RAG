@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) and lateral views",
+    "findings": "The heart is normal in size. The lungs are clear. No pneumothorax, effusion, or airspace disease identified.",
+    "impression": "No acute disease. Normal chest.",
+    "recommendation": "Follow-up not indicated at this time.",
+    "disclaimer": "Low confidence due to limited information and agreement score of 0.60."
+  },
+  "ground_truth": {
+    "findings": "Normal cardiac contours. No pleural effusion or pneumothorax. No acute bony abnormalities. Clear lung [REDACTED] bilaterally. No intervertebral disc narrowing or loss of vertebral body [REDACTED].",
+    "impression": "1. No acute bony abnormalities. 2. No acute cardiopulmonary abnormalities."
+  }
+}

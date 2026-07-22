@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Frontal and lateral views with overlying external cardiac monitor leads",
+    "findings": "Normal size and configuration of the cardiac silhouette, normal pulmonary vasculature and central airways, no focal airspace consolidation or pleural effusion. Nodular densities consistent with chronic granulomatous disease.",
+    "impression": "No acute or active cardiac, pulmonary or pleural disease",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.60)"
+  },
+  "ground_truth": {
+    "findings": "The cardiomediastinal silhouette and pulmonary vasculature are within normal limits in size. The lungs are mildly hypoinflated but grossly clear of focal airspace disease, pneumothorax, or pleural effusion. There are mild degenerative endplate changes in the thoracic spine. There are no acute bony findings.",
+    "impression": "No acute cardiopulmonary findings."
+  }
+}

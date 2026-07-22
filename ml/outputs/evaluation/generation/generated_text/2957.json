@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Lung Opacity, minimal atelectasis in left base, small bilateral pleural effusions, patchy bilateral airspace disease, degenerative changes in the spine, arthritic changes of skeletal structures, previous rotator cuff repair on right.",
+    "impression": "Minimal lung opacity and atelectasis, possible chronic scarring or atelectasis. No acute abnormality.",
+    "recommendation": "Further evaluation recommended to determine cause of lung opacity.",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.80) for top candidate label 'Lung Opacity'."
+  },
+  "ground_truth": {
+    "findings": "The heart is mildly enlarged. Pulmonary vascularity is increased. There is again mild elevation of the right hemidiaphragm. Air space disease and/or atelectasis is noted in right lung base. There is also [REDACTED] streaky opacity in the left base. The costophrenic [REDACTED] are blunted.",
+    "impression": "1. Cardiomegaly and pulmonary vascular congestion. 2. Eventration of right hemidiaphragm with basilar atelectasis."
+  }
+}

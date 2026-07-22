@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) and lateral views",
+    "findings": "The lungs are clear, with no pneumothorax or pleural effusion. The heart and mediastinum are within normal limits. Bony structures appear intact.",
+    "impression": "No acute cardiopulmonary process.",
+    "recommendation": "None",
+    "disclaimer": "Based on available evidence."
+  },
+  "ground_truth": {
+    "findings": "Heart size and mediastinal contours appear within normal limits. Pulmonary vascularity is within normal limits. No focal consolidation, suspicious pulmonary opacity, pneumothorax or definite pleural effusion. Visualized osseous structures appear intact.",
+    "impression": "No acute cardiopulmonary abnormality. No radiographic evidence of metastatic disease in the chest."
+  }
+}

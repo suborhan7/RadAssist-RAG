@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "PA and lateral views",
+    "findings": "Mild patchy bilateral airspace disease, small bilateral pleural effusions, low lung volumes with central bronchovascular crowding and patchy basilar atelectasis, degenerative changes of the spine.",
+    "impression": "Small bilateral pleural effusions with a few scattered areas of patchy bilateral airspace disease. Clinical uncertainty exists due to low agreement score (0.60) for the top candidate label 'Pleural Effusion'.",
+    "recommendation": "Further evaluation recommended to determine cause of pleural effusion and airspace disease.",
+    "disclaimer": ""
+  },
+  "ground_truth": {
+    "findings": "Low lung volumes. Elevation of the right hemidiaphragm. Patchy opacities right base again noted. Left lung clear. Heart size top normal. Aortic calcification. Granulomas. No evidence of pneumothorax. Blunting of the bilateral costophrenic [REDACTED]. Degenerative changes of the thoracic spine.",
+    "impression": "Right lower lobe airspace disease."
+  }
+}

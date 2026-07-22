@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Lung Opacity, minimal atelectasis in the left base, no effusion or pneumothorax, heart and mediastinal contours within normal limits, [REDACTED] density foreign body present in the soft tissues overlying the left lateral chest wall.",
+    "impression": "Minimal atelectasis left base, no acute abnormality.",
+    "recommendation": "",
+    "disclaimer": ""
+  },
+  "ground_truth": {
+    "findings": "Frontal and lateral views of the chest with overlying external cardiac monitor leads show reduced lung volumes with bronchovascular crowding of basilar atelectasis. No definite focal airspace consolidation or pleural effusion. The cardiac silhouette appears mildly enlarged.",
+    "impression": "Mild cardiomegaly. Basilar atelectasis."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Digital Chest Radiography",
+    "findings": "The heart size and mediastinal silhouette are within normal limits for contour. The lungs are clear. No pneumothorax or pleural effusions. A right IJ dual-lumen central venous catheter is present with the distal tip at the [REDACTED] which junction.",
+    "impression": "No acute cardiopulmonary abnormalities. Right IJ catheter tip in proximal right atrium. No pneumothorax.",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.40)"
+  },
+  "ground_truth": {
+    "findings": "The heart is normal in size. The mediastinum is within normal limits. Aorta is tortuous. Right chest [REDACTED] tip is visualized at the proximal right atrium. The lungs are grossly clear. No pneumothorax is seen. There are deformities of the left lateral 7th and 8th ribs possibly healing or old fractures.",
+    "impression": "No acute disease."
+  }
+}

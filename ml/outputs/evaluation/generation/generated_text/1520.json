@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "PA and lateral views",
+    "findings": "Lungs are clear bilaterally. Cardiac and mediastinal silhouettes are normal. Pulmonary vasculature is normal. No pneumothorax or pleural effusion. No acute bony abnormality.",
+    "impression": "No acute cardiopulmonary abnormality.",
+    "recommendation": "None",
+    "disclaimer": "Normal chest"
+  },
+  "ground_truth": {
+    "findings": "Cardiomediastinal silhouette is normal. Pulmonary vasculature and [REDACTED] are normal. No consolidation, pneumothorax or large pleural effusion. Postsurgical changes of the cervical spine are present.",
+    "impression": "No acute cardiopulmonary disease."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Standard PA view",
+    "findings": "The lungs are clear without focal airspace opacity, pleural effusion, or pneumothorax. The heart size is normal. Normal pulmonary vascularity. No radiographic evidence of acute cardiopulmonary disease.",
+    "impression": "No acute abnormality.",
+    "recommendation": "Further evaluation recommended for clarification of interstitial opacities and mild blunting of posterior costophrenic sulci.",
+    "disclaimer": "Clinical uncertainty exists due to low agreement score (0.40) and limited evaluation."
+  },
+  "ground_truth": {
+    "findings": "The heart size is within normal limits. After cirrhotic calcification of the thoracic aorta. Hyperexpanded lungs with flattened diaphragms and increased retrosternal clear space suggestive of emphysema. Streaky left basilar opacities are favored to represent scarring. No pleural effusions or pneumothorax. Exaggerated thoracic kyphosis. Scattered calcified granulomas bilaterally. No acute bony abnormalities.",
+    "impression": "1. No acute cardiopulmonary findings. 2. Chronic changes of emphysema and left basilar scarring."
+  }
+}

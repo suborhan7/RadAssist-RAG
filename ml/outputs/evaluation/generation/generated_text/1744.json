@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Stable cardiomegaly, mild degenerative changes of the thoracic spine, and clear lungs.",
+    "impression": "Stable cardiomegaly with clear lungs.",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.40)"
+  },
+  "ground_truth": {
+    "findings": "Cardiac and mediastinal silhouette are unremarkable. Lungs are clear. No focal consolidation, pneumothorax, or pleural effusion identified. [REDACTED] and soft tissue are unremarkable.",
+    "impression": "No acute cardiopulmonary abnormality."
+  }
+}

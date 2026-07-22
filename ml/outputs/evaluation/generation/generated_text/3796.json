@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Cardiomediastinal silhouette and pulmonary vasculature are stable and within normal limits. Lungs are clear. No pneumothorax or pleural effusion.",
+    "impression": "No acute cardiopulmonary findings. Specifically, no radiographic evidence of active tuberculosis.",
+    "recommendation": "None",
+    "disclaimer": "Based on available evidence"
+  },
+  "ground_truth": {
+    "findings": "The cardiomediastinal silhouette is within normal limits for appearance. No focal areas of pulmonary consolidation. No pneumothorax. No pleural effusion. The thoracic spine appears intact. No acute, displaced rib fractures.",
+    "impression": "1. No acute intrathoracic abnormality."
+  }
+}

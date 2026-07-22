@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown clinical history with possible prior cholecystectomy and unclear [REDACTED] scan.",
+    "technique": "Posteroanterior and lateral views",
+    "findings": "Stable cardiomegaly, mild degenerative changes of the thoracic spine, minimal sclerotic change overlying the midthoracic spine on the lateral view. The lungs are clear with no focal airspace opacities, pneumothorax or pleural effusion.",
+    "impression": "The cardiomediastinal silhouette is normal in size and contour. There is stable cardiomegaly with clear lungs. A possibility of minimal sclerotic change in the thoracic spine which may be pulmonary or skeletal in origin cannot be excluded, and further evaluation such as bone scan would be helpful to determine its nature.",
+    "recommendation": "Further evaluation with bone scan recommended to evaluate for potential metastatic disease.",
+    "disclaimer": "The agreement score for this report is low (0.40), indicating uncertainty in the findings."
+  },
+  "ground_truth": {
+    "findings": "The lungs appear clear. The heart and pulmonary [REDACTED] are normal. Pleural spaces are clear. Mediastinal contours are normal. Patient status post [REDACTED] sternotomy and CABG.",
+    "impression": "No acute cardiopulmonary disease"
+  }
+}

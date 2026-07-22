@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Mildly low lung volumes, no consolidation, pneumothorax, or pleural effusion. Left costophrenic opacity may represent pleural or pericardial fat.",
+    "impression": "Low lung volumes, no acute cardiopulmonary findings.",
+    "recommendation": "Further evaluation recommended to determine the cause of mild lung volume loss and left costophrenic opacity.",
+    "disclaimer": "The presence of a small, nodular opacity in the right upper lobe is not further characterized due to insufficient evidence."
+  },
+  "ground_truth": {
+    "findings": "There your regular interstitial changes and possibly fibrosis in the left mid and lower lung zone and region of the right middle lobe. Hyperinflation is present. No focal consolidation is seen. There is no evidence for pleural effusion. The heart is not enlarged. Mediastinum is normal. There are arthritic changes of the spine.",
+    "impression": "[REDACTED] of COPD and interstitial lung disease. No definite pneumonia. There does appear to be progression of changes since [REDACTED]."
+  }
+}

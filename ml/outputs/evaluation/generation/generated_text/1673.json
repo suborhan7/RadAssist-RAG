@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Heart size within normal limits, no focal alveolar consolidation or pleural effusion seen. Mild spine curvature noted.",
+    "impression": "No acute cardiopulmonary findings, patchy right lower lobe opacities likely due to degenerative changes.",
+    "recommendation": "Clinical correlation recommended",
+    "disclaimer": "Uncertainty exists regarding the nature of the right lower lobe opacities"
+  },
+  "ground_truth": {
+    "findings": "Heart size is normal in cardiomediastinal silhouette is normal in contour. The lungs are clear bilaterally. No [REDACTED] consolidations. No pleural effusion. No pneumothorax. [REDACTED] and soft tissues are unremarkable. Lungs are hyperinflated.",
+    "impression": "No acute cardiopulmonary abnormality"
+  }
+}

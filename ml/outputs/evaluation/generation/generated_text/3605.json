@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The lungs are clear without evidence of focal airspace disease. There is no evidence of pneumothorax or large pleural effusion. The cardiac and mediastinal contours are within normal limits. Mild degenerative change is seen within the midthoracic spine.",
+    "impression": "No acute radiographic cardiopulmonary process",
+    "recommendation": "None",
+    "disclaimer": "Due to low agreement score, there may be uncertainty in these findings"
+  },
+  "ground_truth": {
+    "findings": "Heart size within normal limits. No focal airspace disease. No pleural effusion.",
+    "impression": "No acute cardiopulmonary findings. Specifically, no evidence of pleural effusion or hilar or mediastinal adenopathy."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posterior-anterior (PA) and lateral views",
+    "findings": "Cardiomediastinal silhouette is stable with low lung volumes. No pleural line or costophrenic blunting to suggest pneumothorax or large pleural effusion. The heart size is normal, and the pulmonary vasculature are within normal limits. Airspace opacity is noted in the posterior segment on the lateral view.",
+    "impression": "Low lung volumes with possible developing infection in the posterior airspace.",
+    "recommendation": "Further evaluation recommended to determine the cause of the low lung volumes and airspace opacity.",
+    "disclaimer": "Clinical uncertainty exists due to limited information."
+  },
+  "ground_truth": {
+    "findings": "The heart size is at the upper limits of normal. The mediastinum is unremarkable. There is no pleural effusion, pneumothorax, or focal airspace disease. Mild chronic degenerative changes are present within the thoracic spine.",
+    "impression": "No acute cardiopulmonary abnormality."
+  }
+}

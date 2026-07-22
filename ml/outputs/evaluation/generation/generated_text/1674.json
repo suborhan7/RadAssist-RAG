@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Standard PA view",
+    "findings": "The heart is normal in size and contour. The mediastinum is unremarkable. The lungs are clear bilaterally. No large pleural effusion or pneumothorax.",
+    "impression": "No radiographic evidence of acute cardiopulmonary disease",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty: Low"
+  },
+  "ground_truth": {
+    "findings": "The previously seen right-sided PICC has been removed. The heart size is normal. Lungs are clear. There is no pneumothorax or large pleural effusion. Bony structures are within normal limits.",
+    "impression": "No acute cardiopulmonary findings."
+  }
+}

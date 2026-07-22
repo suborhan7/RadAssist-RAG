@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The heart size is normal. Lungs are clear. There is no pleural line to suggest pneumothorax or costophrenic blunting to suggest large pleural effusion. Bony structures are within normal limits.",
+    "impression": "Normal chest radiograph.",
+    "recommendation": "None",
+    "disclaimer": "No acute cardiopulmonary findings."
+  },
+  "ground_truth": {
+    "findings": "Surgical [REDACTED] at the distal left clavicle. No acute osseous abnormality. Soft tissue structures are within normal limits. Stable normal cardio mediastinal silhouettes and hilar structures. The lungs are normally inflated without evidence of focal airspace disease, pleural effusion, or pneumothorax.",
+    "impression": "1. No acute radiographic cardiopulmonary process."
+  }
+}

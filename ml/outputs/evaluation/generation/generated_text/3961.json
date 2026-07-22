@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "[REDACTED] left perihilar and midlung densities, possible sequela of infectious process versus other pathology including metastatic disease in a patient with thyroid cancer.",
+    "technique": "PA and lateral views",
+    "findings": "1.9 cm interruption of the tunneled left central venous catheter, at the level of the overlap of the clavicle and first rib. Normal heart size. [REDACTED] right basal airspace opacity. Persistent prominent interstitial markings of the right upper lobe.",
+    "impression": "Lung Opacity",
+    "recommendation": "Follow-up imaging and clinical evaluation as clinically indicated.",
+    "disclaimer": "The findings are based on the provided evidence, but the agreement score for the top candidate label 'Lung Opacity' is relatively low (0.60), so some uncertainty exists in the interpretation."
+  },
+  "ground_truth": {
+    "findings": "The heart size is normal. The mediastinal contour is within normal limits. There is a streaky opacity within the right upper lobe. There are no nodules or masses. No visible pneumothorax. No visible pleural fluid. The [REDACTED] are grossly normal. There is no visible free intraperitoneal air under the diaphragm.",
+    "impression": "Right upper lobe infiltrate consistent with pneumonia."
+  }
+}

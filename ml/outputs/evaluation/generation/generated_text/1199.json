@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The heart is normal size, mediastinum is unremarkable, and lungs are clear bilaterally. No pleural effusion, pneumothorax, or focal airspace disease.",
+    "impression": "No acute cardiopulmonary abnormality.",
+    "recommendation": "None",
+    "disclaimer": "Based on available evidence."
+  },
+  "ground_truth": {
+    "findings": "The cardiomediastinal silhouette is within normal limits. The lungs are well expanded without consolidation or edema. No pneumothorax or pleural effusion. Visualized osseous structures are unremarkable.",
+    "impression": "No radiographic evidence of active cardiopulmonary disease."
+  }
+}

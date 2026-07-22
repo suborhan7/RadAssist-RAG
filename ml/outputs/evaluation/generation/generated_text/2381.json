@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Prior granulomatous disease, thoracic spondylosis, and lower cervical degenerative arthritis",
+    "technique": "Standard chest radiography",
+    "findings": "Heart size within normal limits. No focal airspace disease. No pneumothorax or pleural effusion. Normal cardiac contours.",
+    "impression": "No acute cardiopulmonary findings. The lungs are clear. Thoracic spondylosis and lower cervical degenerative arthritis are present.",
+    "recommendation": "Further evaluation and management as clinically indicated",
+    "disclaimer": "Clinical uncertainty exists due to low agreement score (0.40)"
+  },
+  "ground_truth": {
+    "findings": "Cardiac and mediastinal contours are within normal limits. Granulomatous calcifications are present. The lungs are otherwise clear. Bony structures are intact. Prior cholecystectomy.",
+    "impression": "No acute preoperative findings."
+  }
+}

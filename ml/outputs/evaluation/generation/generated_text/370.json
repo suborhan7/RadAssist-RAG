@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The heart size is normal, mediastinal contour within normal limits, lungs free of focal infiltrates, no nodules or masses, no visible pneumothorax, pleural fluid, or free intraperitoneal air. Bony structures are grossly normal.",
+    "impression": "No acute radiographic cardiopulmonary process",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty: The agreement score is low (0.40), so the impression should be considered uncertain"
+  },
+  "ground_truth": {
+    "findings": "Heart size and cardiomediastinal contours are normal. Lungs are clear without focal airspace opacity, pleural effusion, or pneumothorax. Osseous structures are grossly intact.",
+    "impression": "Negative for acute cardiopulmonary findings."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Digital Chest Radiography",
+    "findings": "Calcified and tortuous aorta, compatible with atherosclerotic disease; interval development of left lower lobe airspace disease.",
+    "impression": "Interval development of left lower lobe airspace disease, which may be due to atelectasis or infiltrate. Clinical uncertainty exists regarding the nature of this finding.",
+    "recommendation": "Further evaluation and clinical correlation recommended.",
+    "disclaimer": "The agreement score for the top candidate label is low (0.40), indicating clinical uncertainty."
+  },
+  "ground_truth": {
+    "findings": "The cardiac and mediastinal silhouette is normal There is no evidence of pneumomediastinum or pneumothorax. Clear lungs There are no large pleural effusions No evidence of displaced fractures.",
+    "impression": "1. No evidence of pneumothorax or pneumomediastinum. 2. Clear lungs."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Persistent low lung volumes, stable streaky left lower lobe airspace disease, and probable residual left pneumothorax.",
+    "technique": "Frontal and lateral radiographs of the chest",
+    "findings": "Low lung volumes bilaterally with central bronchovascular crowding without focal consolidation, pleural effusion, or pneumothoraces. Cardiomediastinal silhouette is within normal limits. Degenerative changes of the thoracic spine are noted.",
+    "impression": "The patient has persistent low lung volumes with stable streaky left lower lobe airspace disease and probable residual left pneumothorax. The top candidate label 'Atelectasis' has a moderate agreement score (0.60).",
+    "recommendation": "Further clinical evaluation and follow-up imaging as clinically indicated.",
+    "disclaimer": ""
+  },
+  "ground_truth": {
+    "findings": "There is a rounded dense opacity in the lateral left midlung zone probably the left upper lobe most suggestive of a rounded pneumonia. There is no pleural effusion. The heart and mediastinum are normal. The skeletal structures are normal.",
+    "impression": "Opacity [REDACTED] representing left upper lobe pneumonia. Recommend followup radiographically until cleared to ensure that there is no underlying mass."
+  }
+}

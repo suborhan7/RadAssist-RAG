@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Lungs are clear bilaterally. Cardiac and mediastinal silhouettes are normal. Pulmonary vasculature is normal. No pneumothorax or pleural effusion. There is a stable electronic device on the left anterior chest wall. Advanced degenerative changes are present in the [REDACTED] bilaterally. A 38 mm lucency with geographic margins is seen in the right humeral head.",
+    "impression": "No acute cardiopulmonary abnormality. Lucent lesion with thin sclerotic margin in the right humeral head, likely a large geode considering associated degenerative changes. Dedicated views of the shoulder may be helpful for further characterization.",
+    "recommendation": "Dedicated views of the shoulder may be helpful for further characterization.",
+    "disclaimer": "Clinical uncertainty exists due to low agreement score (0.60) and limited clinical information."
+  },
+  "ground_truth": {
+    "findings": "AP and lateral views of the chest were obtained. The heart is normal size. Mediastinum is unremarkable. Lungs are hypoinflated but clear. No focal consolidation is seen.",
+    "impression": "No acute disease"
+  }
+}

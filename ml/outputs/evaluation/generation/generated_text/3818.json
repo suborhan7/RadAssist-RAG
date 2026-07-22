@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The heart and lungs have [REDACTED] [REDACTED] in the interval. Both lungs are clear and expanded. Heart and mediastinum normal. Atherosclerosis of the aortic [REDACTED]. No focal consolidation, pneumothorax or large pleural effusion. T-spine osteophytes.",
+    "impression": "No acute cardiopulmonary abnormality",
+    "recommendation": "",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.40) for the top-voted label 'Other Abnormality'."
+  },
+  "ground_truth": {
+    "findings": "Heart and mediastinum within normal limits. Negative for focal pulmonary consolidation, pleural effusion, or pneumothorax.",
+    "impression": "No acute abnormality."
+  }
+}

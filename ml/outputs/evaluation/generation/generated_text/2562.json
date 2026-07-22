@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The lungs are clear, and without focal air space opacity. The cardiomediastinal silhouette is normal in size and contour, and stable. There are calcifications in the aortic [REDACTED]. There is a calcified granuloma at the left lower lung. No pneumothorax or large pleural effusion.",
+    "impression": "No acute cardiopulmonary abnormality",
+    "recommendation": "Further evaluation and clinical correlation recommended",
+    "disclaimer": "Clinical uncertainty exists due to low agreement score (0.60)"
+  },
+  "ground_truth": {
+    "findings": "The heart size is normal. The mediastinal contour is within normal limits. Low lung volumes and bronchovascular crowding. Mild bibasilar opacities, [REDACTED] atelectasis. The lungs are free of any focal infiltrates. There are no nodules or masses. No visible pneumothorax. No visible pleural fluid. Stable degenerative change throughout the thoracic spine. Stable thoracolumbar retrolisthesis. There is no visible free intraperitoneal air under the diaphragm.",
+    "impression": "No acute radiographic cardiopulmonary process."
+  }
+}

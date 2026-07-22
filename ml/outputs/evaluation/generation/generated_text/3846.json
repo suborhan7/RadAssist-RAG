@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior view",
+    "findings": "Low lung volumes with streaky bibasilar opacities, subsegmental atelectasis over infiltrate.",
+    "impression": "Low lung volumes with subsequent bronchovascular crowding and bibasilar atelectasis.",
+    "recommendation": "Further evaluation recommended to determine underlying cause of low lung volumes and atelectasis.",
+    "disclaimer": "Clinical uncertainty exists due to limited information."
+  },
+  "ground_truth": {
+    "findings": "Heart size and mediastinal contour are normal. Pulmonary vascularity is normal. The right lung is clear. There is a recurrence moderate-sized left pleural effusion. No pneumothorax. Limited right base stringy density compatible with atelectasis. Dextroscoliosis of the thoracic spine.",
+    "impression": "Recurrent moderate sized left pleural effusion."
+  }
+}

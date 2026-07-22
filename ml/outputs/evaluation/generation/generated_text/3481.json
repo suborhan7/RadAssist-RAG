@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Frontal and lateral views",
+    "findings": "Normal size and configuration of the cardiac silhouette, normal mediastinal contour, pulmonary [REDACTED] and vasculature, central airways and lung volumes. No pleural effusion or focal consolidation.",
+    "impression": "No acute or active cardiac, pulmonary or pleural disease",
+    "recommendation": "Follow up to ensure resolution of focal airspace disease in the right middle lobe",
+    "disclaimer": "Confidence level: moderate (0.40 agreement score)"
+  },
+  "ground_truth": {
+    "findings": "The cardiomediastinal silhouette and vasculature are within normal limits for size and contour. Lungs are hyperexpanded without focal airspace consolidation, pleural effusion, or pneumothorax.. Degenerative endplate changes of the spine.",
+    "impression": "1. No acute radiographic cardiopulmonary process."
+  }
+}

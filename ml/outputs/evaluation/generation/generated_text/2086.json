@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Lungs are clear, heart size is normal, and mediastinal lymph nodes are densely calcified, suggesting prior histoplasmosis exposure. No consolidating airspace disease, pleural effusion, or pneumothorax is seen.",
+    "impression": "No acute cardiopulmonary finding",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty exists due to low agreement score (0.60)"
+  },
+  "ground_truth": {
+    "findings": "The cardiomediastinal silhouette is within normal limits. Lungs are clear without focal consolidation. No visualized pneumothorax or large pleural effusion. No acute bone abnormality.",
+    "impression": "No acute cardiopulmonary process."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Frontal and lateral radiographs of the chest",
+    "findings": "Diminished lung volumes, normal cardiomediastinal contours, normal pulmonary vascularity, no focal consolidation, pleural effusion, or pneumothorax identified.",
+    "impression": "No evidence of acute cardiopulmonary process or significant interval change.",
+    "recommendation": "",
+    "disclaimer": ""
+  },
+  "ground_truth": {
+    "findings": "Rounded 1.4 cm projecting retrosternally on lateral view only. No focal consolidation, effusion, or pneumothorax. Normal heart size. Minimal degenerative changes of the thoracic spine. Negative for pneumoperitoneum.",
+    "impression": "1. Negative acute bone abnormality. 2. Indeterminate 1.4 cm opacity seen only on lateral view is of unknown clinical significance, and may be located in or on the patient. Clinical correlation, with possible followup chest x-[REDACTED] recommended if clinically appropriate. Dr. [REDACTED] [REDACTED] was notified of the indeterminate rounded opacity at [REDACTED] hours on [REDACTED] and acknowledged receipt of the study finding."
+  }
+}

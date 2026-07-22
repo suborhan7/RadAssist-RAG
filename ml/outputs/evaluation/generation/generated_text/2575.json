@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior and lateral views",
+    "findings": "The lungs are clear. The heart and pulmonary [REDACTED] appear normal. The pleural spaces are clear. There is minimal sclerotic change overlying the midthoracic spine on the lateral view, unclear whether this is a pulmonary finding or skeletal finding.",
+    "impression": "Vague increased sclerotic focus overlying the posterior spine on lateral view, possibly artifact or pulmonary density; bone scan would be helpful to evaluate for potential metastatic disease.",
+    "recommendation": "Bone scan recommended to evaluate for potential metastatic disease.",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.60)"
+  },
+  "ground_truth": {
+    "findings": "The lungs are clear. Heart size is normal. No pneumothorax. There are endplate changes within the spine.",
+    "impression": "Clear lungs. No acute cardiopulmonary abnormality."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The heart is top normal in size. The mediastinum is unremarkable. The lungs are clear. Cardiomediastinal silhouette and pulmonary vasculature are within normal limits. There is no pneumothorax or pleural effusion. There are no focal areas of consolidation.",
+    "impression": "No acute disease. No acute cardiopulmonary abnormality. Heart size is normal, and lungs are clear. No evidence of tuberculosis.",
+    "recommendation": "None",
+    "disclaimer": "Low agreement score (0.80) for the label 'Normal', so some uncertainty exists."
+  },
+  "ground_truth": {
+    "findings": "Lungs are clear. A calcified small granuloma is present in the left lower lobe. Heart size normal. Mediastinum normal.",
+    "impression": "No active disease."
+  }
+}

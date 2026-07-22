@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Normal heart size, normal mediastinal silhouette, no pneumothorax, pleural effusion or suspicious focal air space opacity.",
+    "impression": "Normal exam",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty: Low"
+  },
+  "ground_truth": {
+    "findings": "[REDACTED] [REDACTED] and lateral views of the chest were obtained on 02/010/[REDACTED]. The lung volumes are normal. The lungs are clear and there are no pleural effusions. There is stable mild tenting of the medial aspect of the right diaphragm. The mediastinum and pulmonary [REDACTED] are normal. The bony elements are not remarkable.",
+    "impression": "No acute cardiopulmonary abnormalities are seen. END OF REPORT."
+  }
+}

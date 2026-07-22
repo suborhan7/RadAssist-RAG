@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Digital Chest Radiography",
+    "findings": "Platelike horizontal opacities in both lung bases, consistent with scarring or subsegmental atelectasis. T-spine osteophytes are present. Cardiomediastinal silhouette and pulmonary vasculature are within normal limits. No pneumothorax, pleural effusion, lobar pneumonia, or acute osseous abnormality.",
+    "impression": "Unchanged platelike bibasilar opacities most likely representing scarring or subsegmental atelectasis. No acute cardiopulmonary abnormality.",
+    "recommendation": "Follow-up radiography is not indicated based on these findings.",
+    "disclaimer": "Clinical uncertainty exists due to low agreement score (0.40) for the top candidate label 'Lung Opacity'."
+  },
+  "ground_truth": {
+    "findings": "Heart size at the upper limits of normal. There are scattered calcified granulomas. No focal airspace consolidation, large effusion, or appreciable pneumothorax. Tortuous, unfolded to descending aorta. Calcified aortic [REDACTED]. [REDACTED] curvature of the thoracic spine. Exaggerated kyphosis. [REDACTED] are diffusely osteopenic. Multilevel degenerative changes of the thoracic spine with minimal anterior [REDACTED] loss of several vertebral bodies.",
+    "impression": "Chronic changes without acute cardiopulmonary findings."
+  }
+}

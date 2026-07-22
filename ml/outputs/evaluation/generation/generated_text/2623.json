@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Frontal and lateral radiographs of the chest",
+    "findings": "The heart size is normal. The mediastinal contour is within normal limits. The lungs are free of any focal infiltrates. There are no nodules or masses. No visible pneumothorax. No visible pleural fluid. The [REDACTED] are grossly normal. There is no visible free intraperitoneal air under the diaphragm.",
+    "impression": "No acute radiographic cardiopulmonary process",
+    "recommendation": "CT chest with contrast is recommended",
+    "disclaimer": "Primary differential considerations include increased size of prominent epicardial fat, pericardial mass, pleural mass or cardiac aneurysm"
+  },
+  "ground_truth": {
+    "findings": "Lungs are clear bilaterally with no focal infiltrate, pleural effusion, or pneumothoraces. Cardiomediastinal silhouette is within normal limits. No acute bony or soft tissue abnormality.",
+    "impression": "No acute cardiopulmonary abnormality."
+  }
+}

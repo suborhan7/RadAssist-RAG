@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Prior granulomatous disease, possible old lateral right rib fractures",
+    "technique": "Standard PA view",
+    "findings": "Lung Opacity in the right basal airspace, probable old lateral right rib fractures",
+    "impression": "No acute cardiopulmonary findings, possible COPD with focal atelectasis",
+    "recommendation": "Further evaluation and clinical correlation recommended",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.40)"
+  },
+  "ground_truth": {
+    "findings": "Heart size is normal. Cardiomediastinal silhouette is normal in contour. The lungs are clear bilaterally without pleural effusion or pneumothorax. No pulmonary nodules. Bony structures are intact.",
+    "impression": "Negative for acute abnormality."
+  }
+}

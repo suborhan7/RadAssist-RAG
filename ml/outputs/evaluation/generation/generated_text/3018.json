@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior and lateral",
+    "findings": "Heart size normal, lungs are clear, no pneumonia, effusions, edema, pneumothorax, adenopathy, nodules or masses. Calcified mediastinal perihilar pulmonary nodules consistent with sequela of old granulomatous infection.",
+    "impression": "Normal chest, no evidence of tuberculosis",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.40)"
+  },
+  "ground_truth": {
+    "findings": "Heart size within normal limits. No focal airspace disease. Stable 4 mm lateral left midlung calcified granuloma. No pneumothorax or pleural effusion.",
+    "impression": "No acute cardiopulmonary findings."
+  }
+}

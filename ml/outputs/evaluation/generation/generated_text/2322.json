@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "PA and lateral views",
+    "findings": "Lungs are clear bilaterally, cardiac and mediastinal silhouettes are normal, pulmonary vasculature is normal. No pneumothorax or pleural effusion, no acute bony abnormality, ribs appear normal.",
+    "impression": "No acute cardiopulmonary abnormality",
+    "recommendation": "None",
+    "disclaimer": "Based on available evidence"
+  },
+  "ground_truth": {
+    "findings": "Lung volumes remain [REDACTED]. [REDACTED] opacity is present in the right middle lobe. No focal infiltrates. Heart size normal.",
+    "impression": "Continued hypoinflation with right middle lobe focal atelectasis."
+  }
+}

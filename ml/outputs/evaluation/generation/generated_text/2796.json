@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown clinical history with interval development of several ill-defined focal opacities in the left and right mid lung zones.",
+    "technique": "Digital Chest Radiography",
+    "findings": "The lungs are clear and expanded. No change in the small calcified right upper lobe nodule. There are small round calcific density nodules consistent with prior granulomatous disease bilaterally. Interval development of several ill-defined focal opacities in the left and right mid lung zones.",
+    "impression": "No active disease. No acute cardiopulmonary abnormalities. The malpositioned right PICC line tip is now located in the left innominate vein, and the ill-defined focal opacities may represent small areas of pneumonia.",
+    "recommendation": "Further evaluation recommended to determine the nature and significance of the interval development of several ill-defined focal opacities.",
+    "disclaimer": "Due to low agreement score (0.40), there is clinical uncertainty regarding the findings and impression."
+  },
+  "ground_truth": {
+    "findings": "Cardiac and mediastinal contours are within normal limits. The lungs are clear. Bony structures are intact.",
+    "impression": "No acute process."
+  }
+}

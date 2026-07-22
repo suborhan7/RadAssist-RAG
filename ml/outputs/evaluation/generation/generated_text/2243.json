@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Standard PA view",
+    "findings": "The lungs are clear. The cardiomediastinal silhouette is within normal limits. No pleural effusion is identified.",
+    "impression": "Normal chest film",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty: The agreement score for this report is 0.60, indicating moderate confidence in the findings and impression."
+  },
+  "ground_truth": {
+    "findings": "The heart is normal size. The mediastinum is unremarkable. There is no pleural effusion, pneumothorax, or focal airspace disease. There is a stable calcified granuloma within the left lower lobe. There are stable chronic degenerative changes of the thoracic spine.",
+    "impression": "No acute cardiopulmonary abnormality."
+  }
+}

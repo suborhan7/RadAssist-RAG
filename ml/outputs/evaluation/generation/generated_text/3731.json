@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Frontal and lateral views of the chest show normal size and configuration of the cardiac silhouette. Normal mediastinal contour, pulmonary [REDACTED] and vasculature, central airways and lung volumes. No pleural effusion.",
+    "findings": "Heart size within normal limits, stable mediastinal and hilar contours. No focal alveolar consolidation, no definite pleural effusion seen. No typical findings of pulmonary edema. No pneumothorax. Minimal degenerative changes of the thoracic spine noted.",
+    "impression": "No acute or active cardiac, pulmonary, or pleural disease",
+    "recommendation": "None",
+    "disclaimer": "The agreement score is moderate (0.60), indicating some uncertainty in the findings and impression."
+  },
+  "ground_truth": {
+    "findings": "Lungs are clear. Heart and mediastinum appear normal. No pleural effusion or pneumothorax.",
+    "impression": "Negative chest"
+  }
+}

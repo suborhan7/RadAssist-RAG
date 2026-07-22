@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The heart size is upper limits of normal. The pulmonary vasculature and mediastinum are within normal limits. There is no pleural effusion or pneumothorax. No focal air space opacity to suggest a pneumonia.",
+    "impression": "No acute cardiopulmonary abnormality",
+    "recommendation": "None",
+    "disclaimer": "The agreement score is 0.60, indicating moderate confidence in the findings."
+  },
+  "ground_truth": {
+    "findings": "Low lung volumes bilaterally. The lungs are clear bilaterally. Specifically, no evidence of focal consolidation, pneumothorax, or pleural effusion.. Cardio mediastinal silhouette is unremarkable. Visualized osseous structures of the thorax are without acute abnormality.",
+    "impression": "No acute cardiopulmonary abnormality."
+  }
+}

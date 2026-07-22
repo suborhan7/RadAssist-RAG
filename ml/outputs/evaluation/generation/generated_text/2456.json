@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Standard PA view",
+    "findings": "The lungs are clear bilaterally. Specifically, no evidence of focal consolidation, pneumothorax, or pleural effusion. Cardio mediastinal silhouette is unremarkable. Visualized osseous structures of the thorax are without acute abnormality.",
+    "impression": "No acute cardiopulmonary abnormality.",
+    "recommendation": "None",
+    "disclaimer": "Low confidence due to limited clinical information"
+  },
+  "ground_truth": {
+    "findings": "Mild cardiomegaly. Negative for focal pulmonary consolidation, pleural effusion, or pneumothorax. There is thoracic kyphosis. There is [REDACTED] deformity of T12 and L1, unchanged [REDACTED] abdomen [REDACTED], [REDACTED]. Aortic calcifications are noted. Fracture of right proximal humerus, incompletely evaluated.",
+    "impression": "1. No acute abnormality of the chest. 2. [REDACTED] deformities of T12 and L1, unchanged [REDACTED] abdomen [REDACTED], [REDACTED] abdomen [REDACTED], [REDACTED]. 3. Fracture of right proximal humerus, incompletely evaluated."
+  }
+}

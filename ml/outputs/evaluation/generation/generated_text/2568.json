@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Lungs are clear bilaterally. Cardiac and mediastinal silhouettes are normal. Pulmonary vasculature is normal. No pneumothorax or pleural effusion. No acute bony abnormality.",
+    "impression": "No acute cardiopulmonary abnormality.",
+    "recommendation": "None",
+    "disclaimer": "Based on available evidence, no other findings were reported."
+  },
+  "ground_truth": {
+    "findings": "[REDACTED] [REDACTED] sternotomy [REDACTED] appear intact. There is no pleural effusion or pneumothorax. The cardiomediastinal silhouette is within normal limits. The pulmonary vasculature is within normal limits. There is no focal lung opacity. Clips overlie the right upper quadrant.",
+    "impression": "No acute cardiopulmonary findings."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The cardiomediastinal silhouette and pulmonary vasculature are within normal limits. There is no pneumothorax or pleural effusion. There are small calcified granulomata in the right lateral lung.",
+    "impression": "No acute cardiopulmonary abnormality",
+    "recommendation": "",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.40)"
+  },
+  "ground_truth": {
+    "findings": "The heart size and pulmonary vascularity appear within normal limits. The thoracic aorta is prominent with calcification within the aorta. Azygos lobe is noted. Lungs are free of focal airspace disease. No pleural effusion or pneumothorax is seen. Degenerative changes noted in the spine.",
+    "impression": "Prominent transverse aorta. Otherwise clear."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Interval development of left lower lobe airspace disease",
+    "technique": "Standard chest radiography",
+    "findings": "The heart and mediastinal contours are stable. Aorta is calcified and tortuous, compatible with atherosclerotic disease. Interval development of left lower lobe airspace disease. The right lung is clear.",
+    "impression": "Interval development of left lower lobe airspace disease. This may be due to atelectasis or infiltrate.",
+    "recommendation": "",
+    "disclaimer": ""
+  },
+  "ground_truth": {
+    "findings": "Lung volumes remain low. No infiltrates. Heart and pulmonary [REDACTED] are normal.",
+    "impression": "[REDACTED] change. Hypoinflation with no visible active cardiopulmonary disease."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Heart size and pulmonary vascularity appear within normal limits. Lungs are free of focal airspace disease. No pleural effusion or pneumothorax is seen.",
+    "impression": "No evidence of active disease.",
+    "recommendation": "None",
+    "disclaimer": "This examination was performed by an AI radiology assistant and should be reviewed by a qualified radiologist for final interpretation."
+  },
+  "ground_truth": {
+    "findings": "Frontal and lateral views of the chest show an unchanged cardiomediastinal silhouette. The aorta is unfolded. There is left base streaky opacity due to [REDACTED] scarring or discoid atelectasis. There is a midright lung small calcified granuloma. There are small nodular opacities projecting over the right base in the right costophrenic sulcus, posterior right 9th rib and the anterior T10 vertebral body. No [REDACTED] focal airspace consolidation or pleural effusion.",
+    "impression": "1. [REDACTED] indeterminant small nodular opacities. May be granulomas or bone islands. However, [REDACTED] is recommended given the history of malignancy. 2. Otherwise no acute cardiac or pulmonary disease process identified."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior and lateral views",
+    "findings": "Cardiomediastinal silhouettes are within normal limits. Low lung volumes. Lungs are clear without focal consolidation, pneumothorax, or pleural effusion. Bony thorax is unremarkable.",
+    "impression": "No acute cardiopulmonary abnormalities",
+    "recommendation": "None",
+    "disclaimer": "Low agreement score (0.40) for the label 'Normal', so some uncertainty in findings and impression"
+  },
+  "ground_truth": {
+    "findings": "Stable moderate cardiomegaly. Mediastinal contours are unchanged. Stable prominence of the central pulmonary vasculature with coarse central interstitial markings. Decreased left basilar airspace disease. No visible pleural effusion or pneumothorax.",
+    "impression": "1. Stable moderate cardiomegaly with prominent central pulmonary vasculature. 2. Improved left basilar atelectasis or infiltrate."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Standard PA view",
+    "findings": "Cardiac contours are normal, lungs are clear, thoracic spondylosis with mild dextrocurvature of the spine. Cardiac and mediastinal contours are within normal limits. The lungs appear clear.",
+    "impression": "No acute pulmonary abnormality.",
+    "recommendation": "Further evaluation not indicated at this time.",
+    "disclaimer": ""
+  },
+  "ground_truth": {
+    "findings": "The lungs appear clear. There are no suspicious appearing pulmonary nodules or masses. There is no evidence of pneumonia. The heart pulmonary [REDACTED] appear normal. Pleural spaces are clear. Mediastinal contours are normal.",
+    "impression": "No acute cardiopulmonary disease"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Frontal and lateral views",
+    "findings": "Normal size and configuration of the cardiac silhouette, normal mediastinal contour, pulmonary vasculature, central airways and lung volumes. No pleural effusion, pneumothorax or acute osseous findings.",
+    "impression": "No acute or active cardiac, pulmonary or pleural disease",
+    "recommendation": "None",
+    "disclaimer": "Based on the provided evidence"
+  },
+  "ground_truth": {
+    "findings": "The lungs and pleural spaces show no acute abnormality. Heart size upper limits of normal, predominantly left ventricular contour ([REDACTED] visualized on lateral projection), pulmonary vascularity within normal limits.",
+    "impression": "1. No acute pulmonary abnormality."
+  }
+}

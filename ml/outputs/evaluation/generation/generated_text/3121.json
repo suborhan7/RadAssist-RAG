@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Prior granulomatous disease",
+    "technique": "Standard chest radiography",
+    "findings": "Streaky retrocardiac left lower lobe opacities, consistent with a calcified granuloma. Cardiomediastinal silhouette and pulmonary vasculature are within normal limits.",
+    "impression": "No acute cardiopulmonary findings. The streaky retrocardiac left lower lobe opacities could represent a pneumonia. Clinical uncertainty exists due to low agreement score (0.40) for the top-voted label 'Granuloma'.",
+    "recommendation": "Further evaluation or follow-up as clinically indicated",
+    "disclaimer": "Clinical uncertainty exists due to low agreement score (0.40) for the top-voted label 'Granuloma'"
+  },
+  "ground_truth": {
+    "findings": "Heart size and mediastinal contour within normal limits. Calcified granuloma right midlung. No focal airspace consolidation, pneumothorax, or large pleural effusion. Degenerative changes in the thoracic spine.",
+    "impression": "No acute cardiopulmonary abnormality."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Prior granulomatous disease",
+    "technique": "Frontal and lateral views",
+    "findings": "Normal heart size, stable tortuous aorta, clear lungs with prominent coarse interstitial markings throughout, focal streaky bibasilar opacities on frontal view, no pneumothorax or pleural effusion.",
+    "impression": "No acute cardiopulmonary abnormality. Stable interstitial fibrotic changes throughout both lungs.",
+    "recommendation": "",
+    "disclaimer": ""
+  },
+  "ground_truth": {
+    "findings": "Left lower lobe calcified granuloma. Heart size normal. No pleural effusion or pneumothorax. Mild medial right atelectasis. Mild emphysema.",
+    "impression": "Emphysema and mild medial right atelectasis. No acute process."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Standard chest radiography",
+    "findings": "The lungs appear clear. There is a calcified granuloma in the right lung base and calcified right hilar lymph nodes.",
+    "impression": "No acute cardiopulmonary disease. No evidence of metastatic disease to the lungs. The top-voted label 'Granuloma' has an agreement score of 0.40, indicating some uncertainty.",
+    "recommendation": "None",
+    "disclaimer": "The findings are based on the provided evidence and may not be comprehensive."
+  },
+  "ground_truth": {
+    "findings": "The heart size and pulmonary vascularity appear within normal limits. The lungs are free of focal airspace disease. No pleural effusion or pneumothorax is seen. Scoliosis and degenerative changes are present in the spine.",
+    "impression": "1. No evidence of active disease."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The heart is normal in size. The mediastinum is unremarkable. Lungs are clear. There is a moderate left pneumothorax with a left pleural catheter overlying the left upper lung at the level of the left 5th and 6th ribs.",
+    "impression": "No acute disease",
+    "recommendation": "Continue monitoring for any changes in the pneumothorax",
+    "disclaimer": "The agreement score is 0.80, indicating some uncertainty"
+  },
+  "ground_truth": {
+    "findings": "Heart size and mediastinal contour within normal limits. No focal airspace consolidation, pneumothorax, or large pleural effusion. No acute osseous abnormality.",
+    "impression": "No acute cardiopulmonary abnormality."
+  }
+}

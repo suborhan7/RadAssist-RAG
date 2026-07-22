@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The lungs appear clear. The heart and pulmonary structures are normal. The pleural spaces are clear. Mediastinal contours are normal.",
+    "impression": "Normal chest exam. No acute disease.",
+    "recommendation": "No recommendation",
+    "disclaimer": "Clinical uncertainty exists due to low agreement score (0.40)"
+  },
+  "ground_truth": {
+    "findings": "Cardiac and mediastinal contours are unremarkable. Pulmonary vascularity is within normal limits. No focal air space opacities, pleural effusion, or pneumothorax. No cavitary lesions. [REDACTED] are grossly unremarkable.",
+    "impression": "1. Clear lungs. No radiographic evidence of active TB."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The lungs are clear. The cardiomediastinal silhouette is within normal limits. No pleural effusion, pneumothorax, or focal airspace disease identified.",
+    "impression": "Normal chest film with a 1.7 cm nodular opacity within the right hilum, which may represent partially calcified granuloma or lymphadenopathy.",
+    "recommendation": "Followup radiograph to assess stability may be of benefit.",
+    "disclaimer": "The presence of scattered calcified granulomas is noted."
+  },
+  "ground_truth": {
+    "findings": "Heart and mediastinum within normal limits. Negative for focal pulmonary consolidation, pleural effusion, or pneumothorax.",
+    "impression": "No acute abnormality."
+  }
+}

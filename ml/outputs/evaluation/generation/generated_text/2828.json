@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Heart size is normal, lungs are clear without infiltrate or effusion, no pneumothorax, and normal pulmonary vascularity.",
+    "impression": "No acute abnormality.",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty exists due to low agreement score (0.60)."
+  },
+  "ground_truth": {
+    "findings": "Heart size and mediastinal contour are normal. Pulmonary vascularity is normal. Lungs are hyperexpanded but clear. No pleural effusions or pneumothoraces. Degenerative changes in the thoracic spine.",
+    "impression": "Findings suggestive of emphysema. No acute cardiopulmonary process."
+  }
+}

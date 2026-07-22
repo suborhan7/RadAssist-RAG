@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Heart size within normal limits, stable mediastinal and hilar contours, mediastinal calcifications suggest a previous granulomatous process. No focal alveolar consolidation, no definite pleural effusion seen. No typical findings of pulmonary edema.",
+    "impression": "No acute findings",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.40)"
+  },
+  "ground_truth": {
+    "findings": "The [REDACTED] examination consists of frontal and lateral radiographs of the chest. The cardiomediastinal contours are within normal limits. Pulmonary vascularity is within normal limits. No focal consolidation, pleural effusion, or pneumothorax identified. Multilevel degenerative changes are seen throughout the thoracic spine. [REDACTED] anchors [REDACTED] over the left humeral head. There is mild bilateral acromioclavicular joint osteoarthritis. Visualized upper abdomen is grossly unremarkable in appearance.",
+    "impression": "No evidence of acute cardiopulmonary process."
+  }
+}

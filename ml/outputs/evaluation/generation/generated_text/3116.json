@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Frontal and lateral radiographs of the chest",
+    "findings": "Stable cardiomediastinal silhouette with increased elevation of the right hemidiaphragm and right basilar atelectasis. Left basilar consolidation and pleural effusions seen. No focal consolidation or pneumothorax.",
+    "impression": "Right greater than left bibasilar atelectasis, small bilateral pleural effusions, and mild patchy bilateral airspace disease.",
+    "recommendation": "Further evaluation recommended",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.60)"
+  },
+  "ground_truth": {
+    "findings": "The cardiac silhouette is enlarged. There are bibasilar airspace opacities left greater than right with small right pleural effusion. No visualized pneumothorax.",
+    "impression": "Bibasilar airspace disease left greater than right with small effusions."
+  }
+}

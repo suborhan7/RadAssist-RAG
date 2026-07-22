@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Normal heart size and mediastinal contours. No focal airspace opacity, pneumothorax, or pleural effusion. Scattered calcified granulomas also seen.",
+    "impression": "No acute cardiopulmonary abnormalities. Mild degenerative changes are present in the [REDACTED] spine.",
+    "recommendation": "Follow-up radiograph to assess stability may be of benefit",
+    "disclaimer": "The presence of a 1.7 cm nodular opacity within the right hilum, which may represent partially calcified granuloma or lymphadenopathy, requires further evaluation"
+  },
+  "ground_truth": {
+    "findings": "Cardiomediastinal silhouette is within normal limits of size and appearance. The pulmonary vascularity is unremarkable. Lungs are expanded and clear of airspace disease. Negative for pneumothorax or pleural effusion. Limited bone evaluation reveals no acute abnormality. There is incompletely evaluated lumbar levoscoliosis.",
+    "impression": "No acute cardiopulmonary abnormality."
+  }
+}

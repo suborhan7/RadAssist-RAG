@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "AP and lateral views",
+    "findings": "Both lungs are clear and expanded. Heart and mediastinum normal. Small calcified granulomata in the right lateral lung.",
+    "impression": "No active disease.",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.40)"
+  },
+  "ground_truth": {
+    "findings": "Normal cardiac contour. Clear lung [REDACTED] bilaterally. No pleural effusion or pneumothorax. Degenerative seen throughout cervical spine.",
+    "impression": "No acute cardiopulmonary abnormalities."
+  }
+}

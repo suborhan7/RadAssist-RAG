@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Frontal and lateral radiographs of the chest",
+    "findings": "The lungs are clear bilaterally, with no evidence of focal consolidation, pneumothorax, or pleural effusion. Large bilateral hilar calcified lymph [REDACTED]/granulomas. Cardio mediastinal silhouette is unremarkable. Visualized osseous structures of the thorax are without acute abnormality.",
+    "impression": "No acute cardiopulmonary abnormality",
+    "recommendation": "",
+    "disclaimer": ""
+  },
+  "ground_truth": {
+    "findings": "The lungs are without focal air space opacity. There is no pneumothorax or large pleural effusion. The cardiomediastinal silhouette is normal in size and contour.",
+    "impression": "No acute cardiopulmonary abnormality."
+  }
+}

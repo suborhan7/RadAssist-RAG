@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Normal cardiomediastinal silhouette, no focal consolidation, no pleural effusion or pneumothorax, and no acute bony abnormality. The lungs are clear with a nodular density at the left lung base.",
+    "impression": "No radiographic evidence of acute cardiopulmonary disease. Recommend CT scan for further evaluation.",
+    "recommendation": "CT scan without IV contrast",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.60)"
+  },
+  "ground_truth": {
+    "findings": "Left [REDACTED] [REDACTED] noted with tip approximating the high SVC, stable. No pleural effusions. No pneumothorax. Heart size is normal limits. Degenerative changes thoracic spine.",
+    "impression": "No acute cardiopulmonary abnormality."
+  }
+}

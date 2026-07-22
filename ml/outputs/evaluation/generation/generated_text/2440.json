@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Heart size within normal limits with mild hyperexpansion and bronchovascular crowding in the lung bases compatible with emphysema. No focal pulmonary consolidation, pleural effusion, or pneumothorax.",
+    "impression": "No acute abnormality.",
+    "recommendation": "Further evaluation recommended to determine underlying cause of emphysema.",
+    "disclaimer": "Due to low agreement score (0.40), the impression is uncertain and further evaluation is necessary."
+  },
+  "ground_truth": {
+    "findings": "The heart is normal in size. The mediastinum is stable. The aorta is atherosclerotic. Emphysematous changes are identified. There is no acute infiltrate or effusion.",
+    "impression": "Emphysema without acute disease."
+  }
+}

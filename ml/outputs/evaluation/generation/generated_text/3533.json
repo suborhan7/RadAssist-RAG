@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Cardiac silhouette at upper limits of normal, mild prominence of bilateral hilar regions, stable opacity in the left [REDACTED] representing a scar. Both lungs are clear and expanded, heart and mediastinum normal.",
+    "impression": "No acute intrathoracic abnormality. Stable, mild prominence of the bilateral hilar regions, possibly consistent with enlarged pulmonary arteries/pulmonary hypertension. Please correlate clinically.",
+    "recommendation": "Correlate clinically",
+    "disclaimer": "Clinical correlation recommended"
+  },
+  "ground_truth": {
+    "findings": "Heart size, mediastinal contour, and pulmonary vascularity are within normal limits. There is bilateral hyperinflation, without focal consolidation, pneumothorax, or pleural effusion. Visualized osseous structures appear intact.",
+    "impression": "Mildly hyperinflated, clear lungs."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Heart size is normal. The lungs are clear. There are no focal air space consolidations. No pleural effusions or pneumothoraces. The hilar and mediastinal contours are normal. Normal pulmonary vascularity.",
+    "impression": "No acute abnormality. Heart size is normal and the lungs are clear.",
+    "recommendation": "None",
+    "disclaimer": "Based on available evidence."
+  },
+  "ground_truth": {
+    "findings": "The lungs are clear. Heart size is normal. No pneumothorax. Calcified left hilar node.",
+    "impression": "Clear lungs. No acute cardiopulmonary abnormality."
+  }
+}

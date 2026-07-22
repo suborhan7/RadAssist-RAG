@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Digital Chest Radiography",
+    "findings": "The heart size and cardiomediastinal silhouette are normal. There is no focal airspace opacity, pleural effusion, or pneumothorax. There are moderate degenerative changes in the thoracic spine.",
+    "impression": "No acute cardiopulmonary findings. Stable cardiomegaly without overt pulmonary edema.",
+    "recommendation": "None",
+    "disclaimer": ""
+  },
+  "ground_truth": {
+    "findings": "The heart is normal in size. The mediastinum is unremarkable. Granulomatous sequela are noted. The lungs are otherwise clear.",
+    "impression": "No acute disease."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The lungs are clear bilaterally, with no evidence of focal consolidation, pneumothorax, or pleural effusion. Cardio mediastinal silhouette is unremarkable. Visualized osseous structures of the thorax are without acute abnormality.",
+    "impression": "No acute cardiopulmonary abnormality",
+    "recommendation": "None",
+    "disclaimer": "Low agreement score (0.40) for top-voted label 'Normal', indicating some uncertainty in findings and impression"
+  },
+  "ground_truth": {
+    "findings": "Mediastinal contours are normal. Unchanged [REDACTED] opacity in the left lung base, [REDACTED] scarring. Lungs are clear. There is no pneumothorax or large pleural effusion.",
+    "impression": "No acute cardiopulmonary abnormality."
+  }
+}

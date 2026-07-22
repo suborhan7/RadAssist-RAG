@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Lung Opacity, mild cardiomegaly, clear lungs without focal consolidation or pleural effusion",
+    "impression": "Stable lung changes without acute abnormality",
+    "recommendation": "Follow-up radiograph to assess stability may be of benefit",
+    "disclaimer": "The presence of a nodular opacity within the right hilum is uncertain and requires further evaluation"
+  },
+  "ground_truth": {
+    "findings": "The heart is normal in size and contour. The aorta is calcified and tortuous. The lung volumes are low. There is elevation of the right hemidiaphragm. Minimal streaky opacities in the lung bases, [REDACTED] subsegmental atelectasis. No pleural effusion or pneumothorax.",
+    "impression": "1. Low lung volume study with minimal bibasilar atelectasis. Stable chest."
+  }
+}

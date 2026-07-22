@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Frontal and lateral views",
+    "findings": "Both lungs are clear and expanded. Heart and mediastinum normal. Few small nodular opacities in the left lung, consistent with chronic granulomatous disease. Calcified mediastinal and hilar lymph nodes consistent with prior granulomatous disease. Mild degenerative changes of the spine.",
+    "impression": "No active disease. The few small nodular opacities in the left upper lung are relatively dense, suggestive of chronic granulomatous disease.",
+    "recommendation": "Comparison with an [REDACTED] chest radiograph would be helpful to establish stability.",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.60)"
+  },
+  "ground_truth": {
+    "findings": "The heart is normal size. The mediastinum is unremarkable. Atherosclerotic calcifications present within the thoracic aorta. There is no pleural effusion, pneumothorax, or focal airspace disease. Mild emphysematous changes are noted. Bilateral apical pleural scarring is present. Calcified granuloma is present within the right lower lobe. The [REDACTED] are generally unremarkable.",
+    "impression": "No acute cardiopulmonary abnormality."
+  }
+}

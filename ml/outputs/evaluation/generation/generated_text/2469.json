@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The heart is normal in size and contour. There is no mediastinal widening. The lungs are clear bilaterally. No large pleural effusion or pneumothorax. The [REDACTED] are intact.",
+    "impression": "No acute cardiopulmonary abnormalities",
+    "recommendation": "None",
+    "disclaimer": "Based on available evidence"
+  },
+  "ground_truth": {
+    "findings": "There is mild [REDACTED] opacification over both [REDACTED], [REDACTED] secondary to soft tissue attenuation. There are no focal air space opacities. No pleural effusion or pneumothorax. Cardiomediastinal silhouette is within normal limits. Trachea is midline. No free subdiaphragmatic air.",
+    "impression": "No acute pulmonary disease."
+  }
+}

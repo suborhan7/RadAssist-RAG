@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Aorta is calcified and tortuous, compatible with atherosclerotic disease. Interval development of left lower lobe airspace disease.",
+    "impression": "Interval development of left lower lobe airspace disease, possibly due to atelectasis or infiltrate. No acute cardiopulmonary abnormality identified.",
+    "recommendation": "",
+    "disclaimer": "Clinical uncertainty exists regarding the cause of the interval development of left lower lobe airspace disease"
+  },
+  "ground_truth": {
+    "findings": "Left PICC line and NG tube remain in [REDACTED]. Heart size and vascularity appear within normal limits. The lungs are free of focal airspace disease. Small bilateral pleural effusions are present. No pneumothorax is noted.",
+    "impression": "1. Small bilateral pleural effusions."
+  }
+}

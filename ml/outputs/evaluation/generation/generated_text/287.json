@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) and lateral views",
+    "findings": "Cardiomegaly with normal caliber pulmonary vasculature, wedge-shaped T12 fracture, grossly intact sternotomy clips, and diaphragm eventration. No focal airspace disease, pneumothorax, or pleural effusion.",
+    "impression": "Stable cardiomegaly without failure, ectatic aorta, and known ascending aortic aneurysm.",
+    "recommendation": "Further evaluation as clinically indicated",
+    "disclaimer": "No acute cardiopulmonary abnormality identified"
+  },
+  "ground_truth": {
+    "findings": "Heart size is normal. The lungs are grossly clear. No pleural effusions or pneumothoraces. The hilar and mediastinal contours are stable. Normal pulmonary vascularity. No overt edema.",
+    "impression": "No acute abnormality."
+  }
+}

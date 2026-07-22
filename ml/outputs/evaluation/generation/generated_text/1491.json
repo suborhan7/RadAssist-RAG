@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Stable mild cardiomegaly, minimal left basilar atelectasis or scar, and low lung volumes without focal consolidation, pneumothorax, or large pleural effusion.",
+    "impression": "Minimal left basilar atelectasis or scar. No acute cardiopulmonary disease.",
+    "recommendation": "Further evaluation recommended to determine the cause of the atelectasis.",
+    "disclaimer": "The findings are based on a limited dataset and may not be representative of all possible cases."
+  },
+  "ground_truth": {
+    "findings": "There are low lung volumes. The lungs are otherwise clear. No focal airspace consolidation or pleural effusion. Calcific density in the right lung apex, compatible with calcified granuloma.",
+    "impression": "No acute cardiopulmonary abnormality."
+  }
+}

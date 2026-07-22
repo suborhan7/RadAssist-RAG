@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Frontal and lateral views",
+    "findings": "Lungs are clear, heart size normal, no pneumothorax, left costophrenic opacity may represent pleural or pericardial fat.",
+    "impression": "Clear lungs. No acute cardiopulmonary abnormality.",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.60)"
+  },
+  "ground_truth": {
+    "findings": "the heart size is normal. There is tortuosity of aorta. Pulmonary vascularity is normal. No focal airspace disease or effusion. Degenerative changes in the thoracic spine.",
+    "impression": "Tortuous aorta, otherwise unremarkable exam."
+  }
+}

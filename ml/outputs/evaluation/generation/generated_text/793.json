@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Frontal and lateral views",
+    "findings": "The lungs are clear without evidence of focal airspace disease. The cardiac and mediastinal contours are within normal limits. Prominent pericardial fat is noted. There is a stable granuloma overlying a lower thoracic vertebral body.",
+    "impression": "No acute disease",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty: The agreement score for the top candidate label 'Normal' is low (0.40), so this report should be interpreted with caution."
+  },
+  "ground_truth": {
+    "findings": "The [REDACTED] examination consists of frontal and lateral radiographs of the chest. The cardiomediastinal contours are within normal limits. Pulmonary vascularity is within normal limits. No focal consolidation, pleural effusion, or pneumothorax identified. Oval sclerotic density projecting over the inferior right glenoid may represent synovial osteochondromatosis or cortical [REDACTED] [REDACTED]. This is unchanged 31 17 [REDACTED]. The remaining osseous structures and visualized upper abdomen are unremarkable in appearance.",
+    "impression": "No evidence of acute cardiopulmonary process."
+  }
+}

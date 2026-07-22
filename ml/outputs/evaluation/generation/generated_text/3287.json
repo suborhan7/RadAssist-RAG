@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The heart is normal in size and contour, with no mediastinal widening or lung opacities. The lungs are clear bilaterally, and the [REDACTED] are intact.",
+    "impression": "No acute cardiopulmonary abnormalities.",
+    "recommendation": "None",
+    "disclaimer": "Based on available evidence."
+  },
+  "ground_truth": {
+    "findings": "Heart size and mediastinal contour normal. There is a 2.5 cm vague nodular density in the right mid lung, probably within the middle lobe given the opacification on the lateral view. There is a subtle left retrocardiac density also noted, with obscuration of aortic contour. No pleural effusions or pneumothorax.",
+    "impression": "Right midlung and left basilar airspace densities. The most recent study is not available for comparison. Recommend further evaluation with [REDACTED]."
+  }
+}

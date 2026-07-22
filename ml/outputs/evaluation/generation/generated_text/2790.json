@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The heart is normal in size. The mediastinum is unremarkable. The lungs are clear without evidence of acute infiltrate or effusion. There are small round calcific density nodules consistent with prior granulomatous disease bilaterally. No masses, pneumothorax, or acute bony abnormalities are seen.",
+    "impression": "No acute cardiopulmonary abnormalities. Patient has stable interstitial fibrotic changes throughout both lungs.",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty exists due to low agreement score (0.60)."
+  },
+  "ground_truth": {
+    "findings": "Normal and stable cardiomediastinal contours. No pneumothorax, pleural effusions or significant pulmonary edema. No focal lung consolidation. Stable mild interstitial prominence and bilateral lung bases.",
+    "impression": "1. No acute cardiopulmonary abnormalities. Stable mild interstitial prominence."
+  }
+}

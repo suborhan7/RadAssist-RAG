@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Lateral chest examination was obtained.",
+    "clinical_history": "No clinical history provided.",
+    "technique": "Chest X-ray",
+    "findings": "The heart silhouette and mediastinal contours are not enlarged. Lungs demonstrate no acute findings. Minimal posterior pleural effusions.",
+    "impression": "No pneumothorax following removal of left-sided chest tubes. No evidence of active disease.",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty: The agreement score is low, and the report should be interpreted with caution."
+  },
+  "ground_truth": {
+    "findings": "The cardiomediastinal silhouette and pulmonary vasculature are within normal limits in size. The lungs are clear of focal airspace disease, pneumothorax, or pleural effusion. [REDACTED] closure device demonstrated projecting over the right heart. There are no acute bony findings.",
+    "impression": "No acute cardiopulmonary findings."
+  }
+}

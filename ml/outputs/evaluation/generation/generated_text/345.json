@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Frontal and lateral radiographs of the chest",
+    "findings": "The heart is normal in size and contour. The lungs are clear, without evidence of infiltrate. There is no pneumothorax or effusion.",
+    "impression": "No acute cardiopulmonary disease.",
+    "recommendation": "None",
+    "disclaimer": "Based on the provided evidence."
+  },
+  "ground_truth": {
+    "findings": "Cardiomediastinal silhouette and pulmonary vasculature are within normal limits. Lungs are clear. No pneumothorax or pleural effusion. No acute osseous findings. [REDACTED] degenerative changes of the thoracic spine.",
+    "impression": "No acute cardiopulmonary findings."
+  }
+}

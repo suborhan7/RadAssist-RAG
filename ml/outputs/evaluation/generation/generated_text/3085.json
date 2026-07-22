@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Heart size and pulmonary vascular engorgement appear within limits of normal. Mediastinal contour is unremarkable. No focal consolidation, pleural effusion, or pneumothorax identified. No convincing acute bony findings.",
+    "impression": "The heart size and cardiomediastinal silhouette are within normal limits. Pulmonary vasculature appears normal. There is no focal air space consolidation. No pleural effusion or pneumothorax.",
+    "recommendation": "None",
+    "disclaimer": "Normal chest X-ray with no acute cardiopulmonary abnormality identified."
+  },
+  "ground_truth": {
+    "findings": "Normal cardiomediastinal contours. Marrow pneumothorax, focal lung consolidation or pleural effusions.",
+    "impression": "No acute cardiopulmonary abnormality."
+  }
+}

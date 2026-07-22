@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Lung opacities are present in the left lung base, possibly representing atelectasis. Heart size and pulmonary vascularity appear within normal limits. There is no pleural effusion or pneumothorax.",
+    "impression": "Findings consistent with COPD and left base focal atelectasis.",
+    "recommendation": "Further evaluation recommended to confirm the presence of atelectasis and assess its impact on lung function.",
+    "disclaimer": "Due to low agreement score, the diagnosis is uncertain and requires further confirmation."
+  },
+  "ground_truth": {
+    "findings": "The heart size and pulmonary vascularity appear within normal limits. The lungs are free of focal airspace disease. No pleural effusion or pneumothorax is noted. Degenerative changes are noted in the spine. The descending thoracic aorta is mildly tortuous. The mediastinum appears somewhat prominent.",
+    "impression": "1. Prominent mediastinum. May be due to mediastinal fat. Comparison films, if available, would be useful to determine if this is a chronic appearance. 2. Clear lungs."
+  }
+}

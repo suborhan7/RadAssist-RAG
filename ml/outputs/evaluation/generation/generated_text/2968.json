@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Frontal and lateral radiographs of the chest",
+    "findings": "The heart size is normal. Lungs are clear. No pleural line to suggest pneumothorax or costophrenic blunting to suggest large pleural effusion. Bony structures are within normal limits.",
+    "impression": "No acute cardiopulmonary findings.",
+    "recommendation": "None",
+    "disclaimer": "Vague density in right mid lung, possibly related to scapular tip and superimposed ribs, not visualized on lateral exam."
+  },
+  "ground_truth": {
+    "findings": "Right paratracheal stripe is denser and [REDACTED] than normal. The [REDACTED] are normal. Heart size normal. Lungs clear and expanded with no infiltrates.",
+    "impression": "Right paratracheal mass, possibly lymphadenopathy. If there are no previous chest x-[REDACTED] from elsewhere are [REDACTED] scan with contrast [REDACTED] be of further [REDACTED]. Dr. [REDACTED] [REDACTED] I discussed these findings in the [REDACTED] Department approximately [REDACTED] hours [REDACTED], [REDACTED]."
+  }
+}

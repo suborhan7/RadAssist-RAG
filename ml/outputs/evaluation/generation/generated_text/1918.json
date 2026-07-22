@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The lungs are clear bilaterally, with no evidence of focal consolidation, pneumothorax, or pleural effusion. Cardiomediastinal silhouette is unremarkable. Mild granulomatous sequela are noted.",
+    "impression": "No acute cardiopulmonary abnormality",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty: The agreement score for the top-voted label 'Normal' is 0.40, indicating moderate clinical uncertainty."
+  },
+  "ground_truth": {
+    "findings": "There is a 1.5 cm nodular opacity projecting over left hilum. The cardiac silhouette is within normal limits. There is no pulmonary edema. There is no focal consolidation. There are no [REDACTED] of pleural effusion. There is no evidence of pneumothorax. [REDACTED] opacities [REDACTED] representing surgical clips, in the midline at the level of the thoracic inlet.",
+    "impression": "1. Prominence of left hilum which could be due to nodule/lymph node or superimposing blood [REDACTED]. In the absence of prior studies for comparison, [REDACTED] chest for further evaluation. Result notification [REDACTED] Primordial."
+  }
+}

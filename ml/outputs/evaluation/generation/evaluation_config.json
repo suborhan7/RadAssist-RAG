@@ -1,0 +1,54 @@
+{
+  "phase": 20,
+  "evaluation_date": "2026-07-22T01:18:55.923188+00:00",
+  "sample_size": 477,
+  "sample_source": "477 real eligible test-split cases (frontal + real findings + real impression)",
+  "sample_seed": 42,
+  "completed": 460,
+  "failed": 17,
+  "generation_settings": {
+    "model": "llama3:8b",
+    "temperature": 0.0,
+    "top_p": "not set by this system -- Ollama default applied",
+    "repeat_penalty": "not set by this system -- Ollama default applied",
+    "seed": "not set by this system -- Ollama default applied",
+    "max_tokens": "not set by this system -- Ollama default applied",
+    "ollama_version": "0.32.1"
+  },
+  "ground_truth_fields": [
+    "findings",
+    "impression"
+  ],
+  "metrics_tier1": [
+    "bleu",
+    "rouge_l",
+    "meteor"
+  ],
+  "metrics_tier2": {
+    "metric": "bertscore",
+    "model_type": "microsoft/BiomedNLP-PubMedBERT-base-uncased-abstract-fulltext",
+    "num_layers": 9,
+    "num_layers_note": "not in bert_score's tuned model2layers table (general-domain checkpoints only); layer 9 chosen by matching architecture depth to bert-base-uncased's tuned choice, not independently re-validated for this biomedical model",
+    "rescale_with_baseline": false,
+    "environment": "isolated venv (ml/evaluation/.venv-bertscore, torch==2.6.0, transformers==4.46.0) -- decoupled from the main .venv per Step 3's CVE-2025-32434 finding",
+    "n_scored": 460,
+    "validity_check": {
+      "status": "does not clear random-baseline validity bar",
+      "random_baseline_method": "mismatched-pairs derangement, seed 42, same model/layer/settings as real scoring",
+      "random_baseline_f1": {"findings": 0.8403, "impression": 0.8432},
+      "real_f1": {"findings": 0.8420, "impression": 0.8455},
+      "paired_bootstrap_diff_95ci_raw": {
+        "findings": [-0.00103, 0.00454],
+        "impression": [-0.00343, 0.00804]
+      },
+      "rescaled_per_bertscore_paper_substitute": "(x - random_baseline_mean) / (1 - random_baseline_mean), applied identically to real and baseline scores",
+      "paired_bootstrap_diff_95ci_rescaled": {
+        "findings": [-0.0065, 0.0284],
+        "impression": [-0.0206, 0.0505]
+      },
+      "conclusion": "Both raw and rescaled 95% CIs on the real-minus-random-baseline paired difference include zero for both fields -- real generated reports are not statistically distinguishable from mismatched pairs under this configuration. Rescaling is a positive affine transform applied identically to both sides of the paired difference, so it cannot change which side of zero the CI falls on -- this was mathematically guaranteed, not just empirically observed. Not pursued further (different layer/model) per this project's standing discipline against re-testing configurations until one passes (cf. Phase 0 Gate 2)."
+    }
+  },
+  "git_commit_ml": "b8fffb4f181ee5e59f7f64cc884e5ebbf174ca2b",
+  "git_commit_backend": "b8fffb4f181ee5e59f7f64cc884e5ebbf174ca2b"
+}

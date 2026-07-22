@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Standard PA view",
+    "findings": "Cardiac and mediastinal contours are within normal limits. The lungs are clear. Bony structures are intact. Right paratracheal calcifications suggest a previous granulomatous process.",
+    "impression": "No acute findings.",
+    "recommendation": "Consider additional imaging as clinically warranted",
+    "disclaimer": "No acute cardiopulmonary findings"
+  },
+  "ground_truth": {
+    "findings": "Hyperinflated lungs with mildly flattened posterior diaphragm and increased retrosternal airspace. No alveolar consolidation, no findings of pleural effusion or pulmonary edema. Heart size within normal limits. No pneumothorax.",
+    "impression": "Hyperinflated lungs, air trapping versus inspiratory [REDACTED]."
+  }
+}

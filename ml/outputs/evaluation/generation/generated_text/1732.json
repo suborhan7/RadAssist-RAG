@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Standard PA view",
+    "findings": "Cardiac and mediastinal contours are within normal limits. The lungs are clear. Bony structures are intact. No focal air space opacities, pleural effusions, or pneumothorax.",
+    "impression": "No acute cardiopulmonary abnormalities. Heart size is normal and lungs are clear.",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty: The agreement score for the top-voted label 'Normal' is 0.60, indicating some degree of uncertainty in the findings."
+  },
+  "ground_truth": {
+    "findings": "Cardiac and mediastinal silhouette are unremarkable. Lungs are clear. No focal consolidation, pneumothorax, or pleural effusion identified. [REDACTED] and soft tissue are unremarkable.",
+    "impression": "No acute cardiopulmonary abnormality."
+  }
+}

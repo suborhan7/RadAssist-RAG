@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Lungs are clear. There is minimal atelectasis in the left base. No effusion or pneumothorax. Heart and mediastinal contours within normal limits. A [REDACTED] density foreign body present in the soft tissues overlying the left lateral chest wall. Visualized osseous structures intact.",
+    "impression": "[REDACTED] opacity left lung base, minimal atelectasis left base, no acute abnormality",
+    "recommendation": "Further evaluation recommended to determine nature of [REDACTED] density foreign body",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.40)"
+  },
+  "ground_truth": {
+    "findings": "The trachea is midline. Cardio mediastinal silhouette is normal in contour with overlying sternotomy [REDACTED]. The lungs are clear without acute infiltrate, effusion or pneumothorax. The visualized bony structures reveal no fractures or dislocations.",
+    "impression": "No acute abnormalities."
+  }
+}

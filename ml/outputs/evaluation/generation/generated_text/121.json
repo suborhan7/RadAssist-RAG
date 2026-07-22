@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The cardiomediastinal silhouette and pulmonary vasculature are within normal limits. There is no pneumothorax or pleural effusion. There are small calcified granulomata in the right lateral lung.",
+    "impression": "No acute cardiopulmonary abnormality",
+    "recommendation": "None",
+    "disclaimer": "The findings are based on a limited dataset and may not be comprehensive"
+  },
+  "ground_truth": {
+    "findings": "Heart size and vascularity normal. Lungs are clear. No effusions. No pneumothorax. Visualized osseous structures unremarkable.",
+    "impression": "Normal chest."
+  }
+}

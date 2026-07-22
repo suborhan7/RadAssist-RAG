@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Frontal and lateral views",
+    "findings": "The heart is normal in size. The lungs are clear, and without focal airspace opacity. The cardiomediastinal silhouette is normal in size and contour, and stable. There are calcified granulomas at the right perihilar regions appear stable. Significant degenerative osteophytes of the thoracic spine also appear stable.",
+    "impression": "No acute or active cardiac, pulmonary or pleural disease",
+    "recommendation": "None",
+    "disclaimer": "Low agreement score (0.60) for the label 'Normal', so some uncertainty is expressed in the findings and impression."
+  },
+  "ground_truth": {
+    "findings": "The heart size is normal. The mediastinal contour is within normal limits. There are multiple calcified granulomas within the left lower lobe. The lungs are free of any focal infiltrates. There are no nodules or masses. No visible pneumothorax. No visible pleural fluid. The [REDACTED] are grossly normal. There is no visible free intraperitoneal air under the diaphragm.",
+    "impression": "No acute radiographic cardiopulmonary process."
+  }
+}

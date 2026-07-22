@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Digital Chest Radiography",
+    "findings": "The heart and lungs are normal, with no focal air space opacities, pleural effusion, or pneumothorax. Both lungs are clear and expanded. Heart and mediastinum appear normal.",
+    "impression": "No active disease. No acute cardiopulmonary disease",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty exists due to low agreement score (0.40)"
+  },
+  "ground_truth": {
+    "findings": "The heart and cardiomediastinal silhouette are normal in size and contour. There is no focal airspace opacity, pleural effusion, or pneumothorax. The osseous structures are intact.",
+    "impression": "No acute cardiopulmonary finding."
+  }
+}

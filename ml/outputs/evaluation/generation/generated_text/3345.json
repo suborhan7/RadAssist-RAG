@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The heart size is normal. Lungs are clear. No pleural line to suggest pneumothorax or costophrenic blunting to suggest large pleural effusion. Bony structures are within normal limits.",
+    "impression": "No acute cardiopulmonary findings.",
+    "recommendation": "None",
+    "disclaimer": "The radiologist's interpretation is based on the provided evidence and may not reflect the actual clinical situation."
+  },
+  "ground_truth": {
+    "findings": "No focal consolidation, suspicious pulmonary opacity, pneumothorax or definite pleural effusion. Heart size and pulmonary vascularity within normal limits, visualized osseous structures appear intact.",
+    "impression": "No acute cardiopulmonary abnormality."
+  }
+}

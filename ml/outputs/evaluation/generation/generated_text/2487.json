@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Heart size and mediastinal contours appear within normal limits. Pulmonary vascularity is within normal limits. No focal consolidation, suspicious pulmonary opacity, pneumothorax or definite pleural effusion. Visualized osseous structures appear intact.",
+    "impression": "No acute cardiopulmonary abnormality",
+    "recommendation": "None",
+    "disclaimer": "Low agreement score (0.60) for the impression"
+  },
+  "ground_truth": {
+    "findings": "Chest: The cardiomediastinal silhouette is within normal limits for size and contour. The lungs are normally inflated without evidence of focal airspace disease, pleural effusion, or pneumothorax. Thoracic spine: Mild dextro curvature the upper thoracic spine. Evaluation of the upper thoracic bodies is limited secondary to osseous overlap. Vertebral body [REDACTED] and disc spaces are maintained. Mild degenerative endplate changes. Lumbar spine: There are 5 nonrib-bearing lumbar type vertebral bodies. Alignment is within normal limits. Vertebral body [REDACTED] and disc spaces are maintained. Mild degenerative change without acute displaced fracture or dislocation. Moderate amount of stool.",
+    "impression": "Chest. No acute radiographic cardiopulmonary process. Thoracic spine. Mild degenerative change without acute bony abnormality. Lumbar spine. Mild degenerative change without acute bony abnormality."
+  }
+}

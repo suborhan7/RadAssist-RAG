@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The heart is normal in size, and the mediastinum is unremarkable. The lungs are clear.",
+    "impression": "No acute disease.",
+    "recommendation": "None",
+    "disclaimer": "Low confidence due to limited clinical information"
+  },
+  "ground_truth": {
+    "findings": "Heart size and vascularity normal. Lungs are hyperexpanded but clear. Mediastinal contour normal. No pleural effusions or pneumothoraces.",
+    "impression": "Hyperexpanded lungs, suggesting chronic obstructive pulmonary disease. No acute pulmonary process."
+  }
+}

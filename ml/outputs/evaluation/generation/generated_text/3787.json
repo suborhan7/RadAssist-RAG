@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Frontal and lateral radiographs of the chest with overlying external cardiac monitor leads",
+    "findings": "Cardiomediastinal silhouette is within normal limits. No focal consolidation, pneumothorax or large pleural effusion. Diminished lung volumes with central bronchovascular crowding. Minimal atelectasis versus scarring seen in the left lung base.",
+    "impression": "No acute cardiopulmonary abnormality. Low lung volumes with minimal left basilar atelectasis versus scarring.",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.40)"
+  },
+  "ground_truth": {
+    "findings": "Heart size is normal. No pneumothorax, pleural effusion, or focal airspace disease. Bony structures appear intact.",
+    "impression": "Normal chest radiograph."
+  }
+}

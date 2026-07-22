@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The heart is normal in size, and the lungs are clear. The mediastinum is unremarkable.",
+    "impression": "No acute disease. Normal chest.",
+    "recommendation": "None",
+    "disclaimer": "There is a possibility of minimal basilar atelectasis on the left lung, but this cannot be confirmed with certainty due to limited information."
+  },
+  "ground_truth": {
+    "findings": "Normal heart. Clear lungs. No pneumothorax. No pleural effusion.",
+    "impression": "Normal chest exam."
+  }
+}

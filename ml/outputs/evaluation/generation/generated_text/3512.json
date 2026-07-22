@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Multiple myeloma",
+    "technique": "Standard PA view",
+    "findings": "Healing fracture involving the left posterolateral 7th rib, deformity of the 8th vertebral body. The lungs appear clear. The heart and pulmonary vasculature are normal. The pleural spaces are clear. Mediastinal contours are normal.",
+    "impression": "Unremarkable examination of the chest",
+    "recommendation": "Follow-up imaging as clinically indicated",
+    "disclaimer": "Due to a low agreement score (0.40), there is some clinical uncertainty in this report"
+  },
+  "ground_truth": {
+    "findings": "Cardiac and mediastinal contours are within normal limits. The lungs are clear. Thoracic spondylosis.",
+    "impression": "Negative chest x-[REDACTED]. No evidence of pneumonia."
+  }
+}

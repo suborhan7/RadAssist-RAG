@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "PA and lateral views",
+    "findings": "The aortic arch, cardiac apex, and stomach are left-sided. Cardiomediastinal silhouette is within normal limits in overall size and appearance. Pulmonary vascular markings are symmetric and within normal limits. The lungs are normally inflated with no focal airspace disease, pleural effusion, or pneumothorax. No acute bony abnormality.",
+    "impression": "No acute cardiopulmonary process",
+    "recommendation": "None",
+    "disclaimer": "The top candidate label from retrieval-based voting is 'Other Abnormality' with an agreement score of 0.60"
+  },
+  "ground_truth": {
+    "findings": "Heart size and pulmonary vascular engorgement appear within limits of normal. Mediastinal contour is unremarkable. No focal consolidation, pleural effusion, or pneumothorax identified. Multilevel degenerative changes are noted within the thoracic spine.",
+    "impression": "No acute cardiopulmonary abnormality identified."
+  }
+}

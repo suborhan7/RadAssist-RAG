@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Digital Chest Radiography",
+    "findings": "Significant interval decrease in right middle and right lower lobe opacification, persistent small right pleural effusion, atelectasis, blunting of the right costophrenic angle which may represent a small amount of pleural effusion or reaction.",
+    "impression": "Decreasing right pleural effusion with clearing of airspace disease. Clinical uncertainty exists due to low agreement score (0.40) for the top candidate label 'Pleural Effusion'.",
+    "recommendation": "Further evaluation recommended to confirm diagnosis and monitor for any changes.",
+    "disclaimer": ""
+  },
+  "ground_truth": {
+    "findings": "Frontal and lateral views of the chest show normal size and configuration of the cardiac silhouette. The right costophrenic sulcus is blunted. There is an the right base [REDACTED]/fluid level. The left lung is clear.",
+    "impression": "1. Right-sided small pleural effusion. 2. Right base [REDACTED]/fluid level. Atypical location for a hiatal hernia. Cannot exclude a right lower lobe cavity. Correlation [REDACTED] scan recommended. Does not appear to be a hydropneumothorax or empyema."
+  }
+}

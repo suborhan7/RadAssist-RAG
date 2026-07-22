@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Post-CABG, interval CABG with sterotomia and cerclage",
+    "technique": "Standard chest X-ray",
+    "findings": "Stable, mild degenerative disc disease of the thoracic spine. Atherosclerotic calcifications of the thoracic aorta. No focal air space opacity, pleural effusion or pneumothorax.",
+    "impression": "Clear lungs. No acute cardiopulmonary process.",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.40)"
+  },
+  "ground_truth": {
+    "findings": "[REDACTED] sternotomy [REDACTED] remain in [REDACTED]. The cardiomediastinal silhouette is within normal limits for appearance. No focal areas of pulmonary consolidation. No pneumothorax. No pleural effusion. Minimal degenerative changes of the thoracic spine.",
+    "impression": "1. No acute intrathoracic abnormality."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Several calcified granulomas in bilateral hilar regions, normal heart size and mediastinal contours, clear lungs without focal consolidation or effusion.",
+    "impression": "No acute cardiopulmonary abnormality. Evidence of prior granulomatous disease.",
+    "recommendation": "Further evaluation with chest CT may be necessary to clarify the nature of the right paratracheal stripe.",
+    "disclaimer": "Clinical uncertainty exists due to low agreement score (0.40) and contradictory cases."
+  },
+  "ground_truth": {
+    "findings": "Heart size and cardiomediastinal contours are normal. Lungs are clear without focal air space opacity, pleural effusion, or pneumothorax. Osseous structures are intact.",
+    "impression": "Negative for acute cardiopulmonary findings."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Both lungs are clear and expanded. Heart and mediastinum normal.",
+    "impression": "No active disease. Normal chest",
+    "recommendation": "None",
+    "disclaimer": ""
+  },
+  "ground_truth": {
+    "findings": "Heart size within normal limits. Negative for focal pulmonary consolidation, pleural effusion, or pneumothorax. No upper lobe airspace disease or cavitary lesions identified.",
+    "impression": "1. No acute abnormality. 2. No evidence of pulmonary tuberculosis."
+  }
+}

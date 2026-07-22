@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The cardiomediastinal silhouette is within normal limits for appearance. The lungs are hyperexpanded with flattening of the bilateral hemidiaphragms. Mild increased lung markings due to chronic changes. No focal pulmonary consolidation, pneumothorax, or pleural effusion. Moderate degenerative changes of the thoracic spine. Calcified left perihilar granuloma redemonstrated.",
+    "impression": "Findings consistent with emphysema with interstitial thickening. This could be due to edema superimposed on emphysema or pneumonitis or fibrosis.",
+    "recommendation": "Chest X-ray if warranted clinically given recent onset of dyspnea",
+    "disclaimer": "Clinical uncertainty exists due to low agreement score (0.60)"
+  },
+  "ground_truth": {
+    "findings": "Heart size and mediastinal contours are stable. Atherosclerotic calcifications of the aorta. Moderate severe hyperexpansion of the lungs and decreased peripheral vascular markings, consistent with emphysema. Stable biapical pleural-parenchymal scarring. Scattered granulomas. No abnormal airspace consolidation. No pneumothorax or pleural effusion.",
+    "impression": "1. Stable emphysematous changes. 2. Stable biapical pleural-parenchymal scarring."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown clinical history with mild spine curvature and right hemidiaphragm eventration.",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Heart size is normal. Lungs are clear. No pleural effusions or pneumothoraces. Bony structures show degenerative changes, including mild spine curvature and right hemidiaphragm eventration.",
+    "impression": "No acute cardiopulmonary findings. Degenerative changes in the spine.",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.40)"
+  },
+  "ground_truth": {
+    "findings": "The cardiomediastinal silhouette is within normal limits of size and appearance. The pulmonary vascularity is unremarkable. Lungs are expanded and clear of airspace disease. Negative for pneumothorax or pleural effusion. There is mild midthoracic dextroscoliosis, with the [REDACTED] [REDACTED] otherwise grossly intact.",
+    "impression": "No acute cardiopulmonary abnormality."
+  }
+}

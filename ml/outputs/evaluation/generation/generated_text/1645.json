@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Lung hyperexpansion, patchy opacities in the right lower lobe and left upper lobe consistent with scarring. No acute cardiopulmonary findings.",
+    "impression": "Chronic obstructive pulmonary disease (COPD) with no acute findings, but clinical uncertainty exists due to low agreement score for the top-voted label, Lung Opacity.",
+    "recommendation": "Further evaluation recommended to assess lung function and potential underlying causes of COPD.",
+    "disclaimer": "Clinical uncertainty exists due to low agreement score for the top-voted label, Lung Opacity."
+  },
+  "ground_truth": {
+    "findings": "Stable chronic appearing left basilar opacities. No focal areas of consolidation. Heart size within normal limits. No pleural effusions. No evidence of pneumothorax. Osseous structures appear intact. Degenerative changes of the visualized thoracic spine.",
+    "impression": "No acute cardiopulmonary abnormality."
+  }
+}

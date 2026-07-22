@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The heart is normal in size, and the lungs are hypoinflated but clear. The mediastinum and pleural spaces are unremarkable.",
+    "impression": "No acute disease or cardiopulmonary findings.",
+    "recommendation": "Follow-up imaging not indicated at this time.",
+    "disclaimer": "Clinical uncertainty exists due to low agreement score (0.60)."
+  },
+  "ground_truth": {
+    "findings": "The lungs appear clear. There are no suspicious pulmonary nodules or infiltrates. The heart and pulmonary [REDACTED] appear normal. The pleural spaces are clear. Mediastinal contours are normal. There is a left-sided tunneled catheter, the distal tip at the mid superior [REDACTED] [REDACTED] level.",
+    "impression": "No acute cardiopulmonary disease."
+  }
+}

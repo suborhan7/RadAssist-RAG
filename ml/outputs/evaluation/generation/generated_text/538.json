@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "[REDACTED] [REDACTED] in the interval",
+    "technique": "Normal cardiomediastinal contours, no pneumothorax, pleural effusions or focal lung consolidation",
+    "findings": "Both lungs are clear and expanded. Heart and mediastinum normal. The cardiomediastinal silhouette and pulmonary vasculature are within normal limits in size.",
+    "impression": "No active disease. No acute cardiopulmonary findings.",
+    "recommendation": "",
+    "disclaimer": ""
+  },
+  "ground_truth": {
+    "findings": "Frontal and lateral views of the chest show an unchanged cardiomediastinal silhouette. No [REDACTED] focal airspace consolidation or pleural effusion.",
+    "impression": "No acute or active cardiac, pulmonary or pleural disease."
+  }
+}

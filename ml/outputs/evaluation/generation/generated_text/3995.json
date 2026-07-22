@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Digital Chest Radiography",
+    "findings": "Heart size normal, lungs are clear, no pneumonia, effusions, edema, pneumothorax, adenopathy, nodules or masses. Possible volume overload with improved aeration of lung bases and small residual left basilar effusion.",
+    "impression": "Normal chest",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.40)"
+  },
+  "ground_truth": {
+    "findings": "The cardiomediastinal silhouette and pulmonary vasculature are within normal limits in size. The lungs are mildly hyperinflated with flattening of the diaphragms and expansion of the retrosternal clear space. Compared with prior exam, there has been interval resolution of previously demonstrated bibasilar infiltrates. There is minimal [REDACTED] scarring or atelectasis in the right midlung. There is no [REDACTED] focal airspace disease. There is no pneumothorax or pleural effusion. There are no acute bony findings.",
+    "impression": "1. Interval resolution of bibasilar airspace disease. 2. Hyperinflation with chronic changes of emphysema."
+  }
+}

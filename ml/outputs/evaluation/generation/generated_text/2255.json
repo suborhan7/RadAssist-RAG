@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The heart is normal in size and contour. There is no mediastinal widening. The lungs are clear bilaterally. No large pleural effusion or pneumothorax. The [REDACTED] are intact.",
+    "impression": "No acute cardiopulmonary abnormalities.",
+    "recommendation": "None",
+    "disclaimer": "Based on the provided evidence, this report is considered reliable with high confidence."
+  },
+  "ground_truth": {
+    "findings": "The trachea is midline. Cardiomediastinal silhouette is normal and unchanged from prior examination. There are round calcific densities in the right lung consistent with prior granulomatous disease. Otherwise, the lungs are clear without evidence of acute infiltrate or effusion. There is no pneumothorax. The visualized bony structures reveal no acute abnormalities.",
+    "impression": "No acute cardiopulmonary abnormalities."
+  }
+}

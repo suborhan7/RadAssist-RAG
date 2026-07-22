@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior and lateral views",
+    "findings": "Heart size within normal limits, stable mediastinal and hilar contours. The lungs are clear with no focal alveolar consolidation or definite pleural effusion seen. Minimal sclerotic change overlying the midthoracic spine on the lateral view.",
+    "impression": "No acute findings; possible chronic subsegmental atelectasis in the left base",
+    "recommendation": "Further evaluation may be helpful to evaluate for potential metastatic disease",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.40)"
+  },
+  "ground_truth": {
+    "findings": "Heart size near top normal limits, mild aortic ectasia size tortuosity. Mediastinal calcifications and dense nodule in the lingula suggest a previous granulomatous process. No focal alveolar consolidation, no definite pleural effusion seen. No typical findings of pulmonary edema.",
+    "impression": "No acute cardiopulmonary findings"
+  }
+}

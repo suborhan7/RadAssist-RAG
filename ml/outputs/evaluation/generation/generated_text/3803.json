@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "AP chest diameter",
+    "findings": "The lungs are clear, and there is no evidence of focal consolidation, pneumothorax, or pleural effusion. The heart and mediastinum are normal.",
+    "impression": "No acute cardiopulmonary abnormality, findings compatible with emphysema.",
+    "recommendation": "Further evaluation recommended for definitive diagnosis",
+    "disclaimer": "Clinical uncertainty exists due to low agreement score (0.60)"
+  },
+  "ground_truth": {
+    "findings": "The heart size and cardiomediastinal silhouette are normal. The aorta is tortuous and atherosclerotic. The lungs are hyperexpanded with flattening of hemidiaphragms and increased retrosternal airspace. There is no focal airspace opacity, pleural effusion, or pneumothorax. There are degenerative changes in the thoracic spine.",
+    "impression": "1. No acute cardiopulmonary finding. 2. Emphysema and atherosclerosis."
+  }
+}

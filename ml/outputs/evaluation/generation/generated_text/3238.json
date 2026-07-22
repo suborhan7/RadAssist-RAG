@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The lungs remain hyperexpanded. No infiltrates or masses. Heart and mediastinum are normal.",
+    "impression": "Heart size is normal. Lungs are clear. No nodules or masses. No adenopathy or effusion.",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.40)"
+  },
+  "ground_truth": {
+    "findings": "The heart is normal in size. The mediastinal contours are within normal limits. Aorta is mildly tortuous and demonstrates atherosclerotic calcifications. The lungs are mildly hypoinflated with increased peripheral lung markings noted predominantly in the right upper and lower lung. There is no acute infiltrate or significant pleural effusion. Mild eventration of left hemidiaphragm is noted.",
+    "impression": "Scattered [REDACTED] opacities may be secondary to scarring and underlying emphysematous changes versus mild interstitial lung disease. No acute infiltrate."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Heart size within normal limits. There is mild hyperexpansion with flattening diaphragms and bronchovascular crowding in the lung bases compatible with emphysema. Calcified granuloma seen in the left midlung zone. No focal pulmonary consolidation, pleural effusion, or pneumothorax.",
+    "impression": "No acute cardiopulmonary disease",
+    "recommendation": "None",
+    "disclaimer": "The agreement score is moderate (0.60), indicating some uncertainty in the findings and impression."
+  },
+  "ground_truth": {
+    "findings": "PA and lateral views of the chest were obtained. The heart is normal in size. Mediastinal contours are within normal limits. The lungs are clear. There is no pleural effusion or pneumothorax.",
+    "impression": "No acute disease."
+  }
+}

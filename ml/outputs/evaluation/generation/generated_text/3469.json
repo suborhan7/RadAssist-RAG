@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posterior-anterior (PA) view",
+    "findings": "Right chest central venous line with tip in the mid SVC, stable scarring near the right lung apex along the lateral aspect. Lungs are clear, and without focal airspace opacity. Heart size is normal, and mediastinal contours appear within normal limits.",
+    "impression": "Stable appearance of the chest without acute abnormality noted",
+    "recommendation": "None",
+    "disclaimer": "Clinical history unknown"
+  },
+  "ground_truth": {
+    "findings": "Normal heart size and pulmonary vascularity. There are changes of chronic lung disease noticed by hyperinflated lungs and streaky opacities compatible with scar. Interval placement of the chest [REDACTED] with the tip in the superior [REDACTED] [REDACTED]. No focal infiltrate, pneumothorax or pleural effusion is identified.",
+    "impression": "Chronic changes with no acute cardiopulmonary disease."
+  }
+}

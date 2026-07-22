@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Patient has a feeding tube and central line, with stable left lower lobe consolidation and mild residual medial right basilar airspace disease.",
+    "technique": "Posteroanterior (PA) chest X-ray",
+    "findings": "Grossly stable left lower lobe consolidation, mild residual medial right basilar airspace disease, diffuse degenerative changes of the spine, aortic atherosclerotic vascular calcification, and no pneumothorax.",
+    "impression": "Stable left lung consolidation, possibly infectious pneumonia and/or aspiration. Recommend followup radiographs after treatment to ensure complete resolution.",
+    "recommendation": "Follow-up radiographs recommended after treatment to ensure complete resolution of the left lung consolidation.",
+    "disclaimer": "The report is based on the provided evidence and may not reflect the patient's actual clinical status."
+  },
+  "ground_truth": {
+    "findings": "Heart size appears upper limits of normal. Tortuous aorta. Otherwise normal mediastinum. Confluent and [REDACTED] opacities seen within the left base. There are no visible nodules or masses. No visible pneumothorax. The [REDACTED] are grossly normal. There is no visible free intraperitoneal air under the diaphragm.",
+    "impression": "1. Left basilar mixed interstitial and alveolar infiltrate. Interval followup to resolution is recommended."
+  }
+}

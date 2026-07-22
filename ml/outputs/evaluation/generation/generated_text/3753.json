@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Heart size normal, lungs are clear, no pneumonia, effusions, edema, pneumothorax, adenopathy, nodules or masses.",
+    "impression": "Normal chest",
+    "recommendation": "None",
+    "disclaimer": "No acute cardiopulmonary abnormalities"
+  },
+  "ground_truth": {
+    "findings": "The cardiac silhouette, upper mediastinum and pulmonary vasculature are within normal limits. There is no acute pulmonary consolidation, large effusion or pneumothorax. There is minimal left basilar atelectasis. There are small bilateral pulmonary nodules measure approximately 5 mm in size in the right midlung and left upper lung [REDACTED]. These are not well appreciated on the lateral projection.",
+    "impression": "1. No focal pulmonary consolidation or effusion. Minimal left basilar atelectasis. 2. Bilateral pulmonary nodules. These were not present on the prior study and may represent sequela of infection, but could represent neoplastic process. Correlation with history of primary malignancy is recommended. Further evaluation [REDACTED] of the thorax could be performed, if clinically indicated."
+  }
+}

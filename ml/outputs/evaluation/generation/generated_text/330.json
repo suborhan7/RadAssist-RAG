@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Frontal and lateral views",
+    "findings": "Normal heart size, mediastinal contours, lungs are clear without focal consolidation, effusion, or pneumothorax. No acute osseous abnormalities, soft tissue structures are within normal limits.",
+    "impression": "No acute cardiopulmonary abnormalities.",
+    "recommendation": "",
+    "disclaimer": ""
+  },
+  "ground_truth": {
+    "findings": "Heart size, mediastinal contour, and pulmonary vascularity are within normal limits. No focal consolidation, suspicious pulmonary opacity, large pleural effusion, or pneumothorax is identified. Visualized osseous structures appear intact.",
+    "impression": "No acute cardiopulmonary abnormality."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Lungs are clear, heart size normal, no pneumothorax or pleural effusion. Left costophrenic opacity may represent pleural or pericardial fat.",
+    "impression": "Clear lungs, no acute cardiopulmonary abnormality.",
+    "recommendation": "None",
+    "disclaimer": "Low confidence in findings due to low agreement score (0.40)"
+  },
+  "ground_truth": {
+    "findings": "The lungs are clear. There is no pleural effusion. The heart and mediastinum are normal as are the skeletal structures and soft tissues.",
+    "impression": "No active disease."
+  }
+}

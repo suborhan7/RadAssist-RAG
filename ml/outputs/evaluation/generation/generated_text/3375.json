@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Heart size normal, lungs are clear bilaterally, cardiac and mediastinal silhouettes are normal, pulmonary vasculature is normal, no pneumothorax or pleural effusion, no acute bony abnormality.",
+    "impression": "Normal chest",
+    "recommendation": "None",
+    "disclaimer": "This report is based on the provided evidence and may not reflect the full clinical context."
+  },
+  "ground_truth": {
+    "findings": "Heart size is within normal limits. No focal airspace consolidations. No pneumothorax or pleural effusion. There are degenerative changes of the midthoracic spine.",
+    "impression": "No acute cardiopulmonary findings."
+  }
+}

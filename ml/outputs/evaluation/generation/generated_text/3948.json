@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "PA and lateral views",
+    "findings": "The lungs are well-expanded and clear. No pleural effusion or pneumothorax is seen. The cardiomediastinal contour is normal. No acute osseous lesions are identified.",
+    "impression": "No active pulmonary disease. No acute findings.",
+    "recommendation": "",
+    "disclaimer": ""
+  },
+  "ground_truth": {
+    "findings": "The cardiomediastinal silhouette is within normal limits for size and contour. The lungs are normally inflated without evidence of focal airspace disease, pleural effusion, or pneumothorax. No acute bone abnormality.",
+    "impression": "No acute cardiopulmonary process."
+  }
+}

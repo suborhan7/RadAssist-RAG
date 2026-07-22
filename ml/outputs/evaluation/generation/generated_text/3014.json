@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The lungs are clear bilaterally. Minimal subsegmental atelectasis posteriorly.",
+    "impression": "No acute cardiopulmonary abnormality. Minimal subsegmental atelectasis posteriorly. Clinical uncertainty is warranted due to low agreement score for the finding of atelectasis (0.20).",
+    "recommendation": "Further evaluation or follow-up as clinically indicated",
+    "disclaimer": "Low agreement score for the finding of atelectasis (0.20)"
+  },
+  "ground_truth": {
+    "findings": "There is distortion of the right hilum which may be postsurgical versus neoplastic. Volume loss of the right hand side. There is no evidence of focal infiltrate. No pneumothorax. No pleural effusion. Normal heart size.",
+    "impression": "Question prior right upper lobe resection, no acute abnormality."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The heart is normal in size and contour, with unremarkable mediastinum. The lungs are clear, without evidence of infiltrate, pneumothorax, or effusion.",
+    "impression": "No acute cardiopulmonary disease.",
+    "recommendation": "None",
+    "disclaimer": "Based on available evidence."
+  },
+  "ground_truth": {
+    "findings": "Low lung volumes. Heart size normal. No pneumothorax, pleural effusion, or focal airspace disease. Bony structures appear intact. Left humeral head bone anchors.",
+    "impression": "No acute cardiopulmonary abnormality."
+  }
+}

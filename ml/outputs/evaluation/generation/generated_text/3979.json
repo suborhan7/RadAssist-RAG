@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The lungs are clear bilaterally, with no evidence of focal consolidation, pneumothorax, or pleural effusion. Cardio mediastinal silhouette is unremarkable. Visualized osseous structures of the thorax demonstrate stable mild multilevel degenerative disc disease of the thoracolumbar spine as well as chronic left-sided rib fractures without acute abnormality.",
+    "impression": "No acute cardiopulmonary abnormality",
+    "recommendation": "None",
+    "disclaimer": "The findings are based on the provided evidence and may not be comprehensive or definitive."
+  },
+  "ground_truth": {
+    "findings": "Normal heart size. Mild unfolding and atherosclerotic calcification of the aorta. No focal air space consolidation. No pneumothorax or pleural effusion. Visualized bony structures are unremarkable in appearance.",
+    "impression": "No acute cardiopulmonary abnormalities."
+  }
+}

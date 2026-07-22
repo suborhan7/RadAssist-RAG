@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "AP and lateral views, expiratory view repeated",
+    "findings": "Cardiomegaly, atherosclerotic calcifications within the thoracic aorta, chronic degenerative changes in the spine, no pleural effusion, pneumothorax, or focal airspace disease",
+    "impression": "Cardiomegaly without acute cardiopulmonary abnormality",
+    "recommendation": "Further evaluation recommended to determine underlying cause of cardiomegaly",
+    "disclaimer": "Clinical uncertainty exists due to low agreement score (0.40)"
+  },
+  "ground_truth": {
+    "findings": "Overall low lung volumes. Lungs are grossly clear. Pleural thickening along the inferior left lateral chest. This appears relatively stable compared to the prior examination. No pleural effusions or pneumothoraces. cardiomegaly. Degenerative changes in the spine.",
+    "impression": "1. Cardiomegaly. 2. Pleural thickening along the inferior left lateral chest wall stable since the prior examination."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Limited lateral projection and frontal radiographs",
+    "findings": "Lung volumes are low. Prominent increased interstitial markings in both lungs are unchanged in the interval. Bullae are present both upper lobes, right worse than left. No pleural air collections or focal consolidation. Healed distal left clavicular fracture noted.",
+    "impression": "Chronic interstitial and bullous disease with mild interstitial edema",
+    "recommendation": "Further evaluation recommended for underlying cause of lung volumes being low",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.40)"
+  },
+  "ground_truth": {
+    "findings": "Unchanged cardiomegaly. There is continued interstitial prominence bilaterally. Unchanged vascular appearance. There is patchy retrocardiac opacity. Negative for pneumothorax.",
+    "impression": "Unchanged appearance of the chest with interstitial prominence the differential of which is [REDACTED] but could include interstitial edema, infectious process or interstitial disease."
+  }
+}

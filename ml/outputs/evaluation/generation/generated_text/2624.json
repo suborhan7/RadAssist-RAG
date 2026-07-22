@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Standard PA view",
+    "findings": "Cardiac and mediastinal contours are within normal limits. The lungs are clear. Bony structures are intact.",
+    "impression": "Negative chest x-ray, no acute findings",
+    "recommendation": "None",
+    "disclaimer": "No acute cardiopulmonary disease"
+  },
+  "ground_truth": {
+    "findings": "Heart size and mediastinal contour are normal. Pulmonary vascularity is normal. Lungs are clear. No pleural effusions or pneumothoraces. There is a mild anterior wedge [REDACTED] deformity of L1, age-indeterminate.",
+    "impression": "1. No acute cardiopulmonary process. 2. Age indeterminant grade 1 anterior wedge [REDACTED] deformity of L1."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Standard PA view",
+    "findings": "The cardiac and mediastinal silhouettes are normal. The lungs are well-expanded and clear. There is no focal airspace opacity. There is no pneumothorax or effusion. Irregularity of the 7th posterior right rib with underlying pleural thickening.",
+    "impression": "No acute cardiopulmonary abnormality",
+    "recommendation": "Comparison with prior studies if available",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.80)"
+  },
+  "ground_truth": {
+    "findings": "Lungs are clear bilaterally. Cardiac and mediastinal silhouettes are normal. Pulmonary vasculature is normal. No pneumothorax or pleural effusion. Limbus vertebra noted within the partial visualized lumbar vertebral body.",
+    "impression": "No acute cardiopulmonary disease."
+  }
+}

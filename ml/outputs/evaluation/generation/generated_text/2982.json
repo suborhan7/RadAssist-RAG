@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Digital Radiography",
+    "findings": "The heart, pulmonary vessels and mediastinum are within normal limits. There is no pleural effusion or pneumothorax. The aorta is tortuous and ectatic. Degenerative changes of the acromioclavicular joints and spine are noted. An IVC anomaly is identified.",
+    "impression": "No acute cardiopulmonary disease",
+    "recommendation": "Further evaluation not indicated",
+    "disclaimer": ""
+  },
+  "ground_truth": {
+    "findings": "The heart is normal in size. The mediastinum is unremarkable. [REDACTED] scarring is noted in the lingula. The lungs are clear.",
+    "impression": "No acute disease."
+  }
+}

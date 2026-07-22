@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Low lung volumes with associated bronchovascular crowding and basilar subsegmental atelectasis. The cardiomediastinal silhouette and pulmonary vasculature are within normal limits. No pneumothorax or pleural effusion.",
+    "impression": "No acute cardiopulmonary abnormality",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.60)"
+  },
+  "ground_truth": {
+    "findings": "Lungs are clear. No pleural effusions or pneumothoraces. Heart and mediastinum of normal size and contour.",
+    "impression": "No focal lung opacity, pleural effusion of pneumothorax."
+  }
+}

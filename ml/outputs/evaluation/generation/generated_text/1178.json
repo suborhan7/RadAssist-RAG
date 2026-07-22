@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "PA and lateral views",
+    "findings": "The heart is normal in size, mediastinum is unremarkable, lungs are clear. A 5 mm stable right apical nodule.",
+    "impression": "No acute disease",
+    "recommendation": "Normal exam",
+    "disclaimer": "Some uncertainty due to low agreement score (0.60)"
+  },
+  "ground_truth": {
+    "findings": "Trachea is midline. Normal heart. Clear lungs. No pneumothorax. No pleural effusion.",
+    "impression": "Normal chest exam."
+  }
+}

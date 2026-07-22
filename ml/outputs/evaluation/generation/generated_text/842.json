@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior and lateral views",
+    "findings": "Both lungs are clear and expanded. Heart and mediastinum normal.",
+    "impression": "No active disease.",
+    "recommendation": "None",
+    "disclaimer": "Some [REDACTED] opacities compatible with subsegmental atelectasis/scarring noted projecting over region of right middle lobe/lingula on lateral view, but overall lungs are well-expanded and clear."
+  },
+  "ground_truth": {
+    "findings": "Cardiomediastinal silhouette and pulmonary vasculature are within normal limits. Lungs are clear. No pneumothorax or pleural effusion. No radiodense foreign bodies noted. No acute osseous findings.",
+    "impression": "No acute cardiopulmonary findings."
+  }
+}

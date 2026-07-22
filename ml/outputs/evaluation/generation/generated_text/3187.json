@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Prior CABG, sternotomy, and mediastinal surgical clips",
+    "technique": "Digital Chest Radiography",
+    "findings": "Cardiomediastinal contour stable and within normal limits; changes of prior CABG again noted; normal pulmonary vascularity; scattered right basilar subsegmental atelectasis; left lung appears clear; no pneumothorax or pleural effusion present; moderate degenerative changes of the thoracic spine; osteopenia; mild loss of mid thoracic vertebral body",
+    "impression": "Minimal right basilar subsegmental atelectasis. Otherwise, no acute cardiopulmonary abnormality demonstrated.",
+    "recommendation": "No further imaging needed",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.40)"
+  },
+  "ground_truth": {
+    "findings": "PA and lateral views. stable postoperative changes with midline sternotomy [REDACTED] and myocardial revascularization. Cardiac size remains mildly enlarged but stable. There is mild vascular congestion. Small bilateral pleural effusions are present, which are [REDACTED].",
+    "impression": "Mild pulmonary vascular congestion, with [REDACTED] [REDACTED] bilateral effusions. Constellation findings is most compatible with congestive heart failure."
+  }
+}

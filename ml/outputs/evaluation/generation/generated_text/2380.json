@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Sequelae of prior granulomatous disease, minimally displaced fracture involving the lateral right 7th rib, and questionable anterior cortical disruption seen on lateral view.",
+    "technique": "PA and lateral views",
+    "findings": "Low lung volumes with bronchovascular crowding. Minimally displaced fracture involving the lateral right 7th rib. Small right pleural effusion with associated atelectasis of the right lower lobe. Questionable cortical defect involving the sternum seen on lateral view.",
+    "impression": "Bilateral basilar opacity compatible with atelectasis, no acute cardiopulmonary finding.",
+    "recommendation": "Further evaluation would be needed to assess the questionable cortical defect involving the sternum.",
+    "disclaimer": "Clinical uncertainty exists due to low agreement score (0.40) for the top-voted label 'Atelectasis'."
+  },
+  "ground_truth": {
+    "findings": "The heart size and pulmonary vascularity appear within normal limits. The lungs are free of focal airspace disease. No pleural effusion or pneumothorax is seen. The left hemidiaphragm is elevated. This is unchanged. No focal airspace disease is seen. No pneumothorax or pleural effusion is noted. There is eventration of the right hemidiaphragm.",
+    "impression": "1. Continued elevation of the left hemidiaphragm. 2. No evidence of active disease."
+  }
+}

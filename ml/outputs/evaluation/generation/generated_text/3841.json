@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Two-view chest",
+    "findings": "Lungs are clear bilaterally. Cardiac and mediastinal silhouettes are normal. Pulmonary vasculature is normal. No pneumothorax or pleural effusion. No acute bony abnormality.",
+    "impression": "No acute cardiopulmonary abnormality.",
+    "recommendation": "None",
+    "disclaimer": "Normal chest X-ray with no acute findings."
+  },
+  "ground_truth": {
+    "findings": "No acute osseous abnormalities. Mild thoracic spine degenerative changes. Soft tissues are within normal limits. No focal area of consolidation, pleural effusion, or pneumothorax.",
+    "impression": "1. No finding suggestive of active disease."
+  }
+}

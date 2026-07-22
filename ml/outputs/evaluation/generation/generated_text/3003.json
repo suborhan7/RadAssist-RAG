@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Heart size within normal limits, lungs clear and expanded, no focal alveolar consolidation, no definite pleural effusion seen, no typical findings of pulmonary edema, no pneumothorax.",
+    "impression": "No acute cardiopulmonary findings. No active disease.",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty: The agreement score is low (0.40), so the impression should be considered uncertain."
+  },
+  "ground_truth": {
+    "findings": "No focal consolidation, pneumothorax, or pleural effusions. Stable calcified granulomas. Cardiomediastinal silhouette demonstrates mild tortuosity of the thoracic aorta and atherosclerotic calcifications of the aortic [REDACTED]. No acute osseous abnormality identified.",
+    "impression": "No acute cardiopulmonary abnormality."
+  }
+}

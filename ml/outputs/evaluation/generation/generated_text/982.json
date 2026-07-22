@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Standard PA view",
+    "findings": "Mild atherosclerosis, thoracic spondylosis, mild biapical pleural thickening, evidence of previous anterior cervical spine fusion, degenerative changes of the spine, and mild scoliosis.",
+    "impression": "No acute disease. No active cardiopulmonary disease.",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.40) for Degenerative/Bone label."
+  },
+  "ground_truth": {
+    "findings": "Lungs are clear. No focal airspace consolidation. No pleural effusion or pneumothorax. Normal cardiomediastinal silhouette. There are postoperative changes of cervical spine fusion.",
+    "impression": "No active disease."
+  }
+}

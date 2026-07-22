@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Frontal and lateral radiographs of the chest",
+    "findings": "Enlarged heart size, calcification within the aortic arch, mild patchy bilateral airspace disease, small bilateral pleural effusions, blunting of the left costophrenic sulcus, bibasilar atelectasis, and B-lines seen at the lung bases.",
+    "impression": "Small bilateral pleural effusions with a few scattered areas of patchy bilateral airspace disease.",
+    "recommendation": "Further evaluation recommended",
+    "disclaimer": ""
+  },
+  "ground_truth": {
+    "findings": "Within the right lower lobes there are [REDACTED] airspace opacities [REDACTED] representing consolidation and atelectasis with blunting of the bilateral costophrenic [REDACTED]. The cardiomediastinal silhouette is within normal limits. Bibasilar subsegmental atelectasis. No acute osseous abnormality.",
+    "impression": "Right lower lobe airspace disease with bilateral pleural effusions."
+  }
+}

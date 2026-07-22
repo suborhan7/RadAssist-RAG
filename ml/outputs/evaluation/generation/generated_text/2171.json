@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Heart size within normal limits, lungs are clear, no focal alveolar consolidation, no definite pleural effusion seen, no typical findings of pulmonary edema, and no pneumothorax. Mediastinal contours are normal.",
+    "impression": "No acute cardiopulmonary findings",
+    "recommendation": "None",
+    "disclaimer": "Low confidence due to limited clinical information"
+  },
+  "ground_truth": {
+    "findings": "The heart and lungs have [REDACTED] [REDACTED] in the interval. Both lungs are clear and expanded. No change in the small calcified granuloma in the right upper lobe. Heart and mediastinum normal.",
+    "impression": "No active disease."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Mild cardiomegaly, mild [REDACTED] opacities bilaterally favoring scar or atelectasis. No pneumothorax, pleural effusion, or acute displaced rib fractures.",
+    "impression": "Mild cardiomegaly with mild interstitial edema and [REDACTED] posterior pleural effusion. The nodular opacities in the left and right lungs are benign and could be followed up radiographically after treatment of edema, or further characterized with CT.",
+    "recommendation": "Follow-up radiography after treatment of edema, or further characterization with CT for the nodular opacities.",
+    "disclaimer": "The findings are based on the provided evidence and may not reflect the actual clinical situation."
+  },
+  "ground_truth": {
+    "findings": "Lungs remain hyperexpanded. No change in the right middle lobe opacification. No [REDACTED] infiltrates or masses. Pulmonary arteries are prominent centrally.",
+    "impression": "[REDACTED] change COPD. Chronic right middle lobe scar and atelectasis. Pulmonary arterial hypertension."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Heart size within normal limits. No focal airspace disease, pneumothorax, pleural effusion, or displaced rib fractures. The lungs are clear bilaterally with no evidence of focal consolidation, pneumothorax, or pleural effusion.",
+    "impression": "No acute cardiopulmonary findings. Heart size is normal and the lungs are clear.",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty: Low"
+  },
+  "ground_truth": {
+    "findings": "Heart size is normal. No large effusions. No focal airspace opacities. No pneumothorax.",
+    "impression": "No acute cardiopulmonary abnormalities."
+  }
+}

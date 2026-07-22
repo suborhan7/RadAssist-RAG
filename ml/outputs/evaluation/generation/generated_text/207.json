@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Frontal and lateral radiographs of the chest",
+    "findings": "Normal size and configuration of the cardiac silhouette, normal mediastinal contour, pulmonary [REDACTED] and vasculature, central airways and lung volumes. No pleural effusion or acute abnormality. Stable right lower lobe calcified granulomas. Thin [REDACTED] lingular scar, unchanged. Heart size and pulmonary vascularity within normal limits. Surgical clips are visualized in the right upper quadrant.",
+    "impression": "No acute or active cardiac, pulmonary or pleural disease",
+    "recommendation": "None",
+    "disclaimer": "The findings are based on the evidence provided and may not be comprehensive."
+  },
+  "ground_truth": {
+    "findings": "Normal heart size and mediastinal contours. The lungs are clear. There is no pneumothorax or pleural effusion. No acute bony abnormalities.",
+    "impression": "No acute cardiopulmonary process. No obvious rib fractures."
+  }
+}

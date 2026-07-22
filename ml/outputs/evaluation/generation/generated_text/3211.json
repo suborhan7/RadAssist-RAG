@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Partial resection of posterior fourth rib, old bilateral rib fractures, and vertebral body deformity.",
+    "technique": "Posteroanterior (PA) and lateral views",
+    "findings": "Irregular 1.2 cm opacity in the left upper lung, representing chronic scarring; normal heart size; tortuous aorta; anterior wedging of multiple vertebral bodies including T6, T8, T11, and T12.",
+    "impression": "Chronic scarring in the left upper lung with no acute findings.",
+    "recommendation": "None",
+    "disclaimer": "No acute cardiopulmonary disease or pulmonary disease identified."
+  },
+  "ground_truth": {
+    "findings": "The lungs are clear. There appear to be small bilateral pleural effusions. The heart is not grossly enlarged. There are atherosclerotic changes of the aorta. Increased kyphosis is seen in the may be a thoracic [REDACTED] deformity that is not well-characterized. Arthritic changes are seen.",
+    "impression": "1. Probable small bilateral pleural effusions. 2. Possible lower thoracic [REDACTED] deformity not well characterized on today's study."
+  }
+}

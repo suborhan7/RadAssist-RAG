@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Hyperexpanded lungs, suggestive of emphysema. No focal airspace consolidation, suspicious pulmonary mass or nodule, pleural effusion, or pneumothorax. Normal heart size and mediastinal contour.",
+    "impression": "No acute abnormality. Clear lungs.",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty: The agreement score is low (0.40), so the findings and impression should be interpreted with caution."
+  },
+  "ground_truth": {
+    "findings": "Lungs are clear bilaterally with no focal infiltrate, pleural effusion, or pneumothoraces. Cardiomediastinal silhouette is within normal limits. No acute bony or soft tissue abnormality.",
+    "impression": "No acute cardiopulmonary abnormality."
+  }
+}

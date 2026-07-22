@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown clinical history with low lung volumes and mild right hemidiaphragm elevation.",
+    "technique": "Posteroanterior and lateral radiograph the chest",
+    "findings": "Cardiomegaly, mild right hemidiaphragm elevation with bronchovascular crowding, indistinct vascular margination. No focal consolidation, effusion, or pneumothorax.",
+    "impression": "Mild cardiomegaly. Clinical uncertainty exists due to low agreement score (0.40) for the label 'Cardiomegaly'.",
+    "recommendation": "Further evaluation recommended to determine underlying cause of cardiomegaly",
+    "disclaimer": "The radiographic findings are uncertain and may be secondary to bronchovascular crowding, mild pulmonary edema, atypical infection, or inflammation."
+  },
+  "ground_truth": {
+    "findings": "There is borderline cardiomegaly. Mediastinum and pulmonary vasculature are unremarkable. Lungs are clear. No pleural fluid or pneumothorax is appreciated.",
+    "impression": "Borderline cardiomegaly. Otherwise unremarkable exam."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The heart is normal in size and contour, with no mediastinal widening. The lungs are clear bilaterally, without evidence of focal airspace disease, pleural effusion, or pneumothorax. Degenerative changes noted of the thoracic spine.",
+    "impression": "No acute cardiopulmonary abnormality",
+    "recommendation": "None",
+    "disclaimer": "Based on available evidence"
+  },
+  "ground_truth": {
+    "findings": "The heart is normal size. The mediastinum is unremarkable. There is no pleural effusion, pneumothorax, or focal airspace disease. There is stable mild [REDACTED] deformity of the lower thoracic vertebral body.",
+    "impression": "No acute cardiopulmonary abnormality."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Stable elevation of the right hemidiaphragm with questionable increased right basilar airspace opacities. The left lung is clear. Heart size normal.",
+    "impression": "Correlate clinically for possible atelectasis or pneumonia in the right middle lobe and lower lobes.",
+    "recommendation": "Follow-up radiographs may be indicated to exclude an underlying abnormality.",
+    "disclaimer": "Clinical correlation recommended due to uncertainty in the findings."
+  },
+  "ground_truth": {
+    "findings": "[REDACTED] diffuse right lower lobe airspace opacity is present. There is no pleural effusion or pneumothorax. The heart and mediastinum are normal. The skeletal structures are normal.",
+    "impression": "Probable right lower lobe pneumonia."
+  }
+}

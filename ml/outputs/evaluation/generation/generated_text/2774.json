@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Frontal and lateral views",
+    "findings": "Normal cardiomediastinal silhouette, lungs are clear, minimal right middle lobe atelectasis, no focal airspace consolidation, pleural effusion or pneumothorax. Heart size and mediastinal contour are normal.",
+    "impression": "Negative for acute radiographic cardiopulmonary process. Minimal right middle lobe atelectasis with clinical uncertainty due to low agreement score (0.40) for top candidate label 'Atelectasis'.",
+    "recommendation": "",
+    "disclaimer": ""
+  },
+  "ground_truth": {
+    "findings": "The lungs and pleural spaces show no acute abnormality. Heart size is mildly enlarged, pulmonary vascularity within normal limits.",
+    "impression": "1. No acute pulmonary abnormality. 2. Mild cardiomegaly."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Prior granulomatous disease",
+    "technique": "Standard chest radiography",
+    "findings": "Stable cardiomediastinal silhouette with tortuous aorta. No pneumothorax or pleural effusion. Stable retrocardiac airspace opacity.",
+    "impression": "No acute cardiopulmonary findings. Clinical uncertainty: stable retrocardiac airspace opacity.",
+    "recommendation": "Follow-up recommended to monitor the stable retrocardiac airspace opacity.",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.40)"
+  },
+  "ground_truth": {
+    "findings": "The heart is normal in size. The mediastinum is stable. The lungs are grossly clear. [REDACTED] [REDACTED] opacities in the lung bases. There are [REDACTED] fragments overlying the posterior left chest, right neck base and [REDACTED] fragments in the left costophrenic [REDACTED]. There is no pleural effusion or pneumothorax.",
+    "impression": "[REDACTED] bullet fragments, as described above. No evidence of acute parenchymal abnormality."
+  }
+}

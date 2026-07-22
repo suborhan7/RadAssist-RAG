@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown clinical history",
+    "technique": "Digital Chest X-ray",
+    "findings": "Lung Opacity, Left costophrenic opacity may represent pleural or pericardial fat, Normal heart size and pulmonary vascularity, No pneumothorax or pleural effusion",
+    "impression": "Stable left lower lung interstitial markings. No acute cardiopulmonary abnormality.",
+    "recommendation": "Further evaluation recommended to determine the cause of the lung opacity.",
+    "disclaimer": "This examination was performed by an AI radiology assistant and is intended for educational purposes only."
+  },
+  "ground_truth": {
+    "findings": "Heart size and mediastinal contours are within normal limits. No focal airspace consolidation. No suspicious pulmonary nodules or masses. No evidence of pleural effusion or pneumothorax. No evidence of acute osseous abnormality.",
+    "impression": "1. No evidence of active cardiopulmonary disease. 2. No suspicious pulmonary nodules or masses."
+  }
+}

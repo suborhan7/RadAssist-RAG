@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "PA and lateral views",
+    "findings": "Cardiac and mediastinal contours are within normal limits. The lungs are clear. Bony structures are intact.",
+    "impression": "No acute findings. Clear lungs.",
+    "recommendation": "Nonemergent chest CT may be useful for further evaluation of the focal convexity of the left inferior posterior mediastinum.",
+    "disclaimer": "The presence of a focal contour abnormality of the level of the inferior posterior mediastinum, which may reflect focal aneurysm of the descending thoracic aorta, is uncertain and requires further evaluation."
+  },
+  "ground_truth": {
+    "findings": "The lungs are hyperaerated suggestive of chronic obstructive pulmonary disease. No focal lung consolidation. No pleural effusion. No definite pneumothorax. Heart is not enlarged. Postsurgical changes with mediastinal clips and [REDACTED] [REDACTED].",
+    "impression": "COPD. No acute abnormality."
+  }
+}

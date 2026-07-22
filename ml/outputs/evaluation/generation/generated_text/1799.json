@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Digital Chest Radiography",
+    "findings": "Stable cardiomegaly and mediastinal contour. Lungs are clear without focal consolidation, large pleural effusion, or pneumothorax. Left basilar airspace opacity secondary to epicardial fat and overlying soft tissues. Nodular opacity within the left midlung. No acute osseous abnormality.",
+    "impression": "Stable cardiomegaly. Clear lungs with possible left base airspace disease.",
+    "recommendation": "Further evaluation recommended for left basilar airspace opacity",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.60)"
+  },
+  "ground_truth": {
+    "findings": "Heart size within normal limits. No focal airspace disease. No pneumothorax or pleural effusion.",
+    "impression": "No acute right pulmonary findings."
+  }
+}

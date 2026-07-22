@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) and lateral views",
+    "findings": "Hyperexpansion, mild patchy bilateral airspace disease, small bilateral pleural effusions, two bullae in the right upper lung, calcified granuloma stable from prior exam.",
+    "impression": "No acute cardiopulmonary process. Emphysematous changes in the lungs.",
+    "recommendation": "Follow-up recommended to monitor for any changes or progression of disease.",
+    "disclaimer": "Clinical uncertainty exists due to low agreement score (0.60) and limited clinical history."
+  },
+  "ground_truth": {
+    "findings": "Patchy interstitial infiltrates have developed in both lower lobes. Both costophrenic [REDACTED] are blunted. Aorta is somewhat tortuous, with the heart size is normal. Pulmonary [REDACTED] are normal.",
+    "impression": "Bibasilar patchy airspace disease with bilateral small pleural fluid collections."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Correlate clinically with jugular catheter presence and tip overlying lower SVC",
+    "technique": "AP and lateral projections",
+    "findings": "Normal heart size, mediastinal contour, and pulmonary vascularity. Mild degenerative changes of the spine. No focal airspace consolidation, pleural effusion, or pneumothorax.",
+    "impression": "No acute cardiopulmonary findings. Mild degenerative changes of the spine.",
+    "recommendation": "",
+    "disclaimer": ""
+  },
+  "ground_truth": {
+    "findings": "Heart size within normal limits, stable mediastinal and hilar contours. Stable mild hyperinflation, right apical pleural-parenchymal irregularities compatible with scarring. No focal alveolar consolidation, no definite pleural effusion seen. No typical findings of pulmonary edema. No pneumothorax.",
+    "impression": "No acute findings"
+  }
+}

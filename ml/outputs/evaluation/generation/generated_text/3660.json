@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The lungs are clear. The cardiomediastinal silhouette and pulmonary vasculature are within normal limits in size. No pneumothorax or pleural effusion.",
+    "impression": "Negative chest",
+    "recommendation": "None",
+    "disclaimer": "No acute cardiopulmonary abnormalities"
+  },
+  "ground_truth": {
+    "findings": "Lungs are clear without focal consolidation, effusion, or pneumothorax. Normal heart size. Bony thorax and soft tissue is unremarkable.",
+    "impression": "Negative for acute cardiopulmonary abnormality."
+  }
+}

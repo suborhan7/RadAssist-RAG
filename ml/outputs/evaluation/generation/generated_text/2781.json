@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Standard PA view",
+    "findings": "The cardiomediastinal silhouette and pulmonary vasculature are within normal limits in size. The lungs are clear of focal airspace disease, pneumothorax, or pleural effusion. There are no acute bony findings.",
+    "impression": "No acute cardiopulmonary findings.",
+    "recommendation": "None",
+    "disclaimer": "Normal heart and lung parenchyma with no evidence of active cardiopulmonary disease."
+  },
+  "ground_truth": {
+    "findings": "Normal heart. Clear lungs. No pneumothorax. No pleural effusion. Trachea is midline.",
+    "impression": "Normal chest exam."
+  }
+}

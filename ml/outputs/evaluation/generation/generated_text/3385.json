@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Frontal and apical lordotic views",
+    "findings": "The heart is normal in size and contour. There is focal airspace disease in the right middle lobe. There is no pneumothorax or effusion. Calcified granuloma is identified.",
+    "impression": "Focal airspace disease in the right middle lobe, most concerning for pneumonia. No evidence of active disease.",
+    "recommendation": "Follow-up recommended",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.40)"
+  },
+  "ground_truth": {
+    "findings": "Cardiac and mediastinal contours are within normal limits. The lungs are clear. Bony structures are intact.",
+    "impression": "No lobar pneumonia"
+  }
+}

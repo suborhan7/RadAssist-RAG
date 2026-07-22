@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "AP and lateral views",
+    "findings": "Lungs are clear bilaterally. Cardiac and mediastinal silhouettes are normal. Pulmonary vasculature is normal. No pneumothorax or pleural effusion. No acute bony abnormality.",
+    "impression": "No acute cardiopulmonary abnormalities. The lungs remain hyperexpanded with no infiltrates or masses. Heart and mediastinum are normal.",
+    "recommendation": "[REDACTED] scan is recommended",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.60)"
+  },
+  "ground_truth": {
+    "findings": "Normal heart size. Dilated pulmonary arteries. Atherosclerotic calcifications of the aorta. No focal airspace consolidation. Decreased biapical vascular markings with moderate hyperexpansion the lungs, consistent with obstructive pulmonary disease. No pleural effusion or pneumothorax.",
+    "impression": "1. Moderate hyperinflation of the lungs. 2. Dilated pulmonary arteries. This may reflect pulmonary hypertension."
+  }
+}

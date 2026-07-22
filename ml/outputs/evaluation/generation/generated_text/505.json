@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Correlate clinically with jugular catheter and pulmonary nodules",
+    "technique": "PA and lateral chest X-rays",
+    "findings": "Right internal jugular central catheter, distal tip in right atrium; bilateral pulmonary nodules suggesting metastatic disease to lungs; normal heart size and mediastinal contour; no focal airspace consolidation, pleural effusion, or pneumothorax; mild degenerative changes of the spine",
+    "impression": "No acute cardiopulmonary findings; bilateral pulmonary nodules suggesting pulmonary metastases",
+    "recommendation": "Contrast-enhanced imaging would be suited to evaluate these findings",
+    "disclaimer": "Clinical correlation recommended"
+  },
+  "ground_truth": {
+    "findings": "No focal consolidation, suspicious pulmonary opacity, pneumothorax or definite pleural effusion. Heart size and pulmonary vascularity within normal limits, visualized osseous structures appear intact.",
+    "impression": "No acute cardiopulmonary abnormality."
+  }
+}

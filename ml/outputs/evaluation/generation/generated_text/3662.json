@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Standard PA view",
+    "findings": "The lungs are clear bilaterally, with no evidence of focal consolidation, pneumothorax, or pleural effusion. Cardio mediastinal silhouette is unremarkable. Visualized osseous structures of the thorax are without acute abnormality.",
+    "impression": "No acute cardiopulmonary abnormality",
+    "recommendation": "None",
+    "disclaimer": "Low agreement score (0.40) for top-voted label 'Normal', indicating some uncertainty in findings"
+  },
+  "ground_truth": {
+    "findings": "Stable normal cardiomediastinal silhouette. Bilateral calcified hilar/perihilar lymph [REDACTED]. Left lateral lung calcified granuloma. Lungs are grossly clear without focal consolidation, pleural effusion, or pneumothorax. Stable degenerative changes of the thoracic spine. No acute osseous abnormality.",
+    "impression": "Chest radiograph. 1. No acute radiographic cardiopulmonary process."
+  }
+}

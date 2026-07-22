@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The cardiomediastinal silhouette and vasculature are within normal limits for size and contour. The lungs are normally inflated and clear. Osseous structures are within normal limits for patient age. Heart size mildly to moderately enlarged. Mild right hemidiaphragm elevation with mild bronchovascular crowding, right greater than left, indistinct vascular margination.",
+    "impression": "The heart size is normal. There is mild elevation of the left hemidiaphragm. The lungs are free of focal airspace disease. No pleural effusion or pneumothorax is seen.",
+    "recommendation": "Further evaluation recommended",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.60)"
+  },
+  "ground_truth": {
+    "findings": "Stable cardiomegaly, [REDACTED] at [REDACTED] partially accentuated by low lung volumes. Stable [REDACTED] sternotomy [REDACTED], several of which are interrupted, and mediastinal clips. No focal consolidation, pneumothorax or large pleural effusion. T-spine osteophytes.",
+    "impression": "Stable cardiomegaly without heart failure."
+  }
+}

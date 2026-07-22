@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Hyperinflation of the lungs, clear lung fields, normal heart size and pulmonary vascularity, atherosclerotic changes of the aorta, and mild degenerative changes of the spine.",
+    "impression": "COPD. No acute cardiopulmonary abnormality.",
+    "recommendation": "Further clinical evaluation recommended",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.40)"
+  },
+  "ground_truth": {
+    "findings": "The lungs appear clear. Heart and pulmonary [REDACTED] appear normal. Mediastinal contours are normal. Pleural spaces are clear. There appears to the contrast [REDACTED] within small colonic diverticula in the splenic flexure region.",
+    "impression": "1. No acute cardiopulmonary disease"
+  }
+}

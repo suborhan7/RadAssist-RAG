@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Frontal and lateral views",
+    "findings": "Normal size and configuration of the cardiac silhouette, normal mediastinal contour, pulmonary [REDACTED] and vasculature, central airways and lung volumes. No pleural effusion, no focal consolidation, pneumothorax or large pleural effusion.",
+    "impression": "No acute or active cardiac, pulmonary or pleural disease",
+    "recommendation": "None",
+    "disclaimer": "Based on the provided evidence"
+  },
+  "ground_truth": {
+    "findings": "The cardiomediastinal silhouette is normal in size and contour. No focal consolidation, pneumothorax or large pleural effusion. Suspected [REDACTED] artifact over the bilateral neck soft tissues and supraclavicular fossae. Normal [REDACTED].",
+    "impression": "Negative for acute abnormality."
+  }
+}

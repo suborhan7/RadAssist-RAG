@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The lungs are clear with hyperinflation. There is no pleural effusion or pneumothorax. The heart and mediastinum are normal. Some scattered bandlike opacities are present, which appear to represent scars.",
+    "impression": "COPD with probable right basilar scarring. No acute pulmonary disease identified.",
+    "recommendation": "Follow-up imaging as clinically indicated",
+    "disclaimer": "Clinical uncertainty exists due to low agreement score (0.60)"
+  },
+  "ground_truth": {
+    "findings": "Blunting of the costophrenic [REDACTED] [REDACTED] represents scarring. No pleural effusion is identified on the lateral view. There is no focal consolidation. No pneumothorax is present. The cardiomediastinal silhouette is within normal limits are in the pulmonary vasculature is normal.",
+    "impression": "Scarring at the lateral costophrenic [REDACTED]. Otherwise no significant radiographic abnormality."
+  }
+}

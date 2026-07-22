@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Frontal and lateral views",
+    "findings": "Normal size and configuration of the cardiac silhouette, normal mediastinal contour, pulmonary vasculature, central airways, and lung volumes. No pleural effusion, pneumothorax, or acute abnormality.",
+    "impression": "No acute or active cardiac, pulmonary, or pleural disease.",
+    "recommendation": "None",
+    "disclaimer": "Low agreement score (0.60) for the label 'Normal', so some uncertainty is warranted."
+  },
+  "ground_truth": {
+    "findings": "Interval removal of left-sided chest tube. Small residual left apical pneumothorax has increased slightly in size the prior exam, now measuring approximately 0.9 cm from the thoracic apex. Stable cardiomediastinal silhouette. No focal airspace consolidation. No pleural effusion.",
+    "impression": "No acute cardiopulmonary abnormality."
+  }
+}

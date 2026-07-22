@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown clinical history with a stable calcified granuloma in the infrahilar right lung and mild degenerative changes along the thoracic spine.",
+    "technique": "Standard PA view",
+    "findings": "Cardiomediastinal contours are within normal limits. Pulmonary vasculature is unremarkable. No focal airspace opacity, pleural effusion, or pneumothorax is seen. There is a stable calcified granuloma in the infrahilar right lung. Mild degenerative changes along the thoracic spine are noted. No acute bony abnormality is identified.",
+    "impression": "Given the low agreement score (0.40) for the top-voted label 'Atelectasis', there may be uncertainty regarding the presence of atelectasis, and further evaluation or follow-up imaging may be necessary to confirm this finding.",
+    "recommendation": "Further evaluation not indicated at this time",
+    "disclaimer": "Clinical uncertainty exists due to low agreement score (0.40) for the top-voted label 'Atelectasis'"
+  },
+  "ground_truth": {
+    "findings": "There is a [REDACTED] airspace opacity in the left upper lung. Heart size within normal limits. Mild calcification of the aortic [REDACTED]. No pneumothorax or pleural effusions.",
+    "impression": "[REDACTED] airspace opacity in the left upper lung which may represent streaky atelectasis or resolving pneumonia."
+  }
+}

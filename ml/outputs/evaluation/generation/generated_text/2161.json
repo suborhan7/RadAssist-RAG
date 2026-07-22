@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Standard PA view",
+    "findings": "Stable enlarged cardiac silhouette, persistent bilateral lower lobe airspace disease, minimal patchy bibasilar opacities possibly representing evolving pneumonia or atelectasis. No pleural effusion or pneumothorax.",
+    "impression": "Low lung volumes, no significant change compared to prior. Bibasilar airspace disease may represent infection or mild edema.",
+    "recommendation": "Further evaluation and management by a referring physician is recommended.",
+    "disclaimer": "Due to low agreement score of 0.40, the findings and impression should be considered uncertain."
+  },
+  "ground_truth": {
+    "findings": "The heart size is upper limits of normal. Mediastinal contour appears normal and pulmonary vascularity is within normal limits. Otherwise, no focal consolidation, large pleural effusion, or pneumothorax. The visualized osseous structures appear intact.",
+    "impression": "Borderline heart size. Otherwise, no acute cardiopulmonary abnormality."
+  }
+}

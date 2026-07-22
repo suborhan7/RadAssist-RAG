@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Enlarged cardiomediastinal silhouette, low lung volumes, relative elevation of right hemidiaphragm. No focal consolidation, pneumothorax or large pleural effusion.",
+    "impression": "Cardiomegaly without heart failure. Minimal [REDACTED] left basilar scarring/atelectasis.",
+    "recommendation": "Further evaluation recommended to determine the cause of cardiomegaly",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.60)"
+  },
+  "ground_truth": {
+    "findings": "Heart size normal. Mild tortuosity of the thoracic aorta. There is no focal consolidation, pneumothorax, or pleural effusion identified. A bullet is noted in the soft tissues of the inferior right chest wall. No acute bony abnormality.",
+    "impression": "No acute cardiopulmonary abnormality."
+  }
+}

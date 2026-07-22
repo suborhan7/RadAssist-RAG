@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior and lateral views",
+    "findings": "The trachea is midline. The cardio mediastinal silhouette is of normal size and contour. No evidence of focal infiltrate or effusion. Low lung volumes causing bibasilar atelectasis and bronchovascular crowding. There is no pneumothorax. The visualized bony structures reveal no acute abnormalities. Lateral view reveals degenerative changes of the thoracic spine.",
+    "impression": "No acute cardiopulmonary abnormalities. Low lung volumes causing bibasilar atelectasis and bronchovascular crowding.",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.40)"
+  },
+  "ground_truth": {
+    "findings": "3 images. Heart size is normal. There is mild tortuosity of the thoracic aorta. There are costochondral calcifications. The lungs are clear of focal infiltrate. No pleural effusion or pneumothorax. Old left clavicle fracture noted.",
+    "impression": "No acute abnormality identified."
+  }
+}

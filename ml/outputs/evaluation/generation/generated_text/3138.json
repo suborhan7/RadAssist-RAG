@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Lung opacity in left midlung. Heart size appears within normal limits.",
+    "impression": "No acute cardiopulmonary abnormality. Slight cardiomegaly.",
+    "recommendation": "Further evaluation recommended to determine cause of lung opacity.",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.40) for the top candidate label 'Lung Opacity'."
+  },
+  "ground_truth": {
+    "findings": "The trachea is midline. The cardiomediastinal silhouette is normal. The lungs are clear, without evidence of acute infiltrate or effusion. There is no evidence of tuberculous disease. There is no pneumothorax. The visualized bony structures reveal no acute abnormalities.",
+    "impression": "No acute cardiopulmonary abnormality."
+  }
+}

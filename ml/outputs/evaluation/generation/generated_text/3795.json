@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Previous CABG, cervical spine fusion, and peripheral vascular disease",
+    "technique": "Frontal and lateral views with overlying external cardiac monitor leads",
+    "findings": "Clear lungs. No focal air space opacity or pleural effusion. Mild biapical pleural thickening which is smooth. Atherosclerotic calcifications of the thoracic aorta. Scattered nodular opacities consistent with calcified granulomas.",
+    "impression": "No acute chest findings. Probable previous granulomatous disease.",
+    "recommendation": "None",
+    "disclaimer": ""
+  },
+  "ground_truth": {
+    "findings": "2 images. Moderate thoracic dextroscoliosis, similar to prior imaging. Heart size is normal. No focal airspace consolidation is seen within the lungs. No pleural effusion or pneumothorax.",
+    "impression": "No acute changes from prior imaging."
+  }
+}

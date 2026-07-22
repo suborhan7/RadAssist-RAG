@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Both lungs are clear and expanded. Heart and mediastinum normal.",
+    "impression": "No active disease.",
+    "recommendation": "None",
+    "disclaimer": "Low agreement score, clinical uncertainty possible"
+  },
+  "ground_truth": {
+    "findings": "No pneumothorax or pleural effusion. Normal cardiac contours. Clear lungs bilaterally. Redemonstration of transmetatarsal amputation. No evidence of acute fracture-dislocations. No evidence of any bony erosions or osseous infections.",
+    "impression": "Right foot 1. No evidence of the bony erosions or osseous infection. Chest radiograph 1. No acute cardiopulmonary abnormalities."
+  }
+}

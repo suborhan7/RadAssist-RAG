@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unspecified clinical history",
+    "technique": "Standard chest radiography",
+    "findings": "Platelike horizontal opacities in both lung bases, consistent with scarring or subsegmental atelectasis. T-spine osteophytes are present. No pneumothorax, pleural effusion, lobar pneumonia, or acute bony abnormality.",
+    "impression": "Unchanged platelike bibasilar opacities most likely representing scarring or subsegmental atelectasis. No acute cardiopulmonary abnormality.",
+    "recommendation": "Further evaluation and clinical correlation recommended",
+    "disclaimer": "Clinical uncertainty exists due to low agreement score (0.40) for the top candidate label 'Lung Opacity'"
+  },
+  "ground_truth": {
+    "findings": "Apical lordotic frontal view. Considering differences in technical factors [REDACTED] stable cardiomediastinal silhouette with mild cardiomegaly. No focal alveolar consolidation, no definite pleural effusion seen. Dense left lower lung nodule suggests a previous granulomatous process. No typical findings of pulmonary edema.",
+    "impression": "No acute findings"
+  }
+}

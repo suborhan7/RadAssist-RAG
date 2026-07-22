@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Interval decrease in right middle and lower lobe opacification, persistent small right pleural effusion, and atelectasis.",
+    "technique": "Digital Chest Radiography",
+    "findings": "Significant interval decrease in right middle and lower lobe opacification. Persistent small right pleural effusion and atelectasis. No pneumothorax. Stable appearance of the cardiomediastinal silhouette. No acute bone abnormality.",
+    "impression": "The lungs are free of focal airspace disease, with a persistent small right pleural effusion and atelectasis. There is significant interval decrease in right middle and lower lobe opacification.",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.60) for top candidate label 'Lung Opacity'"
+  },
+  "ground_truth": {
+    "findings": "The heart is enlarged. The mediastinal contours are stable. Large hiatal hernia is identified containing stomach and colon. Questionable small bowel loops are also visualized inthe large hernia. There is adjacent compressive atelectasis. The lungs are clear.",
+    "impression": "No acute disease. Stable appearance of large hiatal hernia containing stomach and large bowel as well as possible small bowel loops."
+  }
+}

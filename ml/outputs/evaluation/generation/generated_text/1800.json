@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Mildly hyperinflated lungs with upper lobe areas of lung lucency suggesting obstructive pulmonary disease and emphysema. No superimposed focal airspace consolidation, pleural effusion, or pneumothorax.",
+    "impression": "Emphysema, most likely due to chronic obstructive pulmonary disease (COPD).",
+    "recommendation": "Clinical correlation recommended for further evaluation of lung lucency and potential atelectasis.",
+    "disclaimer": "Due to low agreement score, the impression is not definitive, and clinical correlation is necessary."
+  },
+  "ground_truth": {
+    "findings": "Lungs are hyperexpanded bilaterally, with no focal consolidation, pleural effusion, or pneumothoraces. Cardiomediastinal silhouette is within normal limits. [REDACTED] are unremarkable.",
+    "impression": "No acute cardiopulmonary abnormality."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Mild cardiomegaly, mild central pulmonary vascular congestion and interstitial accentuation.",
+    "impression": "Mild stable cardiomegaly with mild central pulmonary vascular congestion and interstitial accentuation.",
+    "recommendation": "Clinical correlation recommended.",
+    "disclaimer": "No acute cardiopulmonary abnormality."
+  },
+  "ground_truth": {
+    "findings": "Persistent cardiomegaly. No abnormal airspace consolidation. Resolved interstitial edema. No pneumothorax or pleural effusion.",
+    "impression": "Stable cardiomegaly without acute abnormality."
+  }
+}

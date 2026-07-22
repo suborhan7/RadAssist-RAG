@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior and lateral chest examination",
+    "findings": "The heart and lungs have normal appearance in the interval. Both lungs are clear and expanded. Heart and mediastinum normal.",
+    "impression": "No active disease.",
+    "recommendation": "None",
+    "disclaimer": "Based on available evidence, no acute cardiopulmonary abnormalities were detected."
+  },
+  "ground_truth": {
+    "findings": "Heart size within normal limits. Negative for focal pulmonary consolidation, pleural effusion, or pneumothorax. Calcified right hilar lymph [REDACTED] noted.",
+    "impression": "No acute abnormality."
+  }
+}

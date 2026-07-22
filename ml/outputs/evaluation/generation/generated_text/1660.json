@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "PA and lateral views",
+    "findings": "Heart size is upper limits normal or mildly enlarged, thoracic aorta is mildly tortuous, pulmonary vasculature is within normal limits. No pneumothorax, pleural effusion, or focal air space consolidation.",
+    "impression": "No acute cardiopulmonary disease",
+    "recommendation": "",
+    "disclaimer": "Clinical uncertainty: The agreement score for the top-voted label 'Normal' is low (0.40), indicating some degree of uncertainty in the findings and impression."
+  },
+  "ground_truth": {
+    "findings": "There are low lung volumes. The lungs are otherwise clear. Heart size is normal. No pneumothorax.",
+    "impression": "No acute cardiopulmonary abnormality."
+  }
+}

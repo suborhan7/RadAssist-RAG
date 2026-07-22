@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Lung opacities are present in the left lung base, consistent with atelectasis. Heart size and mediastinum are normal.",
+    "impression": "Findings of focal atelectasis in the left lung base, possibly related to chronic obstructive pulmonary disease (COPD).",
+    "recommendation": "Further evaluation or follow-up imaging may be necessary to assess for any changes or progression of the atelectasis.",
+    "disclaimer": "Due to low agreement score, there is some uncertainty regarding the diagnosis and findings."
+  },
+  "ground_truth": {
+    "findings": "The lungs are clear. There is hyperexpansion of the lungs suggesting underlying emphysema. The heart and pulmonary [REDACTED] appear normal. Pleural spaces are clear. Mediastinal contours are normal.",
+    "impression": "No acute cardiopulmonary disease"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Stable cardiomegaly without acute cardiopulmonary abnormality",
+    "technique": "Two images",
+    "findings": "Cardiomegaly, mild thoracolumbar dextroscoliosis, chronic fibrosis/scar in the left basilar region, and stable heart size.",
+    "impression": "Stable cardiomegaly without acute cardiopulmonary abnormality.",
+    "recommendation": "Follow-up radiography is recommended to document resolution of any potential lung disease.",
+    "disclaimer": "No acute osseous abnormality or pleural effusion/pneumothorax detected."
+  },
+  "ground_truth": {
+    "findings": "The lungs are clear bilaterally. Specifically, no evidence of focal consolidation, pneumothorax, or pleural effusion.. Mild cardiomegaly without acute cardiac abnormality. Visualized osseous structures of the thorax are without acute abnormality.",
+    "impression": "Mild cardiomegaly without acute cardiopulmonary abnormality. No active infectious/tuberculous process."
+  }
+}

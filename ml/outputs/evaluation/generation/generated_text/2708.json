@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The lungs are clear bilaterally, with no focal consolidations or pneumothorax. The heart size is normal, and there are minimal degenerative changes of the spine.",
+    "impression": "No acute cardiopulmonary findings, consistent with chronic obstructive pulmonary disease (COPD) with some uncertainty due to low agreement score.",
+    "recommendation": "Follow-up as clinically indicated",
+    "disclaimer": "Due to low agreement score, some uncertainty exists in the interpretation of these findings."
+  },
+  "ground_truth": {
+    "findings": "The cardiac and mediastinal contours are within normal limits. There are calcified mediastinal lymph [REDACTED], with a calcified right lower lobe pulmonary nodule. The lungs are well-inflated and clear. There is no focal consolidation, pneumothorax, or effusion. There are degenerative changes of the first costochondral joints bilaterally. No acute bony abnormalities are seen.",
+    "impression": "1. No evidence of acute cardiopulmonary process. Stable appearance of the chest. 2. Evidence of prior granulomatous disease and degenerative changes of the costochondral junctions."
+  }
+}

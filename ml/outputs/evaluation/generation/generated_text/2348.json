@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unspecified",
+    "technique": "Frontal and lateral radiographs of the chest",
+    "findings": "Right costophrenic angle is blunted. In the left lower lobe, a patchy infiltrate is present. The pulmonary vasculature are normal. Right-sided pleural effusion with elevation of right hemidiaphragm. Vague opacities are noted in the right upper lobe, possibly related to overlying rib lesions versus true pulmonary nodules. No pneumothorax.",
+    "impression": "Right pleural effusion and patchy left lower lobe airspace disease",
+    "recommendation": "Further imaging of the chest may be indicated",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.80)"
+  },
+  "ground_truth": {
+    "findings": "There is a moderate sized right pleural effusion. Severe slightly smaller than is compared to [REDACTED]. There is a small left pleural effusion. This is unchanged as compared to the prior study. There is a right chest wall venous [REDACTED] [REDACTED] which appears accessed. No pneumothorax. Scaphoid abdomen.",
+    "impression": "1. Moderate sized right pleural effusion appears smaller than the prior study. 2. Small left pleural effusion appears unchanged."
+  }
+}

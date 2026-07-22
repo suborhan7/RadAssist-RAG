@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) and lateral chest examination",
+    "findings": "The lungs are clear without evidence of focal airspace disease. There are calcified granulomas in the left lower lobe. The cardiac and mediastinal contours are within normal limits. The [REDACTED] are unremarkable.",
+    "impression": "No radiographic evidence of acute cardiopulmonary disease",
+    "recommendation": "None",
+    "disclaimer": "Based on available evidence, no acute cardiopulmonary abnormality is suspected"
+  },
+  "ground_truth": {
+    "findings": "Frontal and lateral views of the chest show an unchanged cardiomediastinal silhouette. Normal mediastinal contour, pulmonary [REDACTED] and vasculature, central airways and aeration of the lungs. No focal airspace consolidation or pleural effusion. There is subphrenic intraperitoneal extraluminal [REDACTED] free [REDACTED].",
+    "impression": "1. No acute or active cardiac, pulmonary or pleural disease. 2. Pneumoperitoneum, attributed to the patient's recent abdominal surgery."
+  }
+}

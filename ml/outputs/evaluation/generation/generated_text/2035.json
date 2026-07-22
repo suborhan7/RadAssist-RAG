@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Mild blunting of the costophrenic angles bilaterally, possibly indicating bilateral effusions. No focal airspace disease, pneumothorax, or cardiomegaly.",
+    "impression": "Bilateral effusions are possible, but no acute cardiopulmonary process is identified.",
+    "recommendation": "Further evaluation and clinical correlation recommended to determine the nature of the effusions.",
+    "disclaimer": "The agreement score for Pleural Effusion is low (0.20), indicating uncertainty in this finding."
+  },
+  "ground_truth": {
+    "findings": "Hyperexpanded lungs suggesting obstructive lung disease. Sequelae of old granulomatous disease. No focal airspace disease. No pleural effusions or pneumothoraces. Heart and mediastinum of normal size and contour. Degenerative changes in the spine.",
+    "impression": "Hyperexpanded but clear lungs."
+  }
+}

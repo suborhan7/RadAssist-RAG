@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The heart size and mediastinal silhouette are within normal limits. No pneumothorax or pleural effusions. The lungs are clear. There is irregularity of the 7th posterior right rib with underlying pleural thickening.",
+    "impression": "No acute cardiopulmonary abnormalities. Irregularity of the posterior right 7th rib with underlying pleural thickening, which may be related to [REDACTED] [REDACTED], however, if there is no known history, consider comparison with prior studies if available.",
+    "recommendation": "Comparison with prior studies if available for further evaluation",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.40)"
+  },
+  "ground_truth": {
+    "findings": "Postsurgical changes are noted in the mediastinum. There is tortuosity and/or ectasia of the thoracic and upper abdominal aorta. No consolidative airspace opacities. Blunting of the lateral and posterior left costophrenic sulcus may represent residual postsurgical effusion or pleural-parenchymal scarring. No demonstrable pneumothorax. Cardiomediastinal silhouette within normal limits. Multilevel anterior osteophytes of the thoracic spine.",
+    "impression": "1. Small left basilar parenchymal scarring and/or effusion. 2. Postsurgical changes of the mediastinum. 3. Otherwise unremarkable chest radiograph."
+  }
+}

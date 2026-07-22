@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown clinical history",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "No pneumothorax or pleural effusion. Normal cardiac contour. Clear lungs bilaterally.",
+    "impression": "No acute cardiopulmonary findings.",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty: low agreement score (0.60) for the label 'Normal'"
+  },
+  "ground_truth": {
+    "findings": "The cardiomediastinal silhouette is within normal limits for size and contour. The lungs are normally inflated without evidence of focal airspace disease, pleural effusion, or pneumothorax. No acute bone abnormality.",
+    "impression": "No acute cardiopulmonary process."
+  }
+}

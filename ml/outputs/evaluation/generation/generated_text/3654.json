@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Heart size is normal. No focal consolidations. Degenerative changes throughout the midlower thoracic spine. No pneumothorax or pleural effusion.",
+    "impression": "No acute cardiopulmonary findings.",
+    "recommendation": "Further evaluation recommended",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.80)"
+  },
+  "ground_truth": {
+    "findings": "There is a 6 mm nodular opacity in the right upper lobe. This appears [REDACTED] from the prior study. The lungs otherwise appear clear. No pleural effusion or pneumothorax is seen. Heart size and mediastinal contour appear within normal limits.",
+    "impression": "1. No acute traumatic findings. 2. Right upper lobe 6 mm nodular opacity. This may be artifactual secondary to overlapping vascular structures. However, true pulmonary nodule is a possibility. This appears [REDACTED] from [REDACTED]. Consider further evaluation with dedicated PA and lateral chest radiographs [REDACTED] the patient is [REDACTED]."
+  }
+}

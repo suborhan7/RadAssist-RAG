@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Normal heart size and mediastinal contours. Atherosclerotic calcifications of the thoracic aorta. T-spine osteophytes. Basilar atelectasis.",
+    "impression": "Normal chest, no acute cardiopulmonary abnormality.",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.40)"
+  },
+  "ground_truth": {
+    "findings": "Heart size and mediastinal contour are normal. Pulmonary vascularity is normal. There is mild blunting of the right costophrenic [REDACTED] on the frontal view. There is also mild obscuration of the right cardiac [REDACTED]. Airspace disease in expected location of right middle lobe also noted on the lateral view to No pleural effusion. Left lung clear. Degenerative changes spine. No pneumothorax.",
+    "impression": "Right middle lobe airspace disease, which could represent pneumonia in the appropriate clinical setting."
+  }
+}

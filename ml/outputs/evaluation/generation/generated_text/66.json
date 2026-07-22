@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Hyperinflation of the lungs, clear lung fields, normal heart size and shape, no pleural effusion or pneumothorax, atherosclerotic changes in the aorta, and normal skeletal structures.",
+    "impression": "The findings are consistent with a normal chest X-ray. However, there is some uncertainty due to the low agreement score (0.40).",
+    "recommendation": "Further clinical evaluation recommended",
+    "disclaimer": "Due to the low agreement score (0.40), this report should be interpreted with caution."
+  },
+  "ground_truth": {
+    "findings": "Chest. Both lungs are clear and expanded with no pleural air collections or parenchymal consolidations. Heart and mediastinum remain normal. Lumbosacral spine. [REDACTED], disc spaces, and alignment are normal. Sacrum and sacroiliac joints are normal.",
+    "impression": "1. Chest. No active disease. 2. Lumbar spine negative."
+  }
+}

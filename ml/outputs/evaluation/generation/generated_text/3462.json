@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "PA and lateral views",
+    "findings": "Lungs are clear, no pneumothorax or pleural effusion, heart and mediastinum within normal limits, bony structures intact, stable right apical nodule (5 mm)",
+    "impression": "No acute cardiopulmonary process",
+    "recommendation": "None",
+    "disclaimer": "Low confidence due to limited clinical information"
+  },
+  "ground_truth": {
+    "findings": "The heart is top normal in size. The mediastinum is stable. There is a small retrocardiac density which may be secondary to small hiatal hernia. Left IJ catheter tip at cavoatrial junction. No pneumothorax is seen. The lungs are clear.",
+    "impression": "No acute disease."
+  }
+}

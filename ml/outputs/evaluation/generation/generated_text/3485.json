@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Cardiomediastinal silhouette is within normal limits. Lungs are clear without focal consolidation, pneumothorax, or pleural effusion. Vague nodular density right upper lobe overlying the right anterior 2nd and posterior 6th ribs, which could represent healing fracture or superimposed structures.",
+    "impression": "No acute cardiopulmonary abnormalities. The vague nodular density in the right upper lobe may represent a healing fracture or superimposed structures.",
+    "recommendation": "Further imaging may be helpful",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.60)"
+  },
+  "ground_truth": {
+    "findings": "The heart size and pulmonary vascular appear within normal limits. The lungs appear hyperexpanded consistent with emphysema. Calcified lymph [REDACTED] and granuloma are noted. No acute appearing focal airspace disease is seen. No pleural effusion or pneumothorax is noted.",
+    "impression": "1. Hyperexpanded lungs consistent with emphysema. No evidence of active disease."
+  }
+}

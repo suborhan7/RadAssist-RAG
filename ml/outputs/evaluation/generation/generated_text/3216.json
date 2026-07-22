@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Prior granulomatous disease",
+    "technique": "Standard chest radiography",
+    "findings": "Cardiac and mediastinal contours are within normal limits. The lungs are clear. Bony structures are intact. Small hiatal hernia.",
+    "impression": "Clear lungs. No airspace disease or other parenchymal infiltrates. No pleural effusions. No pulmonary edema. Normal heart size, mediastinal contours and normal pulmonary vasculature. No evidence of active cardiopulmonary disease. Unchanged. Clinical uncertainty due to low agreement score (0.20) for the top-voted label 'Hernia/Diaphragm'.",
+    "recommendation": "",
+    "disclaimer": ""
+  },
+  "ground_truth": {
+    "findings": "Heart size is normal. No pneumothorax, pleural effusion, or focal airspace disease. Bony structures are intact.",
+    "impression": "Normal chest radiograph."
+  }
+}

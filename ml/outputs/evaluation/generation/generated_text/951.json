@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The heart is normal in size, pulmonary vascularity is within normal limits, and both lungs are clear. No focal air space opacities, pleural effusions, or pneumothorax are present. Mild degenerative changes of the thoracic spine are noted.",
+    "impression": "No acute cardiopulmonary abnormalities.",
+    "recommendation": "None",
+    "disclaimer": "The presence of a right-sided chest [REDACTED] is not considered an acute cardiopulmonary abnormality."
+  },
+  "ground_truth": {
+    "findings": "Normal heart. Clear lungs. No pneumothorax. No pleural effusion.",
+    "impression": "Normal chest exam."
+  }
+}

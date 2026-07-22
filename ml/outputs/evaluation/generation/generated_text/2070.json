@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Heart size is normal. Lungs are clear and expanded. No pneumothorax or pleural effusion. Stable left lower lobe scarring. Normal heart size and pulmonary vascularity.",
+    "impression": "No acute cardiopulmonary findings",
+    "recommendation": "None",
+    "disclaimer": "The agreement score is moderate (0.60), so some uncertainty exists in the interpretation of these findings."
+  },
+  "ground_truth": {
+    "findings": "There are no acute osseous abnormalities. Questionable old left posterior third and fourth rib fractures. Visualized soft tissues are within normal limits. Normal heart size. Normal hilar vascular markings. Subtle prominence of interstitial markings in the bases, left worse than right. No focal area of consolidation, pleural effusion, or pneumothorax.",
+    "impression": "Subtle interstitial markings bilateral, may represent mild pulmonary edema or chronic interstitial changes."
+  }
+}

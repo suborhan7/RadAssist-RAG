@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Mild cardiomegaly. Pulmonary vasculature is normal in caliber. There are mild [REDACTED] opacities bilaterally, favoring scar or atelectasis. Lung volumes are mildly low. The lungs are otherwise clear. No pneumothorax or pleural effusion.",
+    "impression": "Mild left basilar opacity consistent with atelectasis",
+    "recommendation": "Further evaluation recommended to determine cause of atelectasis",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.40)"
+  },
+  "ground_truth": {
+    "findings": "There is mild cardiomegaly. Mediastinal contours appear within normal limits. There are small bilateral pleural effusions, left greater than right with left basilar opacities. No pneumothorax. Mild degenerative changes of the thoracic spine.",
+    "impression": "Cardiomegaly with small bilateral pleural effusions and left basilar atelectasis."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "AP and lateral views",
+    "findings": "Normal cardiac contours. No pneumothorax or pleural effusions. Clear left lung. Right middle lobe with increased opacities, representative of infiltrate.",
+    "impression": "No acute cardiopulmonary findings. No pneumothorax or pleural effusion. Right middle lobe infiltrate.",
+    "recommendation": "Follow-up imaging as clinically indicated",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.60)"
+  },
+  "ground_truth": {
+    "findings": "Heart size and mediastinal contours are within normal limits given AP projection. The right lung appears clear. There is minimal patchy atelectasis or early infiltrate in left lung base. No visible pleural effusion or pneumothorax. There is a partially visualized IVC [REDACTED] on the lateral view. There are partially visualized surgical changes the cervical spine compatible with prior fusion procedure.",
+    "impression": "Minimal patchy left basilar atelectasis or infiltrate."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown clinical history with calcified granuloma in the right hilum and minimal atelectasis or scarring in the left lower lobe.",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Calcified granuloma in the right hilum, minimal atelectasis or scarring in the left lower lobe, stable cardiomediastinal silhouette, and no effusion or pneumothorax.",
+    "impression": "No acute cardiopulmonary disease. The top candidate label 'Calcinosis/Atherosclerosis' has a low agreement score of 0.40, indicating clinical uncertainty.",
+    "recommendation": "Further evaluation recommended for clarification of calcified granuloma.",
+    "disclaimer": "The diagnosis is uncertain due to the low agreement score (0.40) for the top candidate label 'Calcinosis/Atherosclerosis'."
+  },
+  "ground_truth": {
+    "findings": "The lungs are clear. Heart and pulmonary [REDACTED] appear normal. The pleural spaces are clear and mediastinal contours are normal. Nodular density overlying the anterior left 4th rib [REDACTED] represents a healing rib fracture.",
+    "impression": "1. No acute cardiopulmonary disease"
+  }
+}

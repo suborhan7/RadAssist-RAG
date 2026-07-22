@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Heart size is normal. Lungs are clear. No pneumothorax or pleural effusion. No focal lung consolidation. Heart size and pulmonary vascularity are within normal limits.",
+    "impression": "Clear lungs. No airspace disease or other parenchymal infiltrates. No acute cardiopulmonary findings.",
+    "recommendation": "None",
+    "disclaimer": "Unchanged"
+  },
+  "ground_truth": {
+    "findings": "Frontal and lateral views of the chest show an unchanged cardiomediastinal silhouette. No [REDACTED] focal airspace consolidation or pleural effusion.",
+    "impression": "No acute or active cardiac, pulmonary or pleural disease."
+  }
+}

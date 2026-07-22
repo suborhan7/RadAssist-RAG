@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown clinical history",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Lungs are clear without focal consolidation, effusion, or pneumothorax. Normal heart size. Soft tissues unremarkable.",
+    "impression": "Negative for acute cardiopulmonary abnormality with borderline heart size.",
+    "recommendation": "None recommended",
+    "disclaimer": "Clinical uncertainty exists due to moderate agreement score (0.60)"
+  },
+  "ground_truth": {
+    "findings": "The lungs are clear. No focal air space consolidation. No pleural effusion or pneumothorax. Normal cardiomediastinal silhouette.",
+    "impression": "Clear lungs."
+  }
+}

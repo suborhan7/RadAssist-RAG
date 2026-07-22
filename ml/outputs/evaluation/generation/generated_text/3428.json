@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The lungs appear clear. The heart and pulmonary vasculature are normal. The pleural spaces are clear. Mediastinal contours are normal.",
+    "impression": "Normal chest",
+    "recommendation": "No further imaging or clinical evaluation indicated",
+    "disclaimer": ""
+  },
+  "ground_truth": {
+    "findings": "There is a prominent calcified head to the right anterior first rib. The aorta is tortuous. There are T-spine osteophytes. The cardiomediastinal silhouette and pulmonary vasculature are within normal limits. There is no pneumothorax or pleural effusion. There are no focal areas of consolidation.",
+    "impression": "No acute cardiopulmonary abnormality."
+  }
+}

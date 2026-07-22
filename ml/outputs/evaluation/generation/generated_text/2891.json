@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "PA and lateral views of the chest",
+    "findings": "Mild basilar atelectasis, bibasilar opacities representing subsegmental atelectasis, increased interstitial markings. No pneumothorax, pleural effusion, or focal air space consolidation.",
+    "impression": "Low lung volumes with bibasilar streaky opacities most likely representing subsegmental atectasis. Stable left lower lung interstitial infiltrates or fibrosis. No acute cardiopulmonary findings.",
+    "recommendation": "Further evaluation and clinical correlation recommended",
+    "disclaimer": ""
+  },
+  "ground_truth": {
+    "findings": "Both lungs remain clear and expanded. No focal parenchymal infiltrates or pleural air collections. Heart and aorta are normal. No change in the large hiatus hernia. Pelvis. Bone density is decreased. Hips are normal and symmetric. No fractures, dislocations, or bone destruction. Note [REDACTED] of a severe rotatory dextroscoliosis in the lumbar spine.",
+    "impression": "1. Chest. No change no active cardiopulmonary disease. No evidence for cardiopulmonary injury. 2. Pelvis and hips negative for recent bony injury."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Status post sternotomy and CABG, with coronary vascular stent.",
+    "technique": "Digital Chest Radiography",
+    "findings": "Left chest support device with tip in the mid SVC. Heart size and mediastinal silhouette are within normal limits for contour. Lungs are clear. No pneumothorax or pleural effusions. Intact diaphragms.",
+    "impression": "No acute cardiopulmonary abnormalities.",
+    "recommendation": "None",
+    "disclaimer": "Due to a low agreement score (0.60) for the top-voted label 'Support Devices', there is clinical uncertainty in this report."
+  },
+  "ground_truth": {
+    "findings": "There are lower lung volumes. There is central bronchovascular crowding. Volume loss in the medial right upper lobe seen on [REDACTED] is not as well-demonstrated on radiography. No lobar consolidation. No pleural effusion or pneumothorax.",
+    "impression": "No acute abnormality identified."
+  }
+}

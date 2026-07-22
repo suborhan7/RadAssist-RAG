@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Frontal and lateral views of the chest",
+    "findings": "The lungs are clear bilaterally. Mild right basilar atelectasis and relative elevation of the right hemidiaphragm noted. No focal consolidation, pneumothorax, or pleural effusion is identified. A 1.7 cm nodular opacity within the right hilum may represent partially calcified granuloma or lymphadenopathy. Scattered calcified granulomas are also seen.",
+    "impression": "No acute cardiopulmonary abnormalities; possible partially calcified granuloma or lymphadenopathy in the right hilum.",
+    "recommendation": "Follow-up radiograph to assess stability may be of benefit.",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.40)"
+  },
+  "ground_truth": {
+    "findings": "The cardiomediastinal silhouette is normal in size and contour. No focal consolidation, pneumothorax or large pleural effusion. Interval placement of right humeral prosthesis, incompletely evaluated. Incompletely evaluated the lumbar spine fusion [REDACTED]. [REDACTED] cholecystectomy.",
+    "impression": "Interval placement of right humeral orthopedic [REDACTED], incompletely evaluated. If attention is desired to this area, consider dedicated shoulder x-[REDACTED]."
+  }
+}

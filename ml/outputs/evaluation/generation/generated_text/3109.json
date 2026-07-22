@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) and lateral views",
+    "findings": "Cardiomediastinal contours are within normal limits. Pulmonary vasculature is unremarkable. No focal airspace opacity, pleural effusion, or pneumothorax is seen. Visualized osseous structures appear intact.",
+    "impression": "No acute cardiopulmonary abnormality",
+    "recommendation": "None",
+    "disclaimer": "Low confidence due to limited clinical information"
+  },
+  "ground_truth": {
+    "findings": "There are no focal areas of consolidation. No suspicious pulmonary opacities. Heart size within normal limits. No pleural effusions. No pneumothorax.",
+    "impression": "No acute cardiopulmonary abnormality."
+  }
+}

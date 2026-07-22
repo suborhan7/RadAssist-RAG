@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Digital Chest Radiography",
+    "findings": "The lungs and pleural spaces show no acute abnormality. Stable right lower lobe calcified granulomas. Thin lingular scar, unchanged. Heart size and pulmonary vascularity within normal limits. Surgical clips are visualized in the right upper quadrant.",
+    "impression": "No acute cardiopulmonary abnormality. No evidence of tuberculosis.",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty exists due to low agreement score (0.40) for the top candidate label 'Other Abnormality'."
+  },
+  "ground_truth": {
+    "findings": "The heart is normal in size and contour. The lungs are clear, without evidence of infiltrate. There are calcified granulomas within the left lower lobe. There is no pneumothorax or effusion.",
+    "impression": "No acute cardiopulmonary disease."
+  }
+}

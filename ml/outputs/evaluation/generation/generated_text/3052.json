@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The heart is normal in size, with aortic tortuosity and hypoinflated lungs. No focal consolidation or pleural effusion seen. Old right-sided rib fracture noted.",
+    "impression": "Low lung volumes without acute infiltrate. Aortic tortuosity and mild ectasia. Minimal degenerative changes of the thoracic spine.",
+    "recommendation": "None",
+    "disclaimer": ""
+  },
+  "ground_truth": {
+    "findings": "Normal heart size. Density surrounding superior mediastinum reflex combination of vascular, osseous common pleural structures. No focal airspace consolidation. Moderate degenerative disc disease with osteophyte formation bridging.",
+    "impression": "No acute cardiopulmonary abnormality."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) and lateral chest examination",
+    "findings": "The lungs are clear bilaterally, with no evidence of focal consolidation, pneumothorax, or pleural effusion. Cardio mediastinal silhouette is unremarkable. Visualized osseous structures of the thorax are without acute abnormality.",
+    "impression": "No acute cardiopulmonary abnormality",
+    "recommendation": "None",
+    "disclaimer": "Low agreement score (0.80) may indicate uncertainty in findings"
+  },
+  "ground_truth": {
+    "findings": "Heart size normal. Lungs [REDACTED] clear. [REDACTED] [REDACTED] normal. No pneumonia, effusions, edema, pneumothorax, adenopathy, nodules or masses.",
+    "impression": "Normal chest"
+  }
+}

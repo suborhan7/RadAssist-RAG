@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Digital Chest Radiography",
+    "findings": "The heart and lungs have normal appearance in the interval. Both lungs are clear and expanded. Heart and mediastinum normal.",
+    "impression": "No acute cardiopulmonary abnormalities.",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty: The agreement score is moderate (0.60), indicating some uncertainty in the findings."
+  },
+  "ground_truth": {
+    "findings": "The [REDACTED] examination consists of frontal and lateral radiographs of the chest. The cardiomediastinal contours are within normal limits. Pulmonary vascularity is within normal limits. No focal consolidation, pleural effusion, or pneumothorax identified. Multilevel thoracic spondylosis is again demonstrated.",
+    "impression": "No acute cardiopulmonary disease."
+  }
+}

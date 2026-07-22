@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The heart size and pulmonary vascularity appear within normal limits. The lungs are free of focal airspace disease. No pleural effusion or pneumothorax is seen.",
+    "impression": "No evidence of active disease.",
+    "recommendation": "None",
+    "disclaimer": "Low confidence due to limited clinical information"
+  },
+  "ground_truth": {
+    "findings": "Heart size mildly enlarged with enlarged right atrium. No focal alveolar consolidation, no definite pleural effusion seen. No pneumothorax.",
+    "impression": "Cardiomegaly, no acute pulmonary findings"
+  }
+}

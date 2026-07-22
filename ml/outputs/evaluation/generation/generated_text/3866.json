@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Pulmonary fibrosis",
+    "technique": "Posteroanterior and lateral views",
+    "findings": "Lung Opacity in the right infrahilar region, well-circumscribed nodule in the right upper lung, bilateral pleural thickening, streaky opacities in the lung bases consistent with chronic atelectasis, diffuse increased pulmonary interstitial markings consistent with pulmonary fibrosis",
+    "impression": "Diffuse bilateral pulmonary fibrosis with relative sparing of the bilateral lung apices, no focal pulmonary consolidation",
+    "recommendation": "Follow-up study and 4 to 6 weeks could be considered to evaluate for resolution of the right perihilar lung opacity",
+    "disclaimer": "No acute cardiopulmonary abnormality"
+  },
+  "ground_truth": {
+    "findings": "Patchy airspace disease is noted within the right middle lobe. Subtle opacities are present within the lingula as well. There is no pneumothorax or pleural effusion. The heart size is normal.",
+    "impression": "Patchy right middle lobe and lingular airspace disease compatible with multilobar pneumonia."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Heart size and pulmonary vascularity appear within normal limits. Mild tortuosity to the descending thoracic aorta is seen. The lungs are free of focal airspace disease. No pleural effusion or pneumothorax is present. Degenerative changes are noted in the spine.",
+    "impression": "No evidence of active disease",
+    "recommendation": "None",
+    "disclaimer": "Low agreement score (0.40) for top-voted label 'Normal', indicating some uncertainty"
+  },
+  "ground_truth": {
+    "findings": "The heart size and pulmonary vascularity appear within normal limits. The thoracic aorta is tortuous. Lungs are free of focal airspace disease. No pleural effusion or pneumothorax is seen.",
+    "impression": "Tortuous thoracic aorta. Clear lungs."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "PA and lateral views",
+    "findings": "The heart is normal in size. The mediastinum is stable. The lungs are clear.",
+    "impression": "No acute disease.",
+    "recommendation": "None",
+    "disclaimer": "Low agreement score, clinical uncertainty exists"
+  },
+  "ground_truth": {
+    "findings": "A calcified granuloma is present in the right costophrenic [REDACTED]. Lungs are otherwise clear. Heart size normal.",
+    "impression": "No active disease."
+  }
+}

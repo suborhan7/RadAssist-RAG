@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Digital Chest Radiography",
+    "findings": "Heart size within normal limits, stable mediastinal and hilar contours. Left hemidiaphragm eventration. No focal alveolar consolidation, no definite pleural effusion seen. No typical findings of pulmonary edema. Stable left mid lung calcified granuloma.",
+    "impression": "No acute findings. Findings consistent with chronic lung disease with stable left mid lung calcified granuloma.",
+    "recommendation": "Further evaluation and management by a pulmonologist or primary care physician recommended.",
+    "disclaimer": "Clinical uncertainty exists due to low agreement score (0.40) for the top-voted label 'Granuloma'."
+  },
+  "ground_truth": {
+    "findings": "PA and lateral views the chest were obtained. The cardiomediastinal silhouette is normal in size and configuration. The lungs are well aerated. No pneumothorax, pleural effusion, or focal air space consolidation. Minimal scarring or atelectasis left lung base.",
+    "impression": "No acute cardiopulmonary disease."
+  }
+}

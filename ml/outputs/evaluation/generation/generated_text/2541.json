@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The heart and lungs are normal, with no focal areas of pulmonary consolidation, pneumothorax, or pleural effusion. The thoracic spine appears intact.",
+    "impression": "No active disease; no acute intrathoracic abnormality.",
+    "recommendation": "None",
+    "disclaimer": "Based on available evidence and agreement score of 1.00."
+  },
+  "ground_truth": {
+    "findings": "The cardiomediastinal silhouette is within normal limits for appearance. No focal areas of pulmonary consolidation. No pneumothorax. No pleural effusion. The thoracic spine appears intact. No acute, displaced rib fractures identified.",
+    "impression": "1. No acute intrathoracic abnormality."
+  }
+}

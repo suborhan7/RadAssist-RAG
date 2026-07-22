@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Digital Chest Radiography",
+    "findings": "Cardiomediastinal silhouette is within normal limits. There is slightly increased opacity of the right base compared to the left which may minimal right basilar airspace disease, possibly in the right middle lobe. The lungs are expanded and clear with no pneumothorax or pleural effusion.",
+    "impression": "Minimal right basilar airspace disease, possibly in the right middle lobe",
+    "recommendation": "Further evaluation recommended to confirm diagnosis",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.40)"
+  },
+  "ground_truth": {
+    "findings": "The heart size is normal. The mediastinal contour is within normal limits. There are no focal infiltrates. There is prominent epipericardial fat. There are no nodules or masses. No visible pneumothorax. No visible pleural fluid. Right 7th and 8th rib deformities are noted. There is no visible free intraperitoneal air under the diaphragm.",
+    "impression": "No radiographic evidence of acute cardiopulmonary abnormality."
+  }
+}

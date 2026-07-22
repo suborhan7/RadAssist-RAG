@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown, but patient has degenerative disease in spine and prosthetic right shoulder.",
+    "technique": "Standard chest X-ray",
+    "findings": "Clear lungs with no focal airspace disease, pleural effusion, or pneumothorax. Cardiomediastinal silhouette is within normal limits. Degenerative changes are seen in the spine.",
+    "impression": "No acute cardiopulmonary findings. Specifically, no radiographic evidence of active tuberculosis.",
+    "recommendation": "Further evaluation and clinical correlation recommended.",
+    "disclaimer": "Due to low agreement score (0.40), some uncertainty exists regarding the presence or absence of other abnormalities."
+  },
+  "ground_truth": {
+    "findings": "The trachea is midline. The cardiomediastinal silhouette is normal. Lung [REDACTED] are clear without evidence of effusion, infiltrate, or pneumothorax. Visualized bony structures are intact. Visualized soft tissues appear normal.",
+    "impression": "Normal chest x-[REDACTED]."
+  }
+}

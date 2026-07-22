@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The cardiomediastinal silhouette is normal in size and contour. Atherosclerosis of the aortic [REDACTED]. No focal consolidation, pneumothorax or large pleural effusion. T-spine osteophytes.",
+    "impression": "Negative for acute abnormality",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty exists due to low agreement score (0.60)"
+  },
+  "ground_truth": {
+    "findings": "The cardiomediastinal silhouette and pulmonary vasculature are within normal limits in size. The lungs are clear of focal airspace disease, pneumothorax, or pleural effusion. Lung volumes are low normal. There are no acute bony findings.",
+    "impression": "No acute cardiopulmonary findings."
+  }
+}

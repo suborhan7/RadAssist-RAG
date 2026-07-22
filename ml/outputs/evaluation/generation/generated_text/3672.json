@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Pulmonary fibrosis, possible granuloma",
+    "technique": "Two images",
+    "findings": "Low lung volumes. No acute cardiopulmonary findings. Unchanged calcified granulomas at the left greater than right hilum and in the pretracheal region. Cardiomediastinal size is within normal limits. Pulmonary vasculature is normal.",
+    "impression": "Mild stable cardiomegaly without acute disease. Possible [REDACTED] right pleural effusion. Interstitial markings bilaterally, pulmonary fibrosis",
+    "recommendation": "",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.40)"
+  },
+  "ground_truth": {
+    "findings": "Stable appearance of aortic valve prosthesis. Sternotomy [REDACTED]. Aortic calcifications. Mild interstitial edema. No focal infiltrate. No effusion or pneumothorax. Mild cardiomegaly.",
+    "impression": "Mild interstitial edema."
+  }
+}

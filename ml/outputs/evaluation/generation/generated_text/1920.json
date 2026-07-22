@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The cardiomediastinal silhouette and vasculature are within normal limits for size and contour. The lungs are normally inflated and clear. Osseous structures are within normal limits for patient age. Heart size is normal. Lungs are clear. No pneumothorax or pleural effusion. Minimal scarring in both lower lobes. Stable mild tortuosity of the descending thoracic aorta.",
+    "impression": "No acute radiographic cardiopulmonary process.",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty exists due to low agreement score (0.40)."
+  },
+  "ground_truth": {
+    "findings": "Cardiomediastinal silhouette is normal in size and contour. Pulmonary vasculature is normal in caliber. Lungs are clear of focal airspace disease, pneumothorax or pleural effusion. There are no acute bony findings.",
+    "impression": "No acute cardiopulmonary findings."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Cardiomediastinal silhouette and pulmonary vasculature are within normal limits in size. The lungs are clear of focal airspace disease, pneumothorax, or pleural effusion. There are no acute bony findings. Old rib fractures, healed. Stable increased density overlying the lower mediastinum, unchanged, is due to hiatal hernia.",
+    "impression": "No acute cardiopulmonary findings",
+    "recommendation": "",
+    "disclaimer": ""
+  },
+  "ground_truth": {
+    "findings": "The lungs are clear. There is hyperinflation of the lungs. There is no pleural effusion or pneumothorax. The heart and mediastinum are normal. mild arthritic changes of the spine are present.",
+    "impression": "Hyperinflation consistent with COPD. No acute pulmonary disease identified."
+  }
+}

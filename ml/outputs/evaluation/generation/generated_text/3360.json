@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Both lungs are clear and expanded with no infiltrates. Basilar focal atelectasis is present in the lingula. Heart size normal. Calcified right hilar [REDACTED] are present.",
+    "impression": "No active disease.",
+    "recommendation": "None",
+    "disclaimer": "Uncertainty exists due to low agreement score (0.60)"
+  },
+  "ground_truth": {
+    "findings": "The lungs are clear bilaterally. Specifically, no evidence of focal consolidation, pneumothorax, or pleural effusion.. Left basilar subsegmental atelectasis versus scar noted. Cardio mediastinal silhouette is unremarkable. Visualized osseous structures of the thorax are without acute abnormality.",
+    "impression": "No acute cardiopulmonary abnormality. Specifically, no evidence of active tuberculous process."
+  }
+}

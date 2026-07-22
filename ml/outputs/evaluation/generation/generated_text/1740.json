@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Right upper lobe opacity, left lower lung atelectasis, eventration of the right hemidiaphragm. No focal lung consolidation, pleural effusion or pneumothorax.",
+    "impression": "The findings are consistent with a possible right upper lobe pneumonia, but due to low agreement score (0.40) for the top-voted label 'Lung Opacity', there is clinical uncertainty.",
+    "recommendation": "Further evaluation recommended to determine extent of disease and guide management.",
+    "disclaimer": "Clinical uncertainty exists due to low agreement score (0.40) for the top-voted label 'Lung Opacity'."
+  },
+  "ground_truth": {
+    "findings": "Frontal and lateral views of the chest show an unchanged cardiomediastinal silhouette. There is [REDACTED] airspace opacity in the mid right lung radiating from the right hilum to the pleura and bordered inferiorly by the fissures. The [REDACTED] fissure is convex upward. There is right base patchy airspace opacity. This appears chronic and may be due to scarring. There is no significant pleural effusion.",
+    "impression": "Right upper lobe airspace consolidation Please correlate clinically for pneumonia."
+  }
+}

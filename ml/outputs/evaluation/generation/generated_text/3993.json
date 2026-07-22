@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The Cardiopulmonary silhouette is normal. The Heart size is normal. The lungs are clear with no pulmonary effusions or pneumothorax.",
+    "impression": "No acute cardiopulmonary findings.",
+    "recommendation": "Follow-up radiograph may be of benefit to assess stability",
+    "disclaimer": "The presence of a 1.7 cm nodular opacity within the right hilum, which may represent partially calcified granuloma or lymphadenopathy, is uncertain and requires further evaluation."
+  },
+  "ground_truth": {
+    "findings": "The heart is mildly enlarged. Left hemidiaphragm is elevated. There is no acute infiltrate or pleural effusion. The mediastinum is unremarkable.",
+    "impression": "Borderline cardiomegaly without acute disease."
+  }
+}

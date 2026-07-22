@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Frontal and lateral views",
+    "findings": "Both lungs are clear and expanded. Heart and mediastinum normal. Cardiomediastinal silhouettes are within normal limits. Lungs are clear without focal consolidation, pneumothorax, or pleural effusion. Bony thorax is unremarkable.",
+    "impression": "No active disease. No acute cardiopulmonary abnormalities.",
+    "recommendation": "",
+    "disclaimer": ""
+  },
+  "ground_truth": {
+    "findings": "Low lung volumes are present. The heart size and pulmonary vascularity appear within normal limits. Bandlike opacities are present in the right lung. Appearance suggest atelectasis. No pneumothorax or pleural effusion is seen.",
+    "impression": "Bandlike opacities in the right lung. Appearance [REDACTED] atelectasis."
+  }
+}

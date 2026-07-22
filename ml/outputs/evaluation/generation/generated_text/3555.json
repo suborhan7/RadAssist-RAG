@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Standard PA view",
+    "findings": "The heart and lungs are normal in size and contour. Both lungs are clear and expanded. No mediastinal widening, pleural effusion, or pneumothorax.",
+    "impression": "No active disease. No acute cardiopulmonary abnormalities.",
+    "recommendation": "None",
+    "disclaimer": "Based on available evidence"
+  },
+  "ground_truth": {
+    "findings": "The heart and mediastinum are unremarkable. The lungs are clear without infiltrate. There is no effusion or pneumothorax. Degenerative disease of multiple midthoracic vertebral bodies.",
+    "impression": "1. No acute cardiopulmonary disease."
+  }
+}

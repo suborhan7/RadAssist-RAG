@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Both lungs are clear and expanded. Heart and mediastinum normal.",
+    "impression": "No active disease.",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty: The agreement score is low, so the findings and impression should be interpreted with caution."
+  },
+  "ground_truth": {
+    "findings": "There is a subtle left medial base opacity. Cardiomediastinal silhouette is normal. Pulmonary vasculature and [REDACTED] are normal. No pneumothorax or large pleural effusion. Osseous structures and soft tissues are normal.",
+    "impression": "Subtle medial left basilar opacity could represent early pneumonia."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The cardiomediastinal silhouette and pulmonary vasculature are within normal limits. There is no pneumothorax or pleural effusion. There are no focal areas of consolidation. Prominent left epicardial fat is noted.",
+    "impression": "No acute cardiopulmonary abnormality. A 1.7 cm nodular opacity is identified within the right hilum, which may represent partially calcified granuloma or lymphadenopathy.",
+    "recommendation": "Follow-up radiograph to assess stability may be of benefit",
+    "disclaimer": "Clinical uncertainty exists due to low agreement score (0.40) for the top candidate label 'Nodule/Mass'."
+  },
+  "ground_truth": {
+    "findings": "The heart is normal in size. The mediastinum is unremarkable. The lungs are hypoinflated but grossly clear.",
+    "impression": "No acute disease."
+  }
+}

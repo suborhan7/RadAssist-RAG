@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown cardiomegaly with bilateral opacities and interstitial pulmonary edema.",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Mild cardiomegaly, mild [REDACTED] opacities bilaterally favoring scar or atelectasis, no pneumothorax or pleural effusion, and normal mediastinal silhouette.",
+    "impression": "The lung opacities are likely due to scar or atelectasis. There is also mild interstitial pulmonary edema with [REDACTED] B-lines.",
+    "recommendation": "Follow-up radiography may be necessary to further characterize the lung opacities.",
+    "disclaimer": "The agreement score for this report is 0.60, indicating moderate confidence in the findings and impression."
+  },
+  "ground_truth": {
+    "findings": "Cardiac and mediastinal silhouettes are normal. Pulmonary vasculature is normal. No pneumothorax or pleural effusion. No acute bony abnormality. [REDACTED] [REDACTED] opacities [REDACTED] reflecting atelectasis versus bronchovascular crowding.",
+    "impression": "Bronchovascular crowding versus atelectasis within the right lung base otherwise no acute cardiopulmonary disease."
+  }
+}

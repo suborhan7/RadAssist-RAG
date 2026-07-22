@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The heart size is within normal limits. Trachea is midline. No pleural effusions or pneumothorax. Cardiomediastinal contours are normal. There is focal consolidation in the posterior segment of the right lower lobe.",
+    "impression": "Right lower lobe pneumonia",
+    "recommendation": "Further evaluation and management by a healthcare provider",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.40)"
+  },
+  "ground_truth": {
+    "findings": "There are no acute osseous abnormalities. There are surgical clips in the right upper abdomen, [REDACTED] from cholecystectomy. Normal heart size. Normal hilar vascular markings. The lungs are grossly clear without focal area of consolidation, pleural effusion, pneumothorax.",
+    "impression": "No evidence of active TB."
+  }
+}

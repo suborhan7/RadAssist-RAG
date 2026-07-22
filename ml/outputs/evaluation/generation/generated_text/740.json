@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Heart size is normal, no focal consolidations, degenerative changes in midlower thoracic spine, and no pneumothorax or pleural effusion.",
+    "impression": "No acute cardiopulmonary findings.",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty: low"
+  },
+  "ground_truth": {
+    "findings": "The heart and mediastinum are stable. The lungs are clear without infiltrate. There is no effusion or pneumothorax.",
+    "impression": "1. No acute cardiopulmonary disease."
+  }
+}

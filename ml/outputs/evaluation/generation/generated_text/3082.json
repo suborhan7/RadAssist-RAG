@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Calcified granuloma in the left upper lobe, normal heart size and mediastinum, clear lungs, and unremarkable bony structures.",
+    "impression": "Old granulomatous disease. No acute pulmonary disease.",
+    "recommendation": "None",
+    "disclaimer": ""
+  },
+  "ground_truth": {
+    "findings": "Cardiomegaly. Interstitial opacities consistent with edema in the lower lobes. No pneumothorax. No large pleural effusion.",
+    "impression": "Interstitial pulmonary edema."
+  }
+}

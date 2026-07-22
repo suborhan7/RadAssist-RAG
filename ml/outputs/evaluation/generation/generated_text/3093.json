@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The trachea is midline. The cardiomediastinal silhouette is normal. The lungs are clear, without evidence of acute infiltrate or effusion. There is no pneumothorax. The visualized bony structures reveal no acute abnormalities.",
+    "impression": "No radiographic evidence of acute cardiopulmonary disease",
+    "recommendation": "Clinical correlation recommended",
+    "disclaimer": "The top candidate label from retrieval-based voting is 'Normal' with an agreement score of 0.60"
+  },
+  "ground_truth": {
+    "findings": "Lungs are hyperexpanded. Bullae are present in the upper lobes. No focal infiltrates. Heart size normal.",
+    "impression": "Findings of COPD. No acute findings."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Frontal and lateral views",
+    "findings": "Cardiac and mediastinal contours are within normal limits. The lungs are clear. Bony structures are intact.",
+    "impression": "No acute or active cardiac, pulmonary or pleural disease.",
+    "recommendation": "None",
+    "disclaimer": "Based on available evidence"
+  },
+  "ground_truth": {
+    "findings": "Chest. Lungs are clear and expanded. Heart normal. Left knee. No change marked narrowing, large osteophyte formation, multiple synovial osteochondromas.",
+    "impression": "1. Chest. No active disease. 2. Left knee. Advanced degenerative joint disease."
+  }
+}

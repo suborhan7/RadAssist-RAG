@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) and lateral views",
+    "findings": "The heart is normal size with normal appearance of the cardia mediastinal silhouette. There is no focal airspace opacity, pleural effusion, or pneumothorax. Both lungs are clear and expanded. Heart and mediastinum normal.",
+    "impression": "Heart size normal. Lungs are clear.",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.40)"
+  },
+  "ground_truth": {
+    "findings": "The heart is normal in size. The mediastinal contours are within normal limits. There is mild prominence of the superior mediastinum which is somewhat lucent and [REDACTED] reflects mediastinal and vascular structures. No focal consolidation is seen. There is no pleural effusion.",
+    "impression": "1. Hypoinflation without acute parenchymal infiltrate. 2. Mild mediastinal prominence [REDACTED] related to superimposed [REDACTED] and mediastinal fat."
+  }
+}

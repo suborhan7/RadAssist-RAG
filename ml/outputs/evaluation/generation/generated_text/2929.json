@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior view",
+    "findings": "The lungs are clear bilaterally. No focal consolidation, pneumothorax, or pleural effusion is present. The cardiomediastinal silhouette and pulmonary vasculature are within normal limits in size. There is a stable calcified granuloma in the right upper lobe. Low lung volumes.",
+    "impression": "No acute cardiopulmonary findings",
+    "recommendation": "Further evaluation recommended for clarification of stable calcified granuloma",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.40) for top-voted label 'Granuloma'"
+  },
+  "ground_truth": {
+    "findings": "The heart is top normal in size. The mediastinum is unremarkable. The lungs are hypoinflated but grossly clear. Significant degenerative changes of the [REDACTED] are again noted bilaterally.",
+    "impression": "No acute disease."
+  }
+}

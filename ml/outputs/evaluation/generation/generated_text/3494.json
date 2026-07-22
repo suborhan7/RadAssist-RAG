@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Frontal and lateral radiographs of the chest",
+    "findings": "Cardiomediastinal contours are within normal limits. Pulmonary vascularity is within normal limits. No focal consolidation, pleural effusion, or pneumothorax identified. Old healed left 5th and 6th rib fractures are seen laterally.",
+    "impression": "No evidence of acute cardiopulmonary process.",
+    "recommendation": "",
+    "disclaimer": ""
+  },
+  "ground_truth": {
+    "findings": "There are low lung volumes with bronchovascular crowding. There is no focal consolidation. No visualized pneumothorax. Heart size is within normal limits. The cardiomediastinal contours is grossly normal in size and contour.",
+    "impression": "No acute cardiopulmonary findings."
+  }
+}

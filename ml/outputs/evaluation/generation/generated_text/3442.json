@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior view",
+    "findings": "Lung Opacity, right lung base may represent atelectasis versus scarring; otherwise lungs are clear.",
+    "impression": "Clear lungs. No acute cardiopulmonary abnormality.",
+    "recommendation": "Further evaluation recommended to determine the cause of the opacity.",
+    "disclaimer": "This report is for informational purposes only and should not be used as a substitute for a clinical consultation."
+  },
+  "ground_truth": {
+    "findings": "Normal cardiomediastinal contours. Low lung volumes with minimal left basilar opacities. No pneumothorax or pleural effusions.",
+    "impression": "Minimal left basilar atelectasis versus infiltrate. Low lung volumes."
+  }
+}

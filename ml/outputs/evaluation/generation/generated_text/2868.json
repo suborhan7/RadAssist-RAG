@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Frontal and lateral views of the chest with overlying external cardiac monitor leads",
+    "findings": "Normal size and configuration of the cardiac silhouette, normal pulmonary vasculature and central airways. No focal airspace consolidation or pleural effusion. T-spine osteophytes.",
+    "impression": "No acute or active cardiac, pulmonary or pleural disease. Minimal degenerative changes of the spine.",
+    "recommendation": "None",
+    "disclaimer": "The presence of a single calcified granuloma in the right lung base is noted."
+  },
+  "ground_truth": {
+    "findings": "Heart size, mediastinal contour, and pulmonary vascularity are within normal limits. No focal consolidation, large pleural effusion, or pneumothorax is identified. Minimal thoracic spondylosis.",
+    "impression": "No acute cardiopulmonary abnormality."
+  }
+}

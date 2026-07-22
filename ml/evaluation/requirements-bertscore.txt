@@ -1,0 +1,24 @@
+# Isolated environment for Tier 2 (BERTScore) generation-quality evaluation.
+# Deliberately separate from backend/requirements.txt and the main .venv --
+# see ml/evaluation/.venv-bertscore/ and score_bertscore.py's own docstring
+# for why. Do not merge this into the main project's dependencies.
+#
+# Real, confirmed-working combination (Phase 20 Step 3 smoke test):
+# - torch==2.6.0 required by transformers' check_torch_load_is_safe()
+#   (CVE-2025-32434) since PubMedBERT/BioBERT/Bio_ClinicalBERT only ship
+#   pre-safetensors pytorch_model.bin checkpoints -- confirmed no
+#   safetensors mirror exists for any standard biomedical BERT variant.
+# - transformers==4.46.0, not the latest (5.x): bert_score 0.3.13's
+#   sent_encode() passes tokenizer.model_max_length (an unbounded ~1e30
+#   sentinel for models like PubMedBERT that never set it explicitly)
+#   straight into encode(max_length=...) -- transformers 5.x's newer
+#   fast-tokenizer Rust backend raises OverflowError on that sentinel;
+#   4.46.0's tokenizer backend tolerates it. Real, reproduced bug, not
+#   assumed.
+torch==2.6.0
+transformers==4.46.0
+tokenizers==0.20.3
+huggingface_hub==0.36.2
+numpy==2.5.1
+bert_score==0.3.13
+pandas

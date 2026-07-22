@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Prior chest surgery, fracture deformity proximal right humerus",
+    "technique": "Standard PA view",
+    "findings": "Normal cardiac and mediastinal contours, well-inflated lungs with no focal consolidation or effusion. Mild atherosclerotic calcification of the aorta. No acute bony abnormalities or radiopaque foreign bodies.",
+    "impression": "No evidence of acute cardiopulmonary process. Negative examination of the chest.",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.40)"
+  },
+  "ground_truth": {
+    "findings": "Stable cardiomediastinal silhouette. Mild patchy right upper lobe opacities, similar to slightly improved from [REDACTED]. Left lung clear. No pleural effusion or pneumothorax.",
+    "impression": "1. Persistent mild right upper lobe infiltrate, similar to slightly improved from [REDACTED]. 2. Left lung grossly clear."
+  }
+}

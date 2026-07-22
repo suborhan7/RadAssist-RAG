@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Cardiomediastinal silhouettes are within normal limits. Lungs are clear without focal consolidation, pneumothorax, or pleural effusion. Vague nodular density right upper lobe overlying the right anterior 2nd and posterior 6th ribs. This could represent healing fracture or superimposed structures. Bony thorax is unremarkable.",
+    "impression": "No acute cardiopulmonary abnormalities. Vague left upper lobe nodular density as described above. Further imaging may be helpful.",
+    "recommendation": "Further imaging, such as CT thorax with contrast, may be helpful to further assess the vague nodular density.",
+    "disclaimer": "The findings are uncertain due to low agreement score (0.60) and should be confirmed by additional imaging or clinical evaluation."
+  },
+  "ground_truth": {
+    "findings": "There is bibasilar airspace disease. Cardiac silhouette is within normal limits and stable. There is blunting of the right costophrenic [REDACTED] unchanged [REDACTED] scarring. No pneumothorax.",
+    "impression": "Bibasilar airspace disease."
+  }
+}

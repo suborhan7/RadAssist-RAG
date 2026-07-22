@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "AP portable technique",
+    "findings": "The heart is within normal limits in size given the low lung volumes. The lungs are clear, without evidence of infiltrate. There is no pneumothorax or effusion.",
+    "impression": "No acute cardiopulmonary disease. Low lung volumes with streaky left basilar opacity possibly related to scarring and atelectasis. Infiltrate is not excluded.",
+    "recommendation": "Further evaluation or follow-up as clinically indicated",
+    "disclaimer": "The agreement score for the top-voted label 'Normal' is 0.40, indicating some uncertainty in the findings."
+  },
+  "ground_truth": {
+    "findings": "Low lung volumes. Question patchy opacity left base. No pneumothorax. Osseous structures intact. Small right effusion.",
+    "impression": "1. Patchy opacity left base, may represent evolving infiltrate. 2. Small right pleural effusion."
+  }
+}

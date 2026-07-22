@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Cardiomediastinal silhouette and pulmonary vasculature are within normal limits. No pneumothorax or pleural effusion. No focal areas of consolidation. Borderline enlargement of the heart. Normal vascular markings. Left basilar retrocardiac opacity.",
+    "impression": "Findings consistent with a normal chest X-ray, possibly with some degree of left base airspace disease due to low agreement score (0.40).",
+    "recommendation": "Further evaluation or follow-up imaging may be necessary to confirm the presence and extent of any potential lung disease.",
+    "disclaimer": "Due to low agreement score (0.40), there is some uncertainty in these findings."
+  },
+  "ground_truth": {
+    "findings": "Mild cardiomegaly is unchanged. Stable superior mediastinal contour appear normal pulmonary vascularity. No [REDACTED] airspace opacity, pleural effusion, or pneumothorax. No acute bony abnormalities. Right upper quadrant surgical clips.",
+    "impression": "Stable appearance of the chest. No acute cardiopulmonary findings."
+  }
+}

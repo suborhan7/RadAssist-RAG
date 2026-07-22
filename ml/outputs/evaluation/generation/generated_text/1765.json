@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Heart size is normal. No focal consolidations. There are degenerative changes throughout the midlower thoracic spine. Calcified lymph nodes in both [REDACTED]. Minimal amount of focal atelectasis posterior to the left heart.",
+    "impression": "No acute cardiopulmonary findings.",
+    "recommendation": "None",
+    "disclaimer": "The top-voted label 'Normal' has a low agreement score (0.40), indicating clinical uncertainty."
+  },
+  "ground_truth": {
+    "findings": "The cardiomediastinal silhouette is within normal limits. There is rounded calcified density within the left lower lobe most consistent with granuloma. Remaining lungs are clear without evidence of focal opacification. No pneumothorax or large pleural effusion. No acute bone abnormality.",
+    "impression": "No acute cardiopulmonary process."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Normal heart size, normal mediastinal silhouette, no pneumothorax, pleural effusion or suspicious focal air space opacity. The lungs are clear and the cardiomediastinal silhouette is within normal limits.",
+    "impression": "Normal chest film, no acute cardiopulmonary abnormalities",
+    "recommendation": "None",
+    "disclaimer": "Low agreement score (0.60) for top-voted label 'Normal', clinical uncertainty may be present"
+  },
+  "ground_truth": {
+    "findings": "Cardiac silhouette within normal limits. No edema or airspace consolidation. No pneumothorax. No pleural effusion.",
+    "impression": "No evidence of acute cardiopulmonary process."
+  }
+}

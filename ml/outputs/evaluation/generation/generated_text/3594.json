@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Heart size within normal limits, no focal airspace disease, no pneumothorax or pleural effusion. The cardiomediastinal silhouette is normal size and configuration. Pulmonary vasculature within normal limits. There is levoscoliosis of the thoracic spine.",
+    "impression": "No acute cardiopulmonary findings. No displaced fractures. Heart size is normal and lungs are clear. No evidence of tuberculosis, but clinical uncertainty due to low agreement score (0.40) for top candidate label 'Degenerative/Bone'",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.40) for top candidate label 'Degenerative/Bone'"
+  },
+  "ground_truth": {
+    "findings": "The cardiomediastinal silhouette is normal. No focal airspace consolidation. No pneumothorax or pleural effusion.",
+    "impression": "Normal chest"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "[REDACTED] change",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The lungs are clear without evidence of focal airspace disease. There is no evidence of pneumothorax or large pleural effusion. The cardiac contour is within normal limits. Compared to prior exam, there is [REDACTED] prominence of the mediastinal contour near the right hilum. This may represent the ascending aorta or mediastinal lymphadenopathy.",
+    "impression": "[REDACTED] prominence of the mediastinal contour near the right hilum possibly representing the ascending aorta or mediastinal lymphadenopathy. CT chest with contrast may be helpful for further evaluation.",
+    "recommendation": "Consider CT chest with contrast for further evaluation",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.60)"
+  },
+  "ground_truth": {
+    "findings": "The lungs are clear. No focal airspace consolidation. No pleural effusion or pneumothorax. Heart size is within normal limits.",
+    "impression": "Clear lungs."
+  }
+}

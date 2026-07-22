@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior and lateral views",
+    "findings": "Heart size within normal limits, stable mediastinal and hilar contours, mediastinal calcifications suggest a previous granulomatous process. No focal alveolar consolidation, no definite pleural effusion seen. No typical findings of pulmonary edema.",
+    "impression": "No acute findings",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty: The agreement score is low (0.40), so the impression should be considered uncertain."
+  },
+  "ground_truth": {
+    "findings": "Lungs are clear bilaterally with no focal infiltrate, pleural effusion, or pneumothoraces. Cardiomediastinal silhouette is within normal limits. No acute bony or soft tissue abnormality.",
+    "impression": "No acute cardiopulmonary abnormality."
+  }
+}

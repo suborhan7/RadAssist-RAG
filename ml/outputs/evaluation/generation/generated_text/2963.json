@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Heart size is normal. The lungs are clear. There are no focal air space consolidations or pleural effusions/pneumothoraces. Normal pulmonary vascularity and hilar/mediastinal contours.",
+    "impression": "No acute abnormality, with some uncertainty due to the low agreement score (0.40) for the top-voted label 'Normal'",
+    "recommendation": "None",
+    "disclaimer": "Low agreement score (0.40) for the top-voted label 'Normal', so some uncertainty is expressed in the findings and impression."
+  },
+  "ground_truth": {
+    "findings": "The cardiomediastinal silhouette is within normal limits for size and contour. The lungs are normally inflated without evidence of focal airspace disease, pleural effusion, or pneumothorax. No acute bone abnormality.",
+    "impression": "No acute cardiopulmonary process."
+  }
+}

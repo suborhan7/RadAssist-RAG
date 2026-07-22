@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown clinical history",
+    "technique": "Digital Chest Radiography",
+    "findings": "Cardiac and mediastinal contours are within normal limits. The lungs are clear. Bony structures are intact.",
+    "impression": "No acute cardiopulmonary abnormality, with a possibility of a right upper lobe nodule (8 mm in diameter).",
+    "recommendation": "Further evaluation recommended for the right upper lobe nodule.",
+    "disclaimer": "The agreement score is 0.40 for the label 'Normal', indicating some uncertainty."
+  },
+  "ground_truth": {
+    "findings": "There is a [REDACTED] in the left chest with catheter tip terminating in the superior [REDACTED] [REDACTED]. The cardiac silhouette is mildly enlarged, similar to prior study. There is minimal pulmonary vascular congestion. There is no acute pulmonary consolidation, pleural effusion or pneumothorax. There are stable mild interstitial lung changes, which could be related to chronic edema or fibrosis.",
+    "impression": "Stable cardiomegaly. No acute infiltrate or effusion."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "PA and lateral views",
+    "findings": "The cardiomediastinal silhouette is within normal limits for appearance. No focal areas of pulmonary consolidation. No pneumothorax. No pleural effusion. The thoracic spine appears intact.",
+    "impression": "No acute intrathoracic abnormality.",
+    "recommendation": "",
+    "disclaimer": ""
+  },
+  "ground_truth": {
+    "findings": "Heart size normal. No pneumothorax, pleural effusion, or focal airspace disease. The visualized bony structures appear intact. There is a [REDACTED] radiodensity overlying the right shoulder which is [REDACTED] external to the patient however clinical correlation recommended. Scattered calcified granulomas.",
+    "impression": "No acute cardiopulmonary abnormality. No fracture visualized."
+  }
+}

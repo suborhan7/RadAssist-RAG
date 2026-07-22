@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Cardiac and mediastinal contours are within normal limits. The lungs are clear. Bony structures are intact.",
+    "impression": "No acute findings. No acute cardiopulmonary disease.",
+    "recommendation": "None",
+    "disclaimer": "The radiologist's interpretation is based on the provided evidence only and may not reflect the patient's actual clinical status."
+  },
+  "ground_truth": {
+    "findings": "Heart size within normal limits. No focal airspace opacities. No pneumothorax. No effusions. Mild degenerative changes of the thoracic spine. No [REDACTED] deformities. Emphysematous changes.",
+    "impression": "Chronic lung disease, with no acute cardiopulmonary findings."
+  }
+}

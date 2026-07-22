@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "AP portable technique",
+    "findings": "Mild cardiomegaly, bibasilar atelectasis, bronchovascular crowding, and bilateral emphysematous changes. No pneumothorax, pleural effusion, or focal consolidation.",
+    "impression": "No acute cardiopulmonary disease. Mild cardiomegaly with very low lung volumes, bronchovascular crowding, and bibasilar areas of atelectasis.",
+    "recommendation": "Further evaluation recommended to determine the cause of mild cardiomegaly and bibasilar atelectasis.",
+    "disclaimer": "The findings are based on a limited examination and may not be comprehensive."
+  },
+  "ground_truth": {
+    "findings": "The heart is normal in size. The mediastinum is within normal limits. The study is somewhat limited. No focal consolidation is seen.",
+    "impression": "No acute disease."
+  }
+}

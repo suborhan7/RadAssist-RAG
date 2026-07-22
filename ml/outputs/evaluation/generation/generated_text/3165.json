@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "AP portable",
+    "findings": "Cardiomegaly, bibasilar atelectasis, bronchovascular crowding, chronic interstitial lung changes with superimposed pulmonary edema, mild residual medial right basilar airspace disease, stable left lower lobe consolidation",
+    "impression": "Cardiomegaly with pulmonary edema superimposed on chronic interstitial lung changes and possible infectious pneumonia or aspiration in the left lung.",
+    "recommendation": "Followup radiographs after treatment to ensure complete resolution of the left lung consolidation.",
+    "disclaimer": "Uncertainty exists due to low agreement score (0.40) for the top candidate label 'Cardiomegaly'."
+  },
+  "ground_truth": {
+    "findings": "Normal and stable cardiomediastinal contours. Interval removal of left-sided intravenous catheter. No pneumothorax. [REDACTED] [REDACTED] opacities obscuring the hemidiaphragms, slightly improved from prior exam.. Right-sided rib fractures again noted.",
+    "impression": "Mildly improved [REDACTED] [REDACTED] opacities, which may represent atelectasis, infiltrate and/or pleural effusions."
+  }
+}

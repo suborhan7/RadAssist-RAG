@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior and lateral",
+    "findings": "The heart and lungs are normal, with no acute findings or abnormalities.",
+    "impression": "No active disease. Negative chest.",
+    "recommendation": "None",
+    "disclaimer": "Based on the available evidence, this report is considered reliable."
+  },
+  "ground_truth": {
+    "findings": "Normal heart size. Stable unfolding the thoracic aorta. No focal air space consolidation. No pleural effusion or pneumothorax. Stable calcified granuloma in the left lower lobe. Visualized osseous structures are unremarkable appearance.",
+    "impression": "No acute cardiopulmonary abnormality."
+  }
+}

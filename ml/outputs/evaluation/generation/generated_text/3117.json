@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Multiple myeloma",
+    "technique": "Standard chest radiography",
+    "findings": "Healing fracture involving the left posterolateral 7th rib, deformity of the 8th vertebral body. Lungs appear clear. Heart and pulmonary vasculature are normal. Pleural spaces are clear. Mediastinal contours are normal.",
+    "impression": "No acute cardiopulmonary disease",
+    "recommendation": "",
+    "disclaimer": ""
+  },
+  "ground_truth": {
+    "findings": "Heart size is normal. The lungs and costophrenic [REDACTED] are clear. The bony thorax is grossly intact.",
+    "impression": "Normal chest."
+  }
+}

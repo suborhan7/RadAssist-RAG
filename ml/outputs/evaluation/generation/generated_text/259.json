@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Old right rib fractures, degenerative changes in thoracic spine",
+    "technique": "PA and lateral views of the chest",
+    "findings": "Both lungs are clear and expanded. Heart and mediastinum normal. Old right rib fractures. Minimal degenerative changes of the spine.",
+    "impression": "No active disease. No acute cardiopulmonary finding.",
+    "recommendation": "",
+    "disclaimer": ""
+  },
+  "ground_truth": {
+    "findings": "The heart and cardiomediastinal silhouette or normal in size and contour. There is no focal air space opacity, pleural effusion, or pneumothorax. The osseous structures are intact.",
+    "impression": "No acute cardiopulmonary finding."
+  }
+}

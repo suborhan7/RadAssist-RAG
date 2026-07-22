@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "AP and lateral views",
+    "findings": "The lungs are clear, with no focal infiltrate, pleural effusion, or pneumothoraces. Cardiomediastinal silhouette is within normal limits. The mediastinum and soft tissues are unremarkable.",
+    "impression": "No acute cardiopulmonary disease",
+    "recommendation": "None",
+    "disclaimer": "The presence of bony overlap in the lung apices could obscure a small pulmonary nodule."
+  },
+  "ground_truth": {
+    "findings": "Heart size is normal. Prior calcified granulomatous disease. On the lateral view in the anterior costophrenic [REDACTED], there is a 2.1 x 2 cm nodular density which seems to be present previously but is more nodular in appearance on this examination. No pleural effusion or pneumothorax. Endplate degenerative changes of the thoracolumbar spine and mild scoliosis are unchanged.",
+    "impression": "2.1 cm nodular density in the anterior costophrenic [REDACTED] on the lateral view, which could represent overlapping shadows or actual pulmonary nodule. Recommend followup with chest CT."
+  }
+}

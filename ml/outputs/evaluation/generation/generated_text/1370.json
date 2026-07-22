@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The heart and mediastinum are unremarkable. The lungs are hyperexpanded. The lungs are clear without infiltrate. There is no effusion or pneumothorax.",
+    "impression": "No acute cardiopulmonary disease.",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty: Agreement score of 0.40"
+  },
+  "ground_truth": {
+    "findings": "Stable cardiomediastinal silhouette. There is mild haziness in the right lung and left base, which could represent infiltrate. No pleural effusion. No pneumothorax. Stable [REDACTED] deformity of a midthoracic vertebra.",
+    "impression": "1. Possible infiltrates in the right lung and left base. Consider CT for further evaluation, if clinically indicated."
+  }
+}

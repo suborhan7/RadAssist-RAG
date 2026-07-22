@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The heart size and mediastinal silhouette are within normal limits for contour. The lungs are clear. No pneumothorax or pleural effusions.",
+    "impression": "No acute cardiopulmonary abnormalities.",
+    "recommendation": "Further evaluation with CT may be necessary to determine the nature of the left lower lobe nodule.",
+    "disclaimer": "The presence of a 2 cm diameter nodule in the posterior segment of the left lower lobe is uncertain due to low agreement score."
+  },
+  "ground_truth": {
+    "findings": "Heart size remains slightly large. Pulmonary [REDACTED] are normal. Aorta tortuous.",
+    "impression": "[REDACTED] change. No active cardiopulmonary disease."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "The heart is top normal in size. The mediastinum is unremarkable. The lungs are clear.",
+    "impression": "No acute disease.",
+    "recommendation": "None",
+    "disclaimer": "Clinical uncertainty: Low"
+  },
+  "ground_truth": {
+    "findings": "Heart size and mediastinal contours are stable. Pulmonary vasculature is unremarkable. No focal consolidation. No visible pleural effusion or pneumothorax. No displaced rib fractures are seen. There are mild degenerative changes along the thoracic spine.",
+    "impression": "No acute cardiopulmonary abnormality."
+  }
+}

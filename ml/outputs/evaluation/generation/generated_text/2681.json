@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) view",
+    "findings": "Clear lungs, normal heart size, degenerative changes of the thoracic spine without acute bony abnormality. Possible prosthetic right shoulder and left glenohumeral osteoarthritis.",
+    "impression": "No acute pulmonary findings. Mild degenerative changes of the thoracic spine.",
+    "recommendation": "Further evaluation recommended for the possible prosthetic right shoulder and left glenohumeral osteoarthritis.",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.40) for the Degenerative/Bone label."
+  },
+  "ground_truth": {
+    "findings": "The heart, pulmonary [REDACTED] and mediastinum are within normal limits. There is no pleural effusion or pneumothorax. There is no focal air space opacity to suggest a pneumonia. There is a small stable [REDACTED] foreign body noted over the left chest. There are vascular calcifications over the aortic [REDACTED]. There are mild degenerative changes of the spine.",
+    "impression": "No acute cardiopulmonary disease."
+  }
+}

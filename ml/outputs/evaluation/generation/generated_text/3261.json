@@ -1,0 +1,15 @@
+{
+  "generated": {
+    "examination": "Chest X-ray",
+    "clinical_history": "Unknown",
+    "technique": "Posteroanterior (PA) and lateral views",
+    "findings": "Both lungs are clear and expanded. Heart and mediastinum normal. Calcified densities within the right paratracheal region and left perihilar region, may represent calcified granulomas. Round opacity measuring 2 cm in diameter within the posterior mediastinum.",
+    "impression": "No active disease. Recommend further evaluation of the round opacity with chest CT with IV contrast.",
+    "recommendation": "Further evaluation with chest CT with IV contrast",
+    "disclaimer": "Clinical uncertainty due to low agreement score (0.40)"
+  },
+  "ground_truth": {
+    "findings": "Heart size normal. Lungs are clear. [REDACTED] are normal. No pneumonia, effusions, edema, pneumothorax, adenopathy, nodules or masses.",
+    "impression": "Normal chest No evidence of sarcoidosis."
+  }
+}
