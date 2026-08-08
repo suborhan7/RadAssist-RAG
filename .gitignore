@@ -68,3 +68,9 @@ Thumbs.db
 agent/
 # Superseded pre-port design-system backup (binary; already ported into frontend/src/).
 frontend/p0-design-system.tar.gz
+
+# E2E harness runtime artifacts (disposable DB sidecars, Edge profile, screenshots).
+backend/*.db-wal
+backend/*.db-shm
+e2e/.edge-profile/
+e2e/*.png
