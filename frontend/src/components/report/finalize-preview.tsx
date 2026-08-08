@@ -55,31 +55,31 @@ export function FinalizePreview({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/60 p-page">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-bg-page/70 p-44">
       <Card className="flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden">
-        <div className="flex items-center justify-between border-b border-hairline p-tight px-card">
+        <div className="flex items-center justify-between border-b border-hairline px-24 py-20">
           <div>
-            <h2 className="text-h3 text-ink">Preview before finalizing</h2>
-            <p className="text-sm text-ink-3">
+            <h2 className="text-panel text-text-primary">Preview before finalizing</h2>
+            <p className="mt-3 text-sm text-text-secondary">
               Once finalized, this report cannot be edited further.
             </p>
           </div>
           <button
             type="button"
             onClick={() => setShowDiff((prev) => !prev)}
-            className="shrink-0 text-sm font-medium text-ink-2 underline decoration-hairline-strong underline-offset-2 hover:text-steel-ink"
+            className="shrink-0 text-sm font-medium text-text-secondary transition-colors duration-hover hover:text-cyan"
           >
             {showDiff ? "Hide changes vs AI draft" : "Changes vs AI draft"}
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-card">
+        <div className="flex-1 overflow-y-auto p-24">
           {showDiff ? (
             <ReportDiffView summary={diffSummary} />
           ) : (
             <>
-              <h3 className="text-eyebrow uppercase text-ink-3">Report &middot; {reportDate}</h3>
-              <div className="mt-2">
+              <h3 className="font-mono text-eyebrow uppercase text-text-tertiary">Report &middot; {reportDate}</h3>
+              <div className="mt-14">
                 <ReportDocumentView content={report.content} />
               </div>
             </>
@@ -87,12 +87,12 @@ export function FinalizePreview({
         </div>
 
         {error && (
-          <div className="mx-card mb-3 rounded-card border border-critical-bd bg-critical-bg px-3 py-2 text-sm text-critical-ink">
+          <div className="mx-24 mb-14 rounded-field border border-amber-line bg-amber-wash px-14 py-12 text-sm text-amber">
             {error}
           </div>
         )}
 
-        <div className="flex justify-end gap-3 border-t border-hairline p-card">
+        <div className="flex justify-end gap-14 border-t border-hairline p-24">
           <button
             type="button"
             onClick={onCancel}

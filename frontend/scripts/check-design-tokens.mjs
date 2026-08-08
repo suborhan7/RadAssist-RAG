@@ -1,13 +1,14 @@
 #!/usr/bin/env node
 /**
- * P0 gate — design_specification.md §13.
+ * P0 gate — "Reading Room" design tokens (src/styles/tokens.css).
  *
- * "Zero hex literals outside the radiograph SVG. Zero padding values outside
- *  the three tokens. --e1/2/3 only."
+ * "Zero hex literals outside the radiograph SVG. No arbitrary padding — it
+ *  comes from the spacing scale (--space-3 … --space-44 / the Tailwind
+ *  p-N utilities that name them). Two accents only; no default palette."
  *
  * This exists because V1 shipped a documented design system that nothing
- * consumed: six tokens were declared and never wired up, and every banner
- * invented its own border colour by hand (§15.2). A spec that is not enforced
+ * consumed: tokens were declared and never wired up, and every banner
+ * invented its own border colour by hand. A spec that is not enforced
  * is a suggestion. Run in CI; fail the build.
  *
  *   node scripts/check-design-tokens.mjs
@@ -32,10 +33,12 @@ const RULES = [
   },
   {
     id: "raw-padding",
-    why: "Component padding is --pad-card / --pad-tight / --pad-page only. See §6.4.",
+    why: "Padding comes from the spacing scale — Tailwind p-N (var(--space-N)), never an arbitrary px.",
     // p-[13px] · padding:11px · padding: "13px" · paddingLeft: '10px'
     // All three syntaxes bypass the scale, and the JSX-object form is the one
-    // that actually caused the drift, so it must not have a hole.
+    // that actually caused the drift, so it must not have a hole. Named tokens
+    // (padding: var(--space-14)) and Tailwind p-N utilities are allowed — only
+    // raw pixel values and arbitrary p-[..] brackets are flagged.
     test: (line) => line.match(/\bp[xytrbl]?-\[[^\]]+\]|padding[A-Za-z]*\s*:\s*["'`]?\s*\d+px/g),
     skip: (f) => f === TOKEN_FILE,
   },

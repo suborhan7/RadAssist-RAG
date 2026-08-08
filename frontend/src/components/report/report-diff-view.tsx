@@ -18,19 +18,22 @@ const FIELD_LABELS = new Map(REPORT_CONTENT_FIELDS.map(({ key, label }) => [key,
  * whole component.
  */
 export function DiffMarkup({ diff }: { diff: Change[] }) {
+  // Reading Room diff register (design mock): the doctor's words are cyan and
+  // underlined; drafted words that were removed go muted with a strike. No fill
+  // blocks -- the two accents carry the whole distinction.
   return (
-    <p className="mt-1 whitespace-pre-wrap text-report text-ink-2">
+    <p className="mt-8 whitespace-pre-wrap text-findings text-text-secondary">
       {diff.map((change, i) => {
         if (change.added) {
           return (
-            <span key={i} className="rounded-in bg-stable-bg px-0.5 text-stable-ink">
+            <span key={i} className="border-b border-cyan text-cyan">
               {change.value}
             </span>
           );
         }
         if (change.removed) {
           return (
-            <span key={i} className={cn("rounded-in bg-critical-bg px-0.5 text-critical-ink line-through")}>
+            <span key={i} className={cn("text-text-muted line-through")}>
               {change.value}
             </span>
           );
@@ -64,23 +67,25 @@ export function ReportDiffView({ summary }: { summary: ReportDiffSummary }) {
   const changedSections = summary.sections.filter((section) => section.changed);
 
   return (
-    <div className="flex flex-col gap-4">
-      <p className="text-sm text-ink-2">
-        <span className="font-medium text-ink">
+    <div className="flex flex-col gap-16">
+      <p className="text-sm text-text-secondary">
+        <span className="font-medium text-text-primary">
           {summary.sectionsChanged} of {summary.sections.length} sections changed
         </span>{" "}
         &middot; {summary.editPercentage.toFixed(1)}% of the AI draft was edited
       </p>
 
       {changedSections.length === 0 ? (
-        <p className="rounded-card border border-hairline bg-sunken px-3 py-2 text-sm text-ink-2">
+        <p className="rounded-panel border border-hairline bg-bg-hover px-14 py-12 text-sm text-text-secondary">
           No edits made.
         </p>
       ) : (
-        <div className="flex flex-col divide-y divide-hairline">
+        <div className="flex flex-col">
           {changedSections.map((section) => (
-            <div key={section.field} className="py-3 first:pt-0 last:pb-0">
-              <h3 className="text-h3 text-ink">{FIELD_LABELS.get(section.field) ?? section.field}</h3>
+            <div key={section.field} className="border-b border-hairline py-16 first:pt-0 last:border-0 last:pb-0">
+              <h3 className="font-mono text-eyebrow uppercase text-text-tertiary">
+                {FIELD_LABELS.get(section.field) ?? section.field}
+              </h3>
               <DiffMarkup diff={section.diff} />
             </div>
           ))}
@@ -91,7 +96,7 @@ export function ReportDiffView({ summary }: { summary: ReportDiffSummary }) {
           this project's report_audit_log records who edited when, but
           never snapshots content at each edit, so there is no
           intermediate state to reconstruct here. */}
-      <p className="text-xs text-ink-3">
+      <p className="text-caption text-text-tertiary">
         Comparing the original AI draft against the current report. This shows what changed overall,
         not a step-by-step edit history.
       </p>

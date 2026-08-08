@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -11,7 +12,6 @@ import {
 } from "@/lib/api-client";
 import { StepProgress, type StepStatus, type WorkflowStepDisplay } from "@/components/workflow/StepProgress";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { PhiRevealSlider } from "@/components/ui/phi-reveal-slider";
 import type { paths } from "@/lib/generated/api";
 
@@ -20,25 +20,24 @@ type QuestionnaireResponse =
 
 /**
  * Upload -> Retrieval -> Questionnaire -> Generate (Phase 12 Step 4, PHI
- * slider added Phase 14), one guided flow per the frozen spec -- not
- * separate routes, since a doctor experiences this as one continuous
- * action.
+ * slider Phase 14, ported to the Reading Room theme in the redesign step 4),
+ * one guided flow -- a doctor experiences this as one continuous action.
  *
- * design_specification.md §8.9's PHI reveal slider: `originalObjectUrl`
- * is built from the SAME File object already sitting in this component's
- * state before upload (URL.createObjectURL, never re-uploaded or
- * persisted) -- this system deliberately never stores the raw image
- * (Phase 1/12's masking invariant), so this is the only "original" the
- * slider can legitimately show. Revoked on unmount/file-change to avoid
- * leaking the object URL.
+ * PHI reveal slider (§8.9): `originalObjectUrl` is built from the SAME File
+ * object in this component's state (URL.createObjectURL, never re-uploaded or
+ * persisted). This system never stores the raw image (Phase 1/12 masking
+ * invariant), so this local object URL is the only "original" the slider can
+ * legitimately show, and the "original never stored" caption is literal.
+ * Revoked on unmount/file-change. The mock's multiple-choice pill questions
+ * are aspirational; the real backend returns free-text questions, kept as-is.
  */
 type WorkflowStepId = "uploading" | "retrieving_evidence" | "running_questionnaire" | "generating_report";
 
 const STEP_LABELS: Record<WorkflowStepId, string> = {
-  uploading: "Uploading Chest X-ray",
-  retrieving_evidence: "Retrieving Similar Cases",
-  running_questionnaire: "Clinical Questionnaire",
-  generating_report: "Generating AI Report",
+  uploading: "Uploading chest X-ray",
+  retrieving_evidence: "Retrieving similar cases",
+  running_questionnaire: "Clinical questionnaire",
+  generating_report: "Generating AI report",
 };
 
 const STEP_ORDER: WorkflowStepId[] = [
@@ -186,80 +185,133 @@ export default function UploadFlowPage() {
   const maskedReady = sessionId !== null && steps.retrieving_evidence.status === "done";
 
   return (
-    <div className="flex min-h-screen flex-col items-center bg-paper">
-      <main className="flex w-full max-w-lg flex-col gap-6 px-page py-16">
-        <h1 className="text-h1 text-ink">New Examination</h1>
+    <div className="flex h-[100dvh] flex-col overflow-hidden bg-bg-app">
+      <header className="flex h-header-bar flex-none items-center gap-14 border-b border-hairline px-30">
+        <Link
+          href={`/patients/${patientId}`}
+          className="text-sm text-text-tertiary transition-colors duration-hover hover:text-cyan"
+        >
+          Patient
+        </Link>
+        <span className="text-text-muted">/</span>
+        <h1 className="text-screen-title text-text-primary">New examination</h1>
+        <span className="flex-1" />
+        <span className="whitespace-nowrap font-mono text-mono-meta-lg uppercase text-text-tertiary">
+          K=5 · EN
+        </span>
+      </header>
 
-        {phase === "form" && (
-          <form onSubmit={handleStart} className="flex flex-col gap-4">
-            <label className="flex flex-col gap-1">
-              <span className="text-sm font-medium text-ink-2">Chest X-ray Image</span>
-              <input
-                required
-                type="file"
-                accept="image/*"
-                onChange={(e) => handleFileChange(e.target.files?.[0] ?? null)}
-                className="rounded-btn border border-hairline-strong bg-surface px-3 py-2 text-ink"
-              />
-            </label>
-            <Button type="submit" variant="primary" size="lg" block disabled={!file}>
-              Start Examination
-            </Button>
-          </form>
-        )}
-
-        {phase === "running" && (
-          <>
-            <StepProgress steps={stepDisplays} />
-
-            {maskedReady && originalObjectUrl && sessionId && (
-              <Card className="p-card">
-                <h2 className="mb-2 text-eyebrow uppercase text-ink-3">PHI masking</h2>
-                <PhiRevealSlider
-                  maskedSrc={retrievalSessionImageUrl(sessionId)}
-                  originalSrc={originalObjectUrl}
+      <div className="flex min-h-0 flex-1 overflow-x-auto">
+        {/* Film -- the drop target in the form phase, the masked/original
+            reveal in the running phase. The only pure-black surface. */}
+        <div className="relative flex min-w-[360px] flex-1 items-center justify-center bg-bg-film p-26">
+          {phase === "form" ? (
+            originalObjectUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={originalObjectUrl} alt="Selected chest X-ray" className="max-h-full max-w-full object-contain" />
+            ) : (
+              <label className="flex cursor-pointer flex-col items-center gap-16 text-center">
+                <span className="font-mono text-mono-meta uppercase tracking-[0.12em] text-cyan">
+                  Drop the chest film
+                </span>
+                <span className="rounded-field border border-strong px-22 py-12 text-sm text-text-secondary transition-colors duration-hover hover:border-cyan-line hover:text-cyan">
+                  Choose a file
+                </span>
+                <input
+                  required
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleFileChange(e.target.files?.[0] ?? null)}
+                  className="sr-only"
                 />
-              </Card>
-            )}
+              </label>
+            )
+          ) : maskedReady && originalObjectUrl && sessionId ? (
+            <PhiRevealSlider maskedSrc={retrievalSessionImageUrl(sessionId)} originalSrc={originalObjectUrl} />
+          ) : (
+            originalObjectUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={originalObjectUrl} alt="Chest X-ray, masking in progress" className="max-h-full max-w-full object-contain opacity-70" />
+            )
+          )}
 
-            {questionnaire && (
-              <Card className="flex flex-col gap-4 p-card">
-                <p className="text-sm text-ink-2">
-                  Optional clinical questions (based on top candidate label:{" "}
-                  <span className="font-medium text-ink">{questionnaire.based_on_label}</span>)
-                </p>
-                <form onSubmit={handleSubmitQuestionnaire} className="flex flex-col gap-4">
-                  {questionnaire.questions.map((q) => (
-                    <label key={q.key} className="flex flex-col gap-1">
-                      <span className="text-sm font-medium text-ink-2">{q.text}</span>
-                      <input
-                        type="text"
-                        value={answers[q.key] ?? ""}
-                        onChange={(e) => setAnswers((prev) => ({ ...prev, [q.key]: e.target.value }))}
-                        className="h-10 rounded-btn border border-hairline-strong bg-surface px-3 text-ink"
-                      />
-                    </label>
-                  ))}
-                  <div className="flex gap-3 pt-2">
-                    <Button type="submit" variant="primary" size="md" className="flex-1">
-                      Continue
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      size="md"
-                      className="flex-1"
-                      onClick={handleSkipQuestionnaire}
-                    >
-                      Skip Questionnaire
-                    </Button>
-                  </div>
-                </form>
-              </Card>
-            )}
-          </>
-        )}
-      </main>
+          {phase === "running" && maskedReady && (
+            <span className="absolute left-26 top-26 font-mono text-mono-meta uppercase tracking-[0.12em] text-cyan">
+              Drag to reveal the original
+            </span>
+          )}
+          {file && (
+            <span className="absolute bottom-26 left-26 font-mono text-mono-meta text-text-tertiary">
+              {file.name} · original never stored
+            </span>
+          )}
+        </div>
+
+        {/* Pipeline panel */}
+        <aside className="flex w-[600px] max-w-full flex-none flex-col border-l border-hairline">
+          {phase === "form" ? (
+            <form onSubmit={handleStart} className="flex flex-col gap-18 p-28">
+              <h2 className="text-panel text-text-primary">Start a new examination</h2>
+              <p className="text-sm leading-relaxed text-text-secondary">
+                Drop the chest film on the left. It is masked on upload, then matched against the
+                archive and drafted. Everything runs locally; nothing leaves the building.
+              </p>
+              <Button type="submit" variant="primary" size="lg" disabled={!file}>
+                Start examination
+              </Button>
+            </form>
+          ) : (
+            <>
+              <div className="flex-none border-b border-hairline p-28">
+                <h2 className="mb-18 text-panel text-text-primary">Running the pipeline</h2>
+                <StepProgress steps={stepDisplays} />
+              </div>
+
+              <div className="flex-1 overflow-auto p-28">
+                {questionnaire ? (
+                  <>
+                    <div className="mb-8 font-mono text-eyebrow uppercase text-text-tertiary">
+                      Optional clinical questions
+                    </div>
+                    <p className="mb-20 text-sm leading-relaxed text-text-secondary">
+                      Based on the top candidate label{" "}
+                      <span className="text-text-primary">{questionnaire.based_on_label}</span>. Your
+                      answers go into the prompt and are kept with the report.
+                    </p>
+                    <form onSubmit={handleSubmitQuestionnaire} className="flex flex-col gap-18">
+                      {questionnaire.questions.map((q) => (
+                        <label key={q.key} className="flex flex-col gap-8">
+                          <span className="text-sm text-text-secondary">{q.text}</span>
+                          <input
+                            type="text"
+                            value={answers[q.key] ?? ""}
+                            onChange={(e) => setAnswers((prev) => ({ ...prev, [q.key]: e.target.value }))}
+                            className="h-46 rounded-field border border-strong bg-bg-raised px-16 text-text-primary placeholder:text-text-muted"
+                          />
+                        </label>
+                      ))}
+                      <div className="flex flex-wrap items-center gap-12 pt-4">
+                        <Button type="submit" variant="primary" size="md">
+                          Re-retrieve with answers
+                        </Button>
+                        <Button type="button" variant="secondary" size="md" onClick={handleSkipQuestionnaire}>
+                          Skip and draft anyway
+                        </Button>
+                      </div>
+                      <p className="text-caption text-text-tertiary">Skipping is recorded on the report.</p>
+                    </form>
+                  </>
+                ) : (
+                  <p className="text-sm text-text-tertiary">
+                    Retrieval and drafting are running. This can take several seconds on local
+                    hardware.
+                  </p>
+                )}
+              </div>
+            </>
+          )}
+        </aside>
+      </div>
     </div>
   );
 }

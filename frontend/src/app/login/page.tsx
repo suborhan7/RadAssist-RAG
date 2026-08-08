@@ -12,6 +12,8 @@ import type { paths } from "@/lib/generated/api";
 type HealthResponse = paths["/health"]["get"]["responses"][200]["content"]["application/json"];
 type ServiceStatus = { status: string; detail?: string | null } | null | undefined;
 
+const FIELD = "h-46 rounded-field border border-strong bg-bg-raised px-16 text-text-primary placeholder:text-text-muted";
+
 function toChipState(status: string | undefined): "online" | "degraded" | "offline" {
   if (status === "ok") return "online";
   if (status === "degraded") return "degraded";
@@ -19,32 +21,17 @@ function toChipState(status: string | undefined): "online" | "degraded" | "offli
 }
 
 function serviceValue(service: ServiceStatus): string {
-  if (!service) return "--";
+  if (!service) return "n/a";
   return service.detail ?? service.status;
 }
 
 /**
- * Login (Phase 13b, restyled Phase 14, given the real §8.2 treatment
- * under §16.1's reopening). Split layout per design_specification.md's
- * actual Login section (§8.2 in that document, not §8.1 as
- * frontend/CLAUDE.md's citation says -- a citation slip, not a content
- * conflict, confirmed by reading the section directly): the
- * lightbox-black panel left, form right, per §6.1's "Paper & Lightbox"
- * direction (the lightbox is the only dark surface in the product).
- *
- * Service status strip (design spec: "FastAPI, Ollama, ChromaDB, GPU,
- * before authentication") is now genuinely all four -- previously
- * reduced to a single "Backend" check because GET /health had no per-
- * service reachability logic (its own former comment called this "a
- * documented future improvement"); §16.1 built that improvement
- * (ServiceHealthService) rather than fabricate three more status dots
- * with nothing real behind them.
- *
- * Error copy follows the spec's "specific, does not apologise" rule:
- * the real 401 from POST /auth/login (InvalidCredentialsError,
- * deliberately identical for "no such email" and "wrong password", per
- * Phase 13a) is shown as "Email or password is incorrect.", never a
- * generic failure message.
+ * Login (Phase 13b, ported to the Reading Room theme in the redesign step 4).
+ * Split layout: the pure-black film panel left, form right (§6.1 -- the film
+ * is the only pure-black surface). The service-status strip is genuinely all
+ * four services (ServiceHealthService, §16.1), not fabricated dots. Error copy
+ * follows "specific, does not apologise": the real 401 shows "Email or
+ * password is incorrect.", never a generic failure. All auth logic unchanged.
  */
 export default function LoginPage() {
   const router = useRouter();
@@ -68,9 +55,6 @@ export default function LoginPage() {
 
     try {
       await loginDoctor({ email, password });
-      // Read directly from window.location rather than useSearchParams() --
-      // avoids the Suspense-boundary requirement that hook imposes, for a
-      // value only ever needed once, after a real user submit.
       const redirectParam = new URLSearchParams(window.location.search).get("redirect");
       const destination =
         redirectParam && redirectParam.startsWith("/") && !redirectParam.startsWith("//")
@@ -89,40 +73,44 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen">
-      <div className="relative hidden flex-1 flex-col justify-between overflow-hidden bg-lightbox px-12 py-16 text-lightbox-ink lg:flex">
+    <div className="flex min-h-screen bg-bg-app">
+      {/* Film panel -- the only pure-black surface */}
+      <div className="relative hidden flex-1 flex-col justify-between overflow-hidden bg-bg-film px-50 py-44 lg:flex">
         <ChestXrayIllustration className="pointer-events-none absolute inset-0 h-full w-full opacity-50" />
         <div className="relative">
-          <p className="text-eyebrow uppercase text-lightbox-ink-2">RadAssist-RAG</p>
-          <h1 className="mt-4 max-w-md text-display text-white">
+          <p className="font-mono text-eyebrow uppercase text-text-tertiary">RadAssist-RAG</p>
+          <h1 className="mt-14 max-w-md text-display text-text-primary">
             Retrieval-grounded chest X-ray reporting.
           </h1>
         </div>
-        <div className="relative flex flex-col gap-4">
-          <p className="max-w-md text-sm text-lightbox-ink-2">
+        <div className="relative flex flex-col gap-16">
+          <p className="max-w-md text-sm leading-relaxed text-text-secondary">
             Every AI draft cites the retrieved cases it was grounded in. 0 reports have ever been
             finalised without a radiologist.
           </p>
-          <div className="max-w-md rounded-card border border-lightbox-bd bg-lightbox-chrome px-3 py-2">
-            <p className="font-mono text-data-sm uppercase text-caution-fill">Research prototype</p>
-            <p className="mt-1 text-sm text-lightbox-ink-2">
+          <div className="max-w-md rounded-panel border border-strong bg-bg-raised px-16 py-14">
+            <p className="font-mono text-mono-meta uppercase tracking-[0.14em] text-amber">
+              Research prototype
+            </p>
+            <p className="mt-6 text-sm text-text-secondary">
               Not for clinical use. Every report requires review by a qualified radiologist.
             </p>
           </div>
         </div>
       </div>
 
-      <div className="flex flex-1 flex-col items-center justify-center bg-paper px-page py-16">
-        <div className="flex w-full max-w-sm flex-col gap-6">
+      {/* Form */}
+      <div className="flex flex-1 flex-col items-center justify-center px-30 py-44">
+        <div className="flex w-full max-w-sm flex-col gap-24">
           <div>
-            <h2 className="text-h1 text-ink">Sign in</h2>
-            <p className="mt-1 text-sm text-ink-2">RadAssist-RAG &middot; Radiologist Workflow</p>
+            <h2 className="text-page-title text-text-primary">Sign in</h2>
+            <p className="mt-6 text-sm text-text-secondary">RadAssist-RAG · Radiologist workflow</p>
           </div>
 
-          <div className="rounded-card border border-hairline bg-surface px-3 py-1">
-            <p className="pt-1.5 text-eyebrow uppercase text-ink-3">System status</p>
+          <div className="rounded-panel border border-hairline bg-bg-raised px-16 py-6">
+            <p className="pt-8 font-mono text-eyebrow uppercase text-text-tertiary">System status</p>
             {healthUnreachable ? (
-              <p className="py-2 text-sm text-critical-ink">Backend unreachable.</p>
+              <p className="py-12 text-sm text-amber">Backend unreachable.</p>
             ) : (
               <>
                 <ServiceChip name="FastAPI" value={serviceValue(health?.fastapi)} state={toChipState(health?.fastapi?.status)} />
@@ -133,43 +121,31 @@ export default function LoginPage() {
             )}
           </div>
 
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            <label className="flex flex-col gap-1">
-              <span className="text-sm font-medium text-ink-2">Email</span>
-              <input
-                required
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="h-10 rounded-btn border border-hairline-strong bg-surface px-3 text-ink"
-              />
+          <form onSubmit={handleSubmit} className="flex flex-col gap-16">
+            <label className="flex flex-col gap-8">
+              <span className="text-sm text-text-secondary">Email</span>
+              <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={FIELD} />
             </label>
 
-            <label className="flex flex-col gap-1">
-              <span className="text-sm font-medium text-ink-2">Password</span>
-              <input
-                required
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="h-10 rounded-btn border border-hairline-strong bg-surface px-3 text-ink"
-              />
+            <label className="flex flex-col gap-8">
+              <span className="text-sm text-text-secondary">Password</span>
+              <input required type="password" value={password} onChange={(e) => setPassword(e.target.value)} className={FIELD} />
             </label>
 
-            <Button type="submit" variant="primary" size="lg" block loading={submitting} className="mt-2">
-              {submitting ? "Signing in..." : "Sign in"}
+            <Button type="submit" variant="primary" size="lg" block loading={submitting}>
+              {submitting ? "Signing in…" : "Sign in"}
             </Button>
           </form>
 
           {error && (
-            <p className="rounded-card border border-critical-bd bg-critical-bg px-3 py-2 text-sm text-critical-ink">
+            <p className="rounded-field border border-amber-line bg-amber-wash px-14 py-12 text-sm text-amber">
               {error}
             </p>
           )}
 
-          <p className="text-center text-sm text-ink-2">
+          <p className="text-center text-sm text-text-secondary">
             No account?{" "}
-            <Link href="/register" className="font-medium text-ink underline">
+            <Link href="/register" className="text-cyan transition-colors duration-hover hover:text-text-primary">
               Register
             </Link>
           </p>

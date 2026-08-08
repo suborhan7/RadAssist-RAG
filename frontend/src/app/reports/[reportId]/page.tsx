@@ -13,7 +13,6 @@ import {
   retrievalSessionImageUrl,
   updateReport,
 } from "@/lib/api-client";
-import { Card } from "@/components/ui/card";
 import { StatusChip } from "@/components/ui/chip";
 import { SimilarityBar } from "@/components/ui/similarity-bar";
 import { AgreementBadge } from "@/components/ui/agreement-badge";
@@ -291,8 +290,8 @@ export default function ReportWorkspacePage() {
 
   if (error) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-paper">
-        <p className="rounded-card border border-critical-bd bg-critical-bg px-4 py-3 text-critical-ink">
+      <div className="flex min-h-screen items-center justify-center bg-bg-app p-30">
+        <p className="rounded-field border border-amber-line bg-amber-wash px-16 py-12 text-sm text-amber">
           {error}
         </p>
       </div>
@@ -301,205 +300,219 @@ export default function ReportWorkspacePage() {
 
   if (!report) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-paper">
-        <p className="text-ink-3">Loading report...</p>
+      <div className="flex min-h-screen items-center justify-center bg-bg-app">
+        <p className="text-text-tertiary">Loading report…</p>
       </div>
     );
   }
 
+  const contextMeta = [patient?.patient_code, report.report_date].filter(Boolean).join(" · ");
+
   return (
-    <div className="flex min-h-screen flex-col bg-paper">
+    <div className="flex h-[100dvh] flex-col overflow-hidden bg-bg-app">
       {/* Study context bar */}
-      <div className="flex h-context-bar items-center justify-between border-b border-hairline bg-surface px-page">
-        <div className="flex items-center gap-3">
-          <h1 className="text-h3 text-ink">Radiologist Workspace</h1>
-          {patient ? (
-            <Link
-              href={`/patients/${patient.id}`}
-              onClick={guardedNavigate}
-              className="text-sm text-ink-2 underline"
-            >
-              {patient.name} &middot; {patient.patient_code}
-            </Link>
-          ) : (
-            <span className="text-sm text-ink-3">No patient linked to this report.</span>
-          )}
-        </div>
-        <div className="flex items-center gap-3">
-          {/* Phase 18: visible to any doctor who can already read this
-              report (Decision 7) -- owner or not, pre- or post-finalize.
-              Both ai_draft_content/content are already universally
-              readable, so no new permission logic is needed here. */}
+      <header className="flex h-header-bar flex-none items-center gap-14 border-b border-hairline px-24">
+        {patient ? (
+          <Link
+            href={`/patients/${patient.id}`}
+            onClick={guardedNavigate}
+            className="truncate text-base font-semibold text-text-primary transition-colors duration-hover hover:text-cyan"
+          >
+            {patient.name}
+          </Link>
+        ) : (
+          <span className="text-base font-semibold text-text-primary">Report</span>
+        )}
+        {contextMeta && (
+          <span className="truncate font-mono text-mono-meta-lg text-text-tertiary">{contextMeta}</span>
+        )}
+        <span className="flex-1" />
+
+        {/* Phase 18: visible to any doctor who can already read this report
+            (Decision 7), owner or not, pre- or post-finalize. */}
+        <button
+          type="button"
+          onClick={() => setShowDiff((prev) => !prev)}
+          className="text-sm font-medium text-text-secondary transition-colors duration-hover hover:text-cyan"
+        >
+          {showDiff ? "Hide changes vs draft" : "Changes vs draft"}
+        </button>
+        <OwnerChip ownerId={reportOwnerId} currentDoctorId={currentDoctorId} />
+        <StatusChip status={toChipReportStatus(report.status)} />
+        {canEdit && (
           <button
             type="button"
-            onClick={() => setShowDiff((prev) => !prev)}
-            className="text-sm font-medium text-ink-2 underline decoration-hairline-strong underline-offset-2 hover:text-steel-ink"
+            onClick={() => setShowPreview(true)}
+            className={cn(BUTTON_BASE, VARIANT.primary, SIZE.md)}
           >
-            {showDiff ? "Hide changes vs AI draft" : "Changes vs AI draft"}
+            Finalize
           </button>
-          <OwnerChip ownerId={reportOwnerId} currentDoctorId={currentDoctorId} />
-          <StatusChip status={toChipReportStatus(report.status)} />
-        </div>
-      </div>
+        )}
+      </header>
 
       {showDiff && diffSummary && (
-        <div className="border-b border-hairline bg-surface px-page py-4">
+        <div className="flex-none border-b border-hairline bg-bg-raised px-24 py-20">
           <ReportDiffView summary={diffSummary} />
         </div>
       )}
 
       {!isOwner && reportOwnerId !== null && (
-        <div className="border-b border-hairline bg-sunken px-page py-3 text-sm text-ink-2">
+        <div className="flex-none border-b border-hairline bg-bg-hover px-24 py-12 text-sm text-text-secondary">
           This report belongs to {otherOwnerName ?? "another doctor"}. You can read it and compare
           against it.
         </div>
       )}
 
-      <div className="flex flex-1 flex-col gap-4 p-page lg:flex-row">
-        {/* Lightbox -- the only black surface */}
-        <div className="flex min-h-[420px] flex-1 items-center justify-center rounded-card bg-lightbox lg:min-w-[420px]">
+      {/* Three-column reading station: film, report, evidence. On a monitor
+          narrower than the station, scroll rather than clip a column. */}
+      <div className="flex min-h-0 flex-1 overflow-x-auto">
+        {/* Film -- the only pure-black surface */}
+        <div className="relative flex min-w-[360px] flex-1 items-center justify-center bg-bg-film p-26">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={retrievalSessionImageUrl(report.session_id)}
             alt={`Chest X-ray, ${report.report_date}`}
-            className="max-h-[70vh] max-w-full object-contain"
+            className="max-h-full max-w-full object-contain"
           />
+          {/* PHI masking is real (Phase 1): the persisted film is masked. */}
+          <span className="absolute left-26 top-26 font-mono text-mono-meta uppercase tracking-[0.12em] text-cyan">
+            PHI masked
+          </span>
         </div>
 
         {/* Report as document */}
-        <Card className="flex w-full flex-col gap-0 lg:w-report-col">
-          <div className="flex items-center justify-between border-b border-hairline p-tight px-card">
-            <div>
-              <h2 className="text-eyebrow uppercase text-ink-3">
-                {report.status === "final" ? "Finalized Report" : "AI Report"} &middot; {report.report_date}
-              </h2>
-              {report.status === "final" && report.finalized_at && (
-                <p className="mt-0.5 text-sm text-ink-3">
-                  Finalized by {finalizedByName ?? "this doctor"} on{" "}
-                  {new Date(report.finalized_at).toLocaleDateString()}
-                </p>
+        <section className="flex w-report-col flex-none flex-col border-l border-hairline">
+          <div className="flex-1 overflow-auto px-26 pb-26 pt-24">
+            <div className="mb-20 flex items-baseline gap-12">
+              <span className="font-mono text-eyebrow uppercase text-text-tertiary">
+                {report.status === "final" ? "Finalized report" : "AI report"} · {report.report_date}
+              </span>
+              <span className="flex-1" />
+              {canEdit && (
+                <button
+                  type="button"
+                  onClick={handleRestoreAiDraft}
+                  disabled={restoring}
+                  className="font-mono text-eyebrow uppercase tracking-[0.14em] text-text-tertiary transition-colors duration-hover hover:text-cyan disabled:opacity-50"
+                >
+                  {restoring ? "Restoring…" : "Restore draft"}
+                </button>
               )}
             </div>
-            {canEdit && (
-              <button
-                type="button"
-                onClick={handleRestoreAiDraft}
-                disabled={restoring}
-                className={cn(BUTTON_BASE, VARIANT.ghost, SIZE.sm)}
-              >
-                {restoring ? "Restoring…" : "Restore AI Draft"}
-              </button>
+
+            {report.status === "final" && report.finalized_at && (
+              <p className="mb-20 text-sm text-text-tertiary">
+                Finalized by {finalizedByName ?? "this doctor"} on{" "}
+                {new Date(report.finalized_at).toLocaleDateString()}
+              </p>
             )}
-          </div>
-          <div className="flex flex-col divide-y divide-hairline p-card">
-            {CONTENT_FIELDS.map(({ key, label }) => {
-              const isRegeneratable = EDITABLE_KEYS.has(key);
-              const activePreview =
-                isRegeneratable && regenerationResult?.field === key
-                  ? computeReportDiff(editableRecordFrom(report.content), {
-                      ...editableRecordFrom(report.content),
-                      [key]: regenerationResult.candidate,
-                    }).sections.find((section) => section.field === key) ?? null
-                  : null;
 
-              return (
-                <EditableReportSection
-                  key={key}
-                  label={label}
-                  value={report.content[key] ?? ""}
-                  isEdited={report.content[key] !== report.ai_draft_content[key]}
-                  canEdit={!!canEdit && EDITABLE_KEYS.has(key)}
-                  saving={savingField === key}
-                  onCommit={(next) => handleCommit(key, next)}
-                  onDirtyChange={(dirty) => handleDirtyChange(key, dirty)}
-                  canRegenerate={isRegeneratable}
-                  regenerating={regeneratingField === key}
-                  regenerationPreview={activePreview}
-                  regenerationContextIncomplete={regenerationResult?.field === key && regenerationResult.contextIncomplete}
-                  regenerationError={regenerationErrorField === key ? regenerationError : null}
-                  onRegenerate={isRegeneratable ? () => handleRegenerate(key as EditableReportField) : undefined}
-                  onAcceptRegeneration={handleAcceptRegeneration}
-                  onDiscardRegeneration={handleDiscardRegeneration}
-                />
-              );
-            })}
-          </div>
+            <div className="flex flex-col">
+              {CONTENT_FIELDS.map(({ key, label }) => {
+                const isRegeneratable = EDITABLE_KEYS.has(key);
+                const activePreview =
+                  isRegeneratable && regenerationResult?.field === key
+                    ? computeReportDiff(editableRecordFrom(report.content), {
+                        ...editableRecordFrom(report.content),
+                        [key]: regenerationResult.candidate,
+                      }).sections.find((section) => section.field === key) ?? null
+                    : null;
 
-          {actionError && (
-            <div className="m-card mt-0 rounded-card border border-critical-bd bg-critical-bg p-tight text-sm text-critical-ink">
-              {actionError}
+                return (
+                  <EditableReportSection
+                    key={key}
+                    label={label}
+                    value={report.content[key] ?? ""}
+                    isEdited={report.content[key] !== report.ai_draft_content[key]}
+                    canEdit={!!canEdit && EDITABLE_KEYS.has(key)}
+                    saving={savingField === key}
+                    onCommit={(next) => handleCommit(key, next)}
+                    onDirtyChange={(dirty) => handleDirtyChange(key, dirty)}
+                    canRegenerate={isRegeneratable}
+                    regenerating={regeneratingField === key}
+                    regenerationPreview={activePreview}
+                    regenerationContextIncomplete={regenerationResult?.field === key && regenerationResult.contextIncomplete}
+                    regenerationError={regenerationErrorField === key ? regenerationError : null}
+                    onRegenerate={isRegeneratable ? () => handleRegenerate(key as EditableReportField) : undefined}
+                    onAcceptRegeneration={handleAcceptRegeneration}
+                    onDiscardRegeneration={handleDiscardRegeneration}
+                  />
+                );
+              })}
             </div>
-          )}
 
-          {/* Validation */}
-          <div
-            className={cn(
-              "m-card mt-0 rounded-card border p-tight",
-              report.validation.is_clean
-                ? "border-stable-bd bg-stable-bg"
-                : "border-caution-bd bg-caution-bg",
+            {actionError && (
+              <div className="mt-16 rounded-field border border-amber-line bg-amber-wash px-14 py-12 text-sm text-amber">
+                {actionError}
+              </div>
             )}
-          >
-            <h3 className="text-eyebrow uppercase text-ink-3">Validation</h3>
-            {report.validation.is_clean ? (
-              <p className="mt-1 text-sm text-stable-ink">No validation warnings.</p>
-            ) : (
-              <ul className="mt-1 list-inside list-disc text-sm text-caution-ink">
-                {report.validation.warnings.map((warning, i) => (
-                  <li key={i}>{warning}</li>
-                ))}
-              </ul>
-            )}
-          </div>
 
-          {/* Actions */}
-          <div className="flex flex-wrap gap-3 p-card pt-0">
-            <Link
-              href={`/reports/${reportId}/explain`}
-              onClick={guardedNavigate}
-              className={cn(BUTTON_BASE, VARIANT.primary, SIZE.md, "flex-1")}
+            {/* Validation -- amber only when there is something to look at;
+                a clean pass stays quiet rather than inventing a success hue. */}
+            <div
+              className={cn(
+                "mt-16 rounded-panel border p-14",
+                report.validation.is_clean ? "border-hairline" : "border-amber-line bg-amber-wash",
+              )}
             >
-              Explain Report
-            </Link>
-            <Link
-              href={`/reports/${reportId}/compare`}
-              onClick={guardedNavigate}
-              className={cn(BUTTON_BASE, VARIANT.secondary, SIZE.md, "flex-1")}
-            >
-              Compare Previous Report
-            </Link>
-            {canEdit && (
-              <button
-                type="button"
-                onClick={() => setShowPreview(true)}
+              <h3 className="font-mono text-eyebrow uppercase text-text-tertiary">Validation</h3>
+              {report.validation.is_clean ? (
+                <p className="mt-8 text-sm text-text-secondary">No validation warnings.</p>
+              ) : (
+                <ul className="mt-8 list-inside list-disc text-sm text-amber">
+                  {report.validation.warnings.map((warning, i) => (
+                    <li key={i}>{warning}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div className="mt-16 flex flex-wrap gap-12">
+              <Link
+                href={`/reports/${reportId}/explain`}
+                onClick={guardedNavigate}
                 className={cn(BUTTON_BASE, VARIANT.primary, SIZE.md, "flex-1")}
               >
-                Finalize
+                Explain report
+              </Link>
+              <Link
+                href={`/reports/${reportId}/compare`}
+                onClick={guardedNavigate}
+                className={cn(BUTTON_BASE, VARIANT.secondary, SIZE.md, "flex-1")}
+              >
+                Compare previous
+              </Link>
+              <button
+                type="button"
+                disabled
+                title="Out of scope for this thesis (frozen Phase 12 spec)"
+                className={cn(BUTTON_BASE, VARIANT.ghost, SIZE.md, "flex-1")}
+              >
+                Download PDF
               </button>
-            )}
-            <button
-              type="button"
-              disabled
-              title="Out of scope for this thesis (frozen Phase 12 spec)"
-              className={cn(BUTTON_BASE, VARIANT.ghost, SIZE.md, "flex-1")}
-            >
-              Download PDF
-            </button>
-          </div>
-        </Card>
+            </div>
 
-        {/* Evidence rail -- paper, quieter, mono-heavy */}
-        <Card className="flex w-full flex-col lg:w-evidence-rail">
-          <div className="flex border-b border-hairline">
+            <p className="mt-26 border-t border-hairline pt-16 text-caption leading-relaxed text-text-tertiary">
+              Drafted from {report.retrieved_cases.length} archive{" "}
+              {report.retrieved_cases.length === 1 ? "case" : "cases"}, then reviewed and edited by
+              the reporting radiologist. Not an autonomous diagnosis.
+            </p>
+          </div>
+        </section>
+
+        {/* Evidence rail -- quieter surface, mono-heavy */}
+        <aside className="flex w-evidence-panel flex-none flex-col border-l border-hairline bg-bg-raised">
+          <div className="flex flex-none border-b border-hairline">
             {(["evidence", "agreement", "alternatives"] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setRailTab(tab)}
                 className={cn(
-                  "flex-1 border-b-2 px-3 py-2 text-sm font-medium capitalize transition-colors duration-hover",
+                  "flex-1 border-b-2 px-12 py-12 text-sm font-medium capitalize transition-colors duration-hover",
                   railTab === tab
-                    ? "border-steel text-steel-ink"
-                    : "border-transparent text-ink-3 hover:text-ink",
+                    ? "border-cyan text-cyan"
+                    : "border-transparent text-text-tertiary hover:text-text-primary",
                 )}
               >
                 {tab}
@@ -507,22 +520,21 @@ export default function ReportWorkspacePage() {
             ))}
           </div>
 
-          <div className="p-card">
+          <div className="flex-1 overflow-auto p-20">
             {railTab === "evidence" && (
-              <div className="flex flex-col gap-3">
-                <h3 className="text-eyebrow uppercase text-ink-3">
-                  Retrieved evidence ({report.retrieved_cases.length} cases)
+              <div className="flex flex-col gap-16">
+                <h3 className="font-mono text-eyebrow uppercase text-text-tertiary">
+                  Archive cases · other patients ({report.retrieved_cases.length})
                 </h3>
                 {report.retrieved_cases.map((c) => (
-                  <div key={c.rank} className="rounded-card border border-hairline p-tight text-sm">
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium text-ink">
-                        #{c.rank} &middot; {c.primary_label}
-                      </span>
+                  <div key={c.rank} className="rounded-panel border border-hairline p-14 text-sm">
+                    <div className="flex items-center gap-8">
+                      <span className="font-mono text-mono-meta text-cyan">#{c.rank}</span>
+                      <span className="font-medium text-text-primary">{c.primary_label}</span>
                     </div>
-                    <SimilarityBar value={c.similarity * 100} className="mt-2" />
-                    <p className="mt-2 text-ink-2">{c.findings}</p>
-                    <p className="text-ink-2">{c.impression}</p>
+                    <SimilarityBar value={c.similarity * 100} className="mt-12" />
+                    <p className="mt-12 text-text-secondary">{c.findings}</p>
+                    <p className="mt-3 text-text-secondary">{c.impression}</p>
                   </div>
                 ))}
               </div>
@@ -533,33 +545,32 @@ export default function ReportWorkspacePage() {
             )}
 
             {railTab === "alternatives" && agreement && (
-              <div className="flex flex-col gap-3">
-                <h3 className="text-eyebrow uppercase text-ink-3">
+              <div className="flex flex-col gap-16">
+                <h3 className="font-mono text-eyebrow uppercase text-text-tertiary">
                   Present in the retrieved set
                 </h3>
-                <dl className="flex flex-col">
+                <dl className="flex flex-col border-t border-hairline">
                   {agreement.presentLabels.map(({ label, count, k }) => (
                     <div
                       key={label}
-                      className="flex items-center justify-between border-b border-hairline py-2 last:border-0"
+                      className="flex items-center justify-between border-b border-hairline py-12"
                     >
-                      <dt className="text-sm text-ink-2">{label}</dt>
-                      <dd className="font-mono text-data-sm text-ink">
+                      <dt className="text-sm text-text-secondary">{label}</dt>
+                      <dd className="font-mono text-sm text-text-primary">
                         {count} of {k}
                       </dd>
                     </div>
                   ))}
                 </dl>
-                <p className="rounded-card bg-sunken p-tight text-sm text-ink-2">
-                  Absence from this list means no retrieved case carried the label. It is not an
-                  exclusion. The full set of labels the system could have retrieved is not shown
-                  here -- only labels present are reported, not a complete positive/negative
-                  taxonomy.
+                <p className="text-sm leading-relaxed text-text-secondary">
+                  Absence from this list means no retrieved case carried the label.{" "}
+                  <span className="text-text-primary">It is not an exclusion.</span>{" "}
+                  Only labels present are reported, not a complete positive or negative taxonomy.
                 </p>
               </div>
             )}
           </div>
-        </Card>
+        </aside>
       </div>
 
       {showPreview && diffSummary && (

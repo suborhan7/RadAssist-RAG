@@ -6,11 +6,10 @@ import {
   ApiError,
   getCurrentDoctor,
   getDashboardStats,
-  getHealth,
   listReports,
 } from "@/lib/api-client";
+import { ScreenHeader } from "@/components/layout/screen-header";
 import { BUTTON_BASE, SIZE, VARIANT } from "@/components/ui/button";
-import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { StatusChip } from "@/components/ui/chip";
 import { toChipReportStatus } from "@/lib/report-status";
 import { computeReportDiff, editableRecordFrom } from "@/lib/report-diff";
@@ -23,37 +22,23 @@ type ReportListItemResponse =
   paths["/reports"]["get"]["responses"][200]["content"]["application/json"][number];
 
 const RECENT_ACTIVITY_LIMIT = 8;
-
-function daysAgo(dateOnly: string): number {
-  const then = new Date(`${dateOnly}T00:00:00`).getTime();
-  const now = new Date().getTime();
-  return Math.max(0, Math.round((now - then) / 86_400_000));
-}
+const LATE_AFTER_DAYS = 1;
 
 /**
- * Dashboard (Phase 12 Step 2, real ownership counts added Phase 15,
- * rebuilt per design_specification.md §8.3 in Priority 4 of the
- * post-Phase-19 walkthrough fixes). Moved from `/` to `/dashboard` under
- * §16.1's reopening -- `/` is now the public Landing page (design spec
- * §8.1, previously specced but never built), so the authenticated home
- * needed its own path, matching how a real hospital platform separates
- * a public marketing entry point from the signed-in workspace.
+ * Dashboard -- "Reading queue" (design/github (1).md, isDashboard screen).
+ * Ported to the Reading Room theme in the Phase-20 redesign step 4. The work
+ * leads: one H1 stating what's owed, the oldest reachable in a single click, a
+ * quiet row of throughput metrics, then the queue itself.
  *
- * Zero charts, per §8.3's own stated test ("does this change what the
- * doctor does next?"). Agreement and a per-row generation-duration
- * column are deliberately NOT in the recent-activity table -- named
- * omissions, not oversights, see development_log.md's Priority 4 entry
- * for the real cost reasoning (agreement needs a live vector-store query
- * per report; generation duration was never instrumented anywhere).
- *
- * "Settings" no longer lives in Quick Actions -- moved into AppNavbar's
- * doctor menu (§16.1: a doctor's own profile/settings has no business
- * sitting next to clinical actions like "Register New Patient").
+ * Deliberate omissions vs the mock, kept as named omissions rather than faked
+ * data: no accession/STUDY column (a report carries no accession field), no
+ * "median edit" hero metric (never instrumented as an aggregate -- a per-row
+ * edit % is computed client-side, but a true all-time median is not available),
+ * and no system-status block (health lives on Login; the queue leads with work,
+ * per the mock, which shows no status here).
  */
 export default function DashboardPage() {
-  const [backendStatus, setBackendStatus] = useState<"checking" | "ok" | "unreachable">(
-    "checking",
-  );
+  const [now, setNow] = useState<Date | null>(null);
   const [doctorName, setDoctorName] = useState<string | null>(null);
   const [stats, setStats] = useState<DashboardStatsResponse | null>(null);
   const [statsError, setStatsError] = useState<string | null>(null);
@@ -61,9 +46,8 @@ export default function DashboardPage() {
   const [recentError, setRecentError] = useState<string | null>(null);
 
   useEffect(() => {
-    getHealth()
-      .then((response) => setBackendStatus(response.status === "ok" ? "ok" : "unreachable"))
-      .catch(() => setBackendStatus("unreachable"));
+    // Set on the client to avoid an SSR/CSR clock mismatch.
+    setNow(new Date());
 
     getCurrentDoctor()
       .then((doctor) => setDoctorName(doctor?.full_name ?? null))
@@ -82,219 +66,217 @@ export default function DashboardPage() {
       });
   }, []);
 
-  const hasAwaitingReview = !!stats && stats.awaiting_review > 0;
+  const awaiting = stats?.awaiting_review ?? 0;
+  const hasAwaiting = awaiting > 0;
   const oldestAge = stats?.oldest_awaiting_review_report_date
     ? daysAgo(stats.oldest_awaiting_review_report_date)
     : null;
+  // The oldest report's patient name isn't on the stats payload; resolve it from
+  // the recent list when present, otherwise show the waiting time alone.
+  const oldestName =
+    recentReports?.find((r) => r.report_id === stats?.oldest_awaiting_review_report_id)
+      ?.patient_name ?? null;
+
+  const firstName = doctorName ? doctorName.replace(/^Dr\.?\s+/i, "").split(" ")[0] : null;
 
   return (
-    <div className="min-h-screen bg-paper">
-      <div className="mx-auto flex max-w-5xl flex-col gap-8 px-page py-16">
-        {/* Greeting demoted to small/secondary text -- the work leads, per §8.3 */}
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-ink-2">
-            {doctorName ? `Welcome back, ${doctorName}.` : "RadAssist-RAG"}
-          </p>
-        </div>
+    <>
+      <ScreenHeader
+        title="Reading queue"
+        meta={now ? formatClock(now) : ""}
+        actions={
+          <div className="flex items-center gap-12">
+            <Link href="/patients/search" className={cn(BUTTON_BASE, VARIANT.secondary, SIZE.md)}>
+              Find patient
+            </Link>
+            <Link href="/patients/new" className={cn(BUTTON_BASE, VARIANT.primary, SIZE.md)}>
+              New examination
+            </Link>
+          </div>
+        }
+      />
 
-        {/* Work-queue H1 */}
-        <div>
-          {!stats ? (
-            <h1 className="text-display text-ink-3">Loading...</h1>
-          ) : hasAwaitingReview ? (
-            <>
-              <h1 className="text-display text-ink">
-                {stats.awaiting_review} {stats.awaiting_review === 1 ? "report" : "reports"} awaiting
-                your review
-              </h1>
-              {stats.oldest_awaiting_review_report_id && (
-                <div className="mt-2 flex items-center gap-3">
+      <div className="flex-1 overflow-auto px-30 pb-30 pt-34">
+        <div className="mx-auto max-w-[1180px]">
+          {/* Hero: what's owed, on the left; throughput metrics on the right. */}
+          <div className="mb-34 flex flex-col gap-24 md:flex-row md:items-end md:gap-36">
+            <div className="min-w-0 flex-1">
+              {stats === null ? (
+                <h1 className="text-page-title text-text-tertiary">
+                  {statsError ? "Your reading queue" : "Loading your queue…"}
+                </h1>
+              ) : (
+                <h1 className="text-page-title text-text-primary">
+                  {hasAwaiting
+                    ? `${awaiting} ${awaiting === 1 ? "report is" : "reports are"} waiting on you.`
+                    : firstName
+                      ? `Your queue is clear, ${firstName}.`
+                      : "Your queue is clear."}
+                </h1>
+              )}
+
+              {hasAwaiting && stats?.oldest_awaiting_review_report_id && (
+                <div className="mt-14 flex flex-wrap items-center gap-14">
                   <Link
                     href={`/reports/${stats.oldest_awaiting_review_report_id}`}
-                    className="text-sm font-medium text-steel-ink underline decoration-steel-bd underline-offset-2 hover:text-steel"
+                    className={cn(BUTTON_BASE, VARIANT.primary, SIZE.md)}
                   >
-                    Open oldest
+                    Open the oldest
                   </Link>
                   {oldestAge !== null && (
-                    <span className="text-sm text-ink-3">
-                      {oldestAge} {oldestAge === 1 ? "day" : "days"} old
+                    <span className="text-sm text-amber">
+                      {oldestName ? `${oldestName} · ` : ""}
+                      waiting {oldestAge} {oldestAge === 1 ? "day" : "days"}
                     </span>
                   )}
                 </div>
               )}
-            </>
-          ) : (
-            <h1 className="text-display text-ink">Your queue is clear.</h1>
+            </div>
+
+            <div className="flex flex-none gap-34">
+              <Metric value={stats?.examinations_today} label="examinations today" />
+              <Metric value={stats?.my_reports} label="reports by you" />
+              <Metric value={stats?.my_patients} label="patients reported" />
+            </div>
+          </div>
+
+          {statsError && (
+            <p className="mb-24 rounded-field border border-amber-line bg-amber-wash px-14 py-12 text-sm text-amber">
+              {statsError}
+            </p>
+          )}
+
+          {/* Queue table: PATIENT / WAITING / STATUS / EDITED / action.
+              Fixed-width columns scroll horizontally on narrow viewports. */}
+          <div className="overflow-x-auto">
+            <div className="min-w-[720px] border-t border-hairline">
+              <div className="grid grid-cols-[minmax(0,1.6fr)_130px_150px_100px_110px] gap-14 border-b border-hairline px-4 py-12 font-mono text-eyebrow uppercase text-text-tertiary">
+                <span>Patient</span>
+                <span>Waiting</span>
+                <span>Status</span>
+                <span>Edited</span>
+                <span />
+              </div>
+
+              {recentError ? (
+                <p className="px-4 py-16 text-sm text-amber">{recentError}</p>
+              ) : recentReports === null ? (
+                <p className="px-4 py-16 text-sm text-text-tertiary">Loading queue…</p>
+              ) : recentReports.length === 0 ? (
+                <p className="px-4 py-16 text-sm text-text-secondary">
+                  No reports yet. Start a new examination to build the queue.
+                </p>
+              ) : (
+                recentReports.map((item) => {
+                  const chipStatus = toChipReportStatus(item.status);
+                  const late = chipStatus === "draft" && daysAgo(item.created_at) >= LATE_AFTER_DAYS;
+                  const editPercentage = computeReportDiff(
+                    editableRecordFrom(item.ai_draft_content),
+                    editableRecordFrom(item.content),
+                  ).editPercentage;
+
+                  return (
+                    <Link
+                      key={item.report_id}
+                      href={`/reports/${item.report_id}`}
+                      className="group grid grid-cols-[minmax(0,1.6fr)_130px_150px_100px_110px] items-center gap-14 border-b border-hairline px-4 py-14 transition-colors duration-hover last:border-0 hover:bg-bg-hover"
+                    >
+                      <div className="min-w-0">
+                        <div className="truncate text-base font-medium text-text-primary">
+                          {item.patient_name ?? "No patient linked"}
+                        </div>
+                        {item.patient_code && (
+                          <div className="mt-2 truncate font-mono text-mono-meta text-text-tertiary">
+                            {item.patient_code}
+                          </div>
+                        )}
+                      </div>
+                      <div className={cn("text-sm", late ? "text-amber" : "text-text-secondary")}>
+                        {relTime(item.created_at)}
+                      </div>
+                      <div>
+                        <StatusChip status={chipStatus} />
+                      </div>
+                      <div className="font-mono text-sm text-text-secondary">
+                        {editPercentage.toFixed(1)}%
+                      </div>
+                      <div className="text-right">
+                        <span className="text-sm text-cyan transition-colors duration-hover group-hover:text-text-primary">
+                          {rowAction(chipStatus)}
+                        </span>
+                      </div>
+                    </Link>
+                  );
+                })
+              )}
+            </div>
+          </div>
+
+          {/* Ownership framing: taught through real registry arithmetic. Held
+              back until the counts exist -- a half-empty sentence is noise. */}
+          {stats && (
+            <p className="mt-30 max-w-[56ch] text-sm leading-relaxed text-text-secondary">
+              You have reported on{" "}
+              <span className="text-text-primary">{stats.my_patients}</span>{" "}
+              of the hospital&rsquo;s{" "}
+              <span className="text-text-primary">{stats.total_patients}</span>{" "}
+              registered patients. You can open any colleague&rsquo;s patient; you cannot open their
+              unsigned drafts.
+            </p>
           )}
         </div>
-
-        {statsError && (
-          <p className="rounded-card border border-critical-bd bg-critical-bg px-3 py-2 text-sm text-critical-ink">
-            {statsError}
-          </p>
-        )}
-
-        {/* Four tiles */}
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          <Card>
-            <CardBody className="text-center">
-              <p className="text-eyebrow uppercase text-ink-3">Examinations today</p>
-              <p className="mt-1 text-h1 text-ink">{stats?.examinations_today ?? "—"}</p>
-            </CardBody>
-          </Card>
-          <Card>
-            <CardBody className="text-center">
-              <p className="text-eyebrow uppercase text-ink-3">Patients you&rsquo;ve reported</p>
-              <p className="mt-1 text-h1 text-ink">
-                {stats?.my_patients ?? "—"}{" "}
-                <span className="text-sm font-normal text-ink-3">of {stats?.total_patients ?? "—"}</span>
-              </p>
-            </CardBody>
-          </Card>
-          <Card>
-            <CardBody className="text-center">
-              <p className="text-eyebrow uppercase text-ink-3">Reports generated</p>
-              <p className="mt-1 text-h1 text-ink">
-                {stats?.my_reports ?? "—"}{" "}
-                <span className="text-sm font-normal text-ink-3">of {stats?.total_reports ?? "—"}</span>
-              </p>
-            </CardBody>
-          </Card>
-          <Card>
-            <CardBody className="text-center">
-              <p className="text-eyebrow uppercase text-ink-3">Awaiting review</p>
-              <p className="mt-1 text-h1 text-ink">{stats?.awaiting_review ?? "—"}</p>
-            </CardBody>
-          </Card>
-        </div>
-
-        {/* Recent activity table -- patient, time, status, edited%. Deliberately
-            NOT agreement/generated-time, see this file's own docstring. */}
-        <Card>
-          <CardHeader title="Your recent activity" />
-          <CardBody className="p-0">
-            {recentError ? (
-              <p className="p-card text-sm text-critical-ink">{recentError}</p>
-            ) : recentReports === null ? (
-              <p className="p-card text-sm text-ink-3">Loading...</p>
-            ) : recentReports.length === 0 ? (
-              <p className="p-card text-sm text-ink-2">No reports yet.</p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm">
-                  <thead>
-                    <tr className="border-b border-hairline text-eyebrow uppercase text-ink-3">
-                      <th className="p-card py-2 font-medium">Patient</th>
-                      <th className="p-card py-2 font-medium">Time</th>
-                      <th className="p-card py-2 font-medium">Status</th>
-                      <th className="p-card py-2 font-medium">Edited</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {recentReports.map((item) => {
-                      const editPercentage = computeReportDiff(
-                        editableRecordFrom(item.ai_draft_content),
-                        editableRecordFrom(item.content),
-                      ).editPercentage;
-                      return (
-                        <tr key={item.report_id} className="border-b border-hairline last:border-0">
-                          <td className="p-card py-2">
-                            <Link
-                              href={`/reports/${item.report_id}`}
-                              className="font-medium text-ink underline decoration-hairline-strong underline-offset-2 hover:text-steel-ink"
-                            >
-                              {item.patient_name ?? "No patient linked"}
-                            </Link>
-                            {item.patient_code && (
-                              <span className="ml-1 text-ink-3">&middot; {item.patient_code}</span>
-                            )}
-                          </td>
-                          <td className="p-card py-2 text-ink-2">
-                            {new Date(item.created_at).toLocaleString()}
-                          </td>
-                          <td className="p-card py-2">
-                            <StatusChip status={toChipReportStatus(item.status)} />
-                          </td>
-                          <td className="p-card py-2 font-mono text-data-sm text-ink-2">
-                            {editPercentage.toFixed(1)}%
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </CardBody>
-        </Card>
-
-        <div className="grid gap-4 lg:grid-cols-2">
-          {/* Quick actions -- clinical actions only; Settings lives in AppNavbar's doctor menu */}
-          <Card>
-            <CardHeader title="Quick actions" />
-            <CardBody className="flex flex-col gap-3">
-              <Link
-                href="/patients/search"
-                className={cn(BUTTON_BASE, VARIANT.primary, SIZE.md, "w-full")}
-              >
-                Find Patient
-              </Link>
-              <Link
-                href="/patients/new"
-                className={cn(BUTTON_BASE, VARIANT.secondary, SIZE.md, "w-full")}
-              >
-                Register New Patient
-              </Link>
-            </CardBody>
-          </Card>
-
-          {/* Registry card -- the ownership model taught through arithmetic,
-              per §8.3, richer presentation than the compact tile above. */}
-          <Card>
-            <CardHeader title="Registry" />
-            <CardBody className="flex flex-col gap-2">
-              <p className="text-ink-2">
-                You&rsquo;ve reported on{" "}
-                <span className="font-medium text-ink">{stats?.my_patients ?? "—"}</span> of the{" "}
-                hospital&rsquo;s <span className="font-medium text-ink">{stats?.total_patients ?? "—"}</span>{" "}
-                registered patients.
-              </p>
-              <p className="text-ink-2">
-                You&rsquo;ve generated{" "}
-                <span className="font-medium text-ink">{stats?.my_reports ?? "—"}</span> of the{" "}
-                registry&rsquo;s{" "}
-                <span className="font-medium text-ink">{stats?.total_reports ?? "—"}</span> total
-                reports.
-              </p>
-            </CardBody>
-          </Card>
-        </div>
-
-        {/* System status -- reuses GET /health, already used on Login */}
-        <Card>
-          <CardHeader title="System status" />
-          <CardBody>
-            <div className="flex items-center gap-2 text-sm">
-              <span
-                className={cn(
-                  "h-1.5 w-1.5 rounded-full",
-                  backendStatus === "ok"
-                    ? "bg-stable"
-                    : backendStatus === "unreachable"
-                      ? "bg-critical"
-                      : "bg-ink-3",
-                )}
-              />
-              <span className="text-ink-2">
-                Backend:{" "}
-                <span className="font-medium text-ink">
-                  {backendStatus === "checking" ? "checking..." : backendStatus}
-                </span>
-              </span>
-            </div>
-          </CardBody>
-        </Card>
       </div>
+    </>
+  );
+}
+
+function Metric({ value, label }: { value: number | undefined; label: string }) {
+  return (
+    <div>
+      {value === undefined ? (
+        // Static skeleton, sized to the number line. No shimmer -- the theme's
+        // motion budget is spent elsewhere, and the "Loading" H1 carries intent.
+        <div className="h-30 w-44 rounded-chip bg-bg-hover" aria-hidden />
+      ) : (
+        <div className="whitespace-nowrap font-mono text-metric-sm text-text-primary">{value}</div>
+      )}
+      <div className="mt-3 whitespace-nowrap text-caption text-text-secondary">{label}</div>
     </div>
   );
+}
+
+function rowAction(status: ReturnType<typeof toChipReportStatus>): string {
+  switch (status) {
+    case "draft":
+      return "Review";
+    case "final":
+      return "Open";
+    default:
+      return "Resume";
+  }
+}
+
+function daysAgo(dateOnly: string): number {
+  const then = new Date(dateOnly.length <= 10 ? `${dateOnly}T00:00:00` : dateOnly).getTime();
+  return Math.max(0, Math.round((Date.now() - then) / 86_400_000));
+}
+
+/** Compact "waiting" duration: 25 min | 3 hours | 2 days. */
+function relTime(iso: string): string {
+  const mins = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60_000));
+  if (mins < 60) return `${mins} min`;
+  const hours = Math.round(mins / 60);
+  if (hours < 24) return `${hours} ${hours === 1 ? "hour" : "hours"}`;
+  const days = Math.round(hours / 24);
+  return `${days} ${days === 1 ? "day" : "days"}`;
+}
+
+/** THU 31 JUL 2026 · 09:14 -- mono metadata in the screen header. */
+function formatClock(d: Date): string {
+  const date = d
+    .toLocaleDateString("en-GB", { weekday: "short", day: "2-digit", month: "short", year: "numeric" })
+    .toUpperCase()
+    .replace(/,/g, "");
+  const time = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  return `${date} · ${time}`;
 }

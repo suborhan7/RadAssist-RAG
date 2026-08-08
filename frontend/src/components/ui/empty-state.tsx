@@ -8,15 +8,15 @@ export function EmptyState({
   icon, title, body, actions,
 }: { icon?: ReactNode; title: string; body: string; actions?: ReactNode }) {
   return (
-    <div className="px-page py-14 text-center">
+    <div className="px-30 py-14 text-center">
       {icon && (
-        <div className="mx-auto mb-4 grid h-11 w-11 place-items-center rounded-full bg-steel-tint text-steel">
+        <div className="mx-auto mb-14 grid h-44 w-44 place-items-center rounded-full bg-cyan-wash text-cyan">
           {icon}
         </div>
       )}
-      <h2 className="text-h2 text-ink">{title}</h2>
-      <p className="mx-auto mt-2 max-w-[460px] text-body leading-[22px] text-ink-2">{body}</p>
-      {actions && <div className="mt-5 flex justify-center gap-2">{actions}</div>}
+      <h2 className="text-panel text-text-primary">{title}</h2>
+      <p className="mx-auto mt-8 max-w-[460px] text-sm leading-relaxed text-text-secondary">{body}</p>
+      {actions && <div className="mt-18 flex justify-center gap-12">{actions}</div>}
     </div>
   );
 }

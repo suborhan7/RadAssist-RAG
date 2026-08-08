@@ -30,52 +30,52 @@ export interface WorkflowStepDisplay {
 function StatusIcon({ status }: { status: StepStatus }) {
   switch (status) {
     case "done":
-      return <span className="text-stable">✓</span>;
+      return <span className="text-cyan">✓</span>;
     case "error":
-      return <span className="text-critical">✗</span>;
+      return <span className="text-amber">✗</span>;
     case "active":
-      return (
-        <span className="inline-block animate-spin text-ink-3" aria-hidden>
-          ⏳
-        </span>
-      );
+      // The one honest place waiting is work: a blinking cyan dot (rr-blink,
+      // one of the theme's two sanctioned keyframes), not a novelty spinner.
+      return <span className="inline-block h-8 w-8 animate-rr-blink rounded-full bg-cyan" aria-hidden />;
     case "skipped":
-      return <span className="text-ink-3">⏭</span>;
+      return <span className="text-text-muted">⏭</span>;
     case "pending":
     default:
-      return <span className="text-hairline-strong">○</span>;
+      return <span className="text-text-muted">○</span>;
   }
 }
 
 export function StepProgress({ steps }: { steps: WorkflowStepDisplay[] }) {
   return (
-    <ol className="flex flex-col gap-2">
+    <ol className="flex flex-col gap-8">
       {steps.map((step) => (
         <li
           key={step.id}
-          className={`flex items-center gap-3 rounded-card border px-3 py-2 ${
+          className={`flex items-center gap-12 rounded-field border px-14 py-12 ${
             step.status === "error"
-              ? "border-critical-bd bg-critical-bg"
+              ? "border-amber-line bg-amber-wash"
               : step.status === "active"
-                ? "border-hairline-strong bg-sunken"
+                ? "border-strong bg-bg-hover"
                 : "border-hairline"
           }`}
         >
           <StatusIcon status={step.status} />
-          <span className={step.status === "pending" ? "text-ink-3" : "text-ink"}>
+          <span className={step.status === "pending" ? "text-text-tertiary" : "text-text-primary"}>
             {step.label}
           </span>
           {step.status === "active" && (
-            <span className="ml-auto text-xs text-ink-3">running...</span>
+            <span className="ml-auto text-caption text-text-tertiary">running</span>
           )}
           {step.status === "done" && step.elapsedMs !== undefined && (
-            <span className="ml-auto font-mono text-data-sm text-ink-3">
+            <span className="ml-auto font-mono text-sm text-text-tertiary">
               {(step.elapsedMs / 1000).toFixed(1)}s
             </span>
           )}
-          {step.status === "skipped" && <span className="ml-auto text-xs text-ink-3">skipped</span>}
+          {step.status === "skipped" && (
+            <span className="ml-auto text-caption text-text-tertiary">skipped</span>
+          )}
           {step.status === "error" && step.detail && (
-            <span className="ml-auto text-xs text-critical-ink">{step.detail}</span>
+            <span className="ml-auto text-caption text-amber">{step.detail}</span>
           )}
         </li>
       ))}

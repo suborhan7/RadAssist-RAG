@@ -11,21 +11,32 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   block?: boolean;
 }
 
+/**
+ * "Reading Room" button. Two accents, each with one job: cyan solid is the
+ * single primary action per view; bordered/ghost are quiet. There is no red in
+ * this theme, so `danger` reads as amber (attention) rather than a third hue.
+ * Transitions are colour-only and honour the reduced-motion token globally.
+ */
 export const BUTTON_BASE =
-  "inline-flex items-center justify-center rounded-btn font-medium whitespace-nowrap transition-colors duration-hover disabled:opacity-50 disabled:pointer-events-none";
+  "inline-flex items-center justify-center gap-8 rounded-field font-medium whitespace-nowrap " +
+  // Tactile press feedback (Feedback, ~120ms, inside the press budget); the
+  // scale rides the same duration-hover as colour. Reduced motion neutralizes
+  // it globally via tokens.css. disabled has no press.
+  "transition-[color,background-color,filter,transform] duration-hover " +
+  "active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none disabled:active:scale-100";
 
 export const VARIANT: Record<Variant, string> = {
-  primary: "bg-steel text-white hover:bg-steel-hover",
-  secondary: "bg-surface text-ink border border-hairline-strong hover:bg-sunken",
-  ghost: "bg-transparent text-ink-2 hover:bg-sunken hover:text-ink",
-  danger: "bg-critical text-white hover:brightness-95",
+  primary: "bg-cyan text-cyan-ink font-semibold hover:brightness-110",
+  secondary: "border border-strong text-text-secondary hover:bg-bg-hover hover:text-text-primary",
+  ghost: "text-text-secondary hover:bg-bg-hover hover:text-text-primary",
+  danger: "bg-amber text-amber-ink font-semibold hover:brightness-110",
 };
 
-// §6.7. One primary per view.
+// One primary per view. Heights come from the spacing scale (h-N == var(--space-N)).
 export const SIZE: Record<Size, string> = {
-  sm: "h-7 px-3 text-sm gap-1.5",
-  md: "h-8 px-3 text-body gap-2",
-  lg: "h-10 px-4 text-body gap-2",
+  sm: "h-34 px-14 text-sm",
+  md: "h-38 px-16 text-sm",
+  lg: "h-46 px-22 text-base",
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
@@ -37,14 +48,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       ref={ref}
       disabled={disabled || loading}
       aria-busy={loading || undefined}
-      className={cn(
-        "inline-flex items-center justify-center rounded-btn font-medium whitespace-nowrap",
-        "transition-colors duration-hover disabled:opacity-50 disabled:pointer-events-none",
-        VARIANT[variant],
-        SIZE[size],
-        block && "w-full",
-        className,
-      )}
+      className={cn(BUTTON_BASE, VARIANT[variant], SIZE[size], block && "w-full", className)}
       {...rest}
     >
       {loading && <Spinner />}
@@ -56,7 +60,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
 /** Stage tick, not decoration: waiting is honest work here (§10.9). */
 function Spinner() {
   return (
-    <svg className="h-4 w-4 animate-spin" viewBox="0 0 16 16" fill="none" aria-hidden>
+    <svg className="h-16 w-16 animate-spin" viewBox="0 0 16 16" fill="none" aria-hidden>
       <circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeOpacity=".25" strokeWidth="2" />
       <path d="M14.5 8A6.5 6.5 0 0 0 8 1.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
     </svg>

@@ -57,3 +57,14 @@ backend/uploaded_images/
 .DS_Store
 Thumbs.db
 .vscode/settings.json
+
+# =============================================================================
+# Agent/design tooling & local config (redesign session) -- not project code.
+# =============================================================================
+# Claude Code local settings + skill symlinks (absolute local paths; not portable).
+.claude/
+# Vendored design-skill packs -- reproducible from skills-lock.json (`npx skills add`).
+.agents/
+agent/
+# Superseded pre-port design-system backup (binary; already ported into frontend/src/).
+frontend/p0-design-system.tar.gz

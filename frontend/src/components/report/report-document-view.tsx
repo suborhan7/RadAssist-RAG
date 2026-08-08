@@ -43,11 +43,13 @@ export const REPORT_CONTENT_FIELDS: { key: keyof ReportContentResponse; label: s
  */
 export function ReportDocumentView({ content }: { content: ReportContentResponse }) {
   return (
-    <div className="flex flex-col divide-y divide-hairline">
+    <div className="flex flex-col">
       {REPORT_CONTENT_FIELDS.map(({ key, label }) => (
-        <div key={key} className="py-3 first:pt-0 last:pb-0">
-          <h3 className="text-h3 text-ink">{label}</h3>
-          <p className="mt-1 whitespace-pre-wrap text-report text-ink-2">{content[key] || "(none)"}</p>
+        <div key={key} className="border-b border-hairline py-16 first:pt-0 last:border-0 last:pb-0">
+          <h3 className="font-mono text-eyebrow uppercase text-text-tertiary">{label}</h3>
+          <p className="mt-8 whitespace-pre-wrap text-findings text-text-secondary">
+            {content[key] || "(none)"}
+          </p>
         </div>
       ))}
     </div>

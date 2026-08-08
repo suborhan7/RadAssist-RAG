@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
+import { BUTTON_BASE, SIZE, VARIANT } from "@/components/ui/button";
 import { DiffMarkup } from "@/components/report/report-diff-view";
 import type { SectionDiff } from "@/lib/report-diff";
 
@@ -120,25 +121,25 @@ export function EditableReportSection({
       }}
       onDoubleClick={startEditing}
     >
-      <div className="flex items-center gap-2">
-        <h3 className="text-h3 text-ink">{label}</h3>
+      <div className="flex items-center gap-8">
+        <h3 className="font-mono text-eyebrow uppercase text-text-tertiary">{label}</h3>
         {isEdited && (
           <span
-            className="inline-block h-1.5 w-1.5 rounded-full bg-steel-ink"
+            className="inline-block h-5 w-5 rounded-full bg-cyan"
             title="Edited by doctor"
             aria-label="Edited"
           />
         )}
-        {isEdited && <span className="text-eyebrow uppercase text-steel-ink">Edited</span>}
-        {saving && <span className="ml-auto text-xs text-ink-3">Saving…</span>}
-        {regenerating && <span className="ml-auto text-xs text-ink-3">Regenerating…</span>}
+        {isEdited && <span className="font-mono text-eyebrow uppercase text-cyan">Edited</span>}
+        {saving && <span className="ml-auto text-caption text-text-tertiary">Saving…</span>}
+        {regenerating && <span className="ml-auto text-caption text-text-tertiary">Regenerating…</span>}
         {canEdit && !editing && !saving && !regenerating && !regenerationPreview && (
-          <div className="ml-auto flex items-center gap-3 opacity-0 transition-opacity duration-hover group-hover:opacity-100 group-focus-within:opacity-100">
+          <div className="ml-auto flex items-center gap-14 opacity-0 transition-opacity duration-hover group-hover:opacity-100 group-focus-within:opacity-100">
             {canRegenerate && onRegenerate && (
               <button
                 type="button"
                 onClick={onRegenerate}
-                className="text-xs text-ink-3 hover:text-steel-ink"
+                className="font-mono text-eyebrow uppercase tracking-[0.14em] text-text-tertiary transition-colors duration-hover hover:text-cyan"
               >
                 Regenerate
               </button>
@@ -146,7 +147,7 @@ export function EditableReportSection({
             <button
               type="button"
               onClick={startEditing}
-              className="text-xs text-ink-3 hover:text-steel-ink"
+              className="text-caption text-text-tertiary transition-colors duration-hover hover:text-cyan"
             >
               Edit
             </button>
@@ -171,47 +172,48 @@ export function EditableReportSection({
           onBlur={commit}
           rows={3}
           className={cn(
-            "mt-1 w-full resize-y rounded-in border border-steel-bd bg-surface p-2",
-            "text-report text-ink focus:ring-2 focus:ring-steel",
+            "mt-8 w-full resize-y rounded-field border border-cyan-line bg-bg-raised p-12",
+            "text-findings text-text-primary",
           )}
         />
       ) : (
-        <p className="mt-1 whitespace-pre-wrap text-report text-ink-2">{value || "(none)"}</p>
+        <p className="mt-8 whitespace-pre-wrap text-findings text-text-secondary">{value || "(none)"}</p>
       )}
 
       {regenerationError && (
-        <p className="mt-2 rounded-card border border-critical-bd bg-critical-bg px-3 py-2 text-sm text-critical-ink">
+        <p className="mt-8 rounded-field border border-amber-line bg-amber-wash px-14 py-12 text-sm text-amber">
           {regenerationError}
         </p>
       )}
 
       {regenerationPreview && (
-        <div className="mt-3 rounded-card border border-steel-bd bg-steel-tint p-tight">
-          <h4 className="text-eyebrow uppercase text-steel-ink">Regenerated candidate -- preview</h4>
+        <div className="mt-14 rounded-panel border border-cyan-line bg-cyan-wash p-14">
+          <h4 className="font-mono text-eyebrow uppercase text-cyan">Regenerated candidate, not applied</h4>
           {regenerationContextIncomplete && (
-            <p className="mt-2 rounded-card border border-caution-bd bg-caution-bg px-3 py-2 text-sm text-caution-ink">
+            <p className="mt-8 rounded-field border border-amber-line bg-amber-wash px-14 py-12 text-sm text-amber">
               This report predates full context capture. This candidate was generated from retrieved
-              evidence only -- it may not reflect the original questionnaire context.
+              evidence only, so it may not reflect the original questionnaire context.
             </p>
           )}
-          <div className="mt-2">
+          <div className="mt-8">
             <DiffMarkup diff={regenerationPreview.diff} />
           </div>
-          <div className="mt-3 flex gap-3">
-            <button
-              type="button"
-              onClick={onDiscardRegeneration}
-              className="text-xs font-medium text-ink-2 underline decoration-hairline-strong underline-offset-2 hover:text-ink"
-            >
-              Discard
-            </button>
+          <div className="mt-14 flex items-center gap-14">
             <button
               type="button"
               onClick={onAcceptRegeneration}
-              className="text-xs font-medium text-steel-ink underline decoration-steel-bd underline-offset-2 hover:text-steel"
+              className={cn(BUTTON_BASE, VARIANT.primary, SIZE.sm)}
             >
               Accept
             </button>
+            <button
+              type="button"
+              onClick={onDiscardRegeneration}
+              className={cn(BUTTON_BASE, VARIANT.secondary, SIZE.sm)}
+            >
+              Discard
+            </button>
+            <span className="ml-auto text-caption text-text-tertiary">Discarding fires no request.</span>
           </div>
         </div>
       )}

@@ -2,7 +2,13 @@
 @import "../styles/tokens.css";
 @config "../../tailwind.config.ts";
 
+/* "Reading Room": near-black page so film is the brightest thing on screen. */
+html {
+  background: var(--bg-page);
+}
+
 body {
-  background: var(--paper);
-  color: var(--ink);
+  background: var(--bg-app);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
 }

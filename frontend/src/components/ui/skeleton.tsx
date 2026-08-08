@@ -7,7 +7,7 @@ import { cn } from "@/lib/cn";
  * The shape of the content arrives before the content; that is the whole job.
  */
 export function Skeleton({ className }: { className?: string }) {
-  return <div className={cn("rounded-in bg-sunken", className)} aria-hidden />;
+  return <div className={cn("rounded-chip bg-bg-hover", className)} aria-hidden />;
 }
 
 export function SkeletonReport() {

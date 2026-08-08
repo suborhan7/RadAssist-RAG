@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import { fontVars } from "@/lib/fonts";
-import { AppNavbar } from "@/components/layout/app-navbar";
+import { AppShell } from "@/components/layout/app-shell";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "RadAssist-RAG",
-  description: "Radiologist Workflow Dashboard",
+  description: "Retrieval-grounded chest X-ray reporting",
 };
 
 export default function RootLayout({
@@ -15,9 +15,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${fontVars} h-full antialiased`}>
-      <body className="flex min-h-full flex-col bg-paper font-sans text-body text-ink">
-        <AppNavbar />
-        {children}
+      <body className="min-h-full bg-bg-app font-sans text-base text-text-primary">
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   );

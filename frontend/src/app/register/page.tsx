@@ -5,22 +5,16 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ApiError, registerDoctor } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
+import { ChestXrayIllustration } from "@/components/ui/chest-xray-illustration";
+
+const FIELD = "h-46 rounded-field border border-strong bg-bg-raised px-16 text-text-primary placeholder:text-text-muted";
 
 /**
- * Register (Phase 13b, restyled Phase 14). design_specification.md has
- * no dedicated doctor self-registration screen -- its §8.6 "Register
- * patient" is a different entity (a PATIENT record, modal, server-generated
- * RA-{YYYY}-{NNNNNN} id -- explicitly NOT reused here per frontend/CLAUDE.md's
- * hard rule). Self-registration (phase13_auth_architecture.md Decision 1)
- * was never in the original design's scope. Rather than inventing a new
- * screen concept, this reuses /login's exact visual vocabulary (lightbox
- * split layout, same primitives) as the lowest-risk extension of an
- * established pattern.
- *
- * Fields match the real Doctor entity (email, password, full_name) --
- * not the design spec's unrelated patient fields (DOB, sex, MRN) and not
- * an invented BMDC-number field (that belongs to a future Settings ·
- * Profile screen, out of Phase 13/14 scope per frontend/CLAUDE.md).
+ * Register (Phase 13b, ported to the Reading Room theme in the redesign step
+ * 4). Reuses /login's exact split vocabulary. Fields match the real Doctor
+ * entity (email, password, full_name) -- deliberately NOT the design's
+ * BMDC/qualifications fields (those belong to Settings·Profile, per
+ * frontend/CLAUDE.md's hard rule). All auth logic unchanged.
  */
 export default function RegisterPage() {
   const router = useRouter();
@@ -50,75 +44,65 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="flex min-h-screen">
-      <div className="hidden flex-1 flex-col justify-between bg-lightbox px-12 py-16 text-lightbox-ink lg:flex">
-        <div>
-          <p className="text-eyebrow uppercase text-lightbox-ink-2">RadAssist-RAG</p>
-          <h1 className="mt-4 max-w-md text-display text-white">
+    <div className="flex min-h-screen bg-bg-app">
+      <div className="relative hidden flex-1 flex-col justify-between overflow-hidden bg-bg-film px-50 py-44 lg:flex">
+        <ChestXrayIllustration className="pointer-events-none absolute inset-0 h-full w-full opacity-50" />
+        <div className="relative">
+          <p className="font-mono text-eyebrow uppercase text-text-tertiary">RadAssist-RAG</p>
+          <h1 className="mt-14 max-w-md text-display text-text-primary">
             Retrieval-grounded chest X-ray reporting.
           </h1>
         </div>
-        <p className="max-w-md text-sm text-lightbox-ink-2">
+        <p className="relative max-w-md text-sm leading-relaxed text-text-secondary">
           Every AI draft cites the retrieved cases it was grounded in. 0 reports have ever been
           finalised without a radiologist.
         </p>
       </div>
 
-      <div className="flex flex-1 flex-col items-center justify-center bg-paper px-page py-16">
-        <div className="flex w-full max-w-sm flex-col gap-6">
+      <div className="flex flex-1 flex-col items-center justify-center px-30 py-44">
+        <div className="flex w-full max-w-sm flex-col gap-24">
           <div>
-            <h2 className="text-h1 text-ink">Create your account</h2>
-            <p className="mt-1 text-sm text-ink-2">RadAssist-RAG &middot; Radiologist Workflow</p>
+            <h2 className="text-page-title text-text-primary">Create your account</h2>
+            <p className="mt-6 text-sm text-text-secondary">RadAssist-RAG · Radiologist workflow</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            <label className="flex flex-col gap-1">
-              <span className="text-sm font-medium text-ink-2">Full name</span>
-              <input
-                required
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                className="h-10 rounded-btn border border-hairline-strong bg-surface px-3 text-ink"
-              />
+          <form onSubmit={handleSubmit} className="flex flex-col gap-16">
+            <label className="flex flex-col gap-8">
+              <span className="text-sm text-text-secondary">Full name</span>
+              <input required value={fullName} onChange={(e) => setFullName(e.target.value)} className={FIELD} />
             </label>
 
-            <label className="flex flex-col gap-1">
-              <span className="text-sm font-medium text-ink-2">Email</span>
-              <input
-                required
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="h-10 rounded-btn border border-hairline-strong bg-surface px-3 text-ink"
-              />
+            <label className="flex flex-col gap-8">
+              <span className="text-sm text-text-secondary">Email</span>
+              <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={FIELD} />
             </label>
 
-            <label className="flex flex-col gap-1">
-              <span className="text-sm font-medium text-ink-2">Password</span>
+            <label className="flex flex-col gap-8">
+              <span className="text-sm text-text-secondary">Password</span>
               <input
                 required
                 type="password"
                 minLength={8}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="h-10 rounded-btn border border-hairline-strong bg-surface px-3 text-ink"
+                className={FIELD}
               />
             </label>
 
-            <Button type="submit" variant="primary" size="lg" block loading={submitting} className="mt-2">
-              {submitting ? "Creating account..." : "Create account"}
+            <Button type="submit" variant="primary" size="lg" block loading={submitting}>
+              {submitting ? "Creating account…" : "Create account"}
             </Button>
           </form>
 
           {error && (
-            <p className="rounded-card border border-critical-bd bg-critical-bg px-3 py-2 text-sm text-critical-ink">
+            <p className="rounded-field border border-amber-line bg-amber-wash px-14 py-12 text-sm text-amber">
               {error}
             </p>
           )}
 
-          <p className="text-center text-sm text-ink-2">
+          <p className="text-center text-sm text-text-secondary">
             Already have an account?{" "}
-            <Link href="/login" className="font-medium text-ink underline">
+            <Link href="/login" className="text-cyan transition-colors duration-hover hover:text-text-primary">
               Sign in
             </Link>
           </p>

@@ -5,32 +5,39 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ApiError, explainReport, getReport } from "@/lib/api-client";
 import { StepProgress, type WorkflowStepDisplay } from "@/components/workflow/StepProgress";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import type { paths } from "@/lib/generated/api";
 
 type ReportDetailResponse =
   paths["/reports/{report_id}"]["get"]["responses"][200]["content"]["application/json"];
 
+// Meta-questions about the grounding, not fabricated clinical facts -- they
+// only prefill the input, which the doctor still sends.
+const SUGGESTED_QUESTIONS = [
+  "Why this impression?",
+  "Which retrieved case is closest?",
+  "What would change this impression?",
+];
+
 /**
  * Explainability (Phase 12 Step 6, restyled Phase 14 per
- * design_specification.md §8.13 -- frontend/CLAUDE.md cites this as §8.11,
- * a citation slip; §8.11 is actually "Questionnaire", a different screen).
+ * design_specification.md §8.13, ported to the Reading Room theme in the
+ * redesign step 4).
  *
  * "Why it does not look like ChatGPT" (§8.13): no bubbles, no avatars, no
  * left/right alternation, no typing dots. The question renders as a bold
- * rule; the answer is plain prose in the document register. Kept as its
- * own route rather than converted into an actual overlay drawer over the
- * Workspace -- frontend/CLAUDE.md's Phase 14 scope is explicitly "styling
- * and interaction, not new routes," and turning a page navigation into an
- * in-place drawer is a real interaction/routing change, not a restyle;
- * the visual/typographic register described in §8.13 is applied without
- * that architectural change.
+ * rule; the answer is plain prose in the document register. Single-turn: the
+ * backend returns one {question, answer} per ask and persists it to the
+ * explanations table, so the latest exchange is shown here and the copy about
+ * the audit trail is literal, not aspirational. Kept as its own route rather
+ * than an in-place drawer (a routing change, out of a restyle's scope).
  *
- * The grounding notice is real, frozen copy (§8.13), not decoration --
- * it states an actual constraint on what the LLM was prompted to do
- * (app/services/prompt_builder.py's build_explanation_prompt), not an
- * aspirational claim.
+ * The grounding notice is real, frozen copy (§8.13) -- it states an actual
+ * constraint on what the LLM was prompted to do
+ * (app/services/prompt_builder.py's build_explanation_prompt), not decoration.
+ * The cases rail reads report.retrieved_cases (real); the mock's per-sentence
+ * "sentence in question" selection has no backend and is not attempted -- the
+ * report impression stands in as the real anchoring text.
  */
 export default function ExplainPage() {
   const params = useParams<{ reportId: string }>();
@@ -83,77 +90,142 @@ export default function ExplainPage() {
 
   const stepDisplay: WorkflowStepDisplay = {
     id: "explaining",
-    label: "Asking AI Assistant",
+    label: "Asking AI assistant",
     status: status === "asking" ? "active" : status === "done" ? "done" : status === "error" ? "error" : "pending",
     elapsedMs: status === "done" ? elapsedMs : undefined,
     detail: status === "error" ? (errorDetail ?? undefined) : undefined,
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center bg-paper">
-      <main className="flex w-full max-w-xl flex-col gap-6 px-page py-16">
-        <div className="flex items-center justify-between">
-          <h1 className="text-h1 text-ink">Explainability</h1>
-          <Link href={`/reports/${reportId}`} className="text-sm text-ink-3 underline">
-            Back to Workspace
-          </Link>
+    <div className="flex h-[100dvh] flex-col overflow-hidden bg-bg-app">
+      <header className="flex h-header-bar flex-none items-center gap-14 border-b border-hairline px-30">
+        <Link
+          href={`/reports/${reportId}`}
+          className="text-sm text-text-tertiary transition-colors duration-hover hover:text-cyan"
+        >
+          Workspace
+        </Link>
+        <span className="text-text-muted">/</span>
+        <h1 className="text-screen-title text-text-primary">Explainability</h1>
+        <span className="flex-1" />
+        <Link
+          href={`/reports/${reportId}`}
+          className="text-sm text-cyan transition-colors duration-hover hover:text-text-primary"
+        >
+          Back to workspace
+        </Link>
+      </header>
+
+      <div className="flex min-h-0 flex-1 overflow-x-auto">
+        {/* Conversation column */}
+        <div className="flex min-w-[420px] flex-1 flex-col">
+          {/* Grounding notice -- real constraint on the prompt, not decoration */}
+          <p className="flex-none border-b border-hairline px-30 py-16 text-sm leading-relaxed text-cyan">
+            Answers are grounded in the retrieved cases and this report. The assistant cannot
+            introduce new findings, and it is not a second opinion.
+          </p>
+
+          <div className="flex-1 overflow-auto px-30 py-30">
+            <div className="mx-auto flex max-w-[70ch] flex-col gap-24">
+              {reportLoadError && (
+                <p className="rounded-field border border-amber-line bg-amber-wash px-14 py-12 text-sm text-amber">
+                  {reportLoadError}
+                </p>
+              )}
+
+              {status !== "idle" && <StepProgress steps={[stepDisplay]} />}
+
+              {status === "done" && askedQuestion && answer ? (
+                <article className="flex flex-col gap-16">
+                  <div className="flex items-baseline gap-14 border-b border-strong pb-12">
+                    <h2 className="text-panel text-text-primary">{askedQuestion}</h2>
+                    <span className="flex-1" />
+                    {elapsedMs !== undefined && (
+                      <span className="whitespace-nowrap font-mono text-mono-meta text-text-tertiary">
+                        {(elapsedMs / 1000).toFixed(1)}s
+                      </span>
+                    )}
+                  </div>
+                  <p className="whitespace-pre-wrap text-findings text-text-primary">{answer}</p>
+                </article>
+              ) : status === "idle" ? (
+                <p className="text-findings text-text-tertiary">
+                  Ask a question about this report to see a grounded answer. Every answer is drawn
+                  only from the retrieved cases and the report text.
+                </p>
+              ) : null}
+            </div>
+          </div>
+
+          {/* Ask footer */}
+          <div className="flex-none border-t border-hairline px-30 py-18">
+            {status !== "asking" && (
+              <div className="mb-14 flex flex-wrap gap-9">
+                {SUGGESTED_QUESTIONS.map((q) => (
+                  <button
+                    key={q}
+                    type="button"
+                    onClick={() => setQuestion(q)}
+                    className="rounded-full border border-strong px-14 py-7 text-sm-tight text-text-secondary transition-colors duration-hover hover:border-cyan-line hover:text-cyan"
+                  >
+                    {q}
+                  </button>
+                ))}
+              </div>
+            )}
+            <form onSubmit={handleAsk} className="flex gap-12">
+              <input
+                type="text"
+                value={question}
+                onChange={(e) => setQuestion(e.target.value)}
+                aria-label="Ask a question about this report"
+                placeholder="Ask about a sentence in this report…"
+                className="h-46 flex-1 rounded-field border border-strong bg-bg-raised px-16 text-text-primary placeholder:text-text-muted"
+              />
+              <Button type="submit" variant="primary" size="lg" disabled={status === "asking" || !question.trim()}>
+                Ask
+              </Button>
+            </form>
+          </div>
         </div>
 
-        {reportLoadError && (
-          <p className="rounded-card border border-critical-bd bg-critical-bg px-3 py-2 text-sm text-critical-ink">
-            {reportLoadError}
-          </p>
-        )}
+        {/* Cases-in-context rail */}
+        <aside className="w-explain-panel flex-none overflow-auto border-l border-hairline bg-bg-raised p-22">
+          {report && (
+            <>
+              <h3 className="mb-14 font-mono text-eyebrow uppercase text-text-tertiary">
+                Report impression
+              </h3>
+              <blockquote className="mb-28 border-l-2 border-cyan pl-16 text-findings text-text-primary">
+                {report.content.impression || "(none)"}
+              </blockquote>
 
-        {report && (
-          <Card className="p-card">
-            <h2 className="text-eyebrow uppercase text-ink-3">Report context</h2>
-            <p className="mt-2 text-report text-ink-2">
-              <span className="font-medium text-ink">Findings:</span> {report.content.findings}
-            </p>
-            <p className="mt-1 text-report text-ink-2">
-              <span className="font-medium text-ink">Impression:</span> {report.content.impression}
-            </p>
-          </Card>
-        )}
+              <h3 className="mb-14 font-mono text-eyebrow uppercase text-text-tertiary">
+                Cases in context
+              </h3>
+              <div className="flex flex-col gap-16 border-t border-hairline pt-16">
+                {report.retrieved_cases.map((c) => (
+                  <div key={c.rank} className="flex items-baseline gap-10">
+                    <span className="whitespace-nowrap font-mono text-mono-meta-lg text-cyan">
+                      {(c.similarity * 100).toFixed(1)}
+                    </span>
+                    <span className="whitespace-nowrap font-mono text-mono-meta text-text-tertiary">
+                      #{c.rank}
+                    </span>
+                    <span className="min-w-0 flex-1 truncate text-sm text-text-secondary">
+                      {c.primary_label}
+                    </span>
+                  </div>
+                ))}
+              </div>
 
-        {/* Non-dismissible grounding notice -- real constraint, not decoration */}
-        <p className="rounded-card border border-steel-bd bg-steel-tint px-3 py-2 text-sm text-steel-ink">
-          Answers are grounded in the retrieved cases and this report. The assistant cannot
-          introduce new findings.
-        </p>
-
-        <form onSubmit={handleAsk} className="flex flex-col gap-3">
-          <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-ink-2">Ask a question about this report</span>
-            <input
-              type="text"
-              value={question}
-              onChange={(e) => setQuestion(e.target.value)}
-              placeholder="e.g. Why do you think this is pneumonia and not just a normal finding?"
-              className="h-10 rounded-btn border border-hairline-strong bg-surface px-3 text-ink"
-            />
-          </label>
-          <Button
-            type="submit"
-            variant="primary"
-            size="lg"
-            block
-            disabled={status === "asking" || !question.trim()}
-          >
-            Ask
-          </Button>
-        </form>
-
-        {status !== "idle" && <StepProgress steps={[stepDisplay]} />}
-
-        {status === "done" && askedQuestion && answer && (
-          <div className="flex flex-col gap-3 border-t border-hairline pt-4">
-            <p className="text-h3 text-ink">{askedQuestion}</p>
-            <p className="whitespace-pre-wrap text-report text-ink-2">{answer}</p>
-          </div>
-        )}
-      </main>
+              <p className="mt-24 text-caption leading-relaxed text-text-tertiary">
+                Questions and answers stay with the report as part of its audit trail.
+              </p>
+            </>
+          )}
+        </aside>
+      </div>
     </div>
   );
 }

@@ -1,106 +1,133 @@
 /* ============================================================
-   RadAssist-RAG — Design tokens
-   design_specification.md §6. THE ONLY FILE THAT MAY CONTAIN HEX.
-   Enforced by scripts/check-design-tokens.mjs (P0 gate, §13).
+   RadAssist-RAG — Design tokens — "Reading Room" theme
+   Source: design/RadAssist Reading Room.dc (1).html (README) +
+   design/github (1).md (interactive mockup). THE ONLY FILE THAT MAY
+   CONTAIN HEX. Enforced by scripts/check-design-tokens.mjs (P0 gate).
    ============================================================ */
 
 :root {
-  /* ---- neutrals — cool-leaning, never pure gray (§6.2) ---- */
-  --paper:            #F2F5F7;
-  --surface:          #FFFFFF;
-  --sunken:           #EAEFF3;
-  --hairline:         #E3E8ED;
-  --hairline-strong:  #BFC9D3;
-  --ink:              #0D1520;
-  --ink-2:            #54626F;
-  --ink-3:            #6E7C8A;   /* AA at 12px on --surface */
+  /* ---- backgrounds — near-black so film is the brightest thing on screen ---- */
+  --bg-page:         #04070A;
+  --bg-app:          #0A0D10;
+  --bg-raised:       #0E1318;
+  --bg-hover:        #12181E;
+  --bg-hover-alt:    #151B21;
+  --bg-film:         #000000;
 
-  /* ---- brand: steel-blue. Doubles as the retrieved-evidence semantic ---- */
-  --steel:            #0F5C87;
-  --steel-hover:      #0B486B;
-  --brand-deep:       #0A3D5C;
+  /* ---- borders ---- */
+  --border-hairline: #1B2229;
+  --border-strong:   #2A343D;
 
-  /* ---- semantic triads: tint / border / deep text ----
-     EVERY semantic has all three. Omitting border+ink caused V1 drift. */
-  --steel-tint:       #E7F0F6;
-  --steel-bd:         #C5DCEA;
-  --steel-ink:        #0B486B;
+  /* ---- text — #8C9AA8 / #96A3B0 are the lightest greys permitted;
+     contrast checked to WCAG AA against --bg-app for all body text
+     and both accents. Do not go lighter in the palette or darker
+     in the greys. ---- */
+  --text-primary:    #E6EDF3;
+  --text-secondary:  #8C9AA8;
+  --text-tertiary:   #96A3B0;
+  --text-muted:      #61707E;
 
-  --caution-bg:       #FFFAEB;
-  --caution-bd:       #F5D9A8;
-  --caution-ink:      #8A5A22;
-  --caution-fill:     #F79009;
+  /* ---- accents: exactly two, each with one job.
+     cyan = retrieval and interaction. amber = look here / unsupported.
+     A new state needing emphasis is one of these two — never a third hue. ---- */
+  --accent-cyan:       #22E3E8;
+  --accent-cyan-ink:   #04181A;
+  --accent-cyan-wash:  rgba(34, 227, 232, .12);
+  --accent-cyan-line:  rgba(34, 227, 232, .45);
 
-  --stable-bg:        #ECFDF3;
-  --stable-bd:        #B7E4C7;
-  --stable-ink:       #22684A;
-  --stable:           #067647;
+  --accent-amber:      #FFB020;
+  --accent-amber-ink:  #1A1200;
+  --accent-amber-wash: rgba(255, 176, 32, .10);
+  --accent-amber-line: rgba(255, 176, 32, .50);
 
-  --critical-bg:      #FEF3F2;
-  --critical-bd:      #F0C4BF;
-  --critical-ink:     #8C2018;
-  --critical:         #B42318;
+  /* ---- ownership texture — carried over pending the owner-chip
+     restyle decision in the primitives pass; value re-tuned for the
+     dark surface (old .10 was calibrated against a light --sunken). ---- */
+  --hatch: rgba(230, 237, 243, .08);
 
-  /* ---- lightbox: the only dark surfaces in the product (§P1) ---- */
-  --lightbox:         #08090B;
-  --lightbox-chrome:  #1C222B;
-  --lightbox-bd:      #2E3742;
-  --lightbox-ink:     #C9D3DD;
-  --lightbox-ink-2:   #98A6B4;
-  --lightbox-ink-3:   #6B7885;
+  /* ---- spacing scale — every padding/gap value the mock actually uses.
+     The README names a 14-value "scale in use", but its own component
+     specs (and the mockup source) use more than that — 7/8/10/11px each
+     appear ~20 times. This is the honest superset, so the design is
+     reproducible exactly and the gate stays meaningful (padding must be
+     a --space-N token / Tailwind p-N, never an arbitrary px). Replaces
+     the old 3-token (--pad-card/tight/page) system. ---- */
+  --space-2:  2px;
+  --space-3:  3px;
+  --space-4:  4px;
+  --space-5:  5px;
+  --space-6:  6px;
+  --space-7:  7px;
+  --space-8:  8px;
+  --space-9:  9px;
+  --space-10: 10px;
+  --space-11: 11px;
+  --space-12: 12px;
+  --space-13: 13px;
+  --space-14: 14px;
+  --space-15: 15px;
+  --space-16: 16px;
+  --space-18: 18px;
+  --space-20: 20px;
+  --space-22: 22px;
+  --space-24: 24px;
+  --space-26: 26px;
+  --space-28: 28px;
+  --space-30: 30px;
+  --space-34: 34px;
+  --space-36: 36px;
+  --space-38: 38px;
+  --space-44: 44px;
+  --space-46: 46px;
+  --space-50: 50px;
+  --space-56: 56px;
+  --space-70: 70px;
+  --space-74: 74px;
 
-  /* ---- ownership texture (§9) — .045 was invisible; .10 is the fix ---- */
-  --hatch: rgba(133, 147, 160, .10);
+  /* ---- radius — derived from the mockup's actual per-component values
+     (the README gives ranges; these are the exact values within them) ---- */
+  --r-thumb:   4px;   /* film thumbnails */
+  --r-chip:    5px;   /* pill-option buttons, mono case chips, mini pills */
+  --r-control: 6px;   /* rail nav items, small secondary controls */
+  --r-btn-sm:  7px;   /* bordered small buttons (e.g. Settings sign out) */
+  --r-field:   8px;   /* solid buttons, inputs, fields */
+  --r-panel:   10px;  /* panels, inset blocks, the app frame */
+  --r-full:    999px; /* status pills */
 
-  /* ---- spacing: THESE THREE ONLY for component padding (§6.4) ---- */
-  --pad-card:  16px;
-  --pad-tight: 12px;
-  --pad-page:  24px;
+  /* ---- no shadows anywhere except the logo dot glow ---- */
+  --glow: 0 0 12px var(--accent-cyan);
 
-  /* ---- elevation = dismissibility (§6.5) ---- */
-  --e1: 0 1px 2px rgba(13, 21, 32, .05);
-  --e2: 0 4px 12px rgba(13, 21, 32, .10);
-  --e3: 0 16px 40px rgba(13, 21, 32, .18);
-
-  /* ---- radius (§6.6) ---- */
-  --r-in:    2px;
-  --r-btn:   4px;
-  --r-card:  6px;
-  --r-modal: 8px;
-
-  /* ---- focus: a token. Never removed, never animated (§9) ---- */
-  --focus-ring:   2px solid var(--steel);
+  /* ---- focus: a token. Never removed, never animated ---- */
+  --focus-ring:   2px solid var(--accent-cyan);
   --focus-offset: 2px;
 
-  /* ---- layout (§6.7) ---- */
-  --sidebar:        240px;
-  --sidebar-rail:   64px;
-  --topbar:         56px;
-  --context-bar:    48px;
-  --report-col:     520px;
-  --evidence-rail:  360px;
-  --rail-collapsed: 44px;
-  --drawer:         460px;
-  --finalize-bar:   64px;
+  /* ---- layout — fixed 1440x900 reading-station frame ---- */
+  --rail:           224px; /* always open, not collapsible */
+  --header-bar:     60px;
+  --header-landing: 66px;  /* sticky landing header variant */
+  --report-col:     530px;
+  --evidence-panel: 340px; /* workspace right panel */
+  --explain-panel:  330px; /* explainability right panel */
 
-  /* ---- motion (§10.9) ---- */
-  --t-hover:  120ms;
-  --t-state:  150ms;
-  --t-panel:  200ms;
-  --ease:     cubic-bezier(.2, 0, 0, 1);
+  /* ---- motion: two keyframes only (rr-flow, rr-blink), defined where
+     they're consumed. Timings/easing kept from the prior theme —
+     unspecified by the new design, not contradicted by it. ---- */
+  --t-hover: 120ms;
+  --t-state: 150ms;
+  --t-panel: 200ms;
+  --ease:    cubic-bezier(.2, 0, 0, 1);
 
-  /* ---- §16.1 reopening: decorative synthetic radiograph SVG ----
-     §6.2's stated exception -- "the only exception is the four values
-     inside the synthetic radiograph SVG, which are image data" -- these
-     ARE those four values. Not UI chrome, not a semantic color; never
-     reference these outside chest-xray-illustration.tsx. */
+  /* ---- decorative synthetic radiograph SVG — the one hex exception
+     outside the semantic palette above; never reference elsewhere.
+     Unchanged pending a decision on whether chest-xray-illustration.tsx
+     still ships in Reading Room (not in the mock's 15 screens). ---- */
   --illustration-vignette-center: #20262E;
   --illustration-vignette-edge:   #08090B;
   --illustration-highlight-start: rgba(224, 235, 246, .40);
   --illustration-highlight-end:   rgba(224, 235, 246, .26);
 }
 
-/* Motion is functional. When it is unwelcome, it is off. (§10.9) */
+/* Motion is functional. When it is unwelcome, it is off. */
 @media (prefers-reduced-motion: reduce) {
   :root { --t-hover: 1ms; --t-state: 1ms; --t-panel: 1ms; }
   *, *::before, *::after {

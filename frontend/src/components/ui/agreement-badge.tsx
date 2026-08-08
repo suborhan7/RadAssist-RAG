@@ -1,7 +1,7 @@
 import { cn } from "@/lib/cn";
 
 /**
- * §10.3. Replaces the "Confidence" surface.
+ * Evidence agreement. Replaces the "Confidence" surface.
  *
  * The measure is a rule over cosine similarity. Calling it confidence implies a
  * calibrated probability of diagnostic correctness the system does not have;
@@ -10,6 +10,11 @@ import { cn } from "@/lib/cn";
  * apology into a definition.
  *
  * Never render a bare percentage. The factors are the point.
+ *
+ * Two-accent mapping: strong agreement reads cyan (confirmed), weak reads amber
+ * (attention), and the middle "mixed" is neither, so it sits neutral grey. The
+ * WORD label and the factor rows carry the distinction — colour is never the
+ * only signal.
  */
 export type Agreement = "strong" | "mixed" | "weak";
 
@@ -26,14 +31,14 @@ export interface AgreementFactors {
 }
 
 const TONE: Record<Agreement, string> = {
-  strong: "text-stable",
-  mixed: "text-caution-ink",
-  weak: "text-critical",
+  strong: "text-cyan",
+  mixed: "text-text-tertiary",
+  weak: "text-amber",
 };
 const FILL: Record<Agreement, string> = {
-  strong: "bg-stable",
-  mixed: "bg-caution",
-  weak: "bg-critical",
+  strong: "bg-cyan",
+  mixed: "bg-border-strong",
+  weak: "bg-amber",
 };
 const WORD: Record<Agreement, string> = { strong: "Strong", mixed: "Mixed", weak: "Weak" };
 
@@ -42,33 +47,33 @@ export function AgreementBadge({ level, factors }: { level: Agreement; factors: 
   return (
     <div>
       <div className="flex items-baseline justify-between">
-        <div className="text-eyebrow uppercase text-ink-3">Evidence agreement</div>
-        <div className={cn("text-h2", TONE[level])}>{WORD[level]}</div>
+        <div className="font-mono text-eyebrow uppercase text-text-tertiary">Evidence agreement</div>
+        <div className={cn("text-panel", TONE[level])}>{WORD[level]}</div>
       </div>
 
-      <div className="my-2.5 h-1 overflow-hidden rounded-full bg-sunken">
+      <div className="my-10 h-4 overflow-hidden rounded-full bg-bg-raised">
         <div className={cn("h-full rounded-full", FILL[level])} style={{ width: `${pct}%` }} />
       </div>
 
-      <p className="text-sm leading-5 text-ink-2">
+      <p className="text-sm text-text-secondary">
         {factors.agreeing} of {factors.k} retrieved cases agree on the primary finding.
       </p>
 
-      <dl className="mt-3 border-t border-hairline pt-2.5">
+      <dl className="mt-12 border-t border-hairline pt-10">
         <Row label="Top-1 similarity" value={`${factors.topSimilarity.toFixed(1)}%`} />
         <Row label={`Mean similarity (K=${factors.k})`} value={`${factors.meanSimilarity.toFixed(1)}%`} />
         <Row
           label="Clinical history provided"
           value={factors.clinicalHistory === null ? "Not recorded" : factors.clinicalHistory ? "Yes" : "No"}
-          tone={factors.clinicalHistory ? "text-stable" : "text-ink-3"}
+          tone={factors.clinicalHistory ? "text-cyan" : "text-text-tertiary"}
         />
         <Row label="Label spread" value={`${factors.labelSpread} labels`} />
       </dl>
 
-      {/* Definition, not disclaimer. §10.3 */}
-      <p className="mt-3 rounded-card bg-sunken p-tight text-sm leading-[18px] text-ink-2">
+      {/* Definition, not disclaimer. */}
+      <p className="mt-12 rounded-panel bg-bg-raised p-12 text-sm text-text-secondary">
         Measures agreement among retrieved cases.{" "}
-        <strong className="text-ink">Not a probability that the report is correct.</strong>
+        <strong className="text-text-primary">Not a probability that the report is correct.</strong>
       </p>
     </div>
   );
@@ -76,9 +81,9 @@ export function AgreementBadge({ level, factors }: { level: Agreement; factors: 
 
 function Row({ label, value, tone }: { label: string; value: string; tone?: string }) {
   return (
-    <div className="flex items-center gap-2 border-b border-hairline py-2 last:border-0">
-      <dt className="text-sm text-ink-2">{label}</dt>
-      <dd className={cn("ml-auto font-mono text-data-sm", tone ?? "text-ink")}>{value}</dd>
+    <div className="flex items-center gap-8 border-b border-hairline py-8 last:border-0">
+      <dt className="text-sm text-text-secondary">{label}</dt>
+      <dd className={cn("ml-auto font-mono text-mono-meta", tone ?? "text-text-primary")}>{value}</dd>
     </div>
   );
 }

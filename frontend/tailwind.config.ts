@@ -1,109 +1,164 @@
 import type { Config } from "tailwindcss";
 
 /**
- * Tokens are CSS custom properties (src/styles/tokens.css) and Tailwind only
- * *names* them. Nothing here restates a value — a second source of truth for
- * colour is exactly how V1 drifted (design_specification.md §15).
+ * "Reading Room" theme. Tokens are CSS custom properties
+ * (src/styles/tokens.css) and Tailwind only *names* them — nothing here
+ * restates a value. A second source of truth for colour is how V1 drifted.
  */
 const config: Config = {
   content: ["./src/**/*.{ts,tsx}"],
   theme: {
     // `colors` is REPLACED, not extended: Tailwind's default palette would
     // reintroduce ~250 non-semantic colours and make `bg-blue-500` reachable.
+    // Two accents only — cyan (retrieval/interaction) and amber (attention/risk).
     colors: {
       transparent: "transparent",
       current: "currentColor",
-      paper: "var(--paper)",
-      surface: "var(--surface)",
-      sunken: "var(--sunken)",
-      hairline: "var(--hairline)",
-      "hairline-strong": "var(--hairline-strong)",
-      ink: { DEFAULT: "var(--ink)", 2: "var(--ink-2)", 3: "var(--ink-3)" },
-      steel: {
-        DEFAULT: "var(--steel)",
-        hover: "var(--steel-hover)",
-        tint: "var(--steel-tint)",
-        bd: "var(--steel-bd)",
-        ink: "var(--steel-ink)",
-        deep: "var(--brand-deep)",
+      bg: {
+        page: "var(--bg-page)",
+        app: "var(--bg-app)",
+        raised: "var(--bg-raised)",
+        hover: "var(--bg-hover)",
+        "hover-alt": "var(--bg-hover-alt)",
+        film: "var(--bg-film)",
       },
-      caution: {
-        DEFAULT: "var(--caution-fill)",
-        bg: "var(--caution-bg)",
-        bd: "var(--caution-bd)",
-        ink: "var(--caution-ink)",
+      border: {
+        DEFAULT: "var(--border-hairline)",
+        hairline: "var(--border-hairline)",
+        strong: "var(--border-strong)",
       },
-      stable: {
-        DEFAULT: "var(--stable)",
-        bg: "var(--stable-bg)",
-        bd: "var(--stable-bd)",
-        ink: "var(--stable-ink)",
+      text: {
+        primary: "var(--text-primary)",
+        secondary: "var(--text-secondary)",
+        tertiary: "var(--text-tertiary)",
+        muted: "var(--text-muted)",
       },
-      critical: {
-        DEFAULT: "var(--critical)",
-        bg: "var(--critical-bg)",
-        bd: "var(--critical-bd)",
-        ink: "var(--critical-ink)",
+      cyan: {
+        DEFAULT: "var(--accent-cyan)",
+        ink: "var(--accent-cyan-ink)",
+        wash: "var(--accent-cyan-wash)",
+        line: "var(--accent-cyan-line)",
       },
-      lightbox: {
-        DEFAULT: "var(--lightbox)",
-        chrome: "var(--lightbox-chrome)",
-        bd: "var(--lightbox-bd)",
-        ink: "var(--lightbox-ink)",
-        "ink-2": "var(--lightbox-ink-2)",
-        "ink-3": "var(--lightbox-ink-3)",
+      amber: {
+        DEFAULT: "var(--accent-amber)",
+        ink: "var(--accent-amber-ink)",
+        wash: "var(--accent-amber-wash)",
+        line: "var(--accent-amber-line)",
       },
-      white: "#FFFFFF", // lightbox foreground only
     },
-    // Component padding is three tokens (§6.4). Layout spacing is 4-based.
+    // The spacing values the mock uses (tokens.css). Both padding and gap
+    // draw from here; there is no arbitrary px. `0`, `px`, and `full` are
+    // kept as structural utilities. Numeric keys match the pixel value, so
+    // p-11 => padding: var(--space-11) => 11px.
     spacing: {
-      0: "0px", px: "1px", 0.5: "2px", 1: "4px", 1.5: "6px", 2: "8px",
-      2.5: "10px", 3: "12px", 3.5: "14px", 4: "16px", 5: "20px", 6: "24px",
-      8: "32px", 10: "40px", 12: "48px", 14: "56px", 16: "64px",
-      card: "var(--pad-card)", tight: "var(--pad-tight)", page: "var(--pad-page)",
+      0: "0px",
+      px: "1px",
+      2: "var(--space-2)",
+      3: "var(--space-3)",
+      4: "var(--space-4)",
+      5: "var(--space-5)",
+      6: "var(--space-6)",
+      7: "var(--space-7)",
+      8: "var(--space-8)",
+      9: "var(--space-9)",
+      10: "var(--space-10)",
+      11: "var(--space-11)",
+      12: "var(--space-12)",
+      13: "var(--space-13)",
+      14: "var(--space-14)",
+      15: "var(--space-15)",
+      16: "var(--space-16)",
+      18: "var(--space-18)",
+      20: "var(--space-20)",
+      22: "var(--space-22)",
+      24: "var(--space-24)",
+      26: "var(--space-26)",
+      28: "var(--space-28)",
+      30: "var(--space-30)",
+      34: "var(--space-34)",
+      36: "var(--space-36)",
+      38: "var(--space-38)",
+      44: "var(--space-44)",
+      46: "var(--space-46)",
+      50: "var(--space-50)",
+      56: "var(--space-56)",
+      70: "var(--space-70)",
+      74: "var(--space-74)",
     },
     borderRadius: {
-      none: "0", in: "var(--r-in)", btn: "var(--r-btn)",
-      card: "var(--r-card)", modal: "var(--r-modal)", full: "999px",
+      none: "0",
+      thumb: "var(--r-thumb)",
+      chip: "var(--r-chip)",
+      control: "var(--r-control)",
+      "btn-sm": "var(--r-btn-sm)",
+      field: "var(--r-field)",
+      panel: "var(--r-panel)",
+      full: "var(--r-full)",
     },
-    // Only these three. --shadow-popover/--shadow-modal are deleted (§6.5).
-    boxShadow: { none: "none", e1: "var(--e1)", e2: "var(--e2)", e3: "var(--e3)" },
+    // No shadows anywhere except the logo dot glow.
+    boxShadow: { none: "none", glow: "var(--glow)" },
     fontFamily: {
+      // Space Grotesk = all UI/prose · IBM Plex Mono = identifiers/eyebrows/
+      // metrics · Noto Sans Bengali = Bangla report text only.
       sans: ["var(--font-sans)", "system-ui", "sans-serif"],
       mono: ["var(--font-mono)", "ui-monospace", "monospace"],
       bn: ["var(--font-bn)", "var(--font-sans)", "sans-serif"],
     },
-    // §6.3. 11px is the floor — nothing smaller is expressible.
+    // Roles from the README type scale. 10.5px is the floor and is reserved
+    // for mono eyebrows; no UI text below 13px otherwise.
     fontSize: {
-      hero:    ["44px", { lineHeight: "50px", letterSpacing: "-0.025em", fontWeight: "600" }],
-      display: ["28px", { lineHeight: "34px", letterSpacing: "-0.02em",  fontWeight: "600" }],
-      h1:      ["22px", { lineHeight: "28px", letterSpacing: "-0.015em", fontWeight: "600" }],
-      h2:      ["18px", { lineHeight: "24px", letterSpacing: "-0.01em",  fontWeight: "600" }],
-      h3:      ["15px", { lineHeight: "20px", letterSpacing: "-0.005em", fontWeight: "600" }],
-      body:    ["14px", { lineHeight: "21px" }],
-      report:  ["15px", { lineHeight: "26px" }],
-      "report-bn": ["15px", { lineHeight: "29px" }], // conjuncts need the leading
-      sm:      ["13px", { lineHeight: "18px" }],
-      label:   ["12px", { lineHeight: "16px", letterSpacing: "0.005em", fontWeight: "500" }],
-      eyebrow: ["11px", { lineHeight: "14px", letterSpacing: "0.06em",  fontWeight: "600" }],
-      data:    ["13px", { lineHeight: "18px" }],
-      "data-sm": ["11px", { lineHeight: "14px", fontWeight: "500" }],
+      display:  ["62px", { lineHeight: "1.05", letterSpacing: "-0.03em",  fontWeight: "600" }],
+      "page-title": ["34px", { lineHeight: "1.1", letterSpacing: "-0.025em", fontWeight: "600" }],
+      section:  ["26px", { lineHeight: "1.2", letterSpacing: "-0.02em",  fontWeight: "600" }],
+      panel:    ["22px", { lineHeight: "1.25", letterSpacing: "-0.02em",  fontWeight: "600" }],
+      "screen-title": ["16px", { lineHeight: "1.3", fontWeight: "600" }],
+      impression:      ["23px", { lineHeight: "38px", letterSpacing: "-0.01em", fontWeight: "500" }],
+      "impression-report": ["19px", { lineHeight: "33px", fontWeight: "500" }],
+      findings:    ["16px", { lineHeight: "30px", fontWeight: "400" }],
+      "findings-bn": ["16px", { lineHeight: "34px", fontWeight: "400" }],
+      prose:   ["15px", { lineHeight: "1.65" }],
+      base:    ["15px", { lineHeight: "1.5" }],
+      sm:      ["14px", { lineHeight: "1.5" }],
+      "sm-tight": ["13.5px", { lineHeight: "1.5" }],
+      caption: ["13px", { lineHeight: "1.6" }],
+      chip:    ["12.5px", { lineHeight: "1.2" }], // status/ownership pills, owner-chip meta
+
+      // mono eyebrow — the 10.5px floor, uppercase, tracked
+      eyebrow: ["10.5px", { lineHeight: "1.3", letterSpacing: "0.14em", fontWeight: "500" }],
+      "eyebrow-11": ["11px", { lineHeight: "1.3", letterSpacing: "0.14em", fontWeight: "500" }],
+      "mono-meta": ["11px", { lineHeight: "1.4" }],
+      "mono-meta-lg": ["12.5px", { lineHeight: "1.4" }],
+      metric:  ["44px", { lineHeight: "1", letterSpacing: "-0.04em", fontWeight: "500" }],
+      // Secondary mono stat — dashboard queue metrics, the register screen's
+      // assigned-id readout. Smaller sibling of `metric`, same mono treatment.
+      "metric-sm": ["30px", { lineHeight: "1", letterSpacing: "-0.03em", fontWeight: "500" }],
+      "citation": ["11px", { lineHeight: "1" }],
     },
     extend: {
       transitionDuration: { hover: "var(--t-hover)", state: "var(--t-state)", panel: "var(--t-panel)" },
       transitionTimingFunction: { panel: "var(--ease)" },
       backgroundImage: {
-        // Ownership texture (§9) — redundant to the chip, and now visible.
+        // Ownership texture — redundant to the owner chip, tuned for dark.
         hatch: "repeating-linear-gradient(135deg, transparent, transparent 8px, var(--hatch) 8px, var(--hatch) 16px)",
       },
       width: {
-        sidebar: "var(--sidebar)", "sidebar-rail": "var(--sidebar-rail)",
-        "report-col": "var(--report-col)", "evidence-rail": "var(--evidence-rail)",
-        "rail-collapsed": "var(--rail-collapsed)", drawer: "var(--drawer)",
+        rail: "var(--rail)",
+        "report-col": "var(--report-col)",
+        "evidence-panel": "var(--evidence-panel)",
+        "explain-panel": "var(--explain-panel)",
       },
       height: {
-        topbar: "var(--topbar)", "context-bar": "var(--context-bar)",
-        "finalize-bar": "var(--finalize-bar)",
+        "header-bar": "var(--header-bar)",
+        "header-landing": "var(--header-landing)",
+      },
+      keyframes: {
+        // The only two keyframes in the product.
+        "rr-flow": { "0%": { transform: "translateX(-320%)" }, "100%": { transform: "translateX(320%)" } },
+        "rr-blink": { "0%,100%": { opacity: "1" }, "50%": { opacity: ".3" } },
+      },
+      animation: {
+        "rr-flow": "rr-flow 1.1s linear infinite",
+        "rr-blink": "rr-blink 1.4s ease-in-out infinite",
       },
     },
   },

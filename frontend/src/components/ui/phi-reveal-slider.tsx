@@ -37,10 +37,10 @@ export function PhiRevealSlider({
   }
 
   return (
-    <div className={cn("flex flex-col gap-2", className)}>
+    <div className={cn("flex flex-col gap-9", className)}>
       <div
         ref={containerRef}
-        className="relative aspect-square w-full select-none overflow-hidden rounded-card bg-lightbox"
+        className="relative aspect-square w-full select-none overflow-hidden rounded-thumb bg-film"
         onPointerDown={(e) => {
           dragging.current = true;
           setFromClientX(e.clientX);
@@ -66,7 +66,7 @@ export function PhiRevealSlider({
           />
         </div>
         <div
-          className="absolute inset-y-0 w-0.5 bg-steel"
+          className="absolute inset-y-0 w-[2px] bg-cyan"
           style={{ left: `${percent}%` }}
           aria-hidden
         />
@@ -77,10 +77,10 @@ export function PhiRevealSlider({
           value={percent}
           onChange={(e) => setPercent(Number(e.target.value))}
           aria-label="Reveal original image beneath the masked copy"
-          className="absolute inset-x-2 bottom-2 w-[calc(100%-16px)] accent-steel"
+          className="absolute inset-x-8 bottom-8 w-[calc(100%-16px)] accent-cyan"
         />
       </div>
-      <p className="text-sm text-ink-3">
+      <p className="text-sm text-text-tertiary">
         Drag to reveal the original beneath the masked copy. Original shown from this session
         only. Not stored.
       </p>

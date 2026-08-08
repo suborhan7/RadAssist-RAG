@@ -5,9 +5,8 @@ import { useParams, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ApiError, createComparison, getCurrentDoctor, getReport, retrievalSessionImageUrl } from "@/lib/api-client";
 import { StepProgress, type WorkflowStepDisplay } from "@/components/workflow/StepProgress";
-import { Card } from "@/components/ui/card";
 import { OwnerChip } from "@/components/ui/owner-chip";
-import { REPORT_CONTENT_FIELDS as CONTENT_FIELDS } from "@/components/report/report-document-view";
+import { cn } from "@/lib/cn";
 import type { paths } from "@/lib/generated/api";
 
 type ReportDetailResponse =
@@ -17,22 +16,19 @@ type ComparisonResponse =
 
 /**
  * Comparison Workspace (Phase 12 Step 7, restyled Phase 14 per
- * design_specification.md §8.14 -- frontend/CLAUDE.md cites this as
- * §8.12, a citation slip; §8.12 is actually "Radiologist Workspace", a
- * different screen).
+ * design_specification.md §8.14, ported to the Reading Room theme in the
+ * redesign step 4).
  *
- * §8.14's provenance split is the content addition this phase makes:
- * "Computed by ComparisonService · Deterministic" under the diff,
- * "Narrative generated ... from the deterministic diff above" under the
- * narrative. ComparisonResponse carries no llm_model field (that's only
- * on GenerateReportResponse's generation_metadata, a different endpoint),
- * so the caption says "an LLM", not a specific hardcoded model name --
- * asserting a model this response never actually names would be a small
- * fabrication, not a styling choice.
- *
- * Linked-viewer pan/zoom synchronisation (§8.14's "single behaviour that
- * makes this feel like PACS") is real image-viewer engineering, not
- * attempted here -- flagged rather than silently dropped.
+ * §8.14's provenance split is the load-bearing content: Resolved / Persistent
+ * / New findings are computed by ComparisonService (deterministic); the
+ * narrative is written by an LLM from that diff only. Both authorships stay
+ * visible. ComparisonResponse carries no llm_model field (that's on a
+ * different endpoint), so the caption says "an LLM", never a hardcoded model
+ * name it doesn't actually carry. Linked pan/zoom sync (§8.14's PACS feel)
+ * and the mock's per-region "new since" overlay are real viewer engineering,
+ * not attempted here. The mock's side-by-side full-report dump is dropped in
+ * favour of the impressions the mock actually shows; the full text stays one
+ * click away in the workspace.
  */
 export default function ComparePage() {
   const params = useParams<{ reportId: string }>();
@@ -72,7 +68,7 @@ export default function ComparePage() {
 
       if (!current.patient_id) {
         setStatus("error");
-        setErrorDetail("This report has no patient linked -- cannot compare against patient history.");
+        setErrorDetail("This report has no patient linked, so it cannot be compared against patient history.");
         return;
       }
 
@@ -115,164 +111,181 @@ export default function ComparePage() {
 
   const stepDisplay: WorkflowStepDisplay = {
     id: "comparing",
-    label: "Generating Comparison",
+    label: "Generating comparison",
     status: status === "comparing" || status === "loading" ? "active" : status === "done" ? "done" : "error",
   };
 
+  const header = (
+    <header className="flex h-header-bar flex-none items-center gap-14 border-b border-hairline px-30">
+      <Link
+        href={`/reports/${reportId}`}
+        className="text-sm text-text-tertiary transition-colors duration-hover hover:text-cyan"
+      >
+        Workspace
+      </Link>
+      <span className="text-text-muted">/</span>
+      <h1 className="text-screen-title text-text-primary">Compare</h1>
+      {status === "done" && comparison && (
+        <span className="whitespace-nowrap font-mono text-mono-meta-lg uppercase text-text-tertiary">
+          {comparison.facts.days_between_studies} days apart
+        </span>
+      )}
+      <span className="flex-1" />
+      <Link
+        href={`/reports/${reportId}`}
+        className="text-sm text-cyan transition-colors duration-hover hover:text-text-primary"
+      >
+        Back to workspace
+      </Link>
+    </header>
+  );
+
   if (status === "error") {
     return (
-      <div className="flex min-h-screen flex-col items-center bg-paper">
-        <main className="flex w-full max-w-md flex-col gap-4 px-page py-16">
-          <StepProgress steps={[stepDisplay]} />
-          <p className="rounded-card border border-critical-bd bg-critical-bg px-3 py-2 text-sm text-critical-ink">
-            {errorDetail}
-          </p>
-          <Link href={`/reports/${reportId}`} className="text-sm text-ink-3 underline">
-            Back to Workspace
-          </Link>
-        </main>
+      <div className="flex h-[100dvh] flex-col overflow-hidden bg-bg-app">
+        {header}
+        <div className="flex flex-1 items-center justify-center p-30">
+          <div className="flex w-full max-w-md flex-col gap-16">
+            <StepProgress steps={[stepDisplay]} />
+            <p className="rounded-field border border-amber-line bg-amber-wash px-14 py-12 text-sm text-amber">
+              {errorDetail}
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (status !== "done" || !comparison || !currentReport || !previousReport) {
     return (
-      <div className="flex min-h-screen flex-col items-center bg-paper">
-        <main className="flex w-full max-w-md flex-col gap-4 px-page py-16">
-          <h1 className="text-h1 text-ink">Comparison</h1>
-          <StepProgress steps={[stepDisplay]} />
-        </main>
+      <div className="flex h-[100dvh] flex-col overflow-hidden bg-bg-app">
+        {header}
+        <div className="flex flex-1 items-center justify-center p-30">
+          <div className="w-full max-w-md">
+            <StepProgress steps={[stepDisplay]} />
+          </div>
+        </div>
       </div>
     );
   }
 
+  const days = comparison.facts.days_between_studies;
+
   return (
-    <div className="flex min-h-screen flex-col items-center bg-paper">
-      <main className="flex w-full max-w-5xl flex-col gap-6 px-page py-16">
-        <div className="flex items-center justify-between">
-          <h1 className="text-h1 text-ink">Comparison</h1>
-          <Link href={`/reports/${reportId}`} className="text-sm text-ink-3 underline">
-            Back to Workspace
-          </Link>
-        </div>
+    <div className="flex h-[100dvh] flex-col overflow-hidden bg-bg-app">
+      {header}
 
-        {/* Doctor Review Required -- visual enforcement of Phase 11's safety principle */}
-        <div className="rounded-card border border-caution-bd bg-caution-bg px-4 py-3 text-sm font-semibold text-caution-ink">
-          Doctor Review Required -- this AI-generated comparison is a draft, not a final verdict.
-        </div>
+      {/* Safety principle (Phase 11): the comparison is a draft for review. */}
+      <div className="flex-none border-b border-hairline bg-amber-wash px-30 py-12 text-sm font-medium text-amber">
+        Doctor review required. This AI-generated comparison is a draft, not a final verdict.
+      </div>
 
-        {/* Side-by-side X-rays, in the lightbox register */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center justify-between">
-              <h2 className="text-eyebrow uppercase text-ink-3">
-                Previous X-ray ({previousReport.report_date})
-              </h2>
-              <OwnerChip ownerId={previousReport.doctor_id ?? null} currentDoctorId={currentDoctorId} />
-            </div>
-            <div className="flex items-center justify-center rounded-card bg-lightbox p-2">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={retrievalSessionImageUrl(previousReport.session_id)}
-                alt="Previous chest X-ray"
-                className="max-h-96 w-full object-contain"
-              />
-            </div>
-          </div>
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center justify-between">
-              <h2 className="text-eyebrow uppercase text-ink-3">
-                Current X-ray ({currentReport.report_date})
-              </h2>
-              <OwnerChip ownerId={currentReport.doctor_id ?? null} currentDoctorId={currentDoctorId} />
-            </div>
-            <div className="flex items-center justify-center rounded-card bg-lightbox p-2">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={retrievalSessionImageUrl(currentReport.session_id)}
-                alt="Current chest X-ray"
-                className="max-h-96 w-full object-contain"
-              />
-            </div>
-          </div>
-        </div>
+      {/* Two studies, side by side */}
+      <div className="grid min-h-0 flex-1 grid-cols-1 overflow-auto lg:grid-cols-2">
+        <StudyColumn
+          eyebrow={`Prior · ${previousReport.report_date}`}
+          eyebrowClass="text-text-tertiary"
+          ownerId={previousReport.doctor_id ?? null}
+          currentDoctorId={currentDoctorId}
+          imageUrl={retrievalSessionImageUrl(previousReport.session_id)}
+          imageAlt="Prior chest X-ray"
+          impression={previousReport.content.impression}
+          impressionClass="text-text-secondary"
+          className="border-b border-hairline lg:border-b-0 lg:border-r"
+        />
+        <StudyColumn
+          eyebrow={`This study · ${currentReport.report_date}`}
+          eyebrowClass="text-cyan"
+          ownerId={currentReport.doctor_id ?? null}
+          currentDoctorId={currentDoctorId}
+          imageUrl={retrievalSessionImageUrl(currentReport.session_id)}
+          imageAlt="Current chest X-ray"
+          impression={currentReport.content.impression}
+          impressionClass="font-medium text-text-primary"
+        />
+      </div>
 
-        {/* Side-by-side reports */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {[
-            { label: "Previous Report", content: previousReport.content },
-            { label: "Current Report", content: currentReport.content },
-          ].map(({ label, content }) => (
-            <Card key={label} className="p-card">
-              <h2 className="mb-2 text-eyebrow uppercase text-ink-3">{label}</h2>
-              <dl className="flex flex-col gap-2">
-                {CONTENT_FIELDS.map(({ key, label: fieldLabel }) => (
-                  <div key={key}>
-                    <dt className="text-xs font-medium text-ink-3">{fieldLabel}</dt>
-                    <dd className="text-report text-ink-2">{content[key] || "(none)"}</dd>
-                  </div>
-                ))}
-              </dl>
-            </Card>
-          ))}
-        </div>
-
-        {/* Resolved / Persistent / New findings -- text labels, never colour alone */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          {[
-            {
-              label: "Resolved Findings",
-              items: comparison.facts.resolved_findings,
-              border: "border-stable-bd",
-              bg: "bg-stable-bg",
-              ink: "text-stable-ink",
-            },
-            {
-              label: "Persistent Findings",
-              items: comparison.facts.persistent_findings,
-              border: "border-caution-bd",
-              bg: "bg-caution-bg",
-              ink: "text-caution-ink",
-            },
-            {
-              label: "New Findings",
-              items: comparison.facts.new_findings,
-              border: "border-critical-bd",
-              bg: "bg-critical-bg",
-              ink: "text-critical-ink",
-            },
-          ].map(({ label, items, border, bg, ink }) => (
-            <div key={label} className={`rounded-card border ${border} ${bg} p-card`}>
-              <h3 className={`mb-2 text-eyebrow uppercase ${ink}`}>{label}</h3>
-              {items.length === 0 ? (
-                <p className="text-sm text-ink-3">(none)</p>
-              ) : (
-                <ul className="list-inside list-disc text-sm text-ink">
-                  {items.map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          ))}
-        </div>
-        {/* Provenance split: the diff's authorship is public (§8.14) */}
-        <p className="-mt-2 text-xs text-ink-3">
-          Computed by ComparisonService &middot; Deterministic. Days between studies:{" "}
-          {comparison.facts.days_between_studies}.
-        </p>
-
-        {/* AI comparison narrative */}
-        <Card className="p-card">
-          <h2 className="mb-2 text-eyebrow uppercase text-ink-3">AI Comparison Narrative</h2>
-          <p className="whitespace-pre-wrap text-report text-ink-2">{comparison.narrative}</p>
-          <p className="mt-3 rounded-card bg-sunken p-tight text-sm text-ink-2">
-            Narrative generated by an LLM from the deterministic diff above. The diff itself is
-            not decided by the model -- it is computed by ComparisonService and passed to the
-            LLM only to be described in prose.
+      {/* Provenance split: deterministic findings, then the model's narrative */}
+      <div className="flex-none grid grid-cols-1 gap-24 border-t border-hairline px-30 py-22 md:grid-cols-2 lg:grid-cols-[150px_190px_240px_1fr]">
+        <FindingsColumn label="Resolved" items={comparison.facts.resolved_findings} />
+        <FindingsColumn label="Persistent" items={comparison.facts.persistent_findings} />
+        <FindingsColumn label="New" items={comparison.facts.new_findings} accent />
+        <div className="min-w-0">
+          <h3 className="mb-8 font-mono text-eyebrow uppercase text-text-tertiary">
+            Narrative · written by the model from the split at left
+          </h3>
+          <p className="whitespace-pre-wrap text-sm leading-relaxed text-text-secondary">
+            {comparison.narrative}
           </p>
-        </Card>
-      </main>
+        </div>
+      </div>
+
+      <p className="flex-none border-t border-hairline px-30 py-12 text-caption text-text-tertiary">
+        Resolved, persistent and new findings are computed by ComparisonService (deterministic),{" "}
+        {days} days between studies. The narrative is generated by an LLM from that diff only; the
+        diff itself is not decided by the model.
+      </p>
+    </div>
+  );
+}
+
+function StudyColumn({
+  eyebrow,
+  eyebrowClass,
+  ownerId,
+  currentDoctorId,
+  imageUrl,
+  imageAlt,
+  impression,
+  impressionClass,
+  className,
+}: {
+  eyebrow: string;
+  eyebrowClass: string;
+  ownerId: string | null;
+  currentDoctorId: string | null;
+  imageUrl: string;
+  imageAlt: string;
+  impression: string;
+  impressionClass: string;
+  className?: string;
+}) {
+  return (
+    <div className={cn("flex min-h-0 flex-col", className)}>
+      <div className="flex flex-none items-center gap-12 border-b border-hairline px-22 py-14">
+        <span className={cn("font-mono text-eyebrow uppercase", eyebrowClass)}>{eyebrow}</span>
+        <span className="flex-1" />
+        <OwnerChip ownerId={ownerId} currentDoctorId={currentDoctorId} />
+      </div>
+      <div className="flex h-[300px] flex-none items-center justify-center bg-bg-film p-16">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={imageUrl} alt={imageAlt} className="max-h-full max-w-full object-contain" />
+      </div>
+      <div className="px-22 py-20">
+        <h3 className="mb-8 font-mono text-eyebrow uppercase text-text-tertiary">Impression</h3>
+        <p className={cn("text-findings", impressionClass)}>{impression || "(none)"}</p>
+      </div>
+    </div>
+  );
+}
+
+function FindingsColumn({ label, items, accent = false }: { label: string; items: string[]; accent?: boolean }) {
+  return (
+    <div className="min-w-0">
+      <h3 className={cn("mb-8 font-mono text-eyebrow uppercase", accent ? "text-amber" : "text-text-tertiary")}>
+        {label}
+      </h3>
+      {items.length === 0 ? (
+        <p className="text-sm text-text-muted">none</p>
+      ) : (
+        <ul className="flex flex-col gap-4 text-sm">
+          {items.map((item) => (
+            <li key={item} className={accent ? "text-amber" : "text-text-primary"}>
+              {item}
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

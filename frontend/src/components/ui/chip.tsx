@@ -1,38 +1,53 @@
 import { cn } from "@/lib/cn";
 
-/* ---------------- StatusChip — the human-in-the-loop machine (§10.1) ------- */
+/* ============================================================================
+   "Reading Room" pills. Two accents only: cyan = interaction / confirmed /
+   "yours", amber = attention / unsupported. Anything that is neither uses
+   text-secondary inside a border-strong outline (no third hue). Pill shape is
+   fixed: rounded-full, 1px border, 3/11 padding, 12.5px, no wrap.
+   ============================================================================ */
+
+type PillTone = "cyan" | "amber" | "muted";
+
+const PILL: Record<PillTone, string> = {
+  cyan: "border-cyan-line bg-cyan-wash text-cyan",
+  amber: "border-amber-line bg-amber-wash text-amber",
+  muted: "border-strong text-text-secondary",
+};
+
+const pillBase = "inline-flex items-center gap-6 rounded-full border px-11 py-3 text-chip whitespace-nowrap";
+
+/* ---------------- StatusChip — the human-in-the-loop machine --------------- */
 
 export type ReportStatus = "draft" | "review" | "edited" | "final";
 
-const STATUS: Record<ReportStatus, { label: string; cls: string }> = {
-  draft:  { label: "AI Draft",      cls: "bg-caution-bg text-caution-ink border-caution-bd" },
-  review: { label: "Under Review",  cls: "bg-steel-tint text-steel-ink border-steel-bd" },
-  edited: { label: "Doctor Edited", cls: "bg-steel-tint text-steel-ink border-steel-bd" },
-  final:  { label: "Final",         cls: "bg-stable-bg text-stable-ink border-stable-bd" },
+// AI draft = the model's, unreviewed => amber (attention). Under review /
+// doctor-edited = a person is in the loop => cyan. Final/signed = settled,
+// needs no emphasis => muted.
+const STATUS: Record<ReportStatus, { label: string; tone: PillTone }> = {
+  draft:  { label: "AI Draft",      tone: "amber" },
+  review: { label: "Under Review",  tone: "cyan" },
+  edited: { label: "Doctor Edited", tone: "cyan" },
+  final:  { label: "Final",         tone: "muted" },
 };
 
 export function StatusChip({ status }: { status: ReportStatus }) {
   const s = STATUS[status];
-  return (
-    <span className={cn("inline-flex h-6 items-center gap-1.5 rounded-full border px-3 text-label", s.cls)}>
-      <Dot />
-      {s.label}
-    </span>
-  );
+  return <span className={cn(pillBase, PILL[s.tone])}>{s.label}</span>;
 }
 
-/* ---------------- OwnershipChip — text first, texture second (§9) ---------- */
+/* ---------------- OwnershipChip — text first, texture second --------------- */
 
 export function OwnershipChip({ doctor }: { doctor: string | null }) {
-  // null == you. The chip is text, so the a11y property holds without the hatch.
+  // null == you. cyan is the "yours" accent. Another doctor is neither an
+  // interaction nor a risk, so it reads muted. The chip is text, so the a11y
+  // property holds without any texture.
   return doctor === null ? (
-    <span className="inline-flex h-6 items-center gap-1.5 rounded-full border border-steel-bd bg-steel-tint px-3 text-label text-steel-ink">
+    <span className={cn(pillBase, PILL.cyan)}>
       <Check /> You
     </span>
   ) : (
-    <span className="inline-flex h-6 items-center rounded-full border border-hairline-strong bg-sunken px-3 text-label text-ink-2">
-      {doctor}
-    </span>
+    <span className={cn(pillBase, PILL.muted)}>{doctor}</span>
   );
 }
 
@@ -41,20 +56,23 @@ export function OwnershipChip({ doctor }: { doctor: string | null }) {
 export function ServiceChip({
   name, value, state = "online",
 }: { name: string; value: string; state?: "online" | "degraded" | "offline" }) {
+  // Dots: cyan for ok, amber for anything not ok. Colour is never the only
+  // signal -- the value sits right beside it.
   return (
-    <div className="flex items-center gap-2 border-b border-hairline py-2 last:border-0">
-      <Dot className={state === "online" ? "text-stable" : state === "degraded" ? "text-caution" : "text-critical"} />
-      <span className="text-sm text-ink-2">{name}</span>
-      <span className="ml-auto font-mono text-data-sm text-ink">{value}</span>
+    <div className="flex items-center gap-12 border-b border-hairline py-12 last:border-0">
+      <Dot className={state === "online" ? "text-cyan" : "text-amber"} />
+      <span className="text-sm text-text-secondary">{name}</span>
+      <span className="ml-auto font-mono text-mono-meta-lg text-text-primary">{value}</span>
     </div>
   );
 }
 
 export function Tag({ children, tone = "neutral" }: { children: React.ReactNode; tone?: "neutral" | "steel" }) {
+  // `tone="steel"` is kept for API compatibility; in this theme it renders cyan.
   return (
     <span className={cn(
-      "inline-flex h-5 items-center rounded-in border px-1.5 text-eyebrow uppercase",
-      tone === "steel" ? "border-steel-bd bg-steel-tint text-steel-ink" : "border-hairline bg-sunken text-ink-3",
+      "inline-flex items-center rounded-chip border px-6 py-3 font-mono text-eyebrow uppercase",
+      tone === "steel" ? "border-cyan-line bg-cyan-wash text-cyan" : "border-strong text-text-tertiary",
     )}>
       {children}
     </span>
@@ -62,10 +80,10 @@ export function Tag({ children, tone = "neutral" }: { children: React.ReactNode;
 }
 
 const Dot = ({ className }: { className?: string }) => (
-  <span className={cn("inline-block h-1.5 w-1.5 rounded-full bg-current", className)} aria-hidden />
+  <span className={cn("inline-block h-6 w-6 rounded-full bg-current", className)} aria-hidden />
 );
 const Check = () => (
-  <svg className="h-3 w-3" viewBox="0 0 12 12" fill="none" aria-hidden>
+  <svg className="h-12 w-12" viewBox="0 0 12 12" fill="none" aria-hidden>
     <path d="M2.5 6.5 5 9l4.5-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
