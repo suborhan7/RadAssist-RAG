@@ -7,12 +7,14 @@ backend + Chroma + Ollama, and verifies it end to end.
 
 Two safety properties are the whole point of this harness:
 
-1. **Disposable database.** The backend is started against a `test-e2e.db` seeded
-   from a fixture (a copy of `dev.db`), and that file is dropped at teardown. The
-   real `dev.db` is never opened by the backend. A **hard guard** in `run.mjs`
-   refuses to run if the target DB path equals the fixture/dev DB, and a
-   **pre-flight** proves the `DATABASE_URL` override actually took effect (via a
-   throwaway write it then removes) *before* the expensive flow runs.
+1. **Disposable database, fail closed.** The backend is started against a
+   `test-e2e.db` seeded from a fixture (a copy of `dev.db`), and that file is
+   dropped at teardown. The real `dev.db` is never opened by the backend.
+   `E2E_DB` is **required** — the harness never guesses a target, so it can never
+   fall back to `dev.db`; it refuses (exit 2) if `E2E_DB` is unset or equals the
+   fixture/dev DB (`harness.assertSafeTarget`). A **pre-flight** then proves the
+   `DATABASE_URL` override actually took effect (via a throwaway write it removes)
+   *before* the expensive flow runs.
 
 2. **ID-scoped cleanup.** The run records every id it creates (doctor, report,
    session, comparisons, uploaded image paths) and deletes **exactly those**.
@@ -24,16 +26,32 @@ Two safety properties are the whole point of this harness:
 ## Run
 
 ```bash
-node e2e/run.mjs
+# owner happy-path proof (disposable DB + ID-scoped cleanup):
+E2E_DB=backend/test-e2e.db node e2e/run.mjs
+
+# read-only ownership proof (a second doctor is blocked at UI *and* API):
+E2E_DB=backend/test-e2e.db node e2e/readonly-ownership.mjs
 ```
 
-Exit code `0` = flow completed **and** `dev.db` row counts were unchanged.
+Exit `0` = the flow's assertions held **and** `dev.db` row counts were unchanged.
+`readonly-ownership.mjs` additionally asserts a non-owner gets `403` on every
+write (PATCH / finalize / regenerate) while `GET` stays `200`, and that the
+report's `updated_at` is unchanged by the rejected writes.
+
+## Files
+
+- `run.mjs` — owner happy-path orchestrator.
+- `readonly-ownership.mjs` — ownership / read-only verification (doctor A vs B).
+- `owner-flow.mjs` — the CDP owner-flow driver (records the ids it creates).
+- `harness.mjs` — shared orchestration: fail-closed guard, backend/Edge lifecycle,
+  pre-flight override check, minimal CDP client.
+- `db.mjs` — `node:sqlite` disposable-DB helpers + ID-scoped cleanup (no predicates).
 
 ## Configuration (env — no hardcoded DB path in the flow)
 
 | Var | Default | Meaning |
 | --- | --- | --- |
-| `E2E_DB` | `backend/test-e2e.db` | Disposable target DB (must NOT be the fixture). |
+| `E2E_DB` | **required** | Disposable target DB. Unset ⇒ refuse; must NOT be the fixture. |
 | `E2E_FIXTURE` | `backend/dev.db` | Snapshot copied into `E2E_DB` (read-only). |
 | `E2E_API` / `E2E_FRONTEND` | `localhost:8000` / `:3000` | Backend / frontend base URLs. |
 | `E2E_BACKEND_PORT` | `8000` | Port the harness starts the backend on. |
