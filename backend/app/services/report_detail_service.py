@@ -38,6 +38,7 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass
+from datetime import timezone
 
 from sqlalchemy.orm import Session
 
@@ -206,7 +207,14 @@ class ReportDetailService:
             created_at=report.created_at.isoformat() if report.created_at else "",
             retrieved_cases=tuple(retrieved_cases),
             doctor_id=str(retrieval_session.doctor_id) if retrieval_session.doctor_id else None,
-            finalized_at=record.finalized_at.isoformat() if record.finalized_at else None,
+            # finalized_at is set from datetime.now(timezone.utc) into a naive DateTime
+            # column, so the stored value is UTC wall time. Re-attach UTC so the wire
+            # carries an offset (...+00:00) and the client renders the correct local
+            # date. NOTE: created_at/updated_at are deliberately NOT treated this way --
+            # they come from func.now(), which resolves to UTC on SQLite but to the
+            # server's LOCAL time on Postgres (the deploy target), so stamping UTC on
+            # them would be silently wrong on deploy.
+            finalized_at=record.finalized_at.replace(tzinfo=timezone.utc).isoformat() if record.finalized_at else None,
             finalized_by=str(record.finalized_by) if record.finalized_by else None,
             audit_log=tuple(
                 ReportAuditLogEntry(
