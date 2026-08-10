@@ -9765,3 +9765,239 @@ git's own automatic repo hygiene on purpose -- a future reader of this
 repo's config should not mistake `maintenance.auto=false` for an
 accidental or default setting; it is a reasoned response to a real,
 repeated, diagnosed failure mode, not an arbitrary preference.
+
+---
+
+## Post-Redesign Release Audit: E2E Verification, Three Reporting Corrections, One Real Fix, and a Rebuilt Test Harness — Context
+
+The "Reading Room" dark-theme redesign (all frontend routes + shared components +
+design tokens; committed as `5549cf1a`) was put through a closeout release audit
+before any push. The audit exercised the owner happy-path end to end against the
+*real* stack -- uvicorn + the real `dev.db` + the real ChromaDB index (2,462
+cases) + Ollama `llama3:8b` + GPU -- driving the actual browser UI over the Chrome
+DevTools Protocol, not mocks and not FastAPI's `TestClient`. It surfaced five items
+to close.
+
+The most useful thing that came out of writing them up honestly is that **only two
+were genuine code defects; the other three were reporting or process problems**:
+the design gate had no blind spot, the alarming five-day-stale timestamp was
+environment clock skew rather than a bug, and read-only ownership had simply never
+been exercised. An audit that corrects its own earlier claims is more trustworthy
+than one that manufactures four bugs, so each is recorded below as what it actually
+was.
+
+### Implementation and Validation
+
+**1. End-to-end owner-flow verification (real UI, real backend).** The owner path
+was driven through the browser over CDP -- upload a real chest X-ray through the
+actual file input, retrieve, run/skip the questionnaire, generate, edit a section,
+finalize, and view the downstream compare -- against a running backend on the real
+DB. Zero mocks. Later re-run on the disposable-DB harness (item 5), it reports:
+
+```
+=== flow steps: {"register":"...","file_accepted":"PASS","retrieval+questionnaire":"PASS",
+    "generation":"PASS reportId=...","owner_controls":"{\"finalizeBtn\":true,\"readOnly\":false,
+    \"status\":\"AI Draft\"}","edit":"PASS","finalize":"PASS","compare":"PASS"}
+=== browser issues: console=0 exceptions=0 http4xx5xx=0
+```
+
+Two honesty corrections belong on the record here, because the habit of matching a
+claim to its evidence is what makes the rest of this log credible:
+
+- *Screenshots.* All **14** UI states were captured to disk; **7** were opened and
+  visually reviewed (owner workspace, edit mode, finalize preview, finalized
+  report, patient history, compare, and the running pipeline). The prior draft
+  audit's "screenshots of every state: PASS" overstated this -- the accurate claim
+  is "all captured, a named subset reviewed; the rest asserted from the flow
+  completing plus the driver's DOM assertions."
+- *A real bug an earlier live-rendering review found.* In the **preceding**
+  session, viewing the dashboard with real data (not the placeholder "--") had
+  exposed a genuine defect: the ownership footer rendered "0of the hospital's
+  22registered patients" -- SWC drops the literal space after an inline `</span>`
+  in JSX prose. It was fixed then with explicit `{" "}` in the dashboard footer and
+  the workspace "alternatives" note (rides inside commit `5549cf1a`), and this
+  audit merely confirmed it still fixed by re-rendering, not by recompiling. This
+  is exactly the class of issue a passing `tsc`/gate cannot catch and only rendered
+  pixels do.
+
+**2. Design gate: no blind spot (a reporting problem).** The prior audit implied
+`check-design-tokens.mjs` might be excluding `app/dev/kitchen-sink` (it reported "0
+violations" while that file used old-theme token names). Replicating the gate's
+exact `walk(SRC)` proved otherwise -- it recurses all of `src/`, excluding only
+`node_modules`, `.next`, and dotdirs:
+
+```
+total scanned: 48
+kitchen-sink in scan set: [ 'src/app/dev/kitchen-sink/page.tsx' ]
+```
+
+The file *was* scanned; it passed because a `grep` for hex found **none** ("NO
+hardcoded hex in kitchen-sink"). Its old tokens were semantic *class names*
+(`bg-paper`, `text-ink`, ...), which are neither hex literals nor Tailwind
+default-palette colours -- not what the gate flags, and never were. So the gate's
+guarantee was exactly as strong as claimed. `kitchen-sink` was deleted anyway (it
+was dev-only and the last file on old tokens; a deleted file cannot drift), after
+which the gate scans 47 files, 0 violations, `next build` clean (commit `b39d5e16`).
+
+**3. Finalize timestamp: environment clock skew (reported symptom) + one real
+timezone defect (fixed).** Screenshot `09-finalized` read "Finalized ... on
+8/3/2026" for a run that truly happened on 8 August. A five-day gap is not
+timezone-sized (Asia/Dhaka is UTC+6; a tz error moves a date by hours). Diagnosis
+ruled each hypothesis in or out explicitly; the row was internally consistent:
+
+```
+finalized_at 2026-08-03 07:35:50.523600   created_at 2026-08-03 07:33:55   (matches display)
+```
+
+Three independent time sources -- `created_at` (SQLAlchemy `func.now()`),
+`finalized_at` (`datetime.now(timezone.utc)`), and the frontend's `new Date()`
+dashboard clock -- all read Aug 3 during the run; their only shared factor is the
+machine clock, which now reads the correct Aug 8. **The audit-trail field
+faithfully recorded the system time; the sandbox VM clock was ~5 days behind.** No
+code fix applies to that symptom.
+
+The diagnosis did, however, surface a genuine, separate code defect: `finalized_at`
+is written as tz-aware UTC into a *naive* `DateTime` column, then serialized with a
+bare `.isoformat()` (no offset), so the frontend `new Date()` parsed it as *local*
+-- shifting the displayed finalize date by up to one day near a UTC/local midnight.
+Fixed at the serialization boundary only (`report_detail_service.py`, commit
+`b6a5d091`), and verified by **live rendering, not compilation** (`TZ=Asia/Dhaka`):
+
+```
+near-midnight 22:00 UTC:  BEFORE 8/3/2026 (wrong)  ->  AFTER 8/4/2026 (correct)
+daytime      07:35 UTC:   BEFORE 8/3/2026          ->  AFTER 8/3/2026 (unchanged)
+```
+
+Scoped to `finalized_at` deliberately: `created_at`/`updated_at` come from
+`func.now()`, which is UTC on SQLite (dev) but the server's *local* time on
+Postgres (deploy target) when landed in a naive column, so stamping UTC on them
+would be silently wrong on deploy (carried forward as an open item below).
+
+**The clock skew's full reach.** The same skewed clock reached `report_date`
+(clock-derived at `report_generation_service.py:135`,
+`datetime.now(timezone.utc).date()`). So the compare view's "21 DAYS APART" was
+right arithmetic on wrong input -- the true interval was **26 days** (Aug 8 minus
+Jul 13, not Aug 3 minus Jul 13). It shares the *root cause* (the clock) but not the
+code path (pure `date` subtraction, no datetime/tz). The verification itself remains
+valid -- every flow worked and every assertion held; only the *dates* on artifacts
+from that window are five days stale.
+
+**4. Read-only ownership demonstrated at the API, not just the UI (it had never
+been tested).** The prior audit claimed verification "in both owner and read-only
+modes," but no step ever had a second doctor open the first's report. This is the
+frozen ownership model -- institutional patients, doctor-owned reports -- the
+project's most defensible security property, and it was asserted, not shown. A
+hidden button is UI; a 403 is the guarantee. Doctor A produced and finalized a
+report; doctor B, hitting the API directly with B's own token (bypassing the UI):
+
+```
+PATCH  /reports/{id}                    -> 403  {"detail":"current doctor does not own this report"}
+PATCH  /reports/{id}/finalize           -> 403  {"detail":"current doctor does not own this report"}
+POST   /reports/{id}/regenerate-section -> 403  {"detail":"current doctor does not own this report"}
+GET    /reports/{id}                    -> 200  (read is universal)
+updated_at  before: 2026-08-08 21:42:27   after: 2026-08-08 21:42:27   (rejected writes mutated nothing)
+```
+
+`_check_ownership()` runs before the finalized-status check in `ReportEditService`,
+so a non-owner gets a clean 403 regardless of finalized state. B could also read the
+institutional patient and its history (200/200), and B's UI view of A's report
+showed no edit/regenerate/finalize/restore affordances, a "belongs to ..." banner,
+and an ownership chip naming A rather than "You" (commit `9c580af1`).
+
+**5. Test harness rebuilt: an absence codified into an ID-scoped, fail-closed,
+disposable-DB tool.** This was the most important item. The prior run's cleanup was
+**not code at all** -- it was ad-hoc SQL run by hand, and its investigation step
+keyed on a date predicate:
+
+```python
+for r in c.execute("select id,email,full_name,created_at from doctors where created_at like '2026-08-03%'"): ...
+c.execute("delete from doctors where email='test-owner@radassist.local'")
+```
+
+That `created_at LIKE '2026-08-03%'` surfaced a *real* account a human was using
+against the same backend at the same time; only a manual email check stopped it
+being deleted. A safeguard that works only when someone is watching is not a
+safeguard. It was replaced by a committed harness (`e2e/`, commits `a16a1dca` +
+`9c580af1`) with two permanent properties: (a) **ID-scoped cleanup** -- the run
+records every id it creates and deletes exactly those; `db.mjs` has no
+date/name/email/predicate deletion path anywhere; (b) **disposable DB, fail closed**
+-- the backend runs against a `test-e2e.db` copied from a fixture and dropped at
+teardown, `E2E_DB` is *required* (never guessed, so it can never fall back to
+`dev.db`), and a pre-flight proves the `DATABASE_URL` override before the flow.
+Verified live over two owner runs plus the ownership run:
+
+```
+FATAL (fail-closed): E2E_DB is not set. Refusing to run. ... never fall back to dev.db.   (exit 2)
+=== ID-scoped cleanup === deletions: {"report_audit_log":1,"explanations":0,"comparisons":1,
+    "reports":1,"retrieved_evidence":5,"retrieval_sessions":1,"doctors":1}
+=== dev.db AFTER: {"doctors":28,"reports":507,"retrieval_sessions":526,"comparisons":7}  UNCHANGED: YES
+```
+
+### How to Write This in Your Thesis
+
+Frame this as a release-audit / verification-and-validation section, and lead with
+the correction discipline, because that is the transferable methodological point: a
+credible audit is one that downgrades its own claims when the evidence does not
+support them. State plainly that of five audited items, two were genuine software
+defects (a JSX whitespace-rendering bug visible only with real data, and a timezone
+serialization bug fixed at the serialization boundary and proven by live rendering
+across a midnight boundary), and three were not defects at all -- a static-analysis
+gate that was already sound, a five-day-stale audit timestamp caused by sandbox
+clock skew rather than code, and a security property (owner vs read-only) that had
+been asserted but never exercised.
+
+For the security property specifically, make the UI/API distinction explicit: a
+disabled or hidden control demonstrates intent, but the enforceable guarantee is the
+server returning `403 Forbidden` to a non-owner's write while still serving the
+read -- and it is stronger still to show the resource's `updated_at` is unchanged
+after the rejected writes, i.e. the rejection did not partially mutate state. This
+is the difference between "the button was greyed out" and "the ownership boundary is
+enforced."
+
+For the harness, the thesis-worthy sentence is the honest one: *"Our test cleanup
+initially used a date predicate that could match production rows; we found this
+before it caused loss and replaced it with ID-scoped deletion against a disposable,
+fail-closed test database."* Reviewers trust a document more, not less, when it
+narrates a near-miss and the correction it drove, rather than hiding it.
+
+Finally, record the clock-skew reach as a validity caveat, not a retraction: the
+end-to-end flows executed correctly and every assertion held, so the verification
+stands; but any *dated* artifact captured during that window (screenshots,
+`report_date`, the compare interval) is five days behind true time, and the compare
+view's stated interval should read 26 days, not 21.
+
+### Open Items Carried Forward (Not Done)
+
+1. **`check-design-tokens.mjs` scans `src/` only.** `frontend/tailwind.config.ts`
+   -- the single file most able to reintroduce raw hex or a non-semantic palette --
+   lives at the `frontend/` root and is therefore unscanned. The gate's coverage has
+   this one real gap (distinct from the non-issue in item 2).
+2. **Audit-date locale hardening.** Finalization dates render via
+   `toLocaleDateString()` in the *viewer's* locale/timezone, so the same audit event
+   can display differently to two doctors. A fixed format and a fixed hospital
+   timezone would make the audit date deterministic. Design-surface change, deferred
+   (not a correctness bug).
+3. **NTP-sync check on the pre-defense deployment checklist.** A demo whose finalize
+   timestamp reads five days stale is exactly what an examiner notices; ensure the
+   deploy/dev host clock is NTP-synced.
+4. **`created_at`/`updated_at` and `func.now()` across backends.** These resolve to
+   UTC on SQLite (dev) but to the server's local time on Postgres (the RunPod deploy
+   target) when stored in a naive column. Needs resolving -- consistently
+   timezone-aware columns, or an explicit UTC convention -- before Postgres, and it
+   is why the timestamp fix was scoped to `finalized_at` alone.
+
+## Post-Redesign Release Audit — COMPLETE
+
+**Status: verification complete; seven local commits (this session's checkpoint),
+none pushed at time of writing.** The Reading Room redesign is verified end-to-end
+across two runs on two DB targets, and the distinction matters: the original owner
+happy-path ran against the real stack on `dev.db` (real ChromaDB index + Ollama +
+GPU), while the read-only ownership verification and a re-run of the owner flow ran
+on the disposable harness against `test-e2e.db` (seeded from `dev.db`, same
+Chroma/Ollama/GPU). Two genuine code defects were fixed and re-verified by live
+rendering; three items were corrected to what they actually were (a sound gate, a
+clock-skew symptom, an untested-but-correct ownership boundary); and the test
+harness is now ID-scoped, fail-closed, and disposable-DB-backed. Four open items are
+carried forward above -- none blocking, one (`func.now()` semantics) to resolve
+before RunPod. Every number in this entry was produced by real execution against the
+live stack, not asserted in advance of running it.
