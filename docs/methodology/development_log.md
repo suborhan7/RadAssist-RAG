@@ -10859,3 +10859,197 @@ exception types, one new admission control, one new gate entry point, one new ca
 script, one rewritten acceptance suite (the v1.0 suite deleted, not kept), and one code
 defect corrected in the indexer. Sections 5 to 10 of the frozen document were not modified,
 and no architecture decision was taken during implementation.
+
+---
+
+## Gate B Recalibration After a Real Out-of-Distribution Rejection — POST-HOC, and Recorded as Such — COMPLETE
+
+### Context, and the honest ordering of events
+
+A genuine frontal chest radiograph obtained from outside the IU dataset was refused by the
+input gates during preparation for a faculty demonstration. **The rules below were changed
+after that image failed, not before. This entry states that plainly because the ordering
+matters to how much the numbers are worth.** §11.4's original selection rule was fixed
+before its value was computed; the replacement rule was not. It is a post-hoc adjustment
+made in response to a single observed failure, and it should be read as one.
+
+What makes the adjustment defensible rather than merely convenient is that the failure is
+the one this project's own configuration predicted. `DEFAULT_RETRIEVAL_FLOOR`'s §11.5 Step
+R3 note already stated the gate's real purpose: *"detection of a distribution shift at
+deployment time. The calibration population and the archive share scanners, processing and
+patient population; a film from a diagnostic centre in Bangladesh does not. The IU dataset
+cannot measure that shift."* A real out-of-distribution frontal arriving and scoring below
+the threshold **is** that predicted shift. The gate did what it was built to do; what was
+wrong was the assumption that everything below the boundary is a lateral.
+
+### Diagnosis: three stacked causes, measured not inferred
+
+The rejection message named the modality gate, and that was only the first of three.
+
+**1. The modality prompt set was a single positive prompt.** On a frontal film framed low
+enough to include the upper abdomen, `"an abdominal radiograph"` beat `"a chest radiograph"`
+on cosine by 0.0062 (0.3945 vs 0.3883). At the configured temperature — the reciprocal of
+BiomedCLIP's learned logit scale, 1/85.2323 — that 0.006 gap becomes 0.63 vs 0.37. §11.2
+Step 6 had already anticipated the shape of this problem ("ADDING a lateral prompt if
+lateral films give a high false-negative rate"); framing that includes abdomen is the same
+class of miss.
+
+**2. PHI masking is unbounded, and a watermark is not PHI.** EasyOCR correctly detected the
+Shutterstock watermark as text and masked it with a 363×80px solid black box — 10.4% of a
+600×633 frame, lying across both lungs. The modality score fell 0.3695 → **0.0259**, which
+is the number the doctor saw. The masker had no size limit because it never needed one: on
+the IU corpus every detection is small.
+
+**3. `PROJECTION_REJECT_THRESHOLD` was calibrated entirely in-distribution.** 0.8695 is the
+midpoint of the gap between lateral max 0.84847 and frontal min 0.89062, both measured on
+held-out IU studies. The out-of-distribution film scored top-1 **0.8582** — above every
+lateral ever observed, below the midpoint. It was refused as `FRONTAL_MISMATCH`. This gate
+would have blocked the image even with cause (1) fixed.
+
+### Changes
+
+**Selection rule for `PROJECTION_REJECT_THRESHOLD`, §11.4.** Was: *the midpoint of the
+observed separation gap.* Now: **just above the observed lateral maximum.** Value 0.8695459
+→ **0.8500**.
+
+The argument for the new rule, independent of the image that prompted it: the midpoint had
+no evidence behind the half of the gap it claimed. Verified — **zero** calibration
+observations of any kind lie between the lateral maximum and the old threshold. The midpoint
+placed the boundary in the middle of a void and thereby rejected an entire band of
+similarity in which nothing had ever been measured. Moving to the edge of the observed
+lateral population gives up an unmeasured margin, not a measured one.
+
+What is preserved, on the same 600-study set
+(`ml/outputs/calibration/top1_similarity_by_label.csv`):
+
+| threshold | lateral rejected | frontal rejected |
+|---|---|---|
+| 0.86954590678 (old) | 300 / 300 | 0 / 300 |
+| 0.8500 (new) | 300 / 300 | 0 / 300 |
+
+The lateral/frontal separation property is unchanged. Still true, and still the caveat: this
+is an observed separation point from 300 images of each projection in one dataset, not a
+validated universal cosine boundary.
+
+**Modality prompt set.** One positive → five; four negatives → seven. The three added
+negatives (`"a blank image"`, `"a uniform grey image"`, `"an empty image with no anatomy"`)
+are **not decoration**: widening the positives alone admitted a flat grey image at 0.6592,
+because five positives spread the probability mass far enough for a picture of nothing to
+clear 0.60. With the blank negatives it returns to 0.0082. Probe of 10 images (6 must-pass,
+4 must-reject):
+
+| prompt set | pass-correct | reject-correct |
+|---|---|---|
+| 1 positive (previous) | 4/6 | 4/4 |
+| 5 positives, old negatives | 6/6 | 3/4 ← admitted flat grey |
+| **5 positives + blank negatives** | **6/6** | **4/4** |
+| 3 positives + blank negatives | 4/6 | 4/4 |
+
+This is a **probe, not the §11.2 calibration procedure**. Rule F4 stands: these numbers are
+not a calibration result and must not be reported as one.
+
+**PHI masking area cap.** New parameter `max_region_area_fraction` on `PHIMasker`
+(constructor argument, so `shared/` still imports nothing from `backend/`), supplied by the
+backend from `PHI_MASK_MAX_REGION_AREA_FRACTION`, default **0.08**. A single detected region
+larger than that share of the frame is left unmasked and counted in a new
+`regions_skipped_oversized` field — reported rather than silently dropped, because "found a
+region and deliberately did not cover it" is a different event from "found nothing".
+
+The cap does not retroactively alter the corpus the knowledge base was built from. Across
+all 3,689 masked IU studies and 4,278 masked regions, the largest single region is **2.17%**
+of image area; median 0.20%, p99 0.92%. **Zero regions** would be skipped at 0.08. The KB
+masking is bit-identical.
+
+### Validation (real execution)
+
+Four test-split frontal studies, verified absent from the live index — `collection.count()`
+= 2462, and the intersection of the 571 test-split frontal uids with the indexed ids is
+**0**:
+
+```
+study_uid=1    in_chroma=0   ml/datasets/masked/1_IM-0001-4001.dcm.png
+study_uid=8    in_chroma=0   ml/datasets/masked/8_IM-2333-1001.dcm.png
+study_uid=24   in_chroma=0   ml/datasets/masked/24_IM-0949-1001.dcm.png
+study_uid=66   in_chroma=0   ml/datasets/masked/66_IM-2236-1001.dcm.png
+```
+
+End to end through the real services (mask → embed → gate → projection band → retrieve →
+vote → context → LLM draft):
+
+```
+test uid=1   modality=1.0000 PASS | top1=0.9557 | at_or_above_floor | report=YES | 5s
+test uid=8   modality=0.9997 PASS | top1=0.9662 | at_or_above_floor | report=YES | 5s
+test uid=24  modality=0.9999 PASS | top1=0.9701 | at_or_above_floor | report=YES | 6s
+test uid=66  modality=0.9998 PASS | top1=0.9776 | at_or_above_floor | report=YES | 5s
+```
+
+A clean internet radiograph (not IU, no watermark) passes unchanged: modality 0.9999, top-1
+0.9559, `at_or_above_floor`.
+
+### The result that did not go the way the change intended
+
+The watermarked stock image — the one that started this — **still does not pass**, and the
+two fixes work against each other on it:
+
+| | top-1 similarity | at 0.8500 |
+|---|---|---|
+| watermark masked (old behaviour) | 0.8582 | PASS |
+| watermark visible (new cap) | **0.7483** | REJECT |
+
+Leaving the watermark in place preserves the lung fields but makes the image genuinely less
+similar to every indexed study, and 0.7483 is far below even the observed lateral maximum
+(0.84847). Admitting it would require dropping the threshold through the lateral population,
+which would destroy the one property this gate demonstrably has. **The threshold was not
+moved further, and this image is left rejected.**
+
+That is the correct outcome and worth stating as a finding rather than a defeat: a 600px web
+thumbnail with a watermark stamped across the anatomy is not a marginal input, it is a poor
+one. The gate declining it is the gate working. The honest boundary of tonight's change is
+that it admits *clean* out-of-distribution radiographs, not *degraded* ones.
+
+### Correction carried into the frozen document
+
+§11.3 of `input_admission_projection_gate_architecture_v1.1_FROZEN.md` stated that moving
+the modality threshold 0.60 → 0.82 "costs 2 rejections of true frontal radiographs". The
+measured cost is **1**. `ml/outputs/calibration/threshold_rates.csv`, column `fnr_frontal`:
+0.000000 at 0.60, 0.003333 at 0.82; 0.003333 × 300 = 1, the single image being study 2115
+(score 0.6544). A correction block is now inline in that document. The decision is
+unaffected — 0.60 is still selected and the trade is still declined — so this is a Gate B
+narrative slip, not an architecture change. The development log already carried the correct
+figure; the frozen document did not.
+
+### How to Write This in Your Thesis
+
+Write it as **a calibration boundary meeting its first out-of-distribution input**, and be
+scrupulous about the ordering, because a reader who spots the post-hoc adjustment on their
+own will discount everything around it.
+
+The defensible sentence is not "the threshold was wrong". It is that the original rule
+placed a decision boundary inside a region containing no observations, and that this only
+became visible when an input landed there. The evidence for that is checkable and
+independent of the image that prompted it: zero of 600 calibration studies lie between the
+lateral maximum and the old midpoint. Both rules reject 300/300 laterals and 0/300 frontals,
+so nothing that was demonstrated before is given up — what changes is the size of the
+unmeasured margin the system claims.
+
+The stronger material for the thesis is the part that did **not** work. The image that
+triggered the whole investigation still fails, because the two remedies pull in opposite
+directions: preserving the lung fields costs retrieval similarity, and masking the watermark
+buys similarity by destroying the anatomy the report would be about. Reporting that tension,
+and declining to widen the threshold through the lateral population to resolve it, is worth
+more than a clean story in which every input was eventually admitted. It also demonstrates
+the asymmetry DR-1 asserts: the system prefers refusing a degraded input over reporting on
+one.
+
+Finally, note the class of defect the masking cap belongs to. PHI masking was validated on
+IU at mean cosine 0.992 pre/post, and that number was true — every real detection was under
+2.2% of the frame. The validation was sound for the population it was run on and silently
+inapplicable to another. That is a more useful cautionary point about corpus-bound
+validation than the threshold story is.
+
+**Status: implemented and verified against the live stack; committed on branch
+`pre-gate-recalibration-safety` (a throwaway pre-change snapshot precedes it).** §§5–10 of
+the architecture are untouched. Every value changed is a Gate B value, which §11.1 states is
+not frozen. `e2e/` was not run; the four demo studies were verified through the real service
+objects rather than over HTTP, so auth, persistence and the API layer are not covered by
+tonight's evidence.

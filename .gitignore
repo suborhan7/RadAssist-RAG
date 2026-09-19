@@ -38,6 +38,20 @@ outputs_smoke/
 ml/outputs/evaluation/per_query/
 
 # =============================================================================
+# Faculty demonstration folder -- deliberately excluded, not an oversight.
+# =============================================================================
+# demonstration/ holds COPIES of masked IU dataset images, and ml/datasets/masked/
+# is already excluded above under "Never commit images, embeddings, or masked
+# outputs to git". Committing them here would put the same excluded data in the
+# repo through a different path, and would create a second copy that can drift
+# from the corpus the knowledge base was actually built from.
+#
+# The reports and evidence tables are regenerable: the LLM seed is pinned
+# (LLM_SEED, app/core/config.py), so re-running the five cases reproduces them.
+# Rebuild rather than restore from git.
+demonstration/
+
+# =============================================================================
 # Backend local dev artifacts
 # =============================================================================
 backend/*.db

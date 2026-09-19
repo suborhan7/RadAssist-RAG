@@ -109,7 +109,12 @@ async def lifespan(app: FastAPI):
     validator = ImageValidator()
     search_policy = SimilaritySearchPolicy()
     logger.info("lifespan startup: loading PHIMasker (EasyOCR model load, should log exactly once)")
-    app.state.phi_masker = PHIMasker()
+    # max_region_area_fraction comes from settings, not the masker's own
+    # default, so the live pipeline's cap is configurable per deployment
+    # like every other Gate B value.
+    app.state.phi_masker = PHIMasker(
+        max_region_area_fraction=settings.PHI_MASK_MAX_REGION_AREA_FRACTION
+    )
 
     # Input Admission and Modality Gate (input_admission_modality_gate_
     # architecture_v1.0_FROZEN.md). Two separate singletons for two

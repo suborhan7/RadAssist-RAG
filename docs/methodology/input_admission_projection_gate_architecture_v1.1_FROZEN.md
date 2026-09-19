@@ -575,7 +575,16 @@ The alternative value 0.82 was examined and declined.
 | `other_radiograph_modality`, n=22 | 19 → 16 false positives. 73 percent still admitted. |
 | Frontal false-negative rate, n=300 | 0.0000 → 0.0033 |
 
-The change buys 3 rejections in the one sub-class that fails at either value. It costs 2 rejections of true frontal radiographs. The only adequately powered negative sub-class is at zero at both values. Against the asymmetry in DR-1, the trade is declined.
+The change buys 3 rejections in the one sub-class that fails at either value. It costs 1 rejection of a true frontal radiograph. The only adequately powered negative sub-class is at zero at both values. Against the asymmetry in DR-1, the trade is declined.
+
+> **Correction, 2026-08-19.** This paragraph previously read "costs 2 rejections of true
+> frontal radiographs". The measured cost is **1**. The row directly above gives the frontal
+> false-negative rate as 0.0000 → 0.0033 over n=300, and 0.0033 × 300 = 1, not 2; the single
+> image is study 2115 (modality score 0.6544). Confirmed against
+> `ml/outputs/calibration/threshold_rates.csv`, column `fnr_frontal`, at thresholds 0.60 and
+> 0.82. The decision is unaffected — 0.60 is still selected, and the trade is still declined
+> — so this is a narrative slip in a Gate B section, not an architecture change. The thesis
+> should use 1. The same correction is recorded in the development log.
 
 **Rule.** Do not report the lateral false-negative rate in the headline gate performance. Lateral inputs are out of scope. Report it separately, as evidence that the gate does not misclassify a lateral radiograph as a non-radiograph.
 

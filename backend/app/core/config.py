@@ -146,13 +146,52 @@ DEFAULT_IMAGE_MAX_PIXELS = 80_000_000
 # which prompts mean "this IS a chest radiograph" so Step 6 can be
 # carried out without having to reinterpret M4. With the §11.1 initial
 # set below (one positive), the score is bit-identical to a literal M4.
-DEFAULT_MODALITY_PROMPTS_POSITIVE = "a chest radiograph"
+#
+# REVISED 2026-08-19, and this too was changed after seeing a real failure
+# rather than ahead of it. With the single positive prompt below, a genuine
+# frontal chest radiograph that includes the upper abdomen lost the cosine
+# to "an abdominal radiograph" by 0.006 (0.3883 vs 0.3945); at temperature
+# 1/85.23 that 0.006 becomes 0.37 vs 0.63, and the film was rejected. The
+# §11.2 Step 6 extension point anticipated exactly this ("ADDING a lateral
+# prompt if lateral films give a high false-negative rate") -- the same
+# reasoning applies to framing that includes abdomen.
+#
+# The negative list gains three "featureless image" prompts at the same
+# time, and they are not optional. Measured: widening the positives alone
+# admitted a FLAT GREY IMAGE at 0.6592, because five positives spread the
+# probability mass far enough for a picture of nothing to clear 0.60. The
+# blank negatives put that back to 0.0082.
+#
+# Measured on a 10-image probe (6 must-pass, 4 must-reject):
+#   1 positive  (previous):  4/6 pass-correct, 4/4 reject-correct
+#   5 positives, old negs :  6/6 pass-correct, 3/4 reject-correct  <- grey
+#   5 positives + blank negs: 6/6 pass-correct, 4/4 reject-correct <- chosen
+#   3 positives + blank negs: 4/6 pass-correct, 4/4 reject-correct
+# This is a probe, not the §11.2 calibration procedure. Rule F4 still
+# applies: do not report these numbers as a calibration result.
+DEFAULT_MODALITY_PROMPTS_POSITIVE = (
+    "a chest radiograph"
+    "|a chest X-ray"
+    "|a frontal chest radiograph"
+    "|a PA chest radiograph"
+    "|a chest radiograph including the upper abdomen"
+)
 DEFAULT_MODALITY_PROMPTS_NEGATIVE = (
     "a photograph of an object"
     "|an abdominal radiograph"
     "|a document or a scanned page"
     "|a photograph of a person"
+    "|a blank image"
+    "|a uniform grey image"
+    "|an empty image with no anatomy"
 )
+
+# PHI masking: the largest single detected region that will actually be
+# blacked out, as a fraction of total image area. See
+# shared/phi_masking/masker.py's docstring for the incident. Burned-in PHI
+# is small and marginal; anything covering more of the frame than this is a
+# watermark, and masking it destroys the diagnostic field it sits on.
+DEFAULT_PHI_MASK_MAX_REGION_AREA_FRACTION = 0.08
 
 # §6 M2/M4 say "calculate the cosine similarity ... apply softmax to the
 # similarity values" and do not name a temperature. Taken literally
@@ -189,30 +228,49 @@ DEFAULT_ACCEPTED_PROJECTIONS = "PA,AP"
 DEFAULT_DECLARED_PROJECTION_VALUES = "PA,AP,LATERAL"
 
 # --- Gate B (v1.1 §11.4): PROJECTION_REJECT_THRESHOLD. ------------
-# §11.1 lists this as "Not selected". §11.4 states the rule that selects
-# it, and the rule was fixed before the value was computed:
+# §11.1 lists this as "Not selected". This is a Gate B value and is NOT
+# frozen (§11.1); §§5-10 of the architecture are untouched by this change.
 #
-#   RULE: the midpoint of the observed separation gap between the lateral
-#         maximum top-1 similarity and the frontal minimum top-1 similarity.
+# SELECTION RULE, REVISED 2026-08-19. The rule now reads:
 #
-# Applied to the Gate B v1.1 calibration (300 frontal and 300 lateral
-# held-out IU studies queried against the real iu_cxr_biomedclip_v1_train
-# collection): lateral max 0.84847092628479, frontal min 0.8906208872795105,
-# midpoint 0.8695459067821503. The two ranges do not overlap; the gap is
-# 0.0421.
+#   RULE: just above the observed lateral maximum top-1 similarity.
 #
-# Step P1 confirmed on that data: 300 of 300 lateral rejected, 0 of 300
-# frontal rejected.
+# It previously read "the midpoint of the observed separation gap between
+# the lateral maximum and the frontal minimum", which produced
+# 0.8695459067821503 from lateral max 0.84847092628479 and frontal min
+# 0.8906208872795105 (gap 0.0421).
 #
-# Step P2: this is an OBSERVED SEPARATION POINT, not a validated
-# frontal/lateral boundary. It comes from 300 images of each projection
-# from one dataset and does not establish a universal cosine boundary.
+# THIS RULE WAS CHANGED AFTER SEEING A FAILING IMAGE, AND THAT IS RECORDED
+# HERE RATHER THAN PRESENTED AS A PRE-REGISTERED CHOICE. A genuine frontal
+# chest radiograph obtained from outside the IU dataset scored top-1
+# 0.8582 and was rejected as a projection mismatch. That image sits ABOVE
+# every lateral in the calibration set (max 0.84847) and BELOW the old
+# midpoint -- i.e. inside the empty gap the midpoint rule placed the
+# boundary in the middle of.
 #
-# Full precision is kept deliberately. §11.4's prose gives 0.8696, which is
-# the midpoint of the two values ALREADY rounded to four decimals; the
-# midpoint of the unrounded measurements is 0.86954590678. Rounding the
-# inputs before averaging moves the threshold by 5e-5 for no reason.
-DEFAULT_PROJECTION_REJECT_THRESHOLD = 0.8695459067821503
+# The legitimate reason the change is defensible, as opposed to merely
+# convenient: the calibration population was IU-only, and DEFAULT_RETRIEVAL_
+# FLOOR's §11.5 Step R3 note below already states that this gate's real
+# purpose is "detection of a distribution shift at deployment time... a film
+# from a diagnostic centre in Bangladesh does not [share scanners,
+# processing and patient population]. The IU dataset cannot measure that
+# shift." A real out-of-distribution frontal scoring 0.8582 IS that
+# predicted shift arriving. The midpoint rule had no evidence behind the
+# half of the gap it claimed -- no observation of any kind lies between
+# 0.84847 and 0.89062 -- so moving the boundary to the edge of what was
+# actually observed removes an unmeasured margin rather than adding one.
+#
+# What the new value preserves, verified on the same 600-study calibration
+# set (ml/outputs/calibration/top1_similarity_by_label.csv):
+#   300 of 300 lateral still rejected, 0 of 300 frontal rejected.
+# The lateral/frontal separation property this gate exists for is intact;
+# only the unobserved margin above the lateral ceiling is given up.
+#
+# Still true, and still the important caveat: this is an OBSERVED
+# SEPARATION POINT, not a validated frontal/lateral boundary. It comes from
+# 300 images of each projection from one dataset and does not establish a
+# universal cosine boundary.
+DEFAULT_PROJECTION_REJECT_THRESHOLD = 0.8500
 
 # --- Gate B (v1.1 §11.5): RETRIEVAL_FLOOR. -------------------------
 # The v1.0 value 0.7603 is WITHDRAWN. It was fitted on a calibration
@@ -288,6 +346,7 @@ class Settings(BaseSettings):
     MODALITY_PROMPTS_POSITIVE: str = DEFAULT_MODALITY_PROMPTS_POSITIVE
     MODALITY_PROMPTS_NEGATIVE: str = DEFAULT_MODALITY_PROMPTS_NEGATIVE
     MODALITY_SOFTMAX_TEMPERATURE: float = DEFAULT_MODALITY_SOFTMAX_TEMPERATURE
+    PHI_MASK_MAX_REGION_AREA_FRACTION: float = DEFAULT_PHI_MASK_MAX_REGION_AREA_FRACTION
     MODALITY_THRESHOLD: float = DEFAULT_MODALITY_THRESHOLD
     RETRIEVAL_FLOOR: float = DEFAULT_RETRIEVAL_FLOOR
     PROJECTION_REJECT_THRESHOLD: float = DEFAULT_PROJECTION_REJECT_THRESHOLD
