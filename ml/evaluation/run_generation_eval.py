@@ -347,6 +347,13 @@ def main() -> None:
     ap.add_argument("--n-samples", type=int, default=100)
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument(
+        "--tag", default=None,
+        help="Optional suffix on the output directory, e.g. --tag n477. Exists so an "
+             "extension run (§6.3.1) lands beside the pre-registered result instead of "
+             "overwriting it -- the n=100 result is reported regardless of what the "
+             "extension shows, so it must survive the extension.",
+    )
+    ap.add_argument(
         "--arm", default=None, choices=["full", "labels_only", "empty"],
         help="Phase 21 ablation arm this run is measuring. This flag does NOT "
              "set the arm -- the backend does, from its EVIDENCE_MODE setting, "
@@ -369,10 +376,11 @@ def main() -> None:
     # Arms write to sibling directories so one arm can never overwrite another,
     # and so an interrupted run is resumable per arm. With no --arm the path is
     # unchanged, which keeps Phase 20's outputs exactly where they are.
+    _suffix = "" if args.tag is None else f"_{args.tag}"
     out_dir = (
         data_root / "ml/outputs/evaluation/generation"
         if args.arm is None
-        else data_root / f"ml/outputs/evaluation/generation_arm_{args.arm}"
+        else data_root / f"ml/outputs/evaluation/generation_arm_{args.arm}{_suffix}"
     )
     out_dir.mkdir(parents=True, exist_ok=True)
     text_dir = out_dir / "generated_text"

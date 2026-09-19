@@ -49,8 +49,11 @@ SEED = 42
 ALPHA = 0.05
 
 
+TAG = ""  # set from --tag in main(); see run_generation_eval.py's --tag
+
+
 def _arm_dir(data_root: Path, arm: str) -> Path:
-    return data_root / f"ml/outputs/evaluation/generation_arm_{arm}"
+    return data_root / f"ml/outputs/evaluation/generation_arm_{arm}{TAG}"
 
 
 def _percentile_ci(boot: np.ndarray) -> tuple[float, float]:
@@ -145,10 +148,14 @@ def main() -> None:
     ap.add_argument("--data-root", default=".")
     ap.add_argument("--upper", default="full")
     ap.add_argument("--lower", nargs="+", default=["labels_only", "empty"])
+    ap.add_argument("--tag", default=None,
+                    help="Output-directory suffix, matching run_generation_eval.py's --tag.")
     ap.add_argument("--skip-tier3", action="store_true",
                     help="Tier 1 contrasts only (for when Tier 3 labels are not yet computed).")
     args = ap.parse_args()
 
+    global TAG
+    TAG = "" if args.tag is None else f"_{args.tag}"
     data_root = Path(args.data_root)
     arms = [args.upper, *args.lower]
     uids = shared_completed_uids(data_root, arms)
@@ -197,7 +204,7 @@ def main() -> None:
               f"[{lo:9.4f},{hi:9.4f}] {str(r['excludes_zero']):>7}{star}")
     print("=" * 98)
 
-    out = data_root / "ml/outputs/evaluation/phase21_arm_contrasts.json"
+    out = data_root / f"ml/outputs/evaluation/phase21_arm_contrasts{TAG}.json"
     out.write_text(json.dumps(results, indent=2), encoding="utf-8")
     print(f"[contrast_arms] wrote {out}")
 

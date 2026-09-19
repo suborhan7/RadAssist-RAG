@@ -214,6 +214,13 @@ def main() -> None:
     ap.add_argument("--n-boot", type=int, default=2000)
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument(
+        "--tag", default=None,
+        help="Optional suffix on the output directory, e.g. --tag n477. Exists so an "
+             "extension run (§6.3.1) lands beside the pre-registered result instead of "
+             "overwriting it -- the n=100 result is reported regardless of what the "
+             "extension shows, so it must survive the extension.",
+    )
+    ap.add_argument(
         "--arm", default=None, choices=["full", "labels_only", "empty"],
         help="Phase 21 arm whose outputs to score. Omitted reads Phase 20's "
              "original directory, leaving those outputs exactly where they are.",
@@ -224,7 +231,8 @@ def main() -> None:
     # Mirrors run_generation_eval.py's per-arm directory convention, so an arm
     # is scored from the text that arm actually generated and can never be
     # scored from another arm's output.
-    _gen = ("generation" if args.arm is None else f"generation_arm_{args.arm}")
+    _gen = ("generation" if args.arm is None
+            else f"generation_arm_{args.arm}" + ("" if args.tag is None else f"_{args.tag}"))
     out_dir = data_root / f"ml/outputs/evaluation/{_gen}"
     text_dir = out_dir / "generated_text"
 

@@ -385,6 +385,23 @@ A third outcome is possible and is pre-committed too, so it is not adjudicated a
 
 **What this settles and what it does not.** It settles whether BERTScore discriminates on the *current* system. It does **not** re-open Phase 20's Tier 2 number, does not licence comparing Arm C's BERTScore to Phase 20's 0.8420/0.8455, and does not change §6.3's primary endpoint, which remains CheXbert macro-F1 on `impression`, Arm C minus Arm B. Tier 1 and Tier 2 on Arm C are **descriptive**: reported with CIs, never promoted to a primary or confirmatory result.
 
+#### 6.2.1a Handling a field split — added 2026-09-19
+
+**Timing, stated plainly: added after the n=100 Tier 2 numbers were seen, and before the §6.3.1 extension was run.** §6.2.1 was written as though the two fields would return the same reading. They did not, so the handling is recorded here rather than improvised in the write-up.
+
+Observed at n=100, Arm C:
+
+| Field | Real F1 | Baseline F1 | Difference | 95% CI paired | Reading |
+|---|---|---|---|---|---|
+| `findings` | 0.8512 | 0.8445 | +0.0066 | [0.0017, 0.0114] | **Reading 2** |
+| `impression` | 0.8547 | 0.8457 | +0.0090 | [−0.0025, 0.0201] | **Reading 1** |
+
+**Each field is reported under its own reading.** `findings` falls under Reading 2 and is therefore subject to Reading 2's guardrail in full: it may be stated that BERTScore *can* discriminate on post-fix output, and it may **not** be written as "BERTScore is valid after all". `impression` falls under Reading 1 and is reported as such.
+
+**The magnitude is reported with the interval, never without it.** `findings`' +0.0066 sits on a scale where both real and baseline scores are ≈0.85. It is statistically distinguishable from zero and substantively negligible. An interval excluding zero is a statement about resolution, not about importance, and this is a case where the two come apart clearly enough that reporting the first without the second would mislead.
+
+**Net conclusion: Phase 20's Tier 2 conclusion stands. BERTScore discriminates little on this dataset.** One field clears by a negligible margin, the other does not clear at all. That is not a rehabilitation of the metric, and Tier 2 remains excluded from the arm contrasts (§6.2) on exactly the grounds it was excluded before.
+
 ### 6.3 Pre-registered primary endpoint
 
 Set before any Phase 21 run, per the Phase 0 pre-registered-gate precedent:
@@ -441,6 +458,53 @@ Phase 20 Step 7's own method, reused.
 Phase 0 and Phase 20's identical configuration: 2,000 resamples, seed 42, 95% CI, percentile method, plain case-level resampling. Applied to the paired per-case difference, not to each arm's mean independently.
 
 ---
+
+### 6.7 Exploratory per-label decomposition — post-hoc, constrained
+
+**EXPLORATORY. Post-hoc. Run 2026-09-19, after the n=100 primary endpoint was known.** It is labelled as such wherever it appears, and it is **never merged into a paragraph with pre-registered analysis** — not in this document, not in the results chapter, not in a figure caption.
+
+Ten of the fourteen CheXbert conditions score exactly 0.000 in every arm on `impression`. macro-F1 divides by 14 regardless, so the endpoint is a four-condition average carrying a fourteen-condition denominator. Decomposing the pre-registered −0.0197:
+
+| Condition | Ref support | Arm C | Arm B | Contribution to C−B |
+|---|---|---|---|---|
+| **Cardiomegaly** | **5** | 0.267 | 0.600 | **−0.0238** |
+| Lung Opacity | 12 | 0.455 | 0.400 | +0.0039 |
+| Pleural Effusion | 3 | 0.444 | 0.400 | +0.0032 |
+| No Finding | 68 | 0.779 | 0.820 | −0.0030 |
+| | | | | **−0.0197** |
+
+**What it supports.** One claim only: *the primary endpoint at n=100 was underpowered and is hostage to a single condition with five reference-positive cases.* Cardiomegaly alone more than accounts for the whole gap; the remaining conditions nearly cancel.
+
+**What it may never be used for.** It may **not** be used to claim, suggest, or imply that the result would have been positive with more data. It establishes that the measurement was fragile, not that it was wrong, and fragility is symmetric — the same five cases could move the estimate in either direction. Any sentence of the form "with more data this would likely have cleared" is forbidden by this subsection.
+
+**Recorded projection, before the extension's numbers exist.** Extending to n=477 narrows the interval by roughly √4.77 ≈ 2.2×. A comparable point estimate would then land near [−0.042, +0.002] — **which may still touch zero.** This projection is recorded now so that a non-clearing extension is visibly an anticipated outcome rather than a disappointment reinterpreted after the fact.
+
+### 6.8 micro-F1 is unusable on this dataset — a standalone metric-validity finding
+
+**This is a result in its own right, reported as a finding, not as an appendix note or a methodological aside.**
+
+Arm A (`empty`) emitted **one byte-identical sentence across all 100 cases in both fields** — "No significant abnormalities are identified on the chest X-ray" — which CheXbert maps to a constant label row whose only positive is `No Finding`. That degenerate generator scores:
+
+| | micro-F1 on `impression` | macro-F1 on `impression` |
+|---|---|---|
+| Arm A (constant string) | **0.6733** | 0.0578 |
+| Arm C (full evidence) | **0.5581** | 0.1389 |
+
+**A system that says "no abnormality" to every image beats the full system on micro-F1.** 68 of 100 references are `No Finding`, so micro-F1 rewards predicting the majority class unconditionally. Any conclusion drawn from micro-F1 on this dataset is an artefact of prevalence.
+
+Reported alongside it, because the two facts belong together: **10 of 14 conditions score 0.000 in every arm**, so macro-F1's denominator is largely inert here. Neither aggregate is well behaved on this data — micro-F1 is actively misleading, macro-F1 is merely insensitive.
+
+This retroactively vindicates §6.3's pre-registration of **macro**-F1 as primary, and that vindication is only citable because the choice was fixed before any arm ran.
+
+### 6.9 Macro-F1 restricted to supported conditions — considered and DECLINED
+
+Proposed as an optional post-hoc secondary, and rejected on proof rather than on taste.
+
+Restricting macro-F1 to the *k* conditions with reference support is **exactly** a multiplication by 14/*k*. A condition with zero reference support cannot have nonzero F1, since F1 > 0 requires a true positive, which requires a reference positive; so every such condition contributes exactly 0 to the numerator and the restriction only shrinks the denominator. Verified numerically at n=100 — the ratio is 14/12 = 1.166667 for `findings` and 14/10 = 1.400000 for `impression`, to six decimals, in both arms, with no zero-support condition carrying nonzero F1 in either.
+
+The multiplier is a positive constant applied identically to both arms, so every paired difference and every bootstrap replicate is scaled by it. The interval scales with the estimate and **cannot cross zero**. It is therefore incapable of changing any reading.
+
+This is the same invariance §6.2.1 already established for BERTScore baseline rescaling, and it is declined for the same reason: a transformation that cannot change a conclusion is not a tiebreaker, and reporting one that enlarges the numbers while adding no information invites exactly the misreading it cannot support. The per-label table in §6.7 already carries everything this would show, with the support counts visible instead of divided away.
 
 ## 7. Latency characterisation (RQ3)
 
