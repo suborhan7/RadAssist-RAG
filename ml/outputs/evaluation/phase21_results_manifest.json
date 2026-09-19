@@ -1,0 +1,1036 @@
+{
+  "estimands": {
+    "phase21_n100": {
+      "arms": {
+        "full": {
+          "run": {
+            "source": "ml\\outputs\\evaluation\\generation_arm_full\\evaluation_config.json",
+            "arm_flag": "full",
+            "evidence_mode_reported_by_backend": "full",
+            "completed": 100,
+            "failed": 0,
+            "sample_seed": 42,
+            "declared_projection": "PA",
+            "git_commit_ml": "221d275464ffbc4f5b05c5166daaeed8036d761c"
+          },
+          "tier3": {
+            "source": "ml\\outputs\\evaluation\\generation_arm_full\\tier3_chexbert_summary.json",
+            "findings": {
+              "macro_f1": 0.15390087853323148,
+              "macro_f1_ci": [
+                0.09043618356433482,
+                0.210438689993007
+              ],
+              "micro_f1": 0.2679425837320574,
+              "random_baseline_macro_f1": 0.09027264946382593,
+              "real_minus_baseline_ci": [
+                -0.008007936404200128,
+                0.13663604849816297
+              ],
+              "real_minus_baseline_excludes_zero": false,
+              "per_label_f1": {
+                "Enlarged Cardiomediastinum": 0.23529411764705882,
+                "Cardiomegaly": 0.4444444444444445,
+                "Lung Opacity": 0.43749999999999994,
+                "Lung Lesion": 0.0,
+                "Edema": 0.3333333333333333,
+                "Consolidation": 0.0,
+                "Pneumonia": 0.0,
+                "Atelectasis": 0.22222222222222224,
+                "Pneumothorax": 0.0,
+                "Pleural Effusion": 0.18181818181818182,
+                "Pleural Other": 0.0,
+                "Fracture": 0.0,
+                "Support Devices": 0.0,
+                "No Finding": 0.30000000000000004
+              }
+            },
+            "impression": {
+              "macro_f1": 0.1388773228467885,
+              "macro_f1_ci": [
+                0.08813892740778091,
+                0.1794224379593993
+              ],
+              "micro_f1": 0.558139534883721,
+              "random_baseline_macro_f1": 0.07139001795490345,
+              "real_minus_baseline_ci": [
+                0.005627813000449773,
+                0.12228727636162584
+              ],
+              "real_minus_baseline_excludes_zero": true,
+              "per_label_f1": {
+                "Enlarged Cardiomediastinum": 0.0,
+                "Cardiomegaly": 0.26666666666666666,
+                "Lung Opacity": 0.45454545454545453,
+                "Lung Lesion": 0.0,
+                "Edema": 0.0,
+                "Consolidation": 0.0,
+                "Pneumonia": 0.0,
+                "Atelectasis": 0.0,
+                "Pneumothorax": 0.0,
+                "Pleural Effusion": 0.4444444444444444,
+                "Pleural Other": 0.0,
+                "Fracture": 0.0,
+                "Support Devices": 0.0,
+                "No Finding": 0.7786259541984734
+              }
+            }
+          },
+          "tier1": {
+            "source": "ml\\outputs\\evaluation\\generation_arm_full\\tier1_bootstrap_summary.csv",
+            "rows": [
+              {
+                "metric": "findings_bleu",
+                "n": 100,
+                "mean": 7.325309116663975,
+                "ci_lower": 6.330292243626616,
+                "ci_upper": 8.446174572037643,
+                "ci_width": 2.1158823284110277
+              },
+              {
+                "metric": "findings_rouge_l",
+                "n": 100,
+                "mean": 0.2474688961087584,
+                "ci_lower": 0.2313581067407714,
+                "ci_upper": 0.2651944152748943,
+                "ci_width": 0.0338363085341229
+              },
+              {
+                "metric": "findings_meteor",
+                "n": 100,
+                "mean": 0.3569768326745328,
+                "ci_lower": 0.3341723220943844,
+                "ci_upper": 0.3829509693376348,
+                "ci_width": 0.0487786472432503
+              },
+              {
+                "metric": "impression_bleu",
+                "n": 100,
+                "mean": 12.948370279000322,
+                "ci_lower": 9.437320084636564,
+                "ci_upper": 17.07655905111632,
+                "ci_width": 7.6392389664797555
+              },
+              {
+                "metric": "impression_rouge_l",
+                "n": 100,
+                "mean": 0.2942134797258863,
+                "ci_lower": 0.2444699523783267,
+                "ci_upper": 0.3457960939871911,
+                "ci_width": 0.1013261416088644
+              },
+              {
+                "metric": "impression_meteor",
+                "n": 100,
+                "mean": 0.3431329779644256,
+                "ci_lower": 0.2917551910824125,
+                "ci_upper": 0.3989172782896556,
+                "ci_width": 0.1071620872072431
+              }
+            ]
+          },
+          "tier2": {
+            "source": "ml\\outputs\\evaluation\\generation_arm_full\\tier2_bootstrap_summary.csv",
+            "rows": [
+              {
+                "metric": "findings_bertscore_p",
+                "n": 100,
+                "mean": 0.8431407541036606,
+                "ci_lower": 0.837237357005477,
+                "ci_upper": 0.8486842184960842,
+                "ci_width": 0.0114468614906072
+              },
+              {
+                "metric": "findings_bertscore_r",
+                "n": 100,
+                "mean": 0.8601715761423111,
+                "ci_lower": 0.854516592875123,
+                "ci_upper": 0.8657257499992848,
+                "ci_width": 0.0112091571241617
+              },
+              {
+                "metric": "findings_bertscore_f1",
+                "n": 100,
+                "mean": 0.8511680632829666,
+                "ci_lower": 0.8465029788315296,
+                "ci_upper": 0.8558773459196091,
+                "ci_width": 0.0093743670880794
+              },
+              {
+                "metric": "impression_bertscore_p",
+                "n": 100,
+                "mean": 0.8451449155807496,
+                "ci_lower": 0.8323187801688909,
+                "ci_upper": 0.8588814092874526,
+                "ci_width": 0.0265626291185616
+              },
+              {
+                "metric": "impression_bertscore_r",
+                "n": 100,
+                "mean": 0.8665874540805817,
+                "ci_lower": 0.853933333799243,
+                "ci_upper": 0.880153465077281,
+                "ci_width": 0.026220131278038
+              },
+              {
+                "metric": "impression_bertscore_f1",
+                "n": 100,
+                "mean": 0.8546827727556229,
+                "ci_lower": 0.8434333745539189,
+                "ci_upper": 0.8665319280177355,
+                "ci_width": 0.0230985534638166
+              }
+            ]
+          }
+        },
+        "labels_only": {
+          "run": {
+            "source": "ml\\outputs\\evaluation\\generation_arm_labels_only\\evaluation_config.json",
+            "arm_flag": "labels_only",
+            "evidence_mode_reported_by_backend": "labels_only",
+            "completed": 100,
+            "failed": 0,
+            "sample_seed": 42,
+            "declared_projection": "PA",
+            "git_commit_ml": "221d275464ffbc4f5b05c5166daaeed8036d761c"
+          },
+          "tier3": {
+            "source": "ml\\outputs\\evaluation\\generation_arm_labels_only\\tier3_chexbert_summary.json",
+            "findings": {
+              "macro_f1": 0.1271581359816654,
+              "macro_f1_ci": [
+                0.058140912943335156,
+                0.1838297270662651
+              ],
+              "micro_f1": 0.3829787234042554,
+              "random_baseline_macro_f1": 0.053316781257957725,
+              "real_minus_baseline_ci": [
+                0.004469579663222349,
+                0.13302930263014287
+              ],
+              "real_minus_baseline_excludes_zero": true,
+              "per_label_f1": {
+                "Enlarged Cardiomediastinum": 0.0,
+                "Cardiomegaly": 0.35294117647058826,
+                "Lung Opacity": 0.16666666666666669,
+                "Lung Lesion": 0.0,
+                "Edema": 0.0,
+                "Consolidation": 0.0,
+                "Pneumonia": 0.0,
+                "Atelectasis": 0.3333333333333333,
+                "Pneumothorax": 0.0,
+                "Pleural Effusion": 0.4,
+                "Pleural Other": 0.0,
+                "Fracture": 0.0,
+                "Support Devices": 0.0,
+                "No Finding": 0.5272727272727272
+              }
+            },
+            "impression": {
+              "macro_f1": 0.15858170606372046,
+              "macro_f1_ci": [
+                0.09548298877024639,
+                0.20562844562844562
+              ],
+              "micro_f1": 0.673469387755102,
+              "random_baseline_macro_f1": 0.07035971223021582,
+              "real_minus_baseline_ci": [
+                0.028226668923180848,
+                0.13998000857786425
+              ],
+              "real_minus_baseline_excludes_zero": true,
+              "per_label_f1": {
+                "Enlarged Cardiomediastinum": 0.0,
+                "Cardiomegaly": 0.6,
+                "Lung Opacity": 0.4,
+                "Lung Lesion": 0.0,
+                "Edema": 0.0,
+                "Consolidation": 0.0,
+                "Pneumonia": 0.0,
+                "Atelectasis": 0.0,
+                "Pneumothorax": 0.0,
+                "Pleural Effusion": 0.4,
+                "Pleural Other": 0.0,
+                "Fracture": 0.0,
+                "Support Devices": 0.0,
+                "No Finding": 0.8201438848920864
+              }
+            }
+          }
+        },
+        "empty": {
+          "run": {
+            "source": "ml\\outputs\\evaluation\\generation_arm_empty\\evaluation_config.json",
+            "arm_flag": "empty",
+            "evidence_mode_reported_by_backend": "empty",
+            "completed": 100,
+            "failed": 0,
+            "sample_seed": 42,
+            "declared_projection": "PA",
+            "git_commit_ml": "221d275464ffbc4f5b05c5166daaeed8036d761c"
+          },
+          "tier3": {
+            "source": "ml\\outputs\\evaluation\\generation_arm_empty\\tier3_chexbert_summary.json",
+            "findings": {
+              "macro_f1": 0.03858185610010428,
+              "macro_f1_ci": [
+                0.03125000000000001,
+                0.04500978473581214
+              ],
+              "micro_f1": 0.387434554973822,
+              "random_baseline_macro_f1": 0.03858185610010428,
+              "real_minus_baseline_ci": [
+                -0.00966898510538073,
+                0.009702940737423497
+              ],
+              "real_minus_baseline_excludes_zero": false,
+              "per_label_f1": {
+                "Enlarged Cardiomediastinum": 0.0,
+                "Cardiomegaly": 0.0,
+                "Lung Opacity": 0.0,
+                "Lung Lesion": 0.0,
+                "Edema": 0.0,
+                "Consolidation": 0.0,
+                "Pneumonia": 0.0,
+                "Atelectasis": 0.0,
+                "Pneumothorax": 0.0,
+                "Pleural Effusion": 0.0,
+                "Pleural Other": 0.0,
+                "Fracture": 0.0,
+                "Support Devices": 0.0,
+                "No Finding": 0.5401459854014599
+              }
+            },
+            "impression": {
+              "macro_f1": 0.05782312925170068,
+              "macro_f1_ci": [
+                0.053009883198562445,
+                0.06214689265536723
+              ],
+              "micro_f1": 0.6732673267326733,
+              "random_baseline_macro_f1": 0.05782312925170068,
+              "real_minus_baseline_ci": [
+                -0.006179397848820636,
+                0.006082259365693431
+              ],
+              "real_minus_baseline_excludes_zero": false,
+              "per_label_f1": {
+                "Enlarged Cardiomediastinum": 0.0,
+                "Cardiomegaly": 0.0,
+                "Lung Opacity": 0.0,
+                "Lung Lesion": 0.0,
+                "Edema": 0.0,
+                "Consolidation": 0.0,
+                "Pneumonia": 0.0,
+                "Atelectasis": 0.0,
+                "Pneumothorax": 0.0,
+                "Pleural Effusion": 0.0,
+                "Pleural Other": 0.0,
+                "Fracture": 0.0,
+                "Support Devices": 0.0,
+                "No Finding": 0.8095238095238095
+              }
+            }
+          }
+        }
+      },
+      "contrasts": {
+        "source": "ml\\outputs\\evaluation\\phase21_arm_contrasts.json",
+        "primary_endpoint": {
+          "definition": "CheXbert macro-F1 on impression, full minus labels_only, paired bootstrap 95% CI excluding zero in the positive direction",
+          "pre_registered": "Phase 21 \u00a76.3, before any run"
+        },
+        "n_shared_cases": 100,
+        "n_boot": 2000,
+        "seed": 42,
+        "contrasts": {
+          "full_minus_labels_only": {
+            "findings_rouge_l": {
+              "n": 100,
+              "mean_upper": 0.24746889610875844,
+              "mean_lower": 0.14531865624644286,
+              "mean_difference": 0.10215023986231563,
+              "ci_95": [
+                0.08342066140649235,
+                0.12035189079082152
+              ],
+              "excludes_zero": true
+            },
+            "findings_meteor": {
+              "n": 100,
+              "mean_upper": 0.3569768326745328,
+              "mean_lower": 0.11474519185697009,
+              "mean_difference": 0.24223164081756277,
+              "ci_95": [
+                0.21867427720543936,
+                0.2663976828656276
+              ],
+              "excludes_zero": true
+            },
+            "findings_chexbert_macro_f1": {
+              "n": 100,
+              "macro_f1_upper": 0.15390087853323148,
+              "macro_f1_lower": 0.1271581359816654,
+              "mean_difference": 0.026742742551566084,
+              "ci_95": [
+                -0.03501787692677824,
+                0.1010186786533716
+              ],
+              "excludes_zero": false
+            },
+            "impression_rouge_l": {
+              "n": 100,
+              "mean_upper": 0.29421347972588635,
+              "mean_lower": 0.03725550930274188,
+              "mean_difference": 0.2569579704231445,
+              "ci_95": [
+                0.20357823425508204,
+                0.3130158957645665
+              ],
+              "excludes_zero": true
+            },
+            "impression_meteor": {
+              "n": 100,
+              "mean_upper": 0.3431329779644257,
+              "mean_lower": 0.10432120176331589,
+              "mean_difference": 0.23881177620110974,
+              "ci_95": [
+                0.1841371073050416,
+                0.2949491787816947
+              ],
+              "excludes_zero": true
+            },
+            "impression_chexbert_macro_f1": {
+              "n": 100,
+              "macro_f1_upper": 0.1388773228467885,
+              "macro_f1_lower": 0.15858170606372046,
+              "mean_difference": -0.019704383216931964,
+              "ci_95": [
+                -0.06214181182036442,
+                0.03343834762144501
+              ],
+              "excludes_zero": false
+            }
+          },
+          "full_minus_empty": {
+            "findings_rouge_l": {
+              "n": 100,
+              "mean_upper": 0.24746889610875844,
+              "mean_lower": 0.09300077508660269,
+              "mean_difference": 0.15446812102215574,
+              "ci_95": [
+                0.13673083677992787,
+                0.17078226439676827
+              ],
+              "excludes_zero": true
+            },
+            "findings_meteor": {
+              "n": 100,
+              "mean_upper": 0.3569768326745328,
+              "mean_lower": 0.043088229938520045,
+              "mean_difference": 0.31388860273601277,
+              "ci_95": [
+                0.28972005445311216,
+                0.3382159649646586
+              ],
+              "excludes_zero": true
+            },
+            "findings_chexbert_macro_f1": {
+              "n": 100,
+              "macro_f1_upper": 0.15390087853323148,
+              "macro_f1_lower": 0.03858185610010428,
+              "mean_difference": 0.1153190224331272,
+              "ci_95": [
+                0.051701345431789746,
+                0.17478671483130184
+              ],
+              "excludes_zero": true
+            },
+            "impression_rouge_l": {
+              "n": 100,
+              "mean_upper": 0.29421347972588635,
+              "mean_lower": 0.1539130933628885,
+              "mean_difference": 0.14030038636299788,
+              "ci_95": [
+                0.09179610685732871,
+                0.18937639817208743
+              ],
+              "excludes_zero": true
+            },
+            "impression_meteor": {
+              "n": 100,
+              "mean_upper": 0.3431329779644257,
+              "mean_lower": 0.09413526302362747,
+              "mean_difference": 0.24899771494079811,
+              "ci_95": [
+                0.1998600007282664,
+                0.29775280244368985
+              ],
+              "excludes_zero": true
+            },
+            "impression_chexbert_macro_f1": {
+              "n": 100,
+              "macro_f1_upper": 0.1388773228467885,
+              "macro_f1_lower": 0.05782312925170068,
+              "mean_difference": 0.08105419359508781,
+              "ci_95": [
+                0.029925647884354836,
+                0.12130505842788701
+              ],
+              "excludes_zero": true
+            }
+          }
+        }
+      },
+      "note": "n=100 is the pre-registered sample (\u00a76.3). n=477 is the full eligible pool extension (\u00a76.3.1). Neither is a replication or correction of the other; the denominator's live composition differs.",
+      "integrity": {
+        "source": "ml\\outputs\\evaluation\\phase21_arm_integrity.json",
+        "arms": [
+          "full",
+          "labels_only",
+          "empty"
+        ],
+        "attempted": {
+          "full": 100,
+          "labels_only": 100,
+          "empty": 100
+        },
+        "completed": {
+          "full": 100,
+          "labels_only": 100,
+          "empty": 100
+        },
+        "shared_by_all_arms": 100,
+        "retrieval_mismatches": [],
+        "problems": []
+      }
+    },
+    "phase21_n477": {
+      "arms": {
+        "full": {
+          "run": {
+            "source": "ml\\outputs\\evaluation\\generation_arm_full_n477\\evaluation_config.json",
+            "arm_flag": "full",
+            "evidence_mode_reported_by_backend": "full",
+            "completed": 477,
+            "failed": 0,
+            "sample_seed": 42,
+            "declared_projection": "PA",
+            "git_commit_ml": "bc1ed1819f8c8ee622d60911505ea447637608fe"
+          },
+          "tier3": {
+            "source": "ml\\outputs\\evaluation\\generation_arm_full_n477\\tier3_chexbert_summary.json",
+            "findings": {
+              "macro_f1": 0.16892694196363017,
+              "macro_f1_ci": [
+                0.13010383862816177,
+                0.20404074855619764
+              ],
+              "micro_f1": 0.28632938643702904,
+              "random_baseline_macro_f1": 0.06071975309115684,
+              "real_minus_baseline_ci": [
+                0.06140057738565543,
+                0.15096769055158796
+              ],
+              "real_minus_baseline_excludes_zero": true,
+              "per_label_f1": {
+                "Enlarged Cardiomediastinum": 0.16,
+                "Cardiomegaly": 0.37383177570093457,
+                "Lung Opacity": 0.3916083916083916,
+                "Lung Lesion": 0.10344827586206896,
+                "Edema": 0.25,
+                "Consolidation": 0.0,
+                "Pneumonia": 0.0,
+                "Atelectasis": 0.2526315789473684,
+                "Pneumothorax": 0.0,
+                "Pleural Effusion": 0.20000000000000004,
+                "Pleural Other": 0.14814814814814814,
+                "Fracture": 0.0,
+                "Support Devices": 0.09523809523809525,
+                "No Finding": 0.3900709219858156
+              }
+            },
+            "impression": {
+              "macro_f1": 0.17339573067068947,
+              "macro_f1_ci": [
+                0.13290555200460985,
+                0.21049099945865363
+              ],
+              "micro_f1": 0.525,
+              "random_baseline_macro_f1": 0.07766043617745548,
+              "real_minus_baseline_ci": [
+                0.05120510391252396,
+                0.13596930296892065
+              ],
+              "real_minus_baseline_excludes_zero": true,
+              "per_label_f1": {
+                "Enlarged Cardiomediastinum": 0.0,
+                "Cardiomegaly": 0.31884057971014496,
+                "Lung Opacity": 0.2268041237113402,
+                "Lung Lesion": 0.15,
+                "Edema": 0.17391304347826086,
+                "Consolidation": 0.0,
+                "Pneumonia": 0.1764705882352941,
+                "Atelectasis": 0.18181818181818182,
+                "Pneumothorax": 0.0,
+                "Pleural Effusion": 0.3125,
+                "Pleural Other": 0.14285714285714285,
+                "Fracture": 0.0,
+                "Support Devices": 0.0,
+                "No Finding": 0.7443365695792881
+              }
+            }
+          }
+        },
+        "labels_only": {
+          "run": {
+            "source": "ml\\outputs\\evaluation\\generation_arm_labels_only_n477\\evaluation_config.json",
+            "arm_flag": "labels_only",
+            "evidence_mode_reported_by_backend": "labels_only",
+            "completed": 477,
+            "failed": 0,
+            "sample_seed": 42,
+            "declared_projection": "PA",
+            "git_commit_ml": "bc1ed1819f8c8ee622d60911505ea447637608fe"
+          },
+          "tier3": {
+            "source": "ml\\outputs\\evaluation\\generation_arm_labels_only_n477\\tier3_chexbert_summary.json",
+            "findings": {
+              "macro_f1": 0.11017733449782131,
+              "macro_f1_ci": [
+                0.08598544278026495,
+                0.1346948374499374
+              ],
+              "micro_f1": 0.3849557522123893,
+              "random_baseline_macro_f1": 0.04758507775749155,
+              "real_minus_baseline_ci": [
+                0.0353891628683399,
+                0.09023919756561298
+              ],
+              "real_minus_baseline_excludes_zero": true,
+              "per_label_f1": {
+                "Enlarged Cardiomediastinum": 0.0,
+                "Cardiomegaly": 0.21212121212121213,
+                "Lung Opacity": 0.32758620689655177,
+                "Lung Lesion": 0.0,
+                "Edema": 0.0,
+                "Consolidation": 0.0,
+                "Pneumonia": 0.0,
+                "Atelectasis": 0.26666666666666666,
+                "Pneumothorax": 0.0,
+                "Pleural Effusion": 0.11764705882352941,
+                "Pleural Other": 0.0,
+                "Fracture": 0.0,
+                "Support Devices": 0.08,
+                "No Finding": 0.5384615384615384
+              }
+            },
+            "impression": {
+              "macro_f1": 0.14780403348389326,
+              "macro_f1_ci": [
+                0.11118685254870755,
+                0.18348879705854768
+              ],
+              "micro_f1": 0.6002098635886673,
+              "random_baseline_macro_f1": 0.06771297169073046,
+              "real_minus_baseline_ci": [
+                0.04404524153579408,
+                0.11424238455191817
+              ],
+              "real_minus_baseline_excludes_zero": true,
+              "per_label_f1": {
+                "Enlarged Cardiomediastinum": 0.0,
+                "Cardiomegaly": 0.34146341463414637,
+                "Lung Opacity": 0.2197802197802198,
+                "Lung Lesion": 0.0,
+                "Edema": 0.16666666666666666,
+                "Consolidation": 0.0,
+                "Pneumonia": 0.14814814814814817,
+                "Atelectasis": 0.22727272727272727,
+                "Pneumothorax": 0.0,
+                "Pleural Effusion": 0.19047619047619047,
+                "Pleural Other": 0.0,
+                "Fracture": 0.0,
+                "Support Devices": 0.0,
+                "No Finding": 0.7754491017964071
+              }
+            }
+          }
+        }
+      },
+      "contrasts": {
+        "source": "ml\\outputs\\evaluation\\phase21_arm_contrasts_n477.json",
+        "primary_endpoint": {
+          "definition": "CheXbert macro-F1 on impression, full minus labels_only, paired bootstrap 95% CI excluding zero in the positive direction",
+          "pre_registered": "Phase 21 \u00a76.3, before any run"
+        },
+        "n_shared_cases": 477,
+        "n_boot": 2000,
+        "seed": 42,
+        "contrasts": {
+          "full_minus_labels_only": {
+            "findings_rouge_l": {
+              "n": 477,
+              "mean_upper": 0.2373445537690862,
+              "mean_lower": 0.14542583875890527,
+              "mean_difference": 0.09191871501018094,
+              "ci_95": [
+                0.08321100223686255,
+                0.10120838638018766
+              ],
+              "excludes_zero": true
+            },
+            "findings_meteor": {
+              "n": 477,
+              "mean_upper": 0.34506408859078075,
+              "mean_lower": 0.11856265472299168,
+              "mean_difference": 0.22650143386778904,
+              "ci_95": [
+                0.21507136158090004,
+                0.23755415560687107
+              ],
+              "excludes_zero": true
+            },
+            "findings_chexbert_macro_f1": {
+              "n": 477,
+              "macro_f1_upper": 0.16892694196363017,
+              "macro_f1_lower": 0.11017733449782131,
+              "mean_difference": 0.05874960746580886,
+              "ci_95": [
+                0.01650202967046759,
+                0.09777231553985062
+              ],
+              "excludes_zero": true
+            },
+            "impression_rouge_l": {
+              "n": 477,
+              "mean_upper": 0.24964098227669151,
+              "mean_lower": 0.03509522178759312,
+              "mean_difference": 0.21454576048909843,
+              "ci_95": [
+                0.19062632221111106,
+                0.24034285437407973
+              ],
+              "excludes_zero": true
+            },
+            "impression_meteor": {
+              "n": 477,
+              "mean_upper": 0.30597608254464437,
+              "mean_lower": 0.09630912522091162,
+              "mean_difference": 0.20966695732373272,
+              "ci_95": [
+                0.18579621427884893,
+                0.23477491255821045
+              ],
+              "excludes_zero": true
+            },
+            "impression_chexbert_macro_f1": {
+              "n": 477,
+              "macro_f1_upper": 0.17339573067068947,
+              "macro_f1_lower": 0.14780403348389326,
+              "mean_difference": 0.025591697186796214,
+              "ci_95": [
+                -0.019802762820331797,
+                0.07096950069410558
+              ],
+              "excludes_zero": false
+            }
+          }
+        }
+      },
+      "note": "n=100 is the pre-registered sample (\u00a76.3). n=477 is the full eligible pool extension (\u00a76.3.1). Neither is a replication or correction of the other; the denominator's live composition differs."
+    }
+  },
+  "provenance_note": "Every value below was read from the file named beside it. Nothing here was recomputed. Phase 21 n=100 and n=477 are separate estimands per \u00a76.11 and are never pooled or averaged.",
+  "exploratory_diagnostics": {
+    "note": "POST-HOC and EXPLORATORY per \u00a76.7. Never to be merged into a paragraph with pre-registered analysis.",
+    "length": {
+      "source": "ml\\outputs\\evaluation\\phase21_length_diagnostic.csv",
+      "rows": [
+        {
+          "arm": "full",
+          "field": "findings",
+          "gen_mean_tokens": 50.3,
+          "gen_median_tokens": 44.5,
+          "ref_mean_tokens": 31.68,
+          "ref_median_tokens": 30.0,
+          "gen_over_ref_mean": 1.587752525252525
+        },
+        {
+          "arm": "labels_only",
+          "field": "findings",
+          "gen_mean_tokens": 16.19,
+          "gen_median_tokens": 11.0,
+          "ref_mean_tokens": 31.68,
+          "ref_median_tokens": 30.0,
+          "gen_over_ref_mean": 0.5110479797979799
+        },
+        {
+          "arm": "empty",
+          "field": "findings",
+          "gen_mean_tokens": 9.0,
+          "gen_median_tokens": 9.0,
+          "ref_mean_tokens": 31.68,
+          "ref_median_tokens": 30.0,
+          "gen_over_ref_mean": 0.2840909090909091
+        },
+        {
+          "arm": "full",
+          "field": "impression",
+          "gen_mean_tokens": 12.05,
+          "gen_median_tokens": 8.0,
+          "ref_mean_tokens": 7.96,
+          "ref_median_tokens": 5.0,
+          "gen_over_ref_mean": 1.5138190954773871
+        },
+        {
+          "arm": "labels_only",
+          "field": "impression",
+          "gen_mean_tokens": 11.47,
+          "gen_median_tokens": 5.0,
+          "ref_mean_tokens": 7.96,
+          "ref_median_tokens": 5.0,
+          "gen_over_ref_mean": 1.440954773869347
+        },
+        {
+          "arm": "empty",
+          "field": "impression",
+          "gen_mean_tokens": 9.0,
+          "gen_median_tokens": 9.0,
+          "ref_mean_tokens": 7.96,
+          "ref_median_tokens": 5.0,
+          "gen_over_ref_mean": 1.1306532663316582
+        }
+      ]
+    },
+    "rougeL_components": {
+      "source": "ml\\outputs\\evaluation\\phase21_rougeL_components.csv",
+      "rows": [
+        {
+          "contrast": "full_minus_labels_only",
+          "field": "findings",
+          "component": "precision",
+          "mean_difference": -0.005777297652942,
+          "ci_lower": -0.0294781788981218,
+          "ci_upper": 0.0184537894640949,
+          "excludes_zero": false
+        },
+        {
+          "contrast": "full_minus_labels_only",
+          "field": "findings",
+          "component": "recall",
+          "mean_difference": 0.2207442902153129,
+          "ci_lower": 0.193976518485593,
+          "ci_upper": 0.2487293954372724,
+          "excludes_zero": true
+        },
+        {
+          "contrast": "full_minus_labels_only",
+          "field": "findings",
+          "component": "fmeasure",
+          "mean_difference": 0.1021502398623156,
+          "ci_lower": 0.0834206614064923,
+          "ci_upper": 0.1203518907908215,
+          "excludes_zero": true
+        },
+        {
+          "contrast": "full_minus_labels_only",
+          "field": "impression",
+          "component": "precision",
+          "mean_difference": 0.2580613990162564,
+          "ci_lower": 0.2036359822257727,
+          "ci_upper": 0.3159448934346129,
+          "excludes_zero": true
+        },
+        {
+          "contrast": "full_minus_labels_only",
+          "field": "impression",
+          "component": "recall",
+          "mean_difference": 0.3390056784346258,
+          "ci_lower": 0.2680198045010545,
+          "ci_upper": 0.4102654129958735,
+          "excludes_zero": true
+        },
+        {
+          "contrast": "full_minus_labels_only",
+          "field": "impression",
+          "component": "fmeasure",
+          "mean_difference": 0.2569579704231445,
+          "ci_lower": 0.203578234255082,
+          "ci_upper": 0.3130158957645665,
+          "excludes_zero": true
+        },
+        {
+          "contrast": "full_minus_empty",
+          "field": "findings",
+          "component": "precision",
+          "mean_difference": 0.0354593520014925,
+          "ci_lower": 0.0139603830831204,
+          "ci_upper": 0.0567608538986042,
+          "excludes_zero": true
+        },
+        {
+          "contrast": "full_minus_empty",
+          "field": "findings",
+          "component": "recall",
+          "mean_difference": 0.2718554539558248,
+          "ci_lower": 0.2448787156446785,
+          "ci_upper": 0.2994683301664719,
+          "excludes_zero": true
+        },
+        {
+          "contrast": "full_minus_empty",
+          "field": "findings",
+          "component": "fmeasure",
+          "mean_difference": 0.1544681210221557,
+          "ci_lower": 0.1367308367799278,
+          "ci_upper": 0.1707822643967682,
+          "excludes_zero": true
+        },
+        {
+          "contrast": "full_minus_empty",
+          "field": "impression",
+          "component": "precision",
+          "mean_difference": 0.1659654882995547,
+          "ci_lower": 0.113706785414185,
+          "ci_upper": 0.2202801829589668,
+          "excludes_zero": true
+        },
+        {
+          "contrast": "full_minus_empty",
+          "field": "impression",
+          "component": "recall",
+          "mean_difference": 0.1552687160792424,
+          "ci_lower": 0.0987543186272791,
+          "ci_upper": 0.2091096629247945,
+          "excludes_zero": true
+        },
+        {
+          "contrast": "full_minus_empty",
+          "field": "impression",
+          "component": "fmeasure",
+          "mean_difference": 0.1403003863629978,
+          "ci_lower": 0.0917961068573287,
+          "ci_upper": 0.1893763981720874,
+          "excludes_zero": true
+        }
+      ]
+    },
+    "chexbert_components_n477": {
+      "source": "ml\\outputs\\evaluation\\phase21_chexbert_components_n477.csv",
+      "rows": [
+        {
+          "field": "findings",
+          "component": "precision",
+          "macro_precision_upper": 0.1588308844339487,
+          "macro_precision_lower": 0.1376057241078249,
+          "difference": 0.0212251603261237,
+          "ci_lower": -0.0365553698410957,
+          "ci_upper": 0.0734714905799827,
+          "excludes_zero": false,
+          "macro_recall_upper": NaN,
+          "macro_recall_lower": NaN,
+          "macro_f1_upper": NaN,
+          "macro_f1_lower": NaN
+        },
+        {
+          "field": "findings",
+          "component": "recall",
+          "macro_precision_upper": NaN,
+          "macro_precision_lower": NaN,
+          "difference": 0.0761870012631136,
+          "ci_lower": 0.0314542784101372,
+          "ci_upper": 0.1217823822461987,
+          "excludes_zero": true,
+          "macro_recall_upper": 0.1927279362583812,
+          "macro_recall_lower": 0.1165409349952675,
+          "macro_f1_upper": NaN,
+          "macro_f1_lower": NaN
+        },
+        {
+          "field": "findings",
+          "component": "f1",
+          "macro_precision_upper": NaN,
+          "macro_precision_lower": NaN,
+          "difference": 0.0587496074658088,
+          "ci_lower": 0.0165020296704675,
+          "ci_upper": 0.0977723155398506,
+          "excludes_zero": true,
+          "macro_recall_upper": NaN,
+          "macro_recall_lower": NaN,
+          "macro_f1_upper": 0.1689269419636301,
+          "macro_f1_lower": 0.1101773344978213
+        },
+        {
+          "field": "impression",
+          "component": "precision",
+          "macro_precision_upper": 0.1645929002231523,
+          "macro_precision_lower": 0.2015316001159616,
+          "difference": -0.0369386998928093,
+          "ci_lower": -0.1086326667735315,
+          "ci_upper": 0.0306607854622033,
+          "excludes_zero": false,
+          "macro_recall_upper": NaN,
+          "macro_recall_lower": NaN,
+          "macro_f1_upper": NaN,
+          "macro_f1_lower": NaN
+        },
+        {
+          "field": "impression",
+          "component": "recall",
+          "macro_precision_upper": NaN,
+          "macro_precision_lower": NaN,
+          "difference": 0.0645237708610014,
+          "ci_lower": 0.0152396036161053,
+          "ci_upper": 0.1202369147646152,
+          "excludes_zero": true,
+          "macro_recall_upper": 0.1942153769720448,
+          "macro_recall_lower": 0.1296916061110434,
+          "macro_f1_upper": NaN,
+          "macro_f1_lower": NaN
+        },
+        {
+          "field": "impression",
+          "component": "f1",
+          "macro_precision_upper": NaN,
+          "macro_precision_lower": NaN,
+          "difference": 0.0255916971867962,
+          "ci_lower": -0.0198027628203317,
+          "ci_upper": 0.0709695006941055,
+          "excludes_zero": false,
+          "macro_recall_upper": NaN,
+          "macro_recall_lower": NaN,
+          "macro_f1_upper": 0.1733957306706894,
+          "macro_f1_lower": 0.1478040334838932
+        }
+      ]
+    }
+  },
+  "phase20_separate": {
+    "note": "Phase 20 ran under the session-reconstruction defect. No Phase 20 generation number may be presented alongside a Phase 21 one as if continuous. Listed here only so the manifest is complete.",
+    "source": "ml\\outputs\\evaluation\\generation",
+    "completed": 460,
+    "failed": 17,
+    "tier3_macro_f1": {
+      "findings": 0.1510955257737658,
+      "impression": 0.1808388460065757
+    }
+  },
+  "traceability": {
+    "scanned_sections": 2,
+    "decimal_claims_found": 87,
+    "traced_to_artefact_file": 70,
+    "FLAGGED_not_traceable": [
+      "0.002",
+      "0.0180",
+      "0.0908",
+      "2.05",
+      "2.18",
+      "2.2",
+      "3.1",
+      "4.77",
+      "\u22120.042"
+    ],
+    "flag_interpretation": "A flag means no stored value rounds to this figure at its quoted precision. It does NOT by itself mean the figure is wrong. Two kinds legitimately appear: (a) DERIVED quantities -- CI widths (hi minus lo), ratios of widths, sqrt(n) factors, length ratios -- which are arithmetic over values the manifest does hold, and (b) the explicitly-labelled PROJECTION in \u00a76.7, which is a prediction and correctly has no artefact behind it. What must never appear here is a MEASUREMENT with no file. At the 2026-09-19 freeze, all flagged figures were verified to be of kind (a) or (b); none was an unsourced measurement."
+  }
+}

@@ -11408,8 +11408,8 @@ class, and it was diagnosed rather than assumed:**
 
 Corroborating evidence from the same runs: the Tier 1 contrasts, which *are*
 case-level means, narrowed as expected. `findings` ROUGE-L went from
-[0.0834, 0.1204] (width 0.0370) at n=100 to [0.0832, 0.1012] (width 0.0180) at
-n=477 — a 2.06× narrowing against √4.77 = 2.18 predicted. **The rule held
+[0.0834, 0.1204] (width 0.0369) at n=100 to [0.0832, 0.1012] (width 0.0180) at
+n=477 — a 2.05× narrowing against √4.77 = 2.18 predicted. **The rule held
 exactly where it applies and failed exactly where it does not**, which is the
 strongest available evidence that the mechanism above is the right one and not
 a post-hoc story.
@@ -11453,7 +11453,7 @@ figure is produced.
 > support, so the larger sample simultaneously purchased precision on
 > established conditions and introduced five new low-support, high-variance
 > ones. In the same experiment,
-> the case-level Tier 1 metrics narrowed by 2.06×, closely matching the
+> the case-level Tier 1 metrics narrowed by 2.05×, closely matching the
 > predicted 2.18×. The heuristic therefore held precisely where its assumptions
 > are satisfied and failed precisely where they are not. The practical
 > consequence, adopted as a standing rule, is that sample-size planning for
@@ -11578,5 +11578,120 @@ measurement, not a property of the system.
 > difference exists; the same constraint that forbids claiming a larger sample
 > would have vindicated the full-evidence arm forbids treating the null as
 > established.
+
+**COMPLETE**
+
+---
+
+## Phase 21 Closing Verification — Four Items, Two Defects Found — 2026-09-19 — COMPLETE
+
+Run after the final verdicts were recorded and before code freeze. **None of
+these items changes any measurement.** Two genuine defects were found; both are
+recorded below as limitations rather than fixed, because they were found at the
+freeze boundary and neither affects a reported number.
+
+### 1. Bengali end-to-end — PASS
+
+A real image through `POST /retrieve` → `POST /generate-report` with
+`language="bn"`, against the live backend in `EVIDENCE_MODE=full`. Both calls
+returned 200. **All 7 report fields rendered in Bengali**, 581 Bengali
+codepoints total, and **zero fields fell back to English**. The same image at
+`language="en"` returned 0 Bengali codepoints across all 7 fields, confirming
+the language parameter is what drove the difference rather than an incidental
+model behaviour.
+
+### 2. Multi-label convention — DEFECT FOUND (documentation, not code)
+
+`app/api/retrieval.py` carries the comment: *"label_set is currently a
+degenerate single-label value (";".join(labels) == primary_label today)"*.
+
+**That comment is false.** Read directly from the live ChromaDB index (2,462
+cases):
+
+| | Count |
+|---|---|
+| Indexed cases | 2,462 |
+| `label_set` containing `;` (genuinely multi-label) | **654 (26.6%)** |
+| `label_set` != `primary_label` | **654** |
+
+Label-count distribution: `{1: 1808, 2: 337, 3: 202, 4: 85, 5: 22, 6: 5, 7: 3}`
+— up to **seven** labels on a single case.
+
+`LabelVotingService.vote()` is **correct** and does the right thing: it iterates
+`case.labels`, so weight and agreement are computed over the full multi-label
+set, exactly as the frozen Phase 4 formula specifies. The defect is that the
+API comment asserts a degeneracy that does not hold, which would mislead anyone
+reasoning about the voting behaviour from the comment alone.
+
+Checked and found **sound**: `_parse_labels()` deliberately hoists
+`primary_label` to index 0 rather than naively splitting `label_set` (which is
+alphabetically sorted), preserving the `labels[0] == primary_label` convention
+that `retrieval.py` relies on. The hazard was anticipated and handled.
+
+**Limitation, not fixed:** the comment is inaccurate. No behaviour depends on it.
+
+### 3. Agreement provenance, frontend vs persisted — DEFECT FOUND
+
+Two different quantities are both called "agreement":
+
+- **Backend** (`LabelVotingService`): `agreement(L) = |cases whose label set
+  contains L| / n`, computed over the **full multi-label set**, persisted on the
+  report as `Report.agreement` and returned by `POST /retrieve`.
+- **Frontend** (`lib/evidence-agreement.ts`): a client-side re-derivation that
+  tallies **`primary_label` only** — a single-label partition over the same
+  retrieved cases. It is a documented re-derivation (because
+  `ReportDetailResponse` does not carry `voted_labels`), not a second call.
+
+Because 26.6% of the index is genuinely multi-label, these do not coincide.
+Measured against the **477 real retrieved sets from the n=477 Arm C run**, using
+the actual indexed metadata:
+
+> **On 101 of 477 retrieved sets (21.2%), the frontend's displayed top label
+> and/or agreement fraction disagrees with the backend's voted label.**
+
+Real examples (uid, backend top/agreement, frontend top/agreement):
+`2161` Cardiomegaly 0.6 vs Edema/Congestion 0.4 · `3211` Lung Opacity 0.4 vs
+Scarring 0.2 · `1750` Lung Opacity 0.6 vs Edema/Congestion 0.2.
+
+**Scope — this does not touch any Phase 21 measurement.** The evaluation harness
+drives the API and reads the generated report; the LLM prompt is built from the
+**backend's** voted labels via `ContextBuilder`. `evidence-agreement.ts` is a
+display path only and appears nowhere in the measurement chain. Every number in
+this log and in the results manifest comes from the backend computation.
+
+**Limitation, not fixed:** a user reading the report UI may see a top label and
+agreement figure that differ from the ones that actually conditioned the
+generated text. This is a real UI-provenance defect and is recorded as a known
+limitation of the deployed interface.
+
+### 4. Results manifest — BUILT, artefact-reading only
+
+`ml/evaluation/build_results_manifest.py` writes
+`ml/outputs/evaluation/phase21_results_manifest.json`. It never calls the API,
+loads a model, or recomputes a statistic — every value is read from a file a
+scoring run wrote, and carries that file's path.
+
+**Phase 21 appears as two separate estimands**, `phase21_n100` and
+`phase21_n477`, per §6.11. They are not pooled, averaged or reconciled, and
+neither is labelled a replication or correction of the other. Phase 20 is listed
+separately again under the standing non-continuity rule.
+
+Dev-log traceability scan over the Phase 21 entries: **87 decimal claims found,
+70 traced to an artefact file, 9 flagged.** Every flagged figure was verified
+individually and is either:
+
+- a **derived** quantity — CI widths (0.0180, 0.0908), width ratios (2.05),
+  √n factors (2.18, 2.2, 4.77), the length ratio (3.1) — i.e. arithmetic over
+  values the manifest does hold; or
+- the **explicitly-labelled §6.7 projection** (−0.042, 0.002), which is a
+  prediction and correctly has no artefact behind it.
+
+**No flagged figure was an unsourced measurement.** That interpretation is
+recorded inside the manifest itself so the flag list stays readable later.
+
+Two prose roundings were corrected during this check: the n=100 `findings`
+ROUGE-L CI width is 0.0369 (previously written 0.0370), and the Tier 1
+narrowing ratio is 2.05 (previously 2.06 — computed from rounded bounds rather
+than stored ones).
 
 **COMPLETE**
