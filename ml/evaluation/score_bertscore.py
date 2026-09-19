@@ -67,10 +67,19 @@ def _derangement(n: int, seed: int) -> np.ndarray:
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--data-root", default=".")
+    ap.add_argument(
+        "--arm", default=None, choices=["full", "labels_only", "empty"],
+        help="Phase 21 arm whose outputs to score. Omitted reads Phase 20's "
+             "original directory, leaving those outputs exactly where they are.",
+    )
     args = ap.parse_args()
 
     data_root = Path(args.data_root)
-    out_dir = data_root / "ml/outputs/evaluation/generation"
+    # Mirrors run_generation_eval.py's per-arm directory convention, so an arm
+    # is scored from the text that arm actually generated and can never be
+    # scored from another arm's output.
+    _gen = ("generation" if args.arm is None else f"generation_arm_{args.arm}")
+    out_dir = data_root / f"ml/outputs/evaluation/{_gen}"
     text_dir = out_dir / "generated_text"
 
     case_files = sorted(text_dir.glob("*.json"))

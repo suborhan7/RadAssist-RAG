@@ -33,10 +33,19 @@ def main() -> None:
     ap.add_argument("--data-root", default=".")
     ap.add_argument("--n-boot", type=int, default=2000)
     ap.add_argument("--seed", type=int, default=42)
+    ap.add_argument(
+        "--arm", default=None, choices=["full", "labels_only", "empty"],
+        help="Phase 21 arm whose outputs to score. Omitted reads Phase 20's "
+             "original directory, leaving those outputs exactly where they are.",
+    )
     args = ap.parse_args()
 
     data_root = Path(args.data_root)
-    results_path = data_root / "ml/outputs/evaluation/generation/tier2_bertscore_results.csv"
+    # Mirrors run_generation_eval.py's per-arm directory convention, so an arm
+    # is scored from the text that arm actually generated and can never be
+    # scored from another arm's output.
+    _gen = ("generation" if args.arm is None else f"generation_arm_{args.arm}")
+    results_path = data_root / f"ml/outputs/evaluation/{_gen}/tier2_bertscore_results.csv"
     df = pd.read_csv(results_path)
 
     print(f"[bootstrap_tier2_ci] {len(df)} scored cases")
@@ -55,7 +64,7 @@ def main() -> None:
         print(f"{col:24s} n={len(values):3d}  mean={mean:7.4f}  95% CI=[{lo:7.4f}, {hi:7.4f}]  width={width:6.4f}")
 
     summary = pd.DataFrame(rows)
-    out_path = data_root / "ml/outputs/evaluation/generation/tier2_bootstrap_summary.csv"
+    out_path = data_root / f"ml/outputs/evaluation/{_gen}/tier2_bootstrap_summary.csv"
     summary.to_csv(out_path, index=False)
     print()
     print(f"[bootstrap_tier2_ci] wrote {out_path}")
