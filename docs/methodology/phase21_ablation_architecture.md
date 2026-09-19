@@ -60,6 +60,27 @@ Rejected alternatives and why:
 
 **Confirm during Step 0:** that `ContextBuilder` already receives `Settings` by injection. If it does not, the injection must be added as a separate, individually-gated step before any ablation logic, because it modifies a frozen Phase 5 file.
 
+### 2.3 Arm C is dual-purpose — amendment, 2026-08-20
+
+Arm C is **two deliverables in one run**, and the second was not anticipated when this document was first frozen.
+
+Phase 20's 460 generated reports were produced while `session_reconstruction` discarded the persisted retrieval similarity and `get_by_ids()` stamped `similarity = 1.0` on every case (see the development log, *"Finding: Session Reconstruction Discarded the Persisted Similarity"*, 2026-08-20; fixed in `5b19a0fe`). **There is therefore no generation-quality result for the post-fix system.** Phase 20's numbers describe a system that no longer exists.
+
+Arm C is the `full` context condition — the production configuration — so it *is* that missing result. It is simultaneously:
+
+1. the ablation's upper arm, against which B and A are contrasted; and
+2. the first generation-quality measurement of the system as it actually ships.
+
+**Consequence for how Arm C must be run.** Because Arm C carries the second role, it must be executed so that it is *methodologically* comparable to Phase 20 even though its numbers are not numerically comparable. Specifically, Arm C must use:
+
+- the **same 477-case evaluation-eligible pool** established in Phase 20 Step 2 (§6.1 already requires this);
+- the **same seed-tracked sampling discipline** — same recorded seed, same ordering, same `--append` extension mechanism, so the case list is reconstructible;
+- the **same CheXbert scoring configuration** Phase 20 Tier 3 used — identical checkpoint, identical label set, identical per-field treatment, with no re-tuning.
+
+Any deviation in these three must be recorded as a deviation and argued for explicitly. The point of holding them fixed is that *procedure* comparability is the only kind still available: it lets the thesis say "the same measurement, applied to a corrected system" rather than "a different measurement of a different system", which is a materially weaker claim.
+
+This does **not** make Arm C's numbers continuous with Phase 20's. See §5.1.
+
 ---
 
 ## 3. Prerequisite fix — disclaimer removal from LLM output schema
@@ -195,9 +216,66 @@ This gate exists because a between-arm difference smaller than within-arm noise 
 
 **Phase 20 stands unchanged.** Its results, findings, and negative results are not re-run, not superseded, and not merged with Phase 21's.
 
-Phase 21 runs all three arms fresh under one code version (post-§3, post-§4), so all three are internally comparable. Phase 21's absolute values will differ slightly from Phase 20's because the code differs; **only Phase 21's between-arm differences are claimed**, which is the quantity the research questions ask about.
+Phase 21 runs all three arms fresh under one code version (post-§3, post-§4), so all three are internally comparable. **Only Phase 21's between-arm differences are claimed**, which is the quantity the research questions ask about.
 
 **Thesis requirement:** Phase 20 and Phase 21 numbers appear in separate tables, never the same one, with a stated note that the code version differs and why.
+
+### 5.1 The Phase 20 → Phase 21 methodological break — amendment, 2026-08-20
+
+An earlier draft of this section said Phase 21's absolute values "will differ slightly from Phase 20's because the code differs". **That wording is withdrawn.** The word *slightly* asserted a magnitude nobody measured.
+
+Between Phase 20's evaluation run and Phase 21, one defect in the retrieval→generation seam was found and fixed. It changed what reached the LLM in three ways:
+
+| What | Under Phase 20 | Phase 21 onward |
+|---|---|---|
+| **Evidence ordering** | `ContextBuilder` sorts by `(-similarity, source_uid)`; with all similarities equal this degenerated to lexicographic **uid order**, rendered under the literal prompt heading *"most similar first"* | True similarity order; the heading is now accurate |
+| **Vote weight** | `weights[label] += case.similarity` with similarity 1.0, so each weight was the plain **case count** (`3.00`), printed into the prompt at `prompt_builder.py:431` | Similarity-weighted (`2.87` in a re-measured example) |
+| **Near-duplicate representative** | `_collapse_near_duplicates` keeps first-seen-per-cluster; under the defect that was the **lowest uid**, so where two retrieved neighbours shared a cluster a *different case's findings text* entered the prompt. All 2,462 indexed studies carry a real `cluster_id` (1,678 distinct clusters) | The highest-similarity cluster member, as the function's docstring always intended |
+
+Also affected: `top_retrieved_case` and `retrieval_stats` (mean/min/max similarity, all 1.0 under the defect).
+
+**Not affected, and therefore still comparable in kind:** the *set* of retrieved uids, `agreement` (count-based), supporting/contradictory case counts, and each retrieved case's findings and impression text. Retrieval itself was correct and correctly measured throughout — Phase 0's retrieval-validation results and Phase 20's retrieval metrics are untouched.
+
+**Magnitude not measured.** How many of Phase 20's 460 reports changed materially is unknown. No count, proportion or severity estimate exists, none was computed, and none may be implied. Phase 20 is deliberately not re-run.
+
+### 5.2 Standing rule — non-negotiable
+
+**No Phase 20 generation number may be presented alongside a Phase 21 generation number as if the two were continuous.** Not in a shared table, not in a shared figure, not in a sentence that invites the reader to read one as the successor of the other. They are measurements of two different systems and must be labelled as such wherever they appear together.
+
+Phase 20 conclusions that do not depend on evidence ordering are unaffected and remain citable without this caveat: the BLEU short-text fit finding, the single-root-cause diagnosis of the 17/477 generation failures, and the Tier 2 BERTScore random-baseline finding (subject to §6.2.1's re-test).
+
+The boundary is tagged in the repository as **`phase20-to-phase21-boundary`** (commit `34ea5599`). Phase 21 runs on that commit or a descendant of it.
+
+### 5.3 What happens to Phase 20's Tier 3 numbers — decided 2026-08-20, before Arm C exists
+
+**This decision is recorded before any Phase 21 generation has been run and before Arm C's CheXbert scores are known.** It is fixed here precisely so it cannot be made after seeing whether Arm C scores higher or lower.
+
+The numbers at issue, from `ml/outputs/evaluation/generation/tier3_chexbert_summary.json` (n = 460):
+
+| Field | macro-F1 | Random baseline | Difference | CI excludes zero |
+|---|---|---|---|---|
+| `findings` | 0.1511 | 0.0744 | +0.0767 | yes |
+| `impression` | 0.1808 | 0.0838 | +0.0970 | yes |
+
+**Decision: RETAINED, as the pre-fix condition, in their own subsection. Not superseded.**
+
+**Why retained rather than superseded.** Two things in that table are doing different jobs, and only one of them is compromised.
+
+The *validity result* — that CheXbert clears a mismatched-pairs random baseline on this dataset, for both fields, with CIs excluding zero — is a property of the **metric on this data**, not of the evidence ordering handed to the generator. It is ordering-independent and already listed in §5.2 as citable without caveat. It is also the finding that licenses using CheXbert as Phase 21's primary endpoint at all. Deleting the scores it was computed from while keeping the conclusion drawn from them would leave the thesis asserting a validity check whose substrate it had discarded.
+
+The *macro-F1 values themselves* are a real measurement of a system that really existed and really ran. They are not wrong; they are **conditional**. Suppressing them would be destroying evidence to make a narrative tidier, which is the opposite of what this project has done everywhere else — including with the Tier 2 negative result, the BLEU finding, and the watermarked image that still fails.
+
+**The risk retention creates, and the constraint that answers it.** A reader who sees `0.1808` on one page and Arm C's impression macro-F1 on another will subtract them. That subtraction is meaningless: different sample size, different code, and a defect whose per-report magnitude was never measured. The numbers are therefore retained **under conditions**, not retained freely.
+
+**Conditions of use — all mandatory:**
+
+1. They appear in **their own subsection**, headed as the pre-fix condition. Never in a table or figure that also contains a Phase 21 number, per §5.2.
+2. Every appearance carries the defect label — at minimum, that they were produced with retrieved-case similarity fixed at 1.0, with a pointer to the development-log finding of 2026-08-20.
+3. They are **never framed as a before/after, an improvement, a regression, or a baseline that Phase 21 beats**. No arrow, no delta, no "compared to". **No controlled comparison exists**: n differs, the code differs, and the magnitude of the defect's effect was not measured.
+4. Any sentence placing them in the same paragraph as an Arm C number must state condition 3 in that same paragraph, not in a distant footnote.
+5. The **validity conclusion is separable** and may be cited normally, without conditions 1–4, because it does not depend on the scores' absolute level — only on their separation from the random baseline, which the defect does not touch.
+
+**What the thesis therefore says.** It reports a generation-quality result for the pre-fix system (Phase 20, labelled), and a generation-quality result for the shipped system (Phase 21 Arm C, labelled), and it states that the two are **not comparable** and that no experiment was run which would make them so. That is a weaker claim than a before/after improvement and it is the only one the evidence supports.
 
 ---
 
@@ -211,17 +289,45 @@ Phase 21 runs all three arms fresh under one code version (post-§3, post-§4), 
 
 ### 6.2 Metrics
 
-| Tier | Metric | Included | Rationale |
+Metrics are now split by **purpose**, because Arm C answers a second question (§2.3). Amended 2026-08-20.
+
+**Between-arm contrasts — all three arms, Tier 3 only:**
+
+| Tier | Metric | Used for contrasts | Rationale |
 |---|---|---|---|
+| 3 | CheXbert macro-F1 | ✓ | Cleared the validity bar for both fields in Phase 20 |
 | 1 | ROUGE-L | ✓ | Converged to tight CIs in Phase 20 |
 | 1 | METEOR | ✓ | As above |
 | 1 | BLEU | ✗ | Phase 20 documented an unresolvable short-text fit limitation |
 | 2 | BERTScore | ✗ | Phase 20 showed it does not clear a random-baseline validity bar on this dataset |
-| 3 | CheXbert macro-F1 | ✓ | Cleared the validity bar for both fields in Phase 20 |
+
+Excluding BLEU and BERTScore **from the arm contrasts** is not result-shopping — both exclusions rest on documented, pre-existing negative findings about the *metrics*, established before this phase's arms existed and without knowledge of this phase's outcome.
+
+**Arm C standalone measurement — all three tiers:**
+
+Arm C is additionally scored on **Tier 1 (BLEU, ROUGE-L, METEOR)** and **Tier 2 (BERTScore plus the mismatched-pairs random baseline)** alongside Tier 3. This is not a contrast; it is the post-fix generation-quality result that does not otherwise exist (§2.3), reported on the same tier structure Phase 20 used so the two are procedurally comparable.
+
+Arms A and B remain Tier 3 only. Running Tier 1/2 on them would add eight further intervals to an already twelve-interval family with no pre-registered question attached to them, which is exactly the multiplicity problem §6.3 exists to control.
 
 Fields scored: `findings` and `impression`, separately, per Phase 20's convention.
 
-Excluding BLEU and BERTScore is not result-shopping — both exclusions rest on documented, pre-existing negative findings about the *metrics*, established before this phase's arms existed and without knowledge of this phase's outcome.
+### 6.2.1 Tier 2 on Arm C — pre-registered readings
+
+Tier 2 must reuse Phase 20's configuration **unchanged**, or the result answers a different question: `ml/evaluation/score_bertscore.py`, the isolated venv, `microsoft/BiomedNLP-PubMedBERT-base-uncased-abstract-fulltext`, layer 9, no baseline rescaling, and a mismatched-pairs baseline built as a **fixed derangement at seed 42 verified to contain zero self-pairings**, scored with identical model/layer/settings. Paired bootstrap on the per-case real-minus-baseline difference: 2,000 resamples, seed 42, 95% percentile CI.
+
+Both readings are fixed here, **before the run**, per the Phase 0 pre-registered-gate precedent:
+
+> **Reading 1 — the CI still includes zero.** BERTScore still cannot distinguish this system's real outputs from unrelated report pairs. This **supports the metric being unsuitable on this dataset**, and specifically shows that Phase 20's Tier 2 negative result was a property of the metric, not an artefact of the similarity defect. Phase 20's Tier 2 finding stands and is strengthened.
+>
+> **Reading 2 — the CI excludes zero in the positive direction.** BERTScore *can* discriminate on post-fix output. This is a **finding about Phase 20's conditions**, not a rehabilitation of the metric in general. It would be evidence that the defect suppressed discriminability, and must be reported in exactly those terms. It may **not** be written up as "BERTScore is valid after all": Phase 20's stored outputs cannot be re-analysed to confirm the mechanism, and asserting causation from a single post-fix run would exceed the evidence.
+
+A third outcome is possible and is pre-committed too, so it is not adjudicated after the fact:
+
+> **Reading 3 — the CI excludes zero in the *negative* direction** (real scores below the random baseline). This is not a win in either direction. It is reported as an anomaly, and the run is checked for a derangement or pairing error before any interpretation is offered.
+
+**Do not re-run the rescaling check as a tiebreaker.** Phase 20 proved it invariant: applying `(x − c)/(1 − c)` identically to both sides yields `(Rᵢ − Bᵢ)/(1 − c)`, every paired difference divided by the same positive constant, which cannot move a CI across zero. It may be computed for reporting symmetry with Phase 20, but it can never change the reading.
+
+**What this settles and what it does not.** It settles whether BERTScore discriminates on the *current* system. It does **not** re-open Phase 20's Tier 2 number, does not licence comparing Arm C's BERTScore to Phase 20's 0.8420/0.8455, and does not change §6.3's primary endpoint, which remains CheXbert macro-F1 on `impression`, Arm C minus Arm B. Tier 1 and Tier 2 on Arm C are **descriptive**: reported with CIs, never promoted to a primary or confirmatory result.
 
 ### 6.3 Pre-registered primary endpoint
 
