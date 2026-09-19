@@ -651,6 +651,63 @@ Items 1–3 are resolved in this revision. The remaining item is a scheduling de
 
 **FROZEN.** Approved with §3.2–§3.7 exactly as revised — the substantive architectural correction from draft 1, which received fresh sign-off rather than inheriting draft 1's approval. The 3-arm design is frozen as specified.
 
+## 12. Final verdicts — Phase 21 CLOSED, 2026-09-19
+
+Recorded after all runs and all scoring, against the endpoints as pre-registered in §6.3 and extended under §6.3.1. No endpoint, metric, field or decision rule was changed at any point after §6.3 was written.
+
+### 12.1 The contribution claim
+
+**Supported against a no-evidence baseline.** Arm C beats Arm A on every contrast run, both fields, both Tier 1 metrics and CheXbert macro-F1 (C−A CheXbert: findings +0.1153 [0.0517, 0.1748]; impression +0.0811 [0.0299, 0.1213]; n=100). Retrieval-derived evidence of *some* kind is doing work relative to generating with none.
+
+That claim carries §2.4's pre-registered qualification in full: Arm A is an **evidence-plus-instruction** contrast, not a pure evidence contrast, so C−A may not be described as "the effect of removing evidence". It is a floor. And per §6.11 it remains an n=100 contrast that is **not comparable to the extended C−B** and must never be tabulated on the same case set.
+
+**NOT supported for retrieved prose over voted labels.** The pre-registered primary endpoint — CheXbert macro-F1 on `impression`, Arm C minus Arm B — failed to clear at **both** sample sizes:
+
+| Sample | Diff | 95% CI | Clears |
+|---|---|---|---|
+| n=100 (pre-registered) | −0.0197 | [−0.0621, +0.0334] | **No** |
+| n=477 (full eligible pool) | +0.0256 | [−0.0198, +0.0710] | **No** |
+
+Reported as a negative result per §6.3, which fixed that treatment before any arm ran. No alternative metric, field or contrast was promoted in its place.
+
+### 12.2 Every clearing C−B CheXbert contrast is recall-driven — binding citation rule
+
+The `findings` C−B CheXbert contrast clears at n=477 (+0.0587 [0.0165, 0.0978]). It is decomposed in §6.7's diagnostic and the decomposition is **binding on how it may be cited**:
+
+| Field | Recall | Precision |
+|---|---|---|
+| findings | +0.0762 [0.0315, 0.1218] ✅ | +0.0212 [−0.0366, +0.0735] ❌ |
+| impression | +0.0645 [0.0152, 0.1202] ✅ | −0.0369 [−0.1086, +0.0307] ❌ |
+
+**No clearing C−B CheXbert contrast may be cited as evidence of improved clinical correctness.** In every case the gain is recall-only with precision failing to clear, and Arm C writes 3.1× Arm B's findings length (50.3 vs 16.2 tokens). A longer report mentions more conditions, so CheXbert extracts more and recall rises; whether those additional assertions are *correct* is what precision measures, and it does not move. The same signature appears in ROUGE-L on the same field (recall +0.2207 clearing, precision −0.0058 not clearing), in an independent metric family.
+
+Wherever a clearing C−B CheXbert number appears, its precision component appears with it.
+
+### 12.3 The one gain that is not length
+
+**`impression` ROUGE-L precision: +0.2581 [0.2036, 0.3159], at near-equal token length** (Arm C 12.1 tokens vs Arm B 11.5; reference-length ratios 1.51 vs 1.44). Recall also clears (+0.3390).
+
+This is the single result in the phase where Arm C is demonstrably doing something other than saying more: a verbosity artefact cannot raise precision when the two arms write the same length. It is a claim about **wording fidelity to the reference impression**, not about diagnostic correctness — the same arm's CheXbert `impression` contrast does not clear. Stated in those terms and no stronger.
+
+### 12.4 Standing caution — applies symmetrically
+
+**The design could not detect a difference. This does not establish that no difference exists.**
+
+Two independent samples, the second being the entire eligible pool, failed to resolve the primary endpoint in either direction. Macro-F1 at these magnitudes (0.11–0.17 across 14 conditions, 5 of which are never predicted correctly by any arm) is a blunt instrument, and §6.10 established that its interval does not narrow with n the way case-level metrics do — so "run more cases" is not an available remedy on this dataset.
+
+**§6.7's constraint applies in both directions, and this is the binding statement of it:**
+
+- It may **not** be claimed or implied that the result would have been positive with more data.
+- It may **equally not** be claimed that the null is established, that retrieved prose has been shown not to help, or that the negative result is a finding about the system rather than about what this design could resolve.
+
+Both readings overstate the evidence. The defensible statement is that **this endpoint, as constructed, may not be resolvable on this dataset**, and that is reported as a limitation of the measurement rather than as a property of the system.
+
+### 12.5 Phase status
+
+**Phase 21 CLOSED.** All pre-registered endpoints reported, both samples reported per §6.11, all post-hoc analysis labelled as such per §6.7, and every deviation and repair recorded at the time it happened.
+
+---
+
 ---
 
 *Document version: draft 2 — FROZEN. Implementation proceeds through §8's gated sequence from Step 0. Any deviation requires an explicit unfreeze and a recorded reason.*

@@ -11461,3 +11461,122 @@ figure is produced.
 > candidate sample size rather than by extrapolating an observed width.
 
 **COMPLETE**
+
+---
+
+## Phase 21 — Evidence-Mode Ablation — FINAL VERDICTS — 2026-09-19 — COMPLETE
+
+### What was run
+
+Three arms, selected by restarting the backend with an `EVIDENCE_MODE` override
+and verified against the live backend before every run: **C `full`** (retrieved
+case prose + voted labels), **B `labels_only`** (voted labels, prose stripped),
+**A `empty`** (no retrieval-derived evidence). 100 cases per arm from the
+pre-registered seed-42 sample, then C and B extended to the full 477-case
+eligible pool under §6.3.1's width-triggered rule.
+
+**Every arm completed every case. 100/100 ×3 and 477/477 ×2, zero generation
+failures throughout.** The pre-scoring integrity gate passed on both samples:
+equal case sets, and retrieved uid sets identical across arms on every single
+case (200 pairwise comparisons at n=100, 477 at n=477, zero mismatches). That
+identity was *checked*, not assumed — retrieval sits upstream of the
+evidence-mode branch, so it is a prediction of the design, and the harness was
+modified to record per-case retrieved uids specifically so it could be falsified.
+
+### Implementation & Validation
+
+**Verdict 1 — the contribution claim is supported against a no-evidence
+baseline, and not supported for retrieved prose over voted labels.**
+
+C−A clears on every contrast, both fields (CheXbert macro-F1: findings +0.1153
+[0.0517, 0.1748], impression +0.0811 [0.0299, 0.1213]). Evidence of some kind
+does work relative to none. This carries §2.4's pre-registered qualification:
+Arm A is an evidence-plus-instruction contrast, so C−A is a floor and may not
+be called "the effect of removing evidence".
+
+C−B — the pre-registered primary endpoint — **did not clear at either sample
+size**: −0.0197 [−0.0621, +0.0334] at n=100, +0.0256 [−0.0198, +0.0710] at
+n=477. Reported as a negative result under §6.3, a treatment fixed before any
+arm ran. No substitute endpoint was promoted.
+
+**Verdict 2 — every clearing C−B CheXbert contrast is recall-driven, and none
+may be cited as evidence of improved clinical correctness.**
+
+The `findings` C−B CheXbert contrast clears at n=477 (+0.0587 [0.0165,
+0.0978]). Decomposed into the macro-precision and macro-recall it is built from
+(verified to reproduce `score_chexbert`'s macro-F1 to 10 decimal places), the
+gain is recall-only: recall +0.0762 [0.0315, 0.1218] clears, precision +0.0212
+[−0.0366, +0.0735] does not. On `impression`, recall clears (+0.0645) while
+precision is negative (−0.0369) and spans zero.
+
+Arm C writes **3.1× Arm B's findings length** (50.3 vs 16.2 tokens; 1.59× the
+reference itself). A longer report names more conditions, CheXbert extracts
+more, recall rises — and whether the extra assertions are right is precisely
+what precision measures, and it does not move. The identical signature appears
+in ROUGE-L on the same field (recall +0.2207 clearing, precision −0.0058 not
+clearing), in an independent metric family. **Three of four decompositions clear
+on recall and fail on precision.** Binding rule: wherever a clearing C−B
+CheXbert number appears, its precision component appears beside it.
+
+**Verdict 3 — the one gain that is not length.**
+
+`impression` ROUGE-L **precision +0.2581 [0.2036, 0.3159]**, at near-equal token
+length (12.1 vs 11.5 tokens; reference ratios 1.51 vs 1.44). A verbosity
+artefact cannot raise precision when both arms write the same length, so this is
+the single place in the phase where Arm C is demonstrably doing something other
+than saying more. It is a claim about **wording fidelity to the reference
+impression**, not about diagnostic correctness — the same arm's CheXbert
+`impression` contrast does not clear. It is stated in those terms and no
+stronger.
+
+**Verdict 4 — the standing caution, applied symmetrically.**
+
+**The design could not detect a difference. That does not establish that none
+exists.** Two independent samples — the second being the entire eligible pool —
+failed to resolve the primary endpoint in either direction. Macro-F1 at these
+magnitudes (0.11–0.17 over 14 conditions, 5 never predicted correctly by any
+arm) is blunt, and because its interval does not narrow with n the way
+case-level metrics do, "run more cases" is not an available remedy here.
+
+§6.7's constraint binds in **both** directions: it may not be claimed the result
+would have been positive with more data, and it may equally not be claimed that
+the null is established or that retrieved prose has been shown not to help. Both
+overstate the evidence. The defensible statement is that this endpoint, as
+constructed, may not be resolvable on this dataset — a limitation of the
+measurement, not a property of the system.
+
+### Supporting findings recorded separately
+
+- **§6.10** — CI width does not extrapolate as 1/√n for macro-averaged metrics.
+  Own dev-log entry above; generalises beyond this project.
+- **§6.11** — n=100 and n=477 macro-F1 are different estimands; both reported,
+  neither a replication or correction of the other, no pooled figure.
+- **§6.8** — micro-F1 is unusable on this dataset: Arm A's constant string
+  scores micro-F1 0.6733 on `impression` against Arm C's 0.5581.
+- **§6.9** — restricted macro-F1 declined on proof of invariance.
+- **§6.2.1a** — Tier 2 field split; Phase 20's BERTScore conclusion stands.
+
+### How to Write This in Your Thesis
+
+> The ablation supports the contribution claim against a no-evidence baseline
+> and does not support it for retrieved case prose over voted labels alone. The
+> pre-registered primary endpoint — CheXbert macro-F1 on the impression field,
+> full-evidence minus labels-only — failed to clear at both the pre-registered
+> sample of 100 cases and at the full 477-case eligible pool, and is reported as
+> a negative result under a treatment fixed before any arm was run. Where
+> between-arm clinical-label contrasts did clear, decomposition into precision
+> and recall showed the gain to be recall-driven in every case, with precision
+> failing to clear; since the full-evidence arm generates 3.1 times the length
+> of the labels-only arm on the findings field, these gains are attributable to
+> verbosity rather than to improved clinical correctness, and are not cited as
+> the latter. A single result resists that explanation: ROUGE-L precision on the
+> impression field improved by 0.2581 at near-equal generated length, which a
+> verbosity artefact cannot produce, and which is therefore reported as improved
+> wording fidelity to the reference impression rather than as improved
+> diagnostic accuracy. The appropriate conclusion is that the design could not
+> detect a difference between retrieved prose and voted labels, not that no such
+> difference exists; the same constraint that forbids claiming a larger sample
+> would have vindicated the full-evidence arm forbids treating the null as
+> established.
+
+**COMPLETE**
