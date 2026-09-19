@@ -1,0 +1,79 @@
+{
+  "primary_endpoint": {
+    "definition": "CheXbert macro-F1 on impression, full minus labels_only, paired bootstrap 95% CI excluding zero in the positive direction",
+    "pre_registered": "Phase 21 \u00a76.3, before any run"
+  },
+  "n_shared_cases": 477,
+  "n_boot": 2000,
+  "seed": 42,
+  "contrasts": {
+    "full_minus_labels_only": {
+      "findings_rouge_l": {
+        "n": 477,
+        "mean_upper": 0.2373445537690862,
+        "mean_lower": 0.14542583875890527,
+        "mean_difference": 0.09191871501018094,
+        "ci_95": [
+          0.08321100223686255,
+          0.10120838638018766
+        ],
+        "excludes_zero": true
+      },
+      "findings_meteor": {
+        "n": 477,
+        "mean_upper": 0.34506408859078075,
+        "mean_lower": 0.11856265472299168,
+        "mean_difference": 0.22650143386778904,
+        "ci_95": [
+          0.21507136158090004,
+          0.23755415560687107
+        ],
+        "excludes_zero": true
+      },
+      "findings_chexbert_macro_f1": {
+        "n": 477,
+        "macro_f1_upper": 0.16892694196363017,
+        "macro_f1_lower": 0.11017733449782131,
+        "mean_difference": 0.05874960746580886,
+        "ci_95": [
+          0.01650202967046759,
+          0.09777231553985062
+        ],
+        "excludes_zero": true
+      },
+      "impression_rouge_l": {
+        "n": 477,
+        "mean_upper": 0.24964098227669151,
+        "mean_lower": 0.03509522178759312,
+        "mean_difference": 0.21454576048909843,
+        "ci_95": [
+          0.19062632221111106,
+          0.24034285437407973
+        ],
+        "excludes_zero": true
+      },
+      "impression_meteor": {
+        "n": 477,
+        "mean_upper": 0.30597608254464437,
+        "mean_lower": 0.09630912522091162,
+        "mean_difference": 0.20966695732373272,
+        "ci_95": [
+          0.18579621427884893,
+          0.23477491255821045
+        ],
+        "excludes_zero": true
+      },
+      "impression_chexbert_macro_f1": {
+        "n": 477,
+        "macro_f1_upper": 0.17339573067068947,
+        "macro_f1_lower": 0.14780403348389326,
+        "mean_difference": 0.025591697186796214,
+        "ci_95": [
+          -0.019802762820331797,
+          0.07096950069410558
+        ],
+        "excludes_zero": false
+      }
+    }
+  }
+}
