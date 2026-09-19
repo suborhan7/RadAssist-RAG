@@ -153,3 +153,22 @@ export function DiscardIcon({ className }: IconProps) {
     </svg>
   );
 }
+
+/** Copy to clipboard -- two offset sheets. */
+export function CopyIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className}>
+      <rect x="6.5" y="6.5" width="8.5" height="8.5" rx="1.5" />
+      <path d="M11.5 6.5V4.5A1.5 1.5 0 0 0 10 3H4.5A1.5 1.5 0 0 0 3 4.5V10a1.5 1.5 0 0 0 1.5 1.5h2" />
+    </svg>
+  );
+}
+
+/** Confirmation tick -- pairs with CopyIcon for the "copied" state. */
+export function CheckIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className}>
+      <path d="M3.5 9.5 7 13l7.5-8" />
+    </svg>
+  );
+}

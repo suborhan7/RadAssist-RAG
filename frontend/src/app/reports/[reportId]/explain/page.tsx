@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { ApiError, explainReport, getReport } from "@/lib/api-client";
 import { StepProgress, type WorkflowStepDisplay } from "@/components/workflow/StepProgress";
 import { Button } from "@/components/ui/button";
+import { ImpressionExplanation } from "@/components/report/impression-explanation";
 import { BackLink } from "@/components/layout/screen-header";
 import { useT } from "@/lib/i18n";
 import type { paths } from "@/lib/generated/api";
@@ -113,7 +114,7 @@ export default function ExplainPage() {
           </p>
 
           <div className="flex-1 overflow-auto px-30 py-30">
-            <div className="mx-auto flex max-w-[70ch] flex-col gap-24">
+            <div className="mx-auto flex max-w-[70ch] flex-col gap-30">
               {reportLoadError && (
                 <p className="rounded-field border border-amber-line bg-amber-wash px-14 py-12 text-sm text-amber">
                   {reportLoadError}
@@ -122,21 +123,17 @@ export default function ExplainPage() {
 
               {status !== "idle" && <StepProgress steps={[stepDisplay]} />}
 
-              {status === "done" && askedQuestion && answer ? (
-                <article className="flex flex-col gap-16">
-                  <div className="flex items-baseline gap-14 border-b border-strong pb-12">
-                    <h2 className="text-panel text-text-primary">{askedQuestion}</h2>
-                    <span className="flex-1" />
-                    {elapsedMs !== undefined && (
-                      <span className="whitespace-nowrap font-mono text-mono-meta text-text-tertiary">
-                        {(elapsedMs / 1000).toFixed(1)}s
-                      </span>
-                    )}
-                  </div>
-                  <p className="whitespace-pre-wrap text-findings text-text-primary">{answer}</p>
-                </article>
+              {status === "done" && askedQuestion && answer && report ? (
+                <ImpressionExplanation
+                  question={askedQuestion}
+                  answer={answer}
+                  impression={report.content.impression}
+                  findings={report.content.findings}
+                  retrievedCases={report.retrieved_cases}
+                  elapsedMs={elapsedMs}
+                />
               ) : status === "idle" ? (
-                <p className="text-findings text-text-tertiary">
+                <p className="max-w-[62ch] text-answer text-text-tertiary">
                   {t("explain.idlePrompt")}
                 </p>
               ) : null}
@@ -182,13 +179,10 @@ export default function ExplainPage() {
         <aside className="w-explain-panel flex-none overflow-auto border-l border-hairline bg-bg-raised p-22">
           {report && (
             <>
-              <h3 className="mb-14 font-mono text-eyebrow uppercase text-text-tertiary">
-                {t("explain.reportImpression")}
-              </h3>
-              <blockquote className="mb-28 border-l-2 border-cyan pl-16 text-findings text-text-primary">
-                {report.content.impression || t("compare.none")}
-              </blockquote>
-
+              {/* The report impression used to be repeated here. It is now the
+                  first thing in the reasoning card, and one screen showing the
+                  same sentence twice is noise. The rail keeps what it alone
+                  carries: the cases the answer was grounded in. */}
               <h3 className="mb-14 font-mono text-eyebrow uppercase text-text-tertiary">
                 {t("explain.casesInContext")}
               </h3>

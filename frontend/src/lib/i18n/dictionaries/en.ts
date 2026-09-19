@@ -21,6 +21,11 @@ export const en: Dict = {
   "common.save": "Save",
   "common.retry": "Retry",
   "common.loading": "Loading…",
+  // Copy-to-clipboard control. "Copy failed" is a real state, not decoration:
+  // the clipboard API can reject, and the button must not show the tick then.
+  "common.copy": "Copy",
+  "common.copied": "Copied",
+  "common.copyFailed": "Copy failed",
 
   // ── nav (left rail) ───────────────────────────────────────────────────────
   "nav.queue": "Queue",
@@ -300,6 +305,24 @@ export const en: Dict = {
   "explain.err404": (p) => `Report not found: ${String(p.msg)}`,
   "explain.errGeneric": "Failed to get an answer.",
   "explain.stepAsking": "Asking AI assistant",
+  // Section labels for the exchange. Without them the question and the answer
+  // read as one undifferentiated block.
+  "explain.labelQuestion": "Your question",
+  "explain.labelAnswer": "Answer",
+  // Reasoning-card section labels. Sentence case, not the app's mono eyebrow:
+  // this card is dense and its labels are read, not scanned past.
+  "explain.aiExplanation": "AI explanation",
+  "explain.labelImpression": "Impression",
+  "explain.labelEvidence": "Evidence",
+  // "Findings in this report", NOT "supporting findings" -- these are the
+  // report's own statements, and nothing in the system computed which of them
+  // support the impression.
+  "explain.labelFindings": "Findings in this report",
+  "explain.labelReasoning": "Model reasoning",
+  "explain.hideReasoning": "Hide",
+  "explain.showReasoning": "Show",
+  "explain.agreeOn": (p) =>
+    `${Number(p.agreeing)} of ${Number(p.k)} retrieved cases agree on ${String(p.label) || "the primary finding"}`,
   "explain.grounding":
     "Answers are grounded in the retrieved cases and this report. The assistant cannot introduce new findings, and it is not a second opinion.",
   "explain.idlePrompt":

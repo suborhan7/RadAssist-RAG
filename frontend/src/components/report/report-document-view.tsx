@@ -1,6 +1,7 @@
 "use client";
 
 import { useT } from "@/lib/i18n";
+import { reportLabelClass, reportBodyClass, type ReportFieldKey } from "./report-typography";
 import type { paths } from "@/lib/generated/api";
 
 type ReportDetailResponse =
@@ -62,14 +63,22 @@ export function ReportDocumentView({ content }: { content: ReportContentResponse
   const { t } = useT();
   return (
     <div className="flex flex-col">
-      {REPORT_CONTENT_FIELDS.map(({ key }) => (
-        <div key={key} className="border-b border-hairline py-16 first:pt-0 last:border-0 last:pb-0">
-          <h3 className="font-mono text-eyebrow uppercase text-text-tertiary">{t(REPORT_FIELD_LABEL_KEY[key])}</h3>
-          <p className="mt-8 whitespace-pre-wrap text-findings text-text-secondary">
-            {content[key] || t("compare.none")}
-          </p>
-        </div>
-      ))}
+      {REPORT_CONTENT_FIELDS.map(({ key }) => {
+        const value = content[key];
+        return (
+          <div key={key} className="border-b border-hairline py-16 first:pt-0 last:border-0 last:pb-0">
+            <h3 className={reportLabelClass(key as ReportFieldKey)}>{t(REPORT_FIELD_LABEL_KEY[key])}</h3>
+            <p
+              className={`mt-12 max-w-[68ch] whitespace-pre-wrap ${reportBodyClass(
+                key as ReportFieldKey,
+                Boolean(value),
+              )}`}
+            >
+              {value || t("compare.none")}
+            </p>
+          </div>
+        );
+      })}
     </div>
   );
 }

@@ -115,6 +115,14 @@ const config: Config = {
       impression:      ["23px", { lineHeight: "38px", letterSpacing: "-0.01em", fontWeight: "500" }],
       "impression-report": ["19px", { lineHeight: "33px", fontWeight: "500" }],
       findings:    ["16px", { lineHeight: "30px", fontWeight: "400" }],
+      // Long-form machine prose the doctor reads end to end (the
+      // explainability answer). Deliberately NOT `findings`: that token is
+      // report-document body, set at 400 to sit quietly under the impression.
+      // This is the only thing on its screen, and light-on-dark text at 400
+      // reads thinner than the same weight does on paper -- halation eats the
+      // stem width. 500 restores the apparent weight, and 17/32 gives the
+      // extra size and leading a screenful of continuous prose needs.
+      answer:      ["17px", { lineHeight: "32px", fontWeight: "500" }],
       "findings-bn": ["16px", { lineHeight: "34px", fontWeight: "400" }],
       prose:   ["15px", { lineHeight: "1.65" }],
       base:    ["15px", { lineHeight: "1.5" }],
@@ -126,6 +134,11 @@ const config: Config = {
       // mono eyebrow — the 10.5px floor, uppercase, tracked
       eyebrow: ["10.5px", { lineHeight: "1.3", letterSpacing: "0.14em", fontWeight: "500" }],
       "eyebrow-11": ["11px", { lineHeight: "1.3", letterSpacing: "0.14em", fontWeight: "500" }],
+      // Boxed section label on a report document (EXAMINATION, FINDINGS, ...).
+      // Larger than the 10.5px eyebrow floor on purpose: on the report these
+      // are not scanned past, they are the structure a radiologist navigates
+      // by, and at 10.5px they read as noise above the text they label.
+      "section-label": ["12.5px", { lineHeight: "1.2", letterSpacing: "0.12em", fontWeight: "500" }],
       "mono-meta": ["11px", { lineHeight: "1.4" }],
       "mono-meta-lg": ["12.5px", { lineHeight: "1.4" }],
       metric:  ["44px", { lineHeight: "1", letterSpacing: "-0.04em", fontWeight: "500" }],

@@ -29,6 +29,7 @@ import { BUTTON_BASE, SIZE, VARIANT } from "@/components/ui/button";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/cn";
 import { EditableReportSection } from "@/components/report/editable-report-section";
+import type { ReportFieldKey } from "@/components/report/report-typography";
 import { FinalizePreview } from "@/components/report/finalize-preview";
 import { ReportDiffView } from "@/components/report/report-diff-view";
 import { REPORT_CONTENT_FIELDS as CONTENT_FIELDS } from "@/components/report/report-document-view";
@@ -450,6 +451,7 @@ export default function ReportWorkspacePage() {
                 return (
                   <EditableReportSection
                     key={key}
+                    fieldKey={key as ReportFieldKey}
                     label={t(REPORT_FIELD_LABEL_KEY[key])}
                     value={report.content[key] ?? ""}
                     isEdited={report.content[key] !== report.ai_draft_content[key]}

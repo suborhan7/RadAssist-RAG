@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 import { BUTTON_BASE, SIZE, VARIANT } from "@/components/ui/button";
 import { DiffMarkup } from "@/components/report/report-diff-view";
+import { reportLabelClass, reportBodyClass, type ReportFieldKey } from "./report-typography";
 import { useT } from "@/lib/i18n";
 import type { SectionDiff } from "@/lib/report-diff";
 
@@ -44,6 +45,7 @@ import type { SectionDiff } from "@/lib/report-diff";
  * extraction) rather than a second word-diff rendering.
  */
 export function EditableReportSection({
+  fieldKey,
   label,
   value,
   isEdited,
@@ -60,6 +62,8 @@ export function EditableReportSection({
   onAcceptRegeneration,
   onDiscardRegeneration,
 }: {
+  /** Which report field this is -- drives typography via report-typography.ts. */
+  fieldKey?: ReportFieldKey;
   label: string;
   value: string;
   isEdited: boolean;
@@ -124,7 +128,7 @@ export function EditableReportSection({
       onDoubleClick={startEditing}
     >
       <div className="flex items-center gap-8">
-        <h3 className="font-mono text-eyebrow uppercase text-text-tertiary">{label}</h3>
+        <h3 className={reportLabelClass(fieldKey)}>{label}</h3>
         {isEdited && (
           <span
             className="inline-block h-5 w-5 rounded-full bg-cyan"
@@ -179,7 +183,16 @@ export function EditableReportSection({
           )}
         />
       ) : (
-        <p className="mt-8 whitespace-pre-wrap text-findings text-text-secondary">{value || t("compare.none")}</p>
+        <p
+          className={cn(
+            "mt-12 max-w-[68ch] whitespace-pre-wrap",
+            // Same rule the finalize preview uses. Committed text must not dim
+            // relative to the identical text mid-edit.
+            reportBodyClass(fieldKey, Boolean(value)),
+          )}
+        >
+          {value || t("compare.none")}
+        </p>
       )}
 
       {regenerationError && (

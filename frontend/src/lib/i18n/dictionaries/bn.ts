@@ -24,6 +24,9 @@ export const bn: Dict = {
   "common.save": "সংরক্ষণ",
   "common.retry": "আবার চেষ্টা করুন",
   "common.loading": "লোড হচ্ছে…",
+  "common.copy": "কপি করুন",
+  "common.copied": "কপি হয়েছে",
+  "common.copyFailed": "কপি ব্যর্থ",
 
   // ── nav (left rail) ───────────────────────────────────────────────────────
   "nav.queue": "সারি",
@@ -296,6 +299,17 @@ export const bn: Dict = {
   "explain.err404": (p) => `রিপোর্ট পাওয়া যায়নি: ${String(p.msg)}`,
   "explain.errGeneric": "একটি উত্তর পাওয়া যায়নি।",
   "explain.stepAsking": "এআই সহকারীকে জিজ্ঞাসা করা হচ্ছে",
+  "explain.labelQuestion": "আপনার প্রশ্ন",
+  "explain.labelAnswer": "উত্তর",
+  "explain.aiExplanation": "এআই ব্যাখ্যা",
+  "explain.labelImpression": "ইম্প্রেশন",
+  "explain.labelEvidence": "প্রমাণ",
+  "explain.labelFindings": "এই রিপোর্টের ফাইন্ডিংস",
+  "explain.labelReasoning": "মডেলের যুক্তি",
+  "explain.hideReasoning": "লুকান",
+  "explain.showReasoning": "দেখান",
+  "explain.agreeOn": (p) =>
+    `${Number(p.k)}টির মধ্যে ${Number(p.agreeing)}টি পুনরুদ্ধার করা কেস ${String(p.label) || "প্রধান ফাইন্ডিং"}-এ একমত`,
   "explain.grounding":
     "উত্তরগুলি পুনরুদ্ধার করা কেস এবং এই রিপোর্টের উপর ভিত্তি করে। সহকারী নতুন কোনো ফলাফল প্রবর্তন করতে পারে না, এবং এটি দ্বিতীয় মতামত নয়।",
   "explain.idlePrompt":
