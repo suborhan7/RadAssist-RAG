@@ -10,7 +10,7 @@ fakes.
 from __future__ import annotations
 
 import uuid
-from dataclasses import asdict
+from dataclasses import asdict, replace
 from datetime import date, datetime, timezone
 
 import pytest
@@ -145,7 +145,15 @@ def test_correct_data_flow_with_patient_and_evidence():
     assert detail.status == ReportStatus.AI_DRAFT
     assert detail.validation_warnings == ("Mentions 'X' which is not supported",)
     assert detail.llm_model == "llama3:8b"
-    assert detail.retrieved_cases == (case_a,)
+    # The fake vector store hands back similarity 0.95, but the persisted
+    # RetrievedEvidence row for this session says 0.9, and the persisted score is
+    # the authoritative one: it came from the original ranked query, whereas an
+    # ID fetch has no distance to report (the real ChromaVectorStore.get_by_ids
+    # returns a flat 1.0 sentinel for every case). Asserting 0.9 here locks in
+    # that reconstruction restores the real score rather than passing the
+    # store's placeholder through.
+    assert detail.retrieved_cases == (replace(case_a, similarity=0.9),)
+    assert detail.retrieved_cases[0].similarity == 0.9
     assert fakes["vector_store"].get_by_ids_calls == [["u1"]]
     # a fresh, never-edited/finalized report has no finalized_at/by and no audit log
     assert detail.finalized_at is None

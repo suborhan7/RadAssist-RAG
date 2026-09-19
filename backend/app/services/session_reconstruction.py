@@ -13,6 +13,7 @@ loader.
 from __future__ import annotations
 
 import uuid
+from dataclasses import replace
 
 from sqlalchemy.orm import Session
 
@@ -56,7 +57,37 @@ def reconstruct_session_evidence(
     )
     study_uids = [row.study_uid for row in evidence_rows]
 
-    retrieved_cases = vector_store.get_by_ids(study_uids)
+    # get_by_ids() is an ID fetch, not a ranked search, so it has no distance to
+    # report and stamps similarity = 1.0 on every case (see its own docstring).
+    # That sentinel is correct at its own layer and wrong the moment anything
+    # downstream treats it as a measurement -- and three things do:
+    #
+    #   * LabelVotingService.vote() sums similarity into vote_weight, so every
+    #     weight collapsed to the plain case count (3 cases -> "3.00"), and that
+    #     number is printed into the LLM prompt (prompt_builder.py's
+    #     "- Vote weight: {:.2f}" line).
+    #   * ContextBuilder sorts by (-similarity, source_uid). With every
+    #     similarity identical the sort degenerated to alphabetical source_uid,
+    #     so the evidence order in the prompt -- and top_retrieved_case -- was
+    #     uid order, not similarity order.
+    #   * The report UI renders similarity as a percentage, showing 100.0% on
+    #     every retrieved case.
+    #
+    # The real numbers were never lost: RetrievedEvidence.similarity persists
+    # each case's score from the original ranked query. They were simply read
+    # for their study_uid and then discarded. This restores them.
+    #
+    # Keyed by uid rather than zipped positionally: get_by_ids() documents that
+    # it reorders to match the requested order, but it can also return fewer
+    # results if a uid is missing from the collection, and a positional zip
+    # would then silently pair the wrong score with the wrong case.
+    persisted_similarity = {row.study_uid: row.similarity for row in evidence_rows}
+    retrieved_cases = [
+        replace(case, similarity=persisted_similarity[case.source_uid])
+        if case.source_uid in persisted_similarity
+        else case
+        for case in vector_store.get_by_ids(study_uids)
+    ]
     voted_labels = label_voting_service.vote(retrieved_cases)
 
     return retrieval_session, retrieved_cases, voted_labels

@@ -19,6 +19,7 @@ strategy.
 from __future__ import annotations
 
 import uuid
+from dataclasses import replace
 from datetime import datetime, timezone
 
 import pytest
@@ -212,10 +213,15 @@ def test_correct_sequencing_and_data_flow():
     # 1-2-3: fetch + study_uids extraction + get_by_ids, in rank order
     assert fakes["vector_store"].get_by_ids_calls == [["u1", "u2"]]
     # 4: vote called with exactly what get_by_ids returned
-    assert fakes["label_voting_service"].vote_calls == [[case_a, case_b]]
+    # Reconstruction overwrites the store's similarity with the persisted
+    # RetrievedEvidence score (0.9 for both rows), because vote_weight is a SUM
+    # of similarities -- with the old 1.0 sentinel every weight collapsed to the
+    # plain case count and that number is printed into the LLM prompt.
+    seeded_a, seeded_b = replace(case_a, similarity=0.9), replace(case_b, similarity=0.9)
+    assert fakes["label_voting_service"].vote_calls == [[seeded_a, seeded_b]]
     # 5: context_builder.build called with retrieved + voted_labels + retrieval_metadata
     build_call = fakes["context_builder"].build_calls[0]
-    assert build_call["retrieved"] == [case_a, case_b]
+    assert build_call["retrieved"] == [seeded_a, seeded_b]
     assert build_call["voted_labels"] == voted
     assert build_call["retrieval_metadata"].collection_name == settings.CHROMA_COLLECTION_NAME
     assert build_call["retrieval_metadata"].embedding_model == settings.CHROMA_EMBEDDING_MODEL

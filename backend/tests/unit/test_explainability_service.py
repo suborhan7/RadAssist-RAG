@@ -13,7 +13,7 @@ is a hand-built fake.
 from __future__ import annotations
 
 import uuid
-from dataclasses import asdict
+from dataclasses import asdict, replace
 
 import pytest
 from sqlalchemy import create_engine
@@ -188,8 +188,11 @@ def test_correct_sequencing_and_data_flow():
 
     # evidence reconstruction: get_by_ids -> vote -> context_builder.build
     assert fakes["vector_store"].get_by_ids_calls == [["u1"]]
-    assert fakes["label_voting_service"].vote_calls == [[case_a]]
-    assert fakes["context_builder"].build_calls[0]["retrieved"] == [case_a]
+    # Same contract as the other two reconstruction callers: the persisted
+    # RetrievedEvidence similarity (0.9) replaces the store's ID-fetch value.
+    seeded_a = replace(case_a, similarity=0.9)
+    assert fakes["label_voting_service"].vote_calls == [[seeded_a]]
+    assert fakes["context_builder"].build_calls[0]["retrieved"] == [seeded_a]
     assert fakes["context_builder"].build_calls[0]["voted_labels"] == voted
 
     # prompt_builder.build_explanation_prompt called with (report, question, evidence_summary)
