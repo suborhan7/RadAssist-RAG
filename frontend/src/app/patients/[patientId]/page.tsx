@@ -8,6 +8,7 @@ import { StatusChip } from "@/components/ui/chip";
 import { OwnerChip } from "@/components/ui/owner-chip";
 import { toChipReportStatus } from "@/lib/report-status";
 import { BUTTON_BASE, SIZE, VARIANT } from "@/components/ui/button";
+import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/cn";
 import type { paths } from "@/lib/generated/api";
 
@@ -30,6 +31,7 @@ type PatientHistoryReportResponse =
  * the access-log rail (no access-log table exists).
  */
 export default function PatientProfilePage() {
+  const { t } = useT();
   const params = useParams<{ patientId: string }>();
   const patientId = params.patientId;
 
@@ -45,11 +47,12 @@ export default function PatientProfilePage() {
         setHistory(historyResult);
       })
       .catch((err) => {
-        setError(err instanceof ApiError ? err.message : "Failed to load patient profile.");
+        setError(err instanceof ApiError ? err.message : t("patient.errLoad"));
       });
     getCurrentDoctor()
       .then((doctor) => setCurrentDoctorId(doctor?.id ?? null))
       .catch(() => setCurrentDoctorId(null));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [patientId]);
 
   if (error) {
@@ -65,7 +68,7 @@ export default function PatientProfilePage() {
   if (!patient || !history) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-bg-app">
-        <p className="text-text-tertiary">Loading patient profile…</p>
+        <p className="text-text-tertiary">{t("patient.loading")}</p>
       </div>
     );
   }
@@ -84,7 +87,7 @@ export default function PatientProfilePage() {
           href="/patients/search"
           className="text-sm text-text-tertiary transition-colors duration-hover hover:text-cyan"
         >
-          Find patient
+          {t("nav.find")}
         </Link>
         <span className="text-text-muted">/</span>
         <h1 className="truncate text-screen-title text-text-primary">{patient.name}</h1>
@@ -97,14 +100,14 @@ export default function PatientProfilePage() {
             href={`/reports/${mostRecentReport.id}/compare?against=${priorReport.id}`}
             className={cn(BUTTON_BASE, VARIANT.secondary, SIZE.md)}
           >
-            Compare latest two
+            {t("patient.compareLatestTwo")}
           </Link>
         )}
         <Link
           href={`/patients/${patientId}/upload`}
           className={cn(BUTTON_BASE, VARIANT.primary, SIZE.md)}
         >
-          New examination
+          {t("nav.newExam")}
         </Link>
       </header>
 
@@ -115,28 +118,28 @@ export default function PatientProfilePage() {
             <div className="min-w-0">
               <h2 className="text-page-title text-text-primary">{patient.name}</h2>
               <p className="mt-6 text-sm text-text-secondary">
-                {age !== null ? `${age} years, ` : ""}
-                {patient.gender} · born {patient.date_of_birth}
+                {age !== null ? `${t("patient.years", { count: age })}, ` : ""}
+                {patient.gender} · {t("patient.born")} {patient.date_of_birth}
               </p>
             </div>
             <span className="hidden flex-1 sm:block" />
             <div className="flex-none">
-              <div className="font-mono text-eyebrow uppercase text-text-tertiary">On record</div>
+              <div className="font-mono text-eyebrow uppercase text-text-tertiary">{t("patient.onRecord")}</div>
               <div className="mt-4 text-base text-text-primary">
-                {history.length} {history.length === 1 ? "study" : "studies"}
-                {since ? ` since ${since}` : ""}
+                {t("patient.studies", { count: history.length })}
+                {since ? ` ${t("patient.since", { since })}` : ""}
               </div>
             </div>
           </div>
 
           {/* Prior studies timeline, newest first */}
           <div className="mb-8 font-mono text-eyebrow uppercase text-cyan">
-            Prior studies · same patient
+            {t("patient.priorStudies")}
           </div>
           <div className="border-t border-hairline">
             {newestFirst.length === 0 && (
               <p className="py-20 text-sm text-text-tertiary">
-                No prior visits recorded for this patient yet.
+                {t("patient.noPriors")}
               </p>
             )}
 
@@ -152,21 +155,21 @@ export default function PatientProfilePage() {
                     <StatusChip status={toChipReportStatus(report.status)} />
                   </div>
                   <p className="line-clamp-2 max-w-[74ch] text-findings text-text-secondary">
-                    {report.ai_content.impression || "(no impression recorded)"}
+                    {report.ai_content.impression || t("patient.noImpression")}
                   </p>
                   <div className="mt-12 flex flex-wrap items-center gap-18">
                     <Link
                       href={`/reports/${report.id}`}
                       className="text-sm text-cyan transition-colors duration-hover hover:text-text-primary"
                     >
-                      Open report
+                      {t("patient.openReport")}
                     </Link>
                     {!isMostRecent && mostRecentReport && (
                       <Link
                         href={`/reports/${mostRecentReport.id}/compare?against=${report.id}`}
                         className="text-sm text-cyan transition-colors duration-hover hover:text-text-primary"
                       >
-                        Compare with this
+                        {t("patient.compareWithThis")}
                       </Link>
                     )}
                   </div>
@@ -176,8 +179,7 @@ export default function PatientProfilePage() {
           </div>
 
           <p className="mt-24 max-w-[74ch] text-sm-tight leading-relaxed text-text-secondary">
-            Prior studies are this patient over time. Archive cases, other patients&rsquo; films
-            retrieved by similarity, never appear here; they exist only inside the workspace.
+            {t("patient.priorNote")}
           </p>
         </div>
       </div>

@@ -87,7 +87,56 @@ function walk(dir, out = []) {
   return out;
 }
 
-let failures = 0;
+/**
+ * Palette parity: every token inside the THEME:START/THEME:END markers of the
+ * base :root block must also be defined inside the light block's markers.
+ *
+ * Same failure mode check-i18n.mjs guards against, one layer down. A token
+ * missing from the light palette does not throw — CSS custom properties
+ * cascade, so it silently inherits the dark value and ships as, say, near-white
+ * text on a white surface. Nobody sees an error; a reader sees nothing at all.
+ *
+ * Tokens declared OUTSIDE the markers (--bg-film, spacing, radius, motion, the
+ * illustration hexes) are theme-invariant on purpose and are not compared.
+ */
+function checkPaletteParity() {
+  const css = readFileSync(join(ROOT, TOKEN_FILE), "utf8");
+  const blocks = [...css.matchAll(/THEME:START ====([\s\S]*?)==== THEME:END/g)].map((m) => m[1]);
+
+  if (blocks.length !== 2) {
+    console.error(
+      `\x1b[31m✗\x1b[0m ${TOKEN_FILE}  [palette-parity]  expected 2 THEME:START/END blocks (dark, light), found ${blocks.length}`,
+    );
+    return 1;
+  }
+
+  const tokensOf = (block) => new Set([...block.matchAll(/^\s*(--[\w-]+|color-scheme)\s*:/gm)].map((m) => m[1]));
+  const [dark, light] = blocks.map(tokensOf);
+
+  let problems = 0;
+  for (const token of dark) {
+    if (!light.has(token)) {
+      console.error(
+        `\x1b[31m✗\x1b[0m ${TOKEN_FILE}  [palette-parity]  ${token} is themed but missing from the light palette`,
+      );
+      console.error("  It would silently inherit the dark value. See §6.2.");
+      problems++;
+    }
+  }
+  for (const token of light) {
+    if (!dark.has(token)) {
+      console.error(
+        `\x1b[31m✗\x1b[0m ${TOKEN_FILE}  [palette-parity]  ${token} is defined only in the light palette`,
+      );
+      console.error("  Every themed token needs a dark counterpart too.");
+      problems++;
+    }
+  }
+  if (problems === 0) console.log(`palette parity OK — ${dark.size} themed tokens in both palettes.`);
+  return problems;
+}
+
+let failures = checkPaletteParity();
 const files = walk(SRC);
 for (const abs of files) {
   const rel = relative(ROOT, abs).split("\\").join("/");

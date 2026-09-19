@@ -124,6 +124,30 @@ class VotedLabel:
     agreement: float            # fraction of top-K neighbors agreeing -> confidence signal
 
 
+class RetrievalSupport(str, Enum):
+    """input_admission_projection_gate_architecture_v1.1_FROZEN.md §7: how
+    near the retrieved cases are to the query image. The SECOND of the two
+    independent evidence signals -- `VotedLabel.agreement` above is the
+    first, and §7.1's Warning is that they can disagree (five cases below
+    the floor can all carry the same label, giving high agreement on weak
+    evidence). Nothing may derive one from the other; this enum is
+    computed from the top-1 similarity and RETRIEVAL_FLOOR alone.
+
+    `str, Enum` matches ReportStatus/EditableReportField's existing idiom
+    in this module, and makes the value persist and serialize as its own
+    plain string without a converter at either boundary.
+
+    The member names state the measurement, not a conclusion about the
+    archive. §7.2's closing Rule is explicit that a top-1 of 0.52 under a
+    floor of 0.60 means "no retrieved case meets the threshold", NOT "no
+    similar case exists" -- so this is BELOW_FLOOR, never something like
+    NO_SIMILAR_CASE.
+    """
+
+    AT_OR_ABOVE_FLOOR = "at_or_above_floor"
+    BELOW_FLOOR = "below_floor"
+
+
 @dataclass(frozen=True)
 class RetrievalStats:
     num_cases: int

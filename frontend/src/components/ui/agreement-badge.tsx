@@ -1,3 +1,6 @@
+"use client";
+
+import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/cn";
 
 /**
@@ -40,15 +43,20 @@ const FILL: Record<Agreement, string> = {
   mixed: "bg-border-strong",
   weak: "bg-amber",
 };
-const WORD: Record<Agreement, string> = { strong: "Strong", mixed: "Mixed", weak: "Weak" };
+const WORD_KEY: Record<Agreement, string> = {
+  strong: "agreement.strong",
+  mixed: "agreement.mixed",
+  weak: "agreement.weak",
+};
 
 export function AgreementBadge({ level, factors }: { level: Agreement; factors: AgreementFactors }) {
+  const { t } = useT();
   const pct = Math.round((factors.agreeing / factors.k) * 100);
   return (
     <div>
       <div className="flex items-baseline justify-between">
-        <div className="font-mono text-eyebrow uppercase text-text-tertiary">Evidence agreement</div>
-        <div className={cn("text-panel", TONE[level])}>{WORD[level]}</div>
+        <div className="font-mono text-eyebrow uppercase text-text-tertiary">{t("agreement.title")}</div>
+        <div className={cn("text-panel", TONE[level])}>{t(WORD_KEY[level])}</div>
       </div>
 
       <div className="my-10 h-4 overflow-hidden rounded-full bg-bg-raised">
@@ -56,24 +64,24 @@ export function AgreementBadge({ level, factors }: { level: Agreement; factors: 
       </div>
 
       <p className="text-sm text-text-secondary">
-        {factors.agreeing} of {factors.k} retrieved cases agree on the primary finding.
+        {t("agreement.agreeLine", { agreeing: factors.agreeing, k: factors.k })}
       </p>
 
       <dl className="mt-12 border-t border-hairline pt-10">
-        <Row label="Top-1 similarity" value={`${factors.topSimilarity.toFixed(1)}%`} />
-        <Row label={`Mean similarity (K=${factors.k})`} value={`${factors.meanSimilarity.toFixed(1)}%`} />
+        <Row label={t("agreement.top1")} value={`${factors.topSimilarity.toFixed(1)}%`} />
+        <Row label={t("agreement.meanSim", { k: factors.k })} value={`${factors.meanSimilarity.toFixed(1)}%`} />
         <Row
-          label="Clinical history provided"
-          value={factors.clinicalHistory === null ? "Not recorded" : factors.clinicalHistory ? "Yes" : "No"}
+          label={t("agreement.clinHistory")}
+          value={factors.clinicalHistory === null ? t("agreement.notRecorded") : factors.clinicalHistory ? t("agreement.yes") : t("agreement.no")}
           tone={factors.clinicalHistory ? "text-cyan" : "text-text-tertiary"}
         />
-        <Row label="Label spread" value={`${factors.labelSpread} labels`} />
+        <Row label={t("agreement.labelSpread")} value={t("agreement.labelsCount", { count: factors.labelSpread })} />
       </dl>
 
       {/* Definition, not disclaimer. */}
       <p className="mt-12 rounded-panel bg-bg-raised p-12 text-sm text-text-secondary">
-        Measures agreement among retrieved cases.{" "}
-        <strong className="text-text-primary">Not a probability that the report is correct.</strong>
+        {t("agreement.defPre")}{" "}
+        <strong className="text-text-primary">{t("agreement.defBold")}</strong>
       </p>
     </div>
   );

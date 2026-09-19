@@ -113,7 +113,7 @@ def test_two_doctor_shared_patient_ownership_gate(client):
         retrieve_response = client.post(
             "/retrieve",
             files={"file": (image_a.name, f, "image/png")},
-            data={"top_k": "5", "min_similarity": "0.0", "patient_id": patient_id},
+            data={"top_k": "5", "min_similarity": "0.0", "declared_projection": "PA", "patient_id": patient_id},
         )
     assert retrieve_response.status_code == 200, f"doctor A's /retrieve failed: {retrieve_response.text}"
     session_a_id = retrieve_response.json()["session_id"]
@@ -146,7 +146,7 @@ def test_two_doctor_shared_patient_ownership_gate(client):
         retrieve_response_b = client.post(
             "/retrieve",
             files={"file": (image_b.name, f, "image/png")},
-            data={"top_k": "5", "min_similarity": "0.0", "patient_id": patient_id},
+            data={"top_k": "5", "min_similarity": "0.0", "declared_projection": "PA", "patient_id": patient_id},
         )
     assert retrieve_response_b.status_code == 200, f"doctor B's /retrieve failed: {retrieve_response_b.text}"
     session_b_id = retrieve_response_b.json()["session_id"]
@@ -190,7 +190,7 @@ def test_ownership_exposed_via_api_and_real_dashboard_counts(client):
         retrieve_response = client.post(
             "/retrieve",
             files={"file": (image_a.name, f, "image/png")},
-            data={"top_k": "5", "min_similarity": "0.0", "patient_id": patient_id},
+            data={"top_k": "5", "min_similarity": "0.0", "declared_projection": "PA", "patient_id": patient_id},
         )
     assert retrieve_response.status_code == 200
     session_a_id = retrieve_response.json()["session_id"]
@@ -236,7 +236,7 @@ def test_ownership_exposed_via_api_and_real_dashboard_counts(client):
         retrieve_response_b = client.post(
             "/retrieve",
             files={"file": (image_b.name, f, "image/png")},
-            data={"top_k": "5", "min_similarity": "0.0", "patient_id": patient_id},
+            data={"top_k": "5", "min_similarity": "0.0", "declared_projection": "PA", "patient_id": patient_id},
         )
     assert retrieve_response_b.status_code == 200
 
@@ -291,7 +291,7 @@ def test_phase17_edit_finalize_ownership_gate(client):
         retrieve_response = client_a.post(
             "/retrieve",
             files={"file": (image_a.name, f, "image/png")},
-            data={"top_k": "5", "min_similarity": "0.0", "patient_id": patient_id},
+            data={"top_k": "5", "min_similarity": "0.0", "declared_projection": "PA", "patient_id": patient_id},
         )
     assert retrieve_response.status_code == 200, retrieve_response.text
     session_id = retrieve_response.json()["session_id"]
@@ -348,7 +348,7 @@ def test_phase17_edit_finalize_ownership_gate(client):
         retrieve_response_2 = client_a.post(
             "/retrieve",
             files={"file": (image_a.name, f, "image/png")},
-            data={"top_k": "5", "min_similarity": "0.0", "patient_id": patient_id},
+            data={"top_k": "5", "min_similarity": "0.0", "declared_projection": "PA", "patient_id": patient_id},
         )
     assert retrieve_response_2.status_code == 200, retrieve_response_2.text
     session_id_2 = retrieve_response_2.json()["session_id"]

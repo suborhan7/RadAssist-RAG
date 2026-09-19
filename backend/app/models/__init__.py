@@ -11,6 +11,7 @@ from app.models.report import ReportRecord
 from app.models.report_audit_log import ReportAuditLog
 from app.models.retrieval_session import RetrievalSession
 from app.models.retrieved_evidence import RetrievedEvidence
+from app.models.upload_rejection import UploadRejectionLog
 
 __all__ = [
     "ComparisonRecord",
@@ -21,4 +22,5 @@ __all__ = [
     "ReportRecord",
     "RetrievalSession",
     "RetrievedEvidence",
+    "UploadRejectionLog",
 ]

@@ -12,3 +12,56 @@ body {
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
 }
+
+/* ── Panel entrance ───────────────────────────────────────────────────────────
+ * One authored moment, used where the pipeline stops and waits for the reader:
+ * the clinical questionnaire. It is the only place in the flow where the system
+ * hands control back, so the panel arriving is information, not decoration —
+ * without it the block simply exists on the next render and is easy to miss,
+ * which is what a tester reported.
+ *
+ * A transition with @starting-style rather than a keyframe, so it is
+ * interruptible and does not restart from zero. Entering, therefore ease-out
+ * (the shared --ease is already an exponential ease-out curve). Opacity plus a
+ * 6px rise: it moves into place, never scales up from nothing. Durations come
+ * from the token, which tokens.css collapses to 1ms under
+ * prefers-reduced-motion, so reduced motion is honoured without a second rule.
+ * ──────────────────────────────────────────────────────────────────────────── */
+.enter-panel {
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    opacity var(--t-panel) var(--ease),
+    transform var(--t-panel) var(--ease);
+}
+
+@starting-style {
+  .enter-panel {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+/* ── Bengali mode (body.lang-bn) ──────────────────────────────────────────────
+ * Central typography for the whole app when the language toggle is on বাংলা,
+ * so individual strings never carry font logic. Prose and labels switch to Noto
+ * Sans Bengali; the mono face is kept only for genuine Latin codes/IDs/numbers
+ * that are never translated (they set font-mono explicitly and win by the
+ * cascade). Bengali has no letter case, so the uppercased mono "eyebrow" labels
+ * lose their transform. Conjuncts sit taller than Latin, so leading is relaxed
+ * a touch to avoid clipping. */
+body.lang-bn,
+body.lang-bn .font-sans {
+  font-family: var(--font-bn), var(--font-sans), system-ui, sans-serif;
+}
+body.lang-bn {
+  line-height: 1.55;
+}
+body.lang-bn .uppercase {
+  text-transform: none;
+}
+/* Codes, IDs, timings, percentages, accession numbers stay Latin + mono. */
+body.lang-bn .font-mono {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  text-transform: none;
+}

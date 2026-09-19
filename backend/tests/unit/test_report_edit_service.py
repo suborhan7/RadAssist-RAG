@@ -9,6 +9,7 @@ behavior).
 from __future__ import annotations
 
 import uuid
+from datetime import date
 from dataclasses import asdict
 
 import pytest
@@ -18,6 +19,9 @@ from sqlalchemy.pool import StaticPool
 
 from app.database.base import Base
 from app.domain.entities import ReportContent, ReportStatus, RetrievedCase
+from app.models.comparison import ComparisonRecord
+from app.models.explanation import Explanation
+from app.models.patient import PatientRecord
 from app.models.report import ReportRecord
 from app.models.report_audit_log import ReportAuditLog
 from app.models.retrieval_session import RetrievalSession
@@ -521,5 +525,92 @@ def test_regenerate_section_passes_none_clinical_notes_as_empty_string_to_contex
     # questionnaire_answers is passed through as None -- ContextBuilder's
     # OWN normalization (already verified) handles that side safely.
     assert build_call["questionnaire_answers"] is None
+
+    db.close()
+
+
+# ── delete() (QA fix: "no way to remove a queue entry") ──────────────────────
+# Deletion is the one irreversible operation in this service, so its guards get
+# tested for what they REFUSE as carefully as for what they do.
+
+
+def test_delete_removes_report_and_its_dependent_rows():
+    engine = _make_engine()
+    db = sessionmaker(bind=engine)()
+    owner_id = uuid.uuid4()
+    session_id = _seed_session(db, owner_id)
+    report_id = _seed_report(db, session_id)
+
+    # One row of every kind that references a report: audit log, explanation,
+    # and a comparison naming it from each side.
+    other_report_id = _seed_report(db, _seed_session(db, owner_id))
+    patient_id = uuid.uuid4()
+    db.add(PatientRecord(
+        id=patient_id, patient_code="PAT-000001", name="n",
+        date_of_birth=date(1990, 1, 1), gender="Other",
+    ))
+    db.add(ReportAuditLog(report_id=report_id, doctor_id=owner_id, action="EDITED"))
+    db.add(Explanation(report_id=report_id, question="q", answer="a", doctor_id=owner_id))
+    db.add(ComparisonRecord(
+        patient_id=patient_id, previous_report_id=report_id,
+        current_report_id=other_report_id, deterministic_facts={}, llm_narrative="n",
+    ))
+    db.add(ComparisonRecord(
+        patient_id=patient_id, previous_report_id=other_report_id,
+        current_report_id=report_id, deterministic_facts={}, llm_narrative="n",
+    ))
+    db.commit()
+
+    ReportEditService(db).delete(str(report_id), str(owner_id))
+
+    assert db.query(ReportRecord).filter(ReportRecord.id == report_id).one_or_none() is None
+    assert db.query(ReportAuditLog).filter(ReportAuditLog.report_id == report_id).count() == 0
+    assert db.query(Explanation).filter(Explanation.report_id == report_id).count() == 0
+    # Both directions, not just previous_report_id -- a comparison that lost
+    # either subject is not a record.
+    assert db.query(ComparisonRecord).count() == 0
+    # The unrelated report is untouched: deletion is scoped to the id given.
+    assert db.query(ReportRecord).filter(ReportRecord.id == other_report_id).one_or_none() is not None
+
+    db.close()
+
+
+def test_delete_by_non_owner_is_forbidden_and_changes_nothing():
+    engine = _make_engine()
+    db = sessionmaker(bind=engine)()
+    owner_id = uuid.uuid4()
+    other_doctor_id = uuid.uuid4()
+    session_id = _seed_session(db, owner_id)
+    report_id = _seed_report(db, session_id)
+
+    with pytest.raises(ForbiddenError):
+        ReportEditService(db).delete(str(report_id), str(other_doctor_id))
+
+    assert db.query(ReportRecord).filter(ReportRecord.id == report_id).one_or_none() is not None
+    db.close()
+
+
+def test_delete_of_finalized_report_is_refused():
+    """A finalized report is a signed record with an audit trail behind it;
+    deleting one would erase the evidence that it was signed."""
+    engine = _make_engine()
+    db = sessionmaker(bind=engine)()
+    owner_id = uuid.uuid4()
+    session_id = _seed_session(db, owner_id)
+    report_id = _seed_report(db, session_id, status=ReportStatus.FINAL)
+
+    with pytest.raises(ReportAlreadyFinalizedError):
+        ReportEditService(db).delete(str(report_id), str(owner_id))
+
+    assert db.query(ReportRecord).filter(ReportRecord.id == report_id).one_or_none() is not None
+    db.close()
+
+
+def test_delete_of_missing_report_raises_not_found():
+    engine = _make_engine()
+    db = sessionmaker(bind=engine)()
+
+    with pytest.raises(ReportNotFoundError):
+        ReportEditService(db).delete(str(uuid.uuid4()), str(uuid.uuid4()))
 
     db.close()

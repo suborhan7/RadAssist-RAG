@@ -1,3 +1,6 @@
+"use client";
+
+import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/cn";
 
 /* ============================================================================
@@ -24,27 +27,29 @@ export type ReportStatus = "draft" | "review" | "edited" | "final";
 // AI draft = the model's, unreviewed => amber (attention). Under review /
 // doctor-edited = a person is in the loop => cyan. Final/signed = settled,
 // needs no emphasis => muted.
-const STATUS: Record<ReportStatus, { label: string; tone: PillTone }> = {
-  draft:  { label: "AI Draft",      tone: "amber" },
-  review: { label: "Under Review",  tone: "cyan" },
-  edited: { label: "Doctor Edited", tone: "cyan" },
-  final:  { label: "Final",         tone: "muted" },
+const STATUS: Record<ReportStatus, { labelKey: string; tone: PillTone }> = {
+  draft:  { labelKey: "chip.statusDraft",  tone: "amber" },
+  review: { labelKey: "chip.statusReview", tone: "cyan" },
+  edited: { labelKey: "chip.statusEdited", tone: "cyan" },
+  final:  { labelKey: "chip.statusFinal",  tone: "muted" },
 };
 
 export function StatusChip({ status }: { status: ReportStatus }) {
+  const { t } = useT();
   const s = STATUS[status];
-  return <span className={cn(pillBase, PILL[s.tone])}>{s.label}</span>;
+  return <span className={cn(pillBase, PILL[s.tone])}>{t(s.labelKey)}</span>;
 }
 
 /* ---------------- OwnershipChip — text first, texture second --------------- */
 
 export function OwnershipChip({ doctor }: { doctor: string | null }) {
+  const { t } = useT();
   // null == you. cyan is the "yours" accent. Another doctor is neither an
   // interaction nor a risk, so it reads muted. The chip is text, so the a11y
   // property holds without any texture.
   return doctor === null ? (
     <span className={cn(pillBase, PILL.cyan)}>
-      <Check /> You
+      <Check /> {t("chip.you")}
     </span>
   ) : (
     <span className={cn(pillBase, PILL.muted)}>{doctor}</span>

@@ -44,6 +44,34 @@ def main() -> None:
         & (df["embedding_cached"])
     ].copy()
 
+    # Section 15 of input_admission_projection_gate_architecture_v1.1:
+    # resolve the projection of the image that is actually indexed, so
+    # build_chroma_index.py can read it from the data row instead of
+    # writing a literal.
+    #
+    # Resolved from `frontal_filename` -- the specific image Phase 2
+    # embedded and the indexer will store -- joined against the dataset's
+    # own projections CSV. Not derived from `has_frontal`, and not assumed
+    # from the fact that build_study_index.py filtered for frontal: both of
+    # those would re-assert the selection rule rather than describe the
+    # image, which is the substitution section 15 exists to remove.
+    projections = pd.read_csv(data_root / cfg["paths"]["projections_csv"])
+    projection_by_filename = dict(zip(projections["filename"], projections["projection"]))
+    filtered["projection"] = filtered["frontal_filename"].map(projection_by_filename)
+
+    unresolved = int(filtered["projection"].isna().sum())
+    if unresolved:
+        # Loud, not silent. An unresolved projection means the indexed
+        # filename is not in the projections CSV, which would make the
+        # stored metadata describe an image the dataset does not know
+        # about. Writing NaN into Chroma is how "nan" strings reached the
+        # evidence cards before (see chroma_result_mapper.py).
+        raise SystemExit(
+            f"[prepare_train_metadata] {unresolved} row(s) have a frontal_filename that "
+            f"is absent from the projections CSV; their projection cannot be resolved. "
+            f"Refusing to write a metadata file the indexer would turn into 'nan'."
+        )
+
     # sanity: masked_image_path must be present for every row we're about to
     # hand to the indexer, since Phase 2 embedded from masked images.
     missing_masked = filtered["masked_image_path"].isna().sum()

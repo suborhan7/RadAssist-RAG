@@ -17,6 +17,10 @@
  * (§7) -- spinner-to-check at 150ms, elapsed counting up in mono (§10.9's
  * "signature motion" -- the only place waiting is honest work).
  */
+"use client";
+
+import { useT } from "@/lib/i18n";
+
 export type StepStatus = "pending" | "active" | "done" | "error" | "skipped";
 
 export interface WorkflowStepDisplay {
@@ -46,6 +50,7 @@ function StatusIcon({ status }: { status: StepStatus }) {
 }
 
 export function StepProgress({ steps }: { steps: WorkflowStepDisplay[] }) {
+  const { t } = useT();
   return (
     <ol className="flex flex-col gap-8">
       {steps.map((step) => (
@@ -64,7 +69,7 @@ export function StepProgress({ steps }: { steps: WorkflowStepDisplay[] }) {
             {step.label}
           </span>
           {step.status === "active" && (
-            <span className="ml-auto text-caption text-text-tertiary">running</span>
+            <span className="ml-auto text-caption text-text-tertiary">{t("step.running")}</span>
           )}
           {step.status === "done" && step.elapsedMs !== undefined && (
             <span className="ml-auto font-mono text-sm text-text-tertiary">
@@ -72,7 +77,7 @@ export function StepProgress({ steps }: { steps: WorkflowStepDisplay[] }) {
             </span>
           )}
           {step.status === "skipped" && (
-            <span className="ml-auto text-caption text-text-tertiary">skipped</span>
+            <span className="ml-auto text-caption text-text-tertiary">{t("step.skipped")}</span>
           )}
           {step.status === "error" && step.detail && (
             <span className="ml-auto text-caption text-amber">{step.detail}</span>

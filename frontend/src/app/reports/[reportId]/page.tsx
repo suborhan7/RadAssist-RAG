@@ -16,16 +16,23 @@ import {
 import { StatusChip } from "@/components/ui/chip";
 import { SimilarityBar } from "@/components/ui/similarity-bar";
 import { AgreementBadge } from "@/components/ui/agreement-badge";
+import {
+  RetrievalSupportNotice,
+  type RetrievalSupportCategory,
+} from "@/components/ui/retrieval-support-notice";
 import { OwnerChip } from "@/components/ui/owner-chip";
+import { BackLink } from "@/components/layout/screen-header";
 import { computeAgreement } from "@/lib/evidence-agreement";
 import { toChipReportStatus } from "@/lib/report-status";
 import { useDoctorName } from "@/lib/use-doctor-name";
 import { BUTTON_BASE, SIZE, VARIANT } from "@/components/ui/button";
+import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/cn";
 import { EditableReportSection } from "@/components/report/editable-report-section";
 import { FinalizePreview } from "@/components/report/finalize-preview";
 import { ReportDiffView } from "@/components/report/report-diff-view";
 import { REPORT_CONTENT_FIELDS as CONTENT_FIELDS } from "@/components/report/report-document-view";
+import { REPORT_FIELD_LABEL_KEY } from "@/components/report/report-document-view";
 import { computeReportDiff, editableRecordFrom } from "@/lib/report-diff";
 import type { paths } from "@/lib/generated/api";
 
@@ -121,6 +128,7 @@ const EDITABLE_KEYS = new Set<ReportContentKey>(EDITABLE_REPORT_FIELDS);
  * Router has no built-in route-change-intercept event to hook globally.
  */
 export default function ReportWorkspacePage() {
+  const { t } = useT();
   const params = useParams<{ reportId: string }>();
   const reportId = params.reportId;
 
@@ -163,11 +171,12 @@ export default function ReportWorkspacePage() {
         }
       })
       .catch((err) => {
-        setError(err instanceof ApiError ? err.message : "Failed to load report.");
+        setError(err instanceof ApiError ? err.message : t("workspace.errLoad"));
       });
     getCurrentDoctor()
       .then((doctor) => setCurrentDoctorId(doctor?.id ?? null))
       .catch(() => setCurrentDoctorId(null));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reportId]);
 
   const agreement = useMemo(() => {
@@ -212,7 +221,7 @@ export default function ReportWorkspacePage() {
   }, [hasUnsavedChanges]);
 
   function guardedNavigate(e: React.MouseEvent) {
-    if (hasUnsavedChanges && !window.confirm("You have an unsaved edit in progress. Leave without saving?")) {
+    if (hasUnsavedChanges && !window.confirm(t("workspace.confirmLeave"))) {
       e.preventDefault();
     }
   }
@@ -225,7 +234,7 @@ export default function ReportWorkspacePage() {
       const updated = await updateReport(reportId, { [key]: nextValue });
       setReport(updated);
     } catch (err) {
-      setActionError(err instanceof ApiError ? err.message : "Failed to save edit.");
+      setActionError(err instanceof ApiError ? err.message : t("workspace.errSave"));
     } finally {
       setSavingField(null);
     }
@@ -233,7 +242,7 @@ export default function ReportWorkspacePage() {
 
   async function handleRestoreAiDraft() {
     if (!report) return;
-    if (!window.confirm("Replace your edits with the original AI draft? This cannot be undone.")) return;
+    if (!window.confirm(t("workspace.confirmRestore"))) return;
     setRestoring(true);
     setActionError(null);
     try {
@@ -247,7 +256,7 @@ export default function ReportWorkspacePage() {
       const updated = await updateReport(reportId, restoreValues);
       setReport(updated);
     } catch (err) {
-      setActionError(err instanceof ApiError ? err.message : "Failed to restore AI draft.");
+      setActionError(err instanceof ApiError ? err.message : t("workspace.errRestore"));
     } finally {
       setRestoring(false);
     }
@@ -264,7 +273,7 @@ export default function ReportWorkspacePage() {
       const result = await regenerateSection(reportId, field);
       setRegenerationResult({ field, candidate: result.candidate, contextIncomplete: result.context_incomplete });
     } catch (err) {
-      setRegenerationError(err instanceof ApiError ? err.message : "Failed to regenerate section.");
+      setRegenerationError(err instanceof ApiError ? err.message : t("workspace.errRegen"));
       setRegenerationErrorField(field);
     } finally {
       setRegeneratingField(null);
@@ -301,7 +310,7 @@ export default function ReportWorkspacePage() {
   if (!report) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-bg-app">
-        <p className="text-text-tertiary">Loading report…</p>
+        <p className="text-text-tertiary">{t("workspace.loading")}</p>
       </div>
     );
   }
@@ -312,6 +321,14 @@ export default function ReportWorkspacePage() {
     <div className="flex h-[100dvh] flex-col overflow-hidden bg-bg-app">
       {/* Study context bar */}
       <header className="flex h-header-bar flex-none items-center gap-14 border-b border-hairline px-24">
+        {/* The only way out of this screen used to be the patient's name,
+            styled as a heading -- a tester reported having no way to cancel or
+            go back, which is what an unlabelled exit looks like. Routed through
+            guardedNavigate so the unsaved-changes prompt still fires. */}
+        <BackLink
+          href={patient ? `/patients/${patient.id}` : "/dashboard"}
+          onClick={guardedNavigate}
+        />
         {patient ? (
           <Link
             href={`/patients/${patient.id}`}
@@ -321,7 +338,7 @@ export default function ReportWorkspacePage() {
             {patient.name}
           </Link>
         ) : (
-          <span className="text-base font-semibold text-text-primary">Report</span>
+          <span className="text-base font-semibold text-text-primary">{t("workspace.reportFallback")}</span>
         )}
         {contextMeta && (
           <span className="truncate font-mono text-mono-meta-lg text-text-tertiary">{contextMeta}</span>
@@ -330,12 +347,22 @@ export default function ReportWorkspacePage() {
 
         {/* Phase 18: visible to any doctor who can already read this report
             (Decision 7), owner or not, pre- or post-finalize. */}
+        {/* The ask/answer feature already existed at /reports/{id}/explain, but
+            nothing on this screen or Compare pointed at it, and a tester
+            reported it as missing. It is a link, not a new capability. */}
+        <Link
+          href={`/reports/${reportId}/explain`}
+          onClick={guardedNavigate}
+          className="text-sm font-medium text-text-secondary transition-colors duration-hover hover:text-cyan"
+        >
+          {t("workspace.askAbout")}
+        </Link>
         <button
           type="button"
           onClick={() => setShowDiff((prev) => !prev)}
           className="text-sm font-medium text-text-secondary transition-colors duration-hover hover:text-cyan"
         >
-          {showDiff ? "Hide changes vs draft" : "Changes vs draft"}
+          {showDiff ? t("workspace.hideChanges") : t("workspace.showChanges")}
         </button>
         <OwnerChip ownerId={reportOwnerId} currentDoctorId={currentDoctorId} />
         <StatusChip status={toChipReportStatus(report.status)} />
@@ -345,7 +372,7 @@ export default function ReportWorkspacePage() {
             onClick={() => setShowPreview(true)}
             className={cn(BUTTON_BASE, VARIANT.primary, SIZE.md)}
           >
-            Finalize
+            {t("workspace.finalize")}
           </button>
         )}
       </header>
@@ -358,8 +385,8 @@ export default function ReportWorkspacePage() {
 
       {!isOwner && reportOwnerId !== null && (
         <div className="flex-none border-b border-hairline bg-bg-hover px-24 py-12 text-sm text-text-secondary">
-          This report belongs to {otherOwnerName ?? "another doctor"}. You can read it and compare
-          against it.
+          {t("workspace.belongsToPre")} {otherOwnerName ?? t("workspace.anotherDoctor")}
+          {t("workspace.belongsToPost")}
         </div>
       )}
 
@@ -367,16 +394,16 @@ export default function ReportWorkspacePage() {
           narrower than the station, scroll rather than clip a column. */}
       <div className="flex min-h-0 flex-1 overflow-x-auto">
         {/* Film -- the only pure-black surface */}
-        <div className="relative flex min-w-[360px] flex-1 items-center justify-center bg-bg-film p-26">
+        <div className="relative flex min-w-[360px] flex-1 items-center justify-center on-film bg-bg-film p-26">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={retrievalSessionImageUrl(report.session_id)}
-            alt={`Chest X-ray, ${report.report_date}`}
+            alt={`${t("workspace.altXrayPrefix")}, ${report.report_date}`}
             className="max-h-full max-w-full object-contain"
           />
           {/* PHI masking is real (Phase 1): the persisted film is masked. */}
           <span className="absolute left-26 top-26 font-mono text-mono-meta uppercase tracking-[0.12em] text-cyan">
-            PHI masked
+            {t("workspace.phiMasked")}
           </span>
         </div>
 
@@ -385,7 +412,7 @@ export default function ReportWorkspacePage() {
           <div className="flex-1 overflow-auto px-26 pb-26 pt-24">
             <div className="mb-20 flex items-baseline gap-12">
               <span className="font-mono text-eyebrow uppercase text-text-tertiary">
-                {report.status === "final" ? "Finalized report" : "AI report"} · {report.report_date}
+                {report.status === "final" ? t("workspace.finalizedReport") : t("workspace.aiReport")} · {report.report_date}
               </span>
               <span className="flex-1" />
               {canEdit && (
@@ -395,20 +422,22 @@ export default function ReportWorkspacePage() {
                   disabled={restoring}
                   className="font-mono text-eyebrow uppercase tracking-[0.14em] text-text-tertiary transition-colors duration-hover hover:text-cyan disabled:opacity-50"
                 >
-                  {restoring ? "Restoring…" : "Restore draft"}
+                  {restoring ? t("workspace.restoring") : t("workspace.restoreDraft")}
                 </button>
               )}
             </div>
 
             {report.status === "final" && report.finalized_at && (
               <p className="mb-20 text-sm text-text-tertiary">
-                Finalized by {finalizedByName ?? "this doctor"} on{" "}
-                {new Date(report.finalized_at).toLocaleDateString()}
+                {t("workspace.finalizedBy", {
+                  name: finalizedByName ?? t("workspace.thisDoctor"),
+                  date: new Date(report.finalized_at).toLocaleDateString(),
+                })}
               </p>
             )}
 
             <div className="flex flex-col">
-              {CONTENT_FIELDS.map(({ key, label }) => {
+              {CONTENT_FIELDS.map(({ key }) => {
                 const isRegeneratable = EDITABLE_KEYS.has(key);
                 const activePreview =
                   isRegeneratable && regenerationResult?.field === key
@@ -421,7 +450,7 @@ export default function ReportWorkspacePage() {
                 return (
                   <EditableReportSection
                     key={key}
-                    label={label}
+                    label={t(REPORT_FIELD_LABEL_KEY[key])}
                     value={report.content[key] ?? ""}
                     isEdited={report.content[key] !== report.ai_draft_content[key]}
                     canEdit={!!canEdit && EDITABLE_KEYS.has(key)}
@@ -455,9 +484,9 @@ export default function ReportWorkspacePage() {
                 report.validation.is_clean ? "border-hairline" : "border-amber-line bg-amber-wash",
               )}
             >
-              <h3 className="font-mono text-eyebrow uppercase text-text-tertiary">Validation</h3>
+              <h3 className="font-mono text-eyebrow uppercase text-text-tertiary">{t("workspace.validation")}</h3>
               {report.validation.is_clean ? (
-                <p className="mt-8 text-sm text-text-secondary">No validation warnings.</p>
+                <p className="mt-8 text-sm text-text-secondary">{t("workspace.noWarnings")}</p>
               ) : (
                 <ul className="mt-8 list-inside list-disc text-sm text-amber">
                   {report.validation.warnings.map((warning, i) => (
@@ -474,29 +503,27 @@ export default function ReportWorkspacePage() {
                 onClick={guardedNavigate}
                 className={cn(BUTTON_BASE, VARIANT.primary, SIZE.md, "flex-1")}
               >
-                Explain report
+                {t("workspace.explainReport")}
               </Link>
               <Link
                 href={`/reports/${reportId}/compare`}
                 onClick={guardedNavigate}
                 className={cn(BUTTON_BASE, VARIANT.secondary, SIZE.md, "flex-1")}
               >
-                Compare previous
+                {t("workspace.comparePrevious")}
               </Link>
               <button
                 type="button"
                 disabled
-                title="Out of scope for this thesis (frozen Phase 12 spec)"
+                title={t("workspace.downloadPdfTitle")}
                 className={cn(BUTTON_BASE, VARIANT.ghost, SIZE.md, "flex-1")}
               >
-                Download PDF
+                {t("workspace.downloadPdf")}
               </button>
             </div>
 
             <p className="mt-26 border-t border-hairline pt-16 text-caption leading-relaxed text-text-tertiary">
-              Drafted from {report.retrieved_cases.length} archive{" "}
-              {report.retrieved_cases.length === 1 ? "case" : "cases"}, then reviewed and edited by
-              the reporting radiologist. Not an autonomous diagnosis.
+              {t("workspace.draftedFrom", { count: report.retrieved_cases.length })}
             </p>
           </div>
         </section>
@@ -515,7 +542,7 @@ export default function ReportWorkspacePage() {
                     : "border-transparent text-text-tertiary hover:text-text-primary",
                 )}
               >
-                {tab}
+                {t(`workspace.tab${tab.charAt(0).toUpperCase()}${tab.slice(1)}`)}
               </button>
             ))}
           </div>
@@ -524,7 +551,7 @@ export default function ReportWorkspacePage() {
             {railTab === "evidence" && (
               <div className="flex flex-col gap-16">
                 <h3 className="font-mono text-eyebrow uppercase text-text-tertiary">
-                  Archive cases · other patients ({report.retrieved_cases.length})
+                  {t("workspace.archiveCases", { count: report.retrieved_cases.length })}
                 </h3>
                 {report.retrieved_cases.map((c) => (
                   <div key={c.rank} className="rounded-panel border border-hairline p-14 text-sm">
@@ -540,14 +567,33 @@ export default function ReportWorkspacePage() {
               </div>
             )}
 
-            {railTab === "agreement" && agreement && (
-              <AgreementBadge level={agreement.level} factors={agreement.factors} />
+            {railTab === "agreement" && (
+              <div className="flex flex-col gap-16">
+                {/* §7.1's Rule: both signals, never one alone. Retrieval
+                    support sits ABOVE the agreement badge because it
+                    qualifies it -- high agreement among cases that are
+                    all far from this image is not strong evidence, and a
+                    reader who stops after the first panel must not have
+                    stopped at the reassuring one. Rendered even when
+                    `agreement` is null, since the support category is
+                    stored on the report and does not depend on the
+                    client-side agreement re-derivation. */}
+                <RetrievalSupportNotice
+                  category={
+                    (report.retrieval_support as RetrievalSupportCategory | null | undefined) ?? null
+                  }
+                  topSimilarity={report.top1_similarity ?? null}
+                />
+                {agreement && (
+                  <AgreementBadge level={agreement.level} factors={agreement.factors} />
+                )}
+              </div>
             )}
 
             {railTab === "alternatives" && agreement && (
               <div className="flex flex-col gap-16">
                 <h3 className="font-mono text-eyebrow uppercase text-text-tertiary">
-                  Present in the retrieved set
+                  {t("workspace.presentInSet")}
                 </h3>
                 <dl className="flex flex-col border-t border-hairline">
                   {agreement.presentLabels.map(({ label, count, k }) => (
@@ -557,15 +603,15 @@ export default function ReportWorkspacePage() {
                     >
                       <dt className="text-sm text-text-secondary">{label}</dt>
                       <dd className="font-mono text-sm text-text-primary">
-                        {count} of {k}
+                        {t("workspace.countOfK", { count, k })}
                       </dd>
                     </div>
                   ))}
                 </dl>
                 <p className="text-sm leading-relaxed text-text-secondary">
-                  Absence from this list means no retrieved case carried the label.{" "}
-                  <span className="text-text-primary">It is not an exclusion.</span>{" "}
-                  Only labels present are reported, not a complete positive or negative taxonomy.
+                  {t("workspace.altNotePre")}{" "}
+                  <span className="text-text-primary">{t("workspace.altNoteEmph")}</span>{" "}
+                  {t("workspace.altNotePost")}
                 </p>
               </div>
             )}

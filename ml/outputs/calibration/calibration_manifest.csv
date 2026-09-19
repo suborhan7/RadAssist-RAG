@@ -1,0 +1,747 @@
+path,set,subclass,projection,study_uid,primary_label
+ml\outputs\calibration\sets\frontal\2239_IM-0836-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2239,Support Devices
+ml\outputs\calibration\sets\frontal\473_IM-2101-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,473,Normal
+ml\outputs\calibration\sets\frontal\2579_IM-1078-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2579,Normal
+ml\outputs\calibration\sets\frontal\3111_IM-1461-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3111,Edema/Congestion
+ml\outputs\calibration\sets\frontal\3158_IM-1487-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3158,Scarring
+ml\outputs\calibration\sets\frontal\739_IM-2296-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,739,Normal
+ml\outputs\calibration\sets\frontal\3658_IM-1819-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3658,Nodule/Mass
+ml\outputs\calibration\sets\frontal\2394_IM-0944-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2394,Normal
+ml\outputs\calibration\sets\frontal\3687_IM-1838-2001.dcm.png,positive,chest_radiograph_frontal,Frontal,3687,Atelectasis
+ml\outputs\calibration\sets\frontal\2859_IM-1266-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2859,Pneumonia
+ml\outputs\calibration\sets\frontal\2868_IM-1275-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2868,Degenerative/Bone
+ml\outputs\calibration\sets\frontal\1239_IM-0160-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,1239,Normal
+ml\outputs\calibration\sets\frontal\3229_IM-1526-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3229,Other Abnormality
+ml\outputs\calibration\sets\frontal\3663_IM-1822-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3663,Normal
+ml\outputs\calibration\sets\frontal\2864_IM-1272-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2864,Lung Opacity
+ml\outputs\calibration\sets\frontal\2456_IM-0989-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2456,Cardiomegaly
+ml\outputs\calibration\sets\frontal\844_IM-2367-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,844,Normal
+ml\outputs\calibration\sets\frontal\2958_IM-1354-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2958,Fibrosis/Interstitial
+ml\outputs\calibration\sets\frontal\1721_IM-0476-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,1721,Normal
+ml\outputs\calibration\sets\frontal\2575_IM-1075-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2575,Other Abnormality
+ml\outputs\calibration\sets\frontal\3428_IM-1657-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3428,Degenerative/Bone
+ml\outputs\calibration\sets\frontal\3688_IM-1839-0001-0001.dcm.png,positive,chest_radiograph_frontal,Frontal,3688,Pleural Effusion
+ml\outputs\calibration\sets\frontal\2263_IM-0853-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2263,Atelectasis
+ml\outputs\calibration\sets\frontal\2174_IM-0787-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2174,Normal
+ml\outputs\calibration\sets\frontal\1913_IM-0595-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,1913,Other Abnormality
+ml\outputs\calibration\sets\frontal\3486_IM-1695-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3486,Other Abnormality
+ml\outputs\calibration\sets\frontal\741_IM-2297-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,741,Normal
+ml\outputs\calibration\sets\frontal\3189_IM-1505-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3189,Other Abnormality
+ml\outputs\calibration\sets\frontal\560_IM-2161-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,560,Normal
+ml\outputs\calibration\sets\frontal\3137_IM-1476-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3137,Calcinosis/Atherosclerosis
+ml\outputs\calibration\sets\frontal\3195_IM-1506-0001-0002.dcm.png,positive,chest_radiograph_frontal,Frontal,3195,Support Devices
+ml\outputs\calibration\sets\frontal\3826_IM-1932-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3826,Normal
+ml\outputs\calibration\sets\frontal\2036_IM-0680-4001.dcm.png,positive,chest_radiograph_frontal,Frontal,2036,Atelectasis
+ml\outputs\calibration\sets\frontal\3611_IM-1784-0001-0001.dcm.png,positive,chest_radiograph_frontal,Frontal,3611,Degenerative/Bone
+ml\outputs\calibration\sets\frontal\2631_IM-1118-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2631,Support Devices
+ml\outputs\calibration\sets\frontal\430_IM-2071-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,430,Normal
+ml\outputs\calibration\sets\frontal\3682_IM-1834-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3682,Other Abnormality
+ml\outputs\calibration\sets\frontal\2367_IM-0928-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2367,Normal
+ml\outputs\calibration\sets\frontal\2920_IM-1323-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2920,Normal
+ml\outputs\calibration\sets\frontal\2712_IM-1179-2001.dcm.png,positive,chest_radiograph_frontal,Frontal,2712,Granuloma
+ml\outputs\calibration\sets\frontal\2490_IM-1017-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2490,Granuloma
+ml\outputs\calibration\sets\frontal\899_IM-2407-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,899,Normal
+ml\outputs\calibration\sets\frontal\2759_IM-1207-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2759,Other Abnormality
+ml\outputs\calibration\sets\frontal\3165_IM-1490-13013.dcm.png,positive,chest_radiograph_frontal,Frontal,3165,Degenerative/Bone
+ml\outputs\calibration\sets\frontal\3766_IM-1885-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3766,Degenerative/Bone
+ml\outputs\calibration\sets\frontal\2981_IM-1371-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2981,Degenerative/Bone
+ml\outputs\calibration\sets\frontal\1729_IM-0480-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,1729,Emphysema/COPD
+ml\outputs\calibration\sets\frontal\2623_IM-1111-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2623,Normal
+ml\outputs\calibration\sets\frontal\3045_IM-1418-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3045,Normal
+ml\outputs\calibration\sets\frontal\2728_IM-1187-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2728,Edema/Congestion
+ml\outputs\calibration\sets\frontal\3408_IM-1648-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3408,Degenerative/Bone
+ml\outputs\calibration\sets\frontal\2439_IM-0978-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2439,Emphysema/COPD
+ml\outputs\calibration\sets\frontal\2891_IM-1294-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2891,Hernia/Diaphragm
+ml\outputs\calibration\sets\frontal\3243_IM-1535-0001-0001.dcm.png,positive,chest_radiograph_frontal,Frontal,3243,Lung Opacity
+ml\outputs\calibration\sets\frontal\3642_IM-1806-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3642,Other Abnormality
+ml\outputs\calibration\sets\frontal\2131_IM-0755-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2131,Normal
+ml\outputs\calibration\sets\frontal\287_IM-1276-4004.dcm.png,positive,chest_radiograph_frontal,Frontal,287,Normal
+ml\outputs\calibration\sets\frontal\2671_IM-1148-1001-0002.dcm.png,positive,chest_radiograph_frontal,Frontal,2671,Other Abnormality
+ml\outputs\calibration\sets\frontal\3103_IM-1454-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3103,Hernia/Diaphragm
+ml\outputs\calibration\sets\frontal\3247_IM-1538-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3247,Normal
+ml\outputs\calibration\sets\frontal\2580_IM-1078-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2580,Scarring
+ml\outputs\calibration\sets\frontal\3600_IM-1776-4004.dcm.png,positive,chest_radiograph_frontal,Frontal,3600,Scarring
+ml\outputs\calibration\sets\frontal\1676_IM-0445-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,1676,Emphysema/COPD
+ml\outputs\calibration\sets\frontal\1994_IM-0651-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,1994,Normal
+ml\outputs\calibration\sets\frontal\3069_IM-1432-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3069,Pneumonia
+ml\outputs\calibration\sets\frontal\2544_IM-1054-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2544,Cardiomegaly
+ml\outputs\calibration\sets\frontal\2578_IM-1078-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2578,Degenerative/Bone
+ml\outputs\calibration\sets\frontal\3798_IM-1911-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3798,Lung Opacity
+ml\outputs\calibration\sets\frontal\986_IM-2473-2002.dcm.png,positive,chest_radiograph_frontal,Frontal,986,Normal
+ml\outputs\calibration\sets\frontal\3430_IM-1659-4004.dcm.png,positive,chest_radiograph_frontal,Frontal,3430,Edema/Congestion
+ml\outputs\calibration\sets\frontal\1534_IM-0345-4004.dcm.png,positive,chest_radiograph_frontal,Frontal,1534,Degenerative/Bone
+ml\outputs\calibration\sets\frontal\3406_IM-1647-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3406,Granuloma
+ml\outputs\calibration\sets\frontal\3987_IM-2041-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3987,Degenerative/Bone
+ml\outputs\calibration\sets\frontal\3581_IM-1761-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3581,Degenerative/Bone
+ml\outputs\calibration\sets\frontal\3454_IM-1677-3001.dcm.png,positive,chest_radiograph_frontal,Frontal,3454,Support Devices
+ml\outputs\calibration\sets\frontal\2161_IM-0779-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2161,Normal
+ml\outputs\calibration\sets\frontal\3457_IM-1678-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3457,Degenerative/Bone
+ml\outputs\calibration\sets\frontal\3117_IM-1465-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3117,Normal
+ml\outputs\calibration\sets\frontal\3013_IM-1391-0001-0001.dcm.png,positive,chest_radiograph_frontal,Frontal,3013,Cardiomegaly
+ml\outputs\calibration\sets\frontal\2223_IM-0827-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2223,Normal
+ml\outputs\calibration\sets\frontal\943_IM-2439-5005.dcm.png,positive,chest_radiograph_frontal,Frontal,943,Normal
+ml\outputs\calibration\sets\frontal\3807_IM-1917-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3807,Other Abnormality
+ml\outputs\calibration\sets\frontal\1384_IM-0246-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,1384,Normal
+ml\outputs\calibration\sets\frontal\3662_IM-1821-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3662,Calcinosis/Atherosclerosis
+ml\outputs\calibration\sets\frontal\1944_IM-0613-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,1944,Calcinosis/Atherosclerosis
+ml\outputs\calibration\sets\frontal\3803_IM-1913-3001.dcm.png,positive,chest_radiograph_frontal,Frontal,3803,Emphysema/COPD
+ml\outputs\calibration\sets\frontal\3690_IM-1841-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3690,Cardiomegaly
+ml\outputs\calibration\sets\frontal\3814_IM-1923-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3814,Normal
+ml\outputs\calibration\sets\frontal\3467_IM-1684-0001-0001.dcm.png,positive,chest_radiograph_frontal,Frontal,3467,Calcinosis/Atherosclerosis
+ml\outputs\calibration\sets\frontal\496_IM-2114-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,496,Normal
+ml\outputs\calibration\sets\frontal\1267_IM-0179-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,1267,Normal
+ml\outputs\calibration\sets\frontal\2014_IM-0664-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2014,Other Abnormality
+ml\outputs\calibration\sets\frontal\3471_IM-1687-2002.dcm.png,positive,chest_radiograph_frontal,Frontal,3471,Hernia/Diaphragm
+ml\outputs\calibration\sets\frontal\2434_IM-0976-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2434,Scarring
+ml\outputs\calibration\sets\frontal\2517_IM-1036-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2517,Normal
+ml\outputs\calibration\sets\frontal\3028_IM-1403-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3028,Calcinosis/Atherosclerosis
+ml\outputs\calibration\sets\frontal\238_IM-0939-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,238,Normal
+ml\outputs\calibration\sets\frontal\3891_IM-1973-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3891,Pneumothorax
+ml\outputs\calibration\sets\frontal\2467_IM-0997-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2467,Lung Opacity
+ml\outputs\calibration\sets\frontal\2865_IM-1273-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2865,Support Devices
+ml\outputs\calibration\sets\frontal\1645_IM-0422-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,1645,Lung Opacity
+ml\outputs\calibration\sets\frontal\3553_IM-1741-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3553,Normal
+ml\outputs\calibration\sets\frontal\3232_IM-1529-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3232,Nodule/Mass
+ml\outputs\calibration\sets\frontal\3765_IM-1884-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3765,Normal
+ml\outputs\calibration\sets\frontal\3477_IM-1690-3001.dcm.png,positive,chest_radiograph_frontal,Frontal,3477,Normal
+ml\outputs\calibration\sets\frontal\727_IM-2287-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,727,Normal
+ml\outputs\calibration\sets\frontal\951_IM-2447-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,951,Normal
+ml\outputs\calibration\sets\frontal\3983_IM-2039-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3983,Atelectasis
+ml\outputs\calibration\sets\frontal\1615_IM-0398-4004.dcm.png,positive,chest_radiograph_frontal,Frontal,1615,Normal
+ml\outputs\calibration\sets\frontal\3363_IM-1616-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3363,Support Devices
+ml\outputs\calibration\sets\frontal\3424_IM-1656-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3424,Granuloma
+ml\outputs\calibration\sets\frontal\1758_IM-0495-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,1758,Other Abnormality
+ml\outputs\calibration\sets\frontal\2384_IM-0942-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2384,Hernia/Diaphragm
+ml\outputs\calibration\sets\frontal\2275_IM-0862-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2275,Nodule/Mass
+ml\outputs\calibration\sets\frontal\2844_IM-1254-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2844,Degenerative/Bone
+ml\outputs\calibration\sets\frontal\428_IM-2070-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,428,Normal
+ml\outputs\calibration\sets\frontal\1685_IM-0449-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,1685,Other Abnormality
+ml\outputs\calibration\sets\frontal\2401_IM-0950-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2401,Normal
+ml\outputs\calibration\sets\frontal\2457_IM-0989-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2457,Normal
+ml\outputs\calibration\sets\frontal\1683_IM-0449-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,1683,Other Abnormality
+ml\outputs\calibration\sets\frontal\632_IM-2213-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,632,Normal
+ml\outputs\calibration\sets\frontal\2960_IM-1354-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2960,Normal
+ml\outputs\calibration\sets\frontal\110_IM-0067-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,110,Normal
+ml\outputs\calibration\sets\frontal\2765_IM-1210-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2765,Normal
+ml\outputs\calibration\sets\frontal\3331_IM-1595-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3331,Granuloma
+ml\outputs\calibration\sets\frontal\3713_IM-1855-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3713,Other Abnormality
+ml\outputs\calibration\sets\frontal\2066_IM-0701-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2066,Atelectasis
+ml\outputs\calibration\sets\frontal\3322_IM-1588-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3322,Granuloma
+ml\outputs\calibration\sets\frontal\3311_IM-1586-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3311,Normal
+ml\outputs\calibration\sets\frontal\3615_IM-1788-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3615,Support Devices
+ml\outputs\calibration\sets\frontal\3557_IM-1742-0001-0002.dcm.png,positive,chest_radiograph_frontal,Frontal,3557,Pleural Effusion
+ml\outputs\calibration\sets\frontal\2447_IM-0983-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2447,Calcinosis/Atherosclerosis
+ml\outputs\calibration\sets\frontal\2847_IM-1256-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2847,Support Devices
+ml\outputs\calibration\sets\frontal\2726_IM-1186-2001.dcm.png,positive,chest_radiograph_frontal,Frontal,2726,Normal
+ml\outputs\calibration\sets\frontal\2636_IM-1121-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2636,Other Abnormality
+ml\outputs\calibration\sets\frontal\2831_IM-1249-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2831,Pneumothorax
+ml\outputs\calibration\sets\frontal\2295_IM-0876-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2295,Calcinosis/Atherosclerosis
+ml\outputs\calibration\sets\frontal\3099_IM-1450-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3099,Calcinosis/Atherosclerosis
+ml\outputs\calibration\sets\frontal\3781_IM-1897-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3781,Normal
+ml\outputs\calibration\sets\frontal\3415_IM-1650-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3415,Atelectasis
+ml\outputs\calibration\sets\frontal\2448_IM-0983-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2448,Pneumothorax
+ml\outputs\calibration\sets\frontal\3120_IM-1466-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3120,Degenerative/Bone
+ml\outputs\calibration\sets\frontal\1927_IM-0600-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,1927,Granuloma
+ml\outputs\calibration\sets\frontal\1894_IM-0581-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,1894,Lung Opacity
+ml\outputs\calibration\sets\frontal\2616_IM-1106-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2616,Hernia/Diaphragm
+ml\outputs\calibration\sets\frontal\2487_IM-1014-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2487,Normal
+ml\outputs\calibration\sets\frontal\691_IM-2258-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,691,Normal
+ml\outputs\calibration\sets\frontal\2383_IM-0941-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2383,Cardiomegaly
+ml\outputs\calibration\sets\frontal\2143_IM-0765-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2143,Nodule/Mass
+ml\outputs\calibration\sets\frontal\2105_IM-0736-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2105,Granuloma
+ml\outputs\calibration\sets\frontal\1512_IM-0332-2002.dcm.png,positive,chest_radiograph_frontal,Frontal,1512,Normal
+ml\outputs\calibration\sets\frontal\1781_IM-0509-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,1781,Other Abnormality
+ml\outputs\calibration\sets\frontal\338_IM-1628-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,338,Normal
+ml\outputs\calibration\sets\frontal\272_IM-1182-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,272,Normal
+ml\outputs\calibration\sets\frontal\3327_IM-1593-2001.dcm.png,positive,chest_radiograph_frontal,Frontal,3327,Calcinosis/Atherosclerosis
+ml\outputs\calibration\sets\frontal\1205_IM-0138-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,1205,Normal
+ml\outputs\calibration\sets\frontal\450_IM-2082-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,450,Normal
+ml\outputs\calibration\sets\frontal\3320_IM-1588-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3320,Normal
+ml\outputs\calibration\sets\frontal\1950_IM-0618-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,1950,Normal
+ml\outputs\calibration\sets\frontal\2685_IM-1158-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2685,Hernia/Diaphragm
+ml\outputs\calibration\sets\frontal\2750_IM-1200-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2750,Lung Opacity
+ml\outputs\calibration\sets\frontal\3785_IM-1898-2001.dcm.png,positive,chest_radiograph_frontal,Frontal,3785,Lung Opacity
+ml\outputs\calibration\sets\frontal\1814_IM-0527-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,1814,Normal
+ml\outputs\calibration\sets\frontal\24_IM-0949-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,24,Normal
+ml\outputs\calibration\sets\frontal\3582_IM-1761-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3582,Normal
+ml\outputs\calibration\sets\frontal\2600_IM-1091-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2600,Support Devices
+ml\outputs\calibration\sets\frontal\3934_IM-2005-0001.dcm.png,positive,chest_radiograph_frontal,Frontal,3934,Fibrosis/Interstitial
+ml\outputs\calibration\sets\frontal\3040_IM-1414-12012.dcm.png,positive,chest_radiograph_frontal,Frontal,3040,Support Devices
+ml\outputs\calibration\sets\frontal\3233_IM-1530-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3233,Emphysema/COPD
+ml\outputs\calibration\sets\frontal\2115_IM-0744-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2115,Normal
+ml\outputs\calibration\sets\frontal\3840_IM-1941-2001.dcm.png,positive,chest_radiograph_frontal,Frontal,3840,Edema/Congestion
+ml\outputs\calibration\sets\frontal\492_IM-2112-2002.dcm.png,positive,chest_radiograph_frontal,Frontal,492,Normal
+ml\outputs\calibration\sets\frontal\518_IM-2131-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,518,Normal
+ml\outputs\calibration\sets\frontal\2038_IM-0682-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2038,Normal
+ml\outputs\calibration\sets\frontal\2229_IM-0831-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2229,Support Devices
+ml\outputs\calibration\sets\frontal\894_IM-2404-0001-0001.dcm.png,positive,chest_radiograph_frontal,Frontal,894,Normal
+ml\outputs\calibration\sets\frontal\1462_IM-0299-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,1462,Normal
+ml\outputs\calibration\sets\frontal\2693_IM-1165-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2693,Other Abnormality
+ml\outputs\calibration\sets\frontal\3808_IM-1918-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3808,Calcinosis/Atherosclerosis
+ml\outputs\calibration\sets\frontal\2032_IM-0677-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2032,Normal
+ml\outputs\calibration\sets\frontal\2652_IM-1136-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2652,Calcinosis/Atherosclerosis
+ml\outputs\calibration\sets\frontal\2125_IM-0749-2001.dcm.png,positive,chest_radiograph_frontal,Frontal,2125,Lung Opacity
+ml\outputs\calibration\sets\frontal\1648_IM-0425-0001-0001.dcm.png,positive,chest_radiograph_frontal,Frontal,1648,Other Abnormality
+ml\outputs\calibration\sets\frontal\3795_IM-1909-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3795,Degenerative/Bone
+ml\outputs\calibration\sets\frontal\2444_IM-0980-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2444,Other Abnormality
+ml\outputs\calibration\sets\frontal\2354_IM-0918-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2354,Normal
+ml\outputs\calibration\sets\frontal\3940_IM-2011-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3940,Scarring
+ml\outputs\calibration\sets\frontal\2352_IM-0918-1002.dcm.png,positive,chest_radiograph_frontal,Frontal,2352,Emphysema/COPD
+ml\outputs\calibration\sets\frontal\536_IM-2143-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,536,Normal
+ml\outputs\calibration\sets\frontal\2065_IM-0701-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2065,Granuloma
+ml\outputs\calibration\sets\frontal\538_IM-2144-4004.dcm.png,positive,chest_radiograph_frontal,Frontal,538,Normal
+ml\outputs\calibration\sets\frontal\1933_IM-0604-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,1933,Other Abnormality
+ml\outputs\calibration\sets\frontal\135_IM-0227-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,135,Normal
+ml\outputs\calibration\sets\frontal\2190_IM-0800-3001.dcm.png,positive,chest_radiograph_frontal,Frontal,2190,Support Devices
+ml\outputs\calibration\sets\frontal\2709_IM-1175-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2709,Lung Opacity
+ml\outputs\calibration\sets\frontal\2483_IM-1012-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2483,Support Devices
+ml\outputs\calibration\sets\frontal\3360_IM-1613-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3360,Scarring
+ml\outputs\calibration\sets\frontal\2934_IM-1337-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2934,Emphysema/COPD
+ml\outputs\calibration\sets\frontal\3752_IM-1876-6001.dcm.png,positive,chest_radiograph_frontal,Frontal,3752,Cardiomegaly
+ml\outputs\calibration\sets\frontal\1560_IM-0366-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,1560,Normal
+ml\outputs\calibration\sets\frontal\3626_IM-1794-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3626,Pleural Effusion
+ml\outputs\calibration\sets\frontal\2206_IM-0815-2001.dcm.png,positive,chest_radiograph_frontal,Frontal,2206,Atelectasis
+ml\outputs\calibration\sets\frontal\3491_IM-1698-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3491,Calcinosis/Atherosclerosis
+ml\outputs\calibration\sets\frontal\3014_IM-1392-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3014,Atelectasis
+ml\outputs\calibration\sets\frontal\2072_IM-0706-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2072,Granuloma
+ml\outputs\calibration\sets\frontal\3905_IM-1984-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3905,Cardiomegaly
+ml\outputs\calibration\sets\frontal\2507_IM-1030-3001.dcm.png,positive,chest_radiograph_frontal,Frontal,2507,Scarring
+ml\outputs\calibration\sets\frontal\3208_IM-1515-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3208,Normal
+ml\outputs\calibration\sets\frontal\3882_IM-1970-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3882,Hernia/Diaphragm
+ml\outputs\calibration\sets\frontal\1813_IM-0526-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,1813,Normal
+ml\outputs\calibration\sets\frontal\3141_IM-1477-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3141,Normal
+ml\outputs\calibration\sets\frontal\3999_IM-2049-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3999,Normal
+ml\outputs\calibration\sets\frontal\16_IM-0389-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,16,Normal
+ml\outputs\calibration\sets\frontal\3412_IM-1650-1001-0001.dcm.png,positive,chest_radiograph_frontal,Frontal,3412,Other Abnormality
+ml\outputs\calibration\sets\frontal\2798_IM-1230-3001.dcm.png,positive,chest_radiograph_frontal,Frontal,2798,Degenerative/Bone
+ml\outputs\calibration\sets\frontal\3572_IM-1755-84853001.dcm.png,positive,chest_radiograph_frontal,Frontal,3572,Other Abnormality
+ml\outputs\calibration\sets\frontal\3545_IM-1737-2002.dcm.png,positive,chest_radiograph_frontal,Frontal,3545,Calcinosis/Atherosclerosis
+ml\outputs\calibration\sets\frontal\3190_IM-1505-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3190,Atelectasis
+ml\outputs\calibration\sets\frontal\3435_IM-1662-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3435,Cardiomegaly
+ml\outputs\calibration\sets\frontal\2760_IM-1207-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2760,Scarring
+ml\outputs\calibration\sets\frontal\3481_IM-1692-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3481,Other Abnormality
+ml\outputs\calibration\sets\frontal\1712_IM-0470-3001.dcm.png,positive,chest_radiograph_frontal,Frontal,1712,Other Abnormality
+ml\outputs\calibration\sets\frontal\1876_IM-0567-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,1876,Emphysema/COPD
+ml\outputs\calibration\sets\frontal\3149_IM-1480-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3149,Other Abnormality
+ml\outputs\calibration\sets\frontal\2373_IM-0934-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2373,Emphysema/COPD
+ml\outputs\calibration\sets\frontal\3725_IM-1861-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3725,Granuloma
+ml\outputs\calibration\sets\frontal\2436_IM-0976-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2436,Normal
+ml\outputs\calibration\sets\frontal\1828_IM-0536-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,1828,Normal
+ml\outputs\calibration\sets\frontal\3091_IM-1445-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3091,Cardiomegaly
+ml\outputs\calibration\sets\frontal\3818_IM-1925-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3818,Normal
+ml\outputs\calibration\sets\frontal\2144_IM-0765-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2144,Calcinosis/Atherosclerosis
+ml\outputs\calibration\sets\frontal\2254_IM-0846-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2254,Support Devices
+ml\outputs\calibration\sets\frontal\2880_IM-1284-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2880,Normal
+ml\outputs\calibration\sets\frontal\2236_IM-0833-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2236,Normal
+ml\outputs\calibration\sets\frontal\3514_IM-1715-2001.dcm.png,positive,chest_radiograph_frontal,Frontal,3514,Lung Opacity
+ml\outputs\calibration\sets\frontal\3202_IM-1513-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3202,Degenerative/Bone
+ml\outputs\calibration\sets\frontal\3980_IM-2039-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3980,Hernia/Diaphragm
+ml\outputs\calibration\sets\frontal\3078_IM-1438-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3078,Pneumonia
+ml\outputs\calibration\sets\frontal\2070_IM-0704-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2070,Other Abnormality
+ml\outputs\calibration\sets\frontal\2034_IM-0679-2001.dcm.png,positive,chest_radiograph_frontal,Frontal,2034,Emphysema/COPD
+ml\outputs\calibration\sets\frontal\3869_IM-1962-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3869,Cardiomegaly
+ml\outputs\calibration\sets\frontal\3758_IM-1882-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3758,Support Devices
+ml\outputs\calibration\sets\frontal\2264_IM-0854-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2264,Other Abnormality
+ml\outputs\calibration\sets\frontal\941_IM-2438-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,941,Normal
+ml\outputs\calibration\sets\frontal\2927_IM-1329-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2927,Calcinosis/Atherosclerosis
+ml\outputs\calibration\sets\frontal\470_IM-2099-3001.dcm.png,positive,chest_radiograph_frontal,Frontal,470,Normal
+ml\outputs\calibration\sets\frontal\2283_IM-0870-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2283,Other Abnormality
+ml\outputs\calibration\sets\frontal\1706_IM-0466-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,1706,Other Abnormality
+ml\outputs\calibration\sets\frontal\1046_IM-0036-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,1046,Normal
+ml\outputs\calibration\sets\frontal\2441_IM-0978-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2441,Degenerative/Bone
+ml\outputs\calibration\sets\frontal\1969_IM-0630-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,1969,Normal
+ml\outputs\calibration\sets\frontal\241_IM-0955-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,241,Normal
+ml\outputs\calibration\sets\frontal\602_IM-2192-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,602,Normal
+ml\outputs\calibration\sets\frontal\2601_IM-1092-4001.dcm.png,positive,chest_radiograph_frontal,Frontal,2601,Normal
+ml\outputs\calibration\sets\frontal\363_IM-1798-4004.dcm.png,positive,chest_radiograph_frontal,Frontal,363,Normal
+ml\outputs\calibration\sets\frontal\3534_IM-1727-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3534,Other Abnormality
+ml\outputs\calibration\sets\frontal\3216_IM-1520-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3216,Normal
+ml\outputs\calibration\sets\frontal\2012_IM-0662-3001.dcm.png,positive,chest_radiograph_frontal,Frontal,2012,Normal
+ml\outputs\calibration\sets\frontal\3927_IM-2000-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3927,Support Devices
+ml\outputs\calibration\sets\frontal\3462_IM-1683-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3462,Support Devices
+ml\outputs\calibration\sets\frontal\3303_IM-1580-3001.dcm.png,positive,chest_radiograph_frontal,Frontal,3303,Lung Opacity
+ml\outputs\calibration\sets\frontal\3862_IM-1956-2001.dcm.png,positive,chest_radiograph_frontal,Frontal,3862,Other Abnormality
+ml\outputs\calibration\sets\frontal\3630_IM-1798-4004.dcm.png,positive,chest_radiograph_frontal,Frontal,3630,Calcinosis/Atherosclerosis
+ml\outputs\calibration\sets\frontal\3668_IM-1825-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3668,Lung Opacity
+ml\outputs\calibration\sets\frontal\2646_IM-1131-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2646,Degenerative/Bone
+ml\outputs\calibration\sets\frontal\3469_IM-1685-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3469,Scarring
+ml\outputs\calibration\sets\frontal\3789_IM-1902-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3789,Cardiomegaly
+ml\outputs\calibration\sets\frontal\3383_IM-1630-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3383,Granuloma
+ml\outputs\calibration\sets\frontal\3672_IM-1828-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3672,Edema/Congestion
+ml\outputs\calibration\sets\frontal\502_IM-2120-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,502,Normal
+ml\outputs\calibration\sets\frontal\3727_IM-1863-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3727,Support Devices
+ml\outputs\calibration\sets\frontal\799_IM-2333-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,799,Normal
+ml\outputs\calibration\sets\frontal\3096_IM-1448-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3096,Nodule/Mass
+ml\outputs\calibration\sets\frontal\2589_IM-1083-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2589,Cardiomegaly
+ml\outputs\calibration\sets\frontal\3241_IM-1534-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3241,Atelectasis
+ml\outputs\calibration\sets\frontal\2028_IM-0673-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2028,Normal
+ml\outputs\calibration\sets\frontal\3908_IM-1985-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3908,Degenerative/Bone
+ml\outputs\calibration\sets\frontal\2171_IM-0786-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2171,Granuloma
+ml\outputs\calibration\sets\frontal\1551_IM-0359-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,1551,Normal
+ml\outputs\calibration\sets\frontal\2704_IM-1171-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2704,Scarring
+ml\outputs\calibration\sets\frontal\3240_IM-1534-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3240,Emphysema/COPD
+ml\outputs\calibration\sets\frontal\965_IM-2455-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,965,Normal
+ml\outputs\calibration\sets\frontal\2351_IM-0917-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2351,Calcinosis/Atherosclerosis
+ml\outputs\calibration\sets\frontal\2826_IM-1246-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2826,Fibrosis/Interstitial
+ml\outputs\calibration\sets\frontal\2681_IM-1154-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2681,Support Devices
+ml\outputs\calibration\sets\frontal\3992_IM-2044-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3992,Edema/Congestion
+ml\outputs\calibration\sets\frontal\2179_IM-0791-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2179,Other Abnormality
+ml\outputs\calibration\sets\frontal\2209_IM-0816-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2209,Emphysema/COPD
+ml\outputs\calibration\sets\frontal\1896_IM-0581-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,1896,Normal
+ml\outputs\calibration\sets\frontal\2172_IM-0786-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2172,Nodule/Mass
+ml\outputs\calibration\sets\frontal\2716_IM-1181-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2716,Pleural Effusion
+ml\outputs\calibration\sets\frontal\2752_IM-1202-0001-0001.dcm.png,positive,chest_radiograph_frontal,Frontal,2752,Edema/Congestion
+ml\outputs\calibration\sets\frontal\3455_IM-1677-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3455,Edema/Congestion
+ml\outputs\calibration\sets\frontal\1218_IM-0146-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,1218,Normal
+ml\outputs\calibration\sets\frontal\3256_IM-1543-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3256,Pleural Effusion
+ml\outputs\calibration\sets\frontal\3001_IM-1387-3001.dcm.png,positive,chest_radiograph_frontal,Frontal,3001,Other Abnormality
+ml\outputs\calibration\sets\frontal\3516_IM-1715-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,3516,Other Abnormality
+ml\outputs\calibration\sets\frontal\2852_IM-1261-3001.dcm.png,positive,chest_radiograph_frontal,Frontal,2852,Normal
+ml\outputs\calibration\sets\frontal\2982_IM-1371-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2982,Scarring
+ml\outputs\calibration\sets\frontal\2946_IM-1346-1001.dcm.png,positive,chest_radiograph_frontal,Frontal,2946,Other Abnormality
+ml\outputs\calibration\sets\lateral\2553_IM-1059-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2553,Granuloma
+ml\outputs\calibration\sets\lateral\2066_IM-0701-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2066,Atelectasis
+ml\outputs\calibration\sets\lateral\2186_IM-0796-3003.dcm.png,positive,chest_radiograph_lateral,Lateral,2186,Other Abnormality
+ml\outputs\calibration\sets\lateral\326_IM-1546-12012.dcm.png,positive,chest_radiograph_lateral,Lateral,326,Normal
+ml\outputs\calibration\sets\lateral\2479_IM-1007-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2479,Support Devices
+ml\outputs\calibration\sets\lateral\1706_IM-0466-1002.dcm.png,positive,chest_radiograph_lateral,Lateral,1706,Other Abnormality
+ml\outputs\calibration\sets\lateral\2628_IM-1115-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2628,Scarring
+ml\outputs\calibration\sets\lateral\1587_IM-0381-1003002.dcm.png,positive,chest_radiograph_lateral,Lateral,1587,Normal
+ml\outputs\calibration\sets\lateral\2688_IM-1159-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2688,Cardiomegaly
+ml\outputs\calibration\sets\lateral\2927_IM-1329-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2927,Calcinosis/Atherosclerosis
+ml\outputs\calibration\sets\lateral\2283_IM-0870-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2283,Other Abnormality
+ml\outputs\calibration\sets\lateral\2086_IM-0717-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2086,Normal
+ml\outputs\calibration\sets\lateral\3327_IM-1593-1001.dcm.png,positive,chest_radiograph_lateral,Lateral,3327,Calcinosis/Atherosclerosis
+ml\outputs\calibration\sets\lateral\3594_IM-1772-1002.dcm.png,positive,chest_radiograph_lateral,Lateral,3594,Normal
+ml\outputs\calibration\sets\lateral\3773_IM-1891-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3773,Normal
+ml\outputs\calibration\sets\lateral\1330_IM-0213-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,1330,Normal
+ml\outputs\calibration\sets\lateral\1676_IM-0445-1002.dcm.png,positive,chest_radiograph_lateral,Lateral,1676,Emphysema/COPD
+ml\outputs\calibration\sets\lateral\3614_IM-1787-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3614,Edema/Congestion
+ml\outputs\calibration\sets\lateral\3825_IM-1931-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3825,Support Devices
+ml\outputs\calibration\sets\lateral\2810_IM-1238-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2810,Other Abnormality
+ml\outputs\calibration\sets\lateral\1618_IM-0399-1002.dcm.png,positive,chest_radiograph_lateral,Lateral,1618,Normal
+ml\outputs\calibration\sets\lateral\3256_IM-1543-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3256,Pleural Effusion
+ml\outputs\calibration\sets\lateral\2335_IM-0902-1001.dcm.png,positive,chest_radiograph_lateral,Lateral,2335,Degenerative/Bone
+ml\outputs\calibration\sets\lateral\3177_IM-1497-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3177,Emphysema/COPD
+ml\outputs\calibration\sets\lateral\1545_IM-0355-3003.dcm.png,positive,chest_radiograph_lateral,Lateral,1545,Normal
+ml\outputs\calibration\sets\lateral\2579_IM-1078-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2579,Normal
+ml\outputs\calibration\sets\lateral\696_IM-2261-1001-0001.dcm.png,positive,chest_radiograph_lateral,Lateral,696,Normal
+ml\outputs\calibration\sets\lateral\3518_IM-1717-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3518,Degenerative/Bone
+ml\outputs\calibration\sets\lateral\3815_IM-1924-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3815,Lung Opacity
+ml\outputs\calibration\sets\lateral\2436_IM-0976-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2436,Normal
+ml\outputs\calibration\sets\lateral\1709_IM-0467-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,1709,Lung Opacity
+ml\outputs\calibration\sets\lateral\3149_IM-1480-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3149,Other Abnormality
+ml\outputs\calibration\sets\lateral\2496_IM-1022-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2496,Cardiomegaly
+ml\outputs\calibration\sets\lateral\536_IM-2143-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,536,Normal
+ml\outputs\calibration\sets\lateral\3118_IM-1466-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3118,Granuloma
+ml\outputs\calibration\sets\lateral\3000_IM-1386-0001-0002.dcm.png,positive,chest_radiograph_lateral,Lateral,3000,Nodule/Mass
+ml\outputs\calibration\sets\lateral\3269_IM-1552-1002.dcm.png,positive,chest_radiograph_lateral,Lateral,3269,Normal
+ml\outputs\calibration\sets\lateral\2671_IM-1148-1001-0001.dcm.png,positive,chest_radiograph_lateral,Lateral,2671,Other Abnormality
+ml\outputs\calibration\sets\lateral\2989_IM-1376-1002.dcm.png,positive,chest_radiograph_lateral,Lateral,2989,Support Devices
+ml\outputs\calibration\sets\lateral\3082_IM-1441-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3082,Edema/Congestion
+ml\outputs\calibration\sets\lateral\2531_IM-1045-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2531,Granuloma
+ml\outputs\calibration\sets\lateral\2538_IM-1050-1002.dcm.png,positive,chest_radiograph_lateral,Lateral,2538,Normal
+ml\outputs\calibration\sets\lateral\3423_IM-1656-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3423,Other Abnormality
+ml\outputs\calibration\sets\lateral\1851_IM-0553-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,1851,Normal
+ml\outputs\calibration\sets\lateral\3987_IM-2041-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3987,Degenerative/Bone
+ml\outputs\calibration\sets\lateral\881_IM-2396-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,881,Normal
+ml\outputs\calibration\sets\lateral\1356_IM-0231-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,1356,Normal
+ml\outputs\calibration\sets\lateral\1756_IM-0494-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,1756,Normal
+ml\outputs\calibration\sets\lateral\3267_IM-1551-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3267,Normal
+ml\outputs\calibration\sets\lateral\1046_IM-0036-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,1046,Normal
+ml\outputs\calibration\sets\lateral\2014_IM-0664-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2014,Other Abnormality
+ml\outputs\calibration\sets\lateral\865_IM-2385-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,865,Normal
+ml\outputs\calibration\sets\lateral\2317_IM-0890-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2317,Granuloma
+ml\outputs\calibration\sets\lateral\1734_IM-0484-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,1734,Normal
+ml\outputs\calibration\sets\lateral\2581_IM-1079-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2581,Other Abnormality
+ml\outputs\calibration\sets\lateral\3126_IM-1470-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3126,Normal
+ml\outputs\calibration\sets\lateral\3393_IM-1637-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3393,Nodule/Mass
+ml\outputs\calibration\sets\lateral\2713_IM-1180-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2713,Atelectasis
+ml\outputs\calibration\sets\lateral\2664_IM-1145-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2664,Atelectasis
+ml\outputs\calibration\sets\lateral\3757_IM-1881-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3757,Other Abnormality
+ml\outputs\calibration\sets\lateral\2134_IM-0756-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2134,Other Abnormality
+ml\outputs\calibration\sets\lateral\3094_IM-1447-3001.dcm.png,positive,chest_radiograph_lateral,Lateral,3094,Other Abnormality
+ml\outputs\calibration\sets\lateral\3627_IM-1795-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3627,Atelectasis
+ml\outputs\calibration\sets\lateral\2789_IM-1223-9001.dcm.png,positive,chest_radiograph_lateral,Lateral,2789,Nodule/Mass
+ml\outputs\calibration\sets\lateral\3382_IM-1629-0001-0002.dcm.png,positive,chest_radiograph_lateral,Lateral,3382,Pleural Effusion
+ml\outputs\calibration\sets\lateral\2481_IM-1010-12012.dcm.png,positive,chest_radiograph_lateral,Lateral,2481,Atelectasis
+ml\outputs\calibration\sets\lateral\2174_IM-0787-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2174,Normal
+ml\outputs\calibration\sets\lateral\2214_IM-0819-1002.dcm.png,positive,chest_radiograph_lateral,Lateral,2214,Normal
+ml\outputs\calibration\sets\lateral\3336_IM-1598-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3336,Degenerative/Bone
+ml\outputs\calibration\sets\lateral\3790_IM-1904-0001-0001.dcm.png,positive,chest_radiograph_lateral,Lateral,3790,Calcinosis/Atherosclerosis
+ml\outputs\calibration\sets\lateral\3089_IM-1444-1002.dcm.png,positive,chest_radiograph_lateral,Lateral,3089,Normal
+ml\outputs\calibration\sets\lateral\3312_IM-1586-1002.dcm.png,positive,chest_radiograph_lateral,Lateral,3312,Pneumonia
+ml\outputs\calibration\sets\lateral\2028_IM-0673-1002.dcm.png,positive,chest_radiograph_lateral,Lateral,2028,Normal
+ml\outputs\calibration\sets\lateral\2793_IM-1226-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2793,Other Abnormality
+ml\outputs\calibration\sets\lateral\3251_IM-1541-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3251,Nodule/Mass
+ml\outputs\calibration\sets\lateral\941_IM-2438-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,941,Normal
+ml\outputs\calibration\sets\lateral\2516_IM-1036-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2516,Scarring
+ml\outputs\calibration\sets\lateral\470_IM-2099-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,470,Normal
+ml\outputs\calibration\sets\lateral\3600_IM-1776-1001.dcm.png,positive,chest_radiograph_lateral,Lateral,3600,Scarring
+ml\outputs\calibration\sets\lateral\3748_IM-1874-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3748,Scarring
+ml\outputs\calibration\sets\lateral\2847_IM-1256-3001.dcm.png,positive,chest_radiograph_lateral,Lateral,2847,Support Devices
+ml\outputs\calibration\sets\lateral\737_IM-2295-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,737,Normal
+ml\outputs\calibration\sets\lateral\121_IM-0142-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,121,Normal
+ml\outputs\calibration\sets\lateral\2724_IM-1186-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2724,Other Abnormality
+ml\outputs\calibration\sets\lateral\3311_IM-1586-3001.dcm.png,positive,chest_radiograph_lateral,Lateral,3311,Normal
+ml\outputs\calibration\sets\lateral\2369_IM-0929-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2369,Fibrosis/Interstitial
+ml\outputs\calibration\sets\lateral\2482_IM-1011-0001-0001.dcm.png,positive,chest_radiograph_lateral,Lateral,2482,Pneumothorax
+ml\outputs\calibration\sets\lateral\2761_IM-1208-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2761,Fibrosis/Interstitial
+ml\outputs\calibration\sets\lateral\2434_IM-0976-1002.dcm.png,positive,chest_radiograph_lateral,Lateral,2434,Scarring
+ml\outputs\calibration\sets\lateral\3388_IM-1633-1002.dcm.png,positive,chest_radiograph_lateral,Lateral,3388,Calcinosis/Atherosclerosis
+ml\outputs\calibration\sets\lateral\2440_IM-0978-1001.dcm.png,positive,chest_radiograph_lateral,Lateral,2440,Emphysema/COPD
+ml\outputs\calibration\sets\lateral\3092_IM-1445-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3092,Degenerative/Bone
+ml\outputs\calibration\sets\lateral\2469_IM-0999-3001.dcm.png,positive,chest_radiograph_lateral,Lateral,2469,Lung Opacity
+ml\outputs\calibration\sets\lateral\1469_IM-0303-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,1469,Normal
+ml\outputs\calibration\sets\lateral\3999_IM-2049-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3999,Normal
+ml\outputs\calibration\sets\lateral\1312_IM-0203-1002.dcm.png,positive,chest_radiograph_lateral,Lateral,1312,Normal
+ml\outputs\calibration\sets\lateral\2382_IM-0941-1001.dcm.png,positive,chest_radiograph_lateral,Lateral,2382,Cardiomegaly
+ml\outputs\calibration\sets\lateral\2323_IM-0895-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2323,Normal
+ml\outputs\calibration\sets\lateral\1740_IM-0488-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,1740,Lung Opacity
+ml\outputs\calibration\sets\lateral\1008_IM-0009-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,1008,Normal
+ml\outputs\calibration\sets\lateral\3940_IM-2011-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3940,Scarring
+ml\outputs\calibration\sets\lateral\3628_IM-1796-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3628,Other Abnormality
+ml\outputs\calibration\sets\lateral\1067_IM-0048-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,1067,Normal
+ml\outputs\calibration\sets\lateral\3601_IM-1777-3003.dcm.png,positive,chest_radiograph_lateral,Lateral,3601,Hernia/Diaphragm
+ml\outputs\calibration\sets\lateral\2426_IM-0968-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2426,Other Abnormality
+ml\outputs\calibration\sets\lateral\2631_IM-1118-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2631,Support Devices
+ml\outputs\calibration\sets\lateral\2904_IM-1308-3001.dcm.png,positive,chest_radiograph_lateral,Lateral,2904,Cardiomegaly
+ml\outputs\calibration\sets\lateral\3681_IM-1833-0001-0001.dcm.png,positive,chest_radiograph_lateral,Lateral,3681,Other Abnormality
+ml\outputs\calibration\sets\lateral\967_IM-2457-3003.dcm.png,positive,chest_radiograph_lateral,Lateral,967,Normal
+ml\outputs\calibration\sets\lateral\3645_IM-1807-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3645,Other Abnormality
+ml\outputs\calibration\sets\lateral\2345_IM-0910-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2345,Other Abnormality
+ml\outputs\calibration\sets\lateral\758_IM-2309-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,758,Normal
+ml\outputs\calibration\sets\lateral\3190_IM-1505-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3190,Atelectasis
+ml\outputs\calibration\sets\lateral\2856_IM-1263-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2856,Normal
+ml\outputs\calibration\sets\lateral\3441_IM-1666-1002.dcm.png,positive,chest_radiograph_lateral,Lateral,3441,Normal
+ml\outputs\calibration\sets\lateral\815_IM-2346-1002.dcm.png,positive,chest_radiograph_lateral,Lateral,815,Normal
+ml\outputs\calibration\sets\lateral\2201_IM-0811-1002.dcm.png,positive,chest_radiograph_lateral,Lateral,2201,Granuloma
+ml\outputs\calibration\sets\lateral\3412_IM-1650-1001-0002.dcm.png,positive,chest_radiograph_lateral,Lateral,3412,Other Abnormality
+ml\outputs\calibration\sets\lateral\1645_IM-0422-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,1645,Lung Opacity
+ml\outputs\calibration\sets\lateral\259_IM-1083-1002.dcm.png,positive,chest_radiograph_lateral,Lateral,259,Normal
+ml\outputs\calibration\sets\lateral\2406_IM-0954-1002.dcm.png,positive,chest_radiograph_lateral,Lateral,2406,Hernia/Diaphragm
+ml\outputs\calibration\sets\lateral\2743_IM-1197-1002.dcm.png,positive,chest_radiograph_lateral,Lateral,2743,Calcinosis/Atherosclerosis
+ml\outputs\calibration\sets\lateral\363_IM-1798-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,363,Normal
+ml\outputs\calibration\sets\lateral\319_IM-1505-1002.dcm.png,positive,chest_radiograph_lateral,Lateral,319,Normal
+ml\outputs\calibration\sets\lateral\3608_IM-1781-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3608,Cardiomegaly
+ml\outputs\calibration\sets\lateral\3439_IM-1664-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3439,Normal
+ml\outputs\calibration\sets\lateral\2210_IM-0817-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2210,Normal
+ml\outputs\calibration\sets\lateral\3992_IM-2044-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3992,Edema/Congestion
+ml\outputs\calibration\sets\lateral\502_IM-2120-1002.dcm.png,positive,chest_radiograph_lateral,Lateral,502,Normal
+ml\outputs\calibration\sets\lateral\2264_IM-0854-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2264,Other Abnormality
+ml\outputs\calibration\sets\lateral\2420_IM-0964-0001-0002.dcm.png,positive,chest_radiograph_lateral,Lateral,2420,Support Devices
+ml\outputs\calibration\sets\lateral\3110_IM-1460-1002.dcm.png,positive,chest_radiograph_lateral,Lateral,3110,Other Abnormality
+ml\outputs\calibration\sets\lateral\2036_IM-0680-1001.dcm.png,positive,chest_radiograph_lateral,Lateral,2036,Atelectasis
+ml\outputs\calibration\sets\lateral\2859_IM-1266-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2859,Pneumonia
+ml\outputs\calibration\sets\lateral\24_IM-0949-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,24,Normal
+ml\outputs\calibration\sets\lateral\3584_IM-1763-1001-0002.dcm.png,positive,chest_radiograph_lateral,Lateral,3584,Atelectasis
+ml\outputs\calibration\sets\lateral\2279_IM-0865-3001.dcm.png,positive,chest_radiograph_lateral,Lateral,2279,Atelectasis
+ml\outputs\calibration\sets\lateral\2288_IM-0872-1002.dcm.png,positive,chest_radiograph_lateral,Lateral,2288,Normal
+ml\outputs\calibration\sets\lateral\3182_IM-1501-0001-0002.dcm.png,positive,chest_radiograph_lateral,Lateral,3182,Nodule/Mass
+ml\outputs\calibration\sets\lateral\2684_IM-1157-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2684,Calcinosis/Atherosclerosis
+ml\outputs\calibration\sets\lateral\3141_IM-1477-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3141,Normal
+ml\outputs\calibration\sets\lateral\529_IM-2137-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,529,Normal
+ml\outputs\calibration\sets\lateral\581_IM-2178-3001.dcm.png,positive,chest_radiograph_lateral,Lateral,581,Normal
+ml\outputs\calibration\sets\lateral\3408_IM-1648-1002.dcm.png,positive,chest_radiograph_lateral,Lateral,3408,Degenerative/Bone
+ml\outputs\calibration\sets\lateral\3533_IM-1726-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3533,Other Abnormality
+ml\outputs\calibration\sets\lateral\965_IM-2455-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,965,Normal
+ml\outputs\calibration\sets\lateral\2627_IM-1114-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2627,Other Abnormality
+ml\outputs\calibration\sets\lateral\2138_IM-0760-1002.dcm.png,positive,chest_radiograph_lateral,Lateral,2138,Degenerative/Bone
+ml\outputs\calibration\sets\lateral\2544_IM-1054-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2544,Cardiomegaly
+ml\outputs\calibration\sets\lateral\3740_IM-1868-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3740,Pneumonia
+ml\outputs\calibration\sets\lateral\3804_IM-1914-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3804,Calcinosis/Atherosclerosis
+ml\outputs\calibration\sets\lateral\1750_IM-0493-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,1750,Emphysema/COPD
+ml\outputs\calibration\sets\lateral\2058_IM-0696-2002.dcm.png,positive,chest_radiograph_lateral,Lateral,2058,Other Abnormality
+ml\outputs\calibration\sets\lateral\2738_IM-1192-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2738,Other Abnormality
+ml\outputs\calibration\sets\lateral\2212_IM-0819-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2212,Normal
+ml\outputs\calibration\sets\lateral\3642_IM-1806-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3642,Other Abnormality
+ml\outputs\calibration\sets\lateral\618_IM-2201-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,618,Normal
+ml\outputs\calibration\sets\lateral\2206_IM-0815-1001.dcm.png,positive,chest_radiograph_lateral,Lateral,2206,Atelectasis
+ml\outputs\calibration\sets\lateral\630_IM-2211-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,630,Normal
+ml\outputs\calibration\sets\lateral\2803_IM-1234-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2803,Other Abnormality
+ml\outputs\calibration\sets\lateral\149_IM-0315-1002.dcm.png,positive,chest_radiograph_lateral,Lateral,149,Normal
+ml\outputs\calibration\sets\lateral\2137_IM-0759-3003.dcm.png,positive,chest_radiograph_lateral,Lateral,2137,Granuloma
+ml\outputs\calibration\sets\lateral\1930_IM-0602-1001-0001.dcm.png,positive,chest_radiograph_lateral,Lateral,1930,Other Abnormality
+ml\outputs\calibration\sets\lateral\3694_IM-1845-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3694,Pneumothorax
+ml\outputs\calibration\sets\lateral\2776_IM-1217-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2776,Nodule/Mass
+ml\outputs\calibration\sets\lateral\2886_IM-1288-0001-0001.dcm.png,positive,chest_radiograph_lateral,Lateral,2886,Pleural Effusion
+ml\outputs\calibration\sets\lateral\3121_IM-1466-1002.dcm.png,positive,chest_radiograph_lateral,Lateral,3121,Granuloma
+ml\outputs\calibration\sets\lateral\2093_IM-0723-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2093,Support Devices
+ml\outputs\calibration\sets\lateral\3391_IM-1637-1001.dcm.png,positive,chest_radiograph_lateral,Lateral,3391,Granuloma
+ml\outputs\calibration\sets\lateral\2811_IM-1238-1001.dcm.png,positive,chest_radiograph_lateral,Lateral,2811,Normal
+ml\outputs\calibration\sets\lateral\3660_IM-1820-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3660,Normal
+ml\outputs\calibration\sets\lateral\3759_IM-1883-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3759,Emphysema/COPD
+ml\outputs\calibration\sets\lateral\3808_IM-1918-1002.dcm.png,positive,chest_radiograph_lateral,Lateral,3808,Calcinosis/Atherosclerosis
+ml\outputs\calibration\sets\lateral\3137_IM-1476-1002.dcm.png,positive,chest_radiograph_lateral,Lateral,3137,Calcinosis/Atherosclerosis
+ml\outputs\calibration\sets\lateral\1896_IM-0581-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,1896,Normal
+ml\outputs\calibration\sets\lateral\2032_IM-0677-2002.dcm.png,positive,chest_radiograph_lateral,Lateral,2032,Normal
+ml\outputs\calibration\sets\lateral\3320_IM-1588-1002.dcm.png,positive,chest_radiograph_lateral,Lateral,3320,Normal
+ml\outputs\calibration\sets\lateral\16_IM-0389-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,16,Normal
+ml\outputs\calibration\sets\lateral\3651_IM-1813-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3651,Scarring
+ml\outputs\calibration\sets\lateral\3948_IM-2017-1002.dcm.png,positive,chest_radiograph_lateral,Lateral,3948,Normal
+ml\outputs\calibration\sets\lateral\2906_IM-1310-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2906,Degenerative/Bone
+ml\outputs\calibration\sets\lateral\3785_IM-1898-1001.dcm.png,positive,chest_radiograph_lateral,Lateral,3785,Lung Opacity
+ml\outputs\calibration\sets\lateral\3952_IM-2020-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3952,Cardiomegaly
+ml\outputs\calibration\sets\lateral\3068_IM-1431-3001.dcm.png,positive,chest_radiograph_lateral,Lateral,3068,Cardiomegaly
+ml\outputs\calibration\sets\lateral\3477_IM-1690-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3477,Normal
+ml\outputs\calibration\sets\lateral\2281_IM-0868-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2281,Normal
+ml\outputs\calibration\sets\lateral\2307_IM-0882-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2307,Emphysema/COPD
+ml\outputs\calibration\sets\lateral\2687_IM-1158-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2687,Support Devices
+ml\outputs\calibration\sets\lateral\1944_IM-0613-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,1944,Calcinosis/Atherosclerosis
+ml\outputs\calibration\sets\lateral\3924_IM-1998-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3924,Degenerative/Bone
+ml\outputs\calibration\sets\lateral\3429_IM-1657-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3429,Support Devices
+ml\outputs\calibration\sets\lateral\3908_IM-1985-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3908,Degenerative/Bone
+ml\outputs\calibration\sets\lateral\2179_IM-0791-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2179,Other Abnormality
+ml\outputs\calibration\sets\lateral\3455_IM-1677-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3455,Edema/Congestion
+ml\outputs\calibration\sets\lateral\1883_IM-0572-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,1883,Support Devices
+ml\outputs\calibration\sets\lateral\1765_IM-0499-1002.dcm.png,positive,chest_radiograph_lateral,Lateral,1765,Calcinosis/Atherosclerosis
+ml\outputs\calibration\sets\lateral\3072_IM-1433-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3072,Scarring
+ml\outputs\calibration\sets\lateral\3273_IM-1554-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3273,Cardiomegaly
+ml\outputs\calibration\sets\lateral\3410_IM-1648-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3410,Emphysema/COPD
+ml\outputs\calibration\sets\lateral\2620_IM-1109-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2620,Normal
+ml\outputs\calibration\sets\lateral\3874_IM-1966-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3874,Calcinosis/Atherosclerosis
+ml\outputs\calibration\sets\lateral\2507_IM-1030-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2507,Scarring
+ml\outputs\calibration\sets\lateral\1006_IM-0007-3003.dcm.png,positive,chest_radiograph_lateral,Lateral,1006,Normal
+ml\outputs\calibration\sets\lateral\2867_IM-1274-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2867,Emphysema/COPD
+ml\outputs\calibration\sets\lateral\505_IM-2123-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,505,Normal
+ml\outputs\calibration\sets\lateral\1178_IM-0121-1002.dcm.png,positive,chest_radiograph_lateral,Lateral,1178,Normal
+ml\outputs\calibration\sets\lateral\3066_IM-1430-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3066,Emphysema/COPD
+ml\outputs\calibration\sets\lateral\272_IM-1182-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,272,Normal
+ml\outputs\calibration\sets\lateral\719_IM-2280-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,719,Normal
+ml\outputs\calibration\sets\lateral\2216_IM-0821-85075002.dcm.png,positive,chest_radiograph_lateral,Lateral,2216,Other Abnormality
+ml\outputs\calibration\sets\lateral\428_IM-2070-1002.dcm.png,positive,chest_radiograph_lateral,Lateral,428,Normal
+ml\outputs\calibration\sets\lateral\2131_IM-0755-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2131,Normal
+ml\outputs\calibration\sets\lateral\3078_IM-1438-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3078,Pneumonia
+ml\outputs\calibration\sets\lateral\2969_IM-1360-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2969,Emphysema/COPD
+ml\outputs\calibration\sets\lateral\3430_IM-1659-1001.dcm.png,positive,chest_radiograph_lateral,Lateral,3430,Edema/Congestion
+ml\outputs\calibration\sets\lateral\3016_IM-1392-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3016,Degenerative/Bone
+ml\outputs\calibration\sets\lateral\3170_IM-1494-1002.dcm.png,positive,chest_radiograph_lateral,Lateral,3170,Degenerative/Bone
+ml\outputs\calibration\sets\lateral\2070_IM-0704-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2070,Other Abnormality
+ml\outputs\calibration\sets\lateral\2128_IM-0752-3003.dcm.png,positive,chest_radiograph_lateral,Lateral,2128,Emphysema/COPD
+ml\outputs\calibration\sets\lateral\2759_IM-1207-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2759,Other Abnormality
+ml\outputs\calibration\sets\lateral\2816_IM-1240-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2816,Granuloma
+ml\outputs\calibration\sets\lateral\3169_IM-1492-1001.dcm.png,positive,chest_radiograph_lateral,Lateral,3169,Emphysema/COPD
+ml\outputs\calibration\sets\lateral\1815_IM-0527-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,1815,Other Abnormality
+ml\outputs\calibration\sets\lateral\2733_IM-1189-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2733,Lung Opacity
+ml\outputs\calibration\sets\lateral\3008_IM-1389-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3008,Normal
+ml\outputs\calibration\sets\lateral\1736_IM-0484-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,1736,Other Abnormality
+ml\outputs\calibration\sets\lateral\2223_IM-0827-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2223,Normal
+ml\outputs\calibration\sets\lateral\3934_IM-2005-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3934,Fibrosis/Interstitial
+ml\outputs\calibration\sets\lateral\3866_IM-1959-0001-0002.dcm.png,positive,chest_radiograph_lateral,Lateral,3866,Pneumonia
+ml\outputs\calibration\sets\lateral\3831_IM-1934-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3831,Normal
+ml\outputs\calibration\sets\lateral\2329_IM-0898-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2329,Normal
+ml\outputs\calibration\sets\lateral\538_IM-2144-1001.dcm.png,positive,chest_radiograph_lateral,Lateral,538,Normal
+ml\outputs\calibration\sets\lateral\2444_IM-0980-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2444,Other Abnormality
+ml\outputs\calibration\sets\lateral\3386_IM-1633-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3386,Normal
+ml\outputs\calibration\sets\lateral\911_IM-2417-1002.dcm.png,positive,chest_radiograph_lateral,Lateral,911,Normal
+ml\outputs\calibration\sets\lateral\3404_IM-1647-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3404,Other Abnormality
+ml\outputs\calibration\sets\lateral\3013_IM-1391-0001-0002.dcm.png,positive,chest_radiograph_lateral,Lateral,3013,Cardiomegaly
+ml\outputs\calibration\sets\lateral\3345_IM-1603-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3345,Normal
+ml\outputs\calibration\sets\lateral\3188_IM-1504-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3188,Support Devices
+ml\outputs\calibration\sets\lateral\2650_IM-1135-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2650,Cardiomegaly
+ml\outputs\calibration\sets\lateral\1971_IM-0633-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,1971,Normal
+ml\outputs\calibration\sets\lateral\1882_IM-0571-1002.dcm.png,positive,chest_radiograph_lateral,Lateral,1882,Normal
+ml\outputs\calibration\sets\lateral\3534_IM-1727-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3534,Other Abnormality
+ml\outputs\calibration\sets\lateral\3155_IM-1486-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3155,Cardiomegaly
+ml\outputs\calibration\sets\lateral\3448_IM-1671-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3448,Calcinosis/Atherosclerosis
+ml\outputs\calibration\sets\lateral\2749_IM-1199-1002.dcm.png,positive,chest_radiograph_lateral,Lateral,2749,Other Abnormality
+ml\outputs\calibration\sets\lateral\2073_IM-0707-1002.dcm.png,positive,chest_radiograph_lateral,Lateral,2073,Other Abnormality
+ml\outputs\calibration\sets\lateral\2255_IM-0847-4001.dcm.png,positive,chest_radiograph_lateral,Lateral,2255,Calcinosis/Atherosclerosis
+ml\outputs\calibration\sets\lateral\2096_IM-0726-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2096,Normal
+ml\outputs\calibration\sets\lateral\2652_IM-1136-3003.dcm.png,positive,chest_radiograph_lateral,Lateral,2652,Calcinosis/Atherosclerosis
+ml\outputs\calibration\sets\lateral\1639_IM-0418-5001.dcm.png,positive,chest_radiograph_lateral,Lateral,1639,Other Abnormality
+ml\outputs\calibration\sets\lateral\2923_IM-1326-3001.dcm.png,positive,chest_radiograph_lateral,Lateral,2923,Normal
+ml\outputs\calibration\sets\lateral\2486_IM-1014-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2486,Other Abnormality
+ml\outputs\calibration\sets\lateral\1051_IM-0039-6001.dcm.png,positive,chest_radiograph_lateral,Lateral,1051,Normal
+ml\outputs\calibration\sets\lateral\3680_IM-1832-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3680,Atelectasis
+ml\outputs\calibration\sets\lateral\3541_IM-1733-0001-0001.dcm.png,positive,chest_radiograph_lateral,Lateral,3541,Atelectasis
+ml\outputs\calibration\sets\lateral\2961_IM-1355-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2961,Pneumonia
+ml\outputs\calibration\sets\lateral\2781_IM-1219-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2781,Normal
+ml\outputs\calibration\sets\lateral\3502_IM-1707-1003.dcm.png,positive,chest_radiograph_lateral,Lateral,3502,Edema/Congestion
+ml\outputs\calibration\sets\lateral\3736_IM-1866-1002.dcm.png,positive,chest_radiograph_lateral,Lateral,3736,Other Abnormality
+ml\outputs\calibration\sets\lateral\2247_IM-0844-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2247,Normal
+ml\outputs\calibration\sets\lateral\2150_IM-0770-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2150,Nodule/Mass
+ml\outputs\calibration\sets\lateral\1946_IM-0615-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,1946,Support Devices
+ml\outputs\calibration\sets\lateral\2100_IM-0731-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2100,Calcinosis/Atherosclerosis
+ml\outputs\calibration\sets\lateral\3605_IM-1781-1002.dcm.png,positive,chest_radiograph_lateral,Lateral,3605,Normal
+ml\outputs\calibration\sets\lateral\3418_IM-1653-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3418,Other Abnormality
+ml\outputs\calibration\sets\lateral\1316_IM-0205-1003.dcm.png,positive,chest_radiograph_lateral,Lateral,1316,Normal
+ml\outputs\calibration\sets\lateral\2313_IM-0888-1004003.dcm.png,positive,chest_radiograph_lateral,Lateral,2313,Normal
+ml\outputs\calibration\sets\lateral\3525_IM-1722-1001.dcm.png,positive,chest_radiograph_lateral,Lateral,3525,Support Devices
+ml\outputs\calibration\sets\lateral\3672_IM-1828-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3672,Edema/Congestion
+ml\outputs\calibration\sets\lateral\3508_IM-1710-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3508,Pleural Effusion
+ml\outputs\calibration\sets\lateral\2902_IM-1306-3001.dcm.png,positive,chest_radiograph_lateral,Lateral,2902,Normal
+ml\outputs\calibration\sets\lateral\310_IM-1451-0001-0002.dcm.png,positive,chest_radiograph_lateral,Lateral,310,Normal
+ml\outputs\calibration\sets\lateral\1520_IM-0336-1003002.dcm.png,positive,chest_radiograph_lateral,Lateral,1520,Normal
+ml\outputs\calibration\sets\lateral\1902_IM-0586-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,1902,Normal
+ml\outputs\calibration\sets\lateral\2181_IM-0793-1001-0002.dcm.png,positive,chest_radiograph_lateral,Lateral,2181,Cardiomegaly
+ml\outputs\calibration\sets\lateral\3148_IM-1480-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3148,Pleural Effusion
+ml\outputs\calibration\sets\lateral\3192_IM-1505-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3192,Hernia/Diaphragm
+ml\outputs\calibration\sets\lateral\2287_IM-0872-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2287,Cardiomegaly
+ml\outputs\calibration\sets\lateral\2963_IM-1356-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2963,Normal
+ml\outputs\calibration\sets\lateral\2752_IM-1202-0001-0002.dcm.png,positive,chest_radiograph_lateral,Lateral,2752,Edema/Congestion
+ml\outputs\calibration\sets\lateral\609_IM-2197-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,609,Normal
+ml\outputs\calibration\sets\lateral\2384_IM-0942-3001.dcm.png,positive,chest_radiograph_lateral,Lateral,2384,Hernia/Diaphragm
+ml\outputs\calibration\sets\lateral\3661_IM-1821-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3661,Normal
+ml\outputs\calibration\sets\lateral\1920_IM-0598-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,1920,Normal
+ml\outputs\calibration\sets\lateral\3237_IM-1534-1001.dcm.png,positive,chest_radiograph_lateral,Lateral,3237,Cardiomegaly
+ml\outputs\calibration\sets\lateral\3216_IM-1520-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,3216,Normal
+ml\outputs\calibration\sets\lateral\1778_IM-0509-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,1778,Normal
+ml\outputs\calibration\sets\lateral\1844_IM-0547-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,1844,Other Abnormality
+ml\outputs\calibration\sets\lateral\2645_IM-1131-1001.dcm.png,positive,chest_radiograph_lateral,Lateral,2645,Support Devices
+ml\outputs\calibration\sets\lateral\2966_IM-1359-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2966,Degenerative/Bone
+ml\outputs\calibration\sets\lateral\3873_IM-1965-3001.dcm.png,positive,chest_radiograph_lateral,Lateral,3873,Lung Opacity
+ml\outputs\calibration\sets\lateral\2928_IM-1330-1001.dcm.png,positive,chest_radiograph_lateral,Lateral,2928,Hernia/Diaphragm
+ml\outputs\calibration\sets\lateral\3840_IM-1941-1001.dcm.png,positive,chest_radiograph_lateral,Lateral,3840,Edema/Congestion
+ml\outputs\calibration\sets\lateral\1911_IM-0593-1002.dcm.png,positive,chest_radiograph_lateral,Lateral,1911,Normal
+ml\outputs\calibration\sets\lateral\2892_IM-1295-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2892,Granuloma
+ml\outputs\calibration\sets\lateral\2467_IM-0997-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,2467,Lung Opacity
+ml\outputs\calibration\sets\lateral\708_IM-2271-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,708,Normal
+ml\outputs\calibration\sets\lateral\921_IM-2423-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,921,Normal
+ml\outputs\calibration\sets\lateral\336_IM-1613-2001.dcm.png,positive,chest_radiograph_lateral,Lateral,336,Normal
+ml\outputs\calibration\sets\natural_photograph\astronaut.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\cat.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\chelsea.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\coffee.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\rocket.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\camera.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\coins.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\horse.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\moon.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\clock.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\grass.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\gravel.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\brick.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\colorwheel.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\hubble_deep_field.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\immunohistochemistry.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\other_medical_imaging\retina.png,negative,other_medical_imaging,,,
+ml\outputs\calibration\sets\other_medical_imaging\shepp_logan_phantom.png,negative,other_medical_imaging,,,
+ml\outputs\calibration\sets\scanned_document\page.png,negative,scanned_document,,,
+ml\outputs\calibration\sets\scanned_document\text.png,negative,scanned_document,,,
+ml\outputs\calibration\sets\scanned_document\logo.png,negative,scanned_document,,,
+ml\outputs\calibration\sets\other_radiograph\105_jpg.rf.3cde2fcd15a9bdf6a2d2d32aff48f33d.png,negative,other_radiograph_modality,,,
+ml\outputs\calibration\sets\other_radiograph\10_jpg.rf.d362a00f9a6b4ac31668dc8aae9c71de.png,negative,other_radiograph_modality,,,
+ml\outputs\calibration\sets\other_radiograph\117_jpg.rf.119dccd2483b04d8d3a8c33a1393d362.png,negative,other_radiograph_modality,,,
+ml\outputs\calibration\sets\other_radiograph\118_jpg.rf.acee2a86eba65adc57f3b15d5acab93c.png,negative,other_radiograph_modality,,,
+ml\outputs\calibration\sets\other_radiograph\11_jpg.rf.8e1c22ba2779121f3ba0a8ae03a20407.png,negative,other_radiograph_modality,,,
+ml\outputs\calibration\sets\other_radiograph\124_jpg.rf.100aeaede7a9c017d7f74f73cfcf34d7.png,negative,other_radiograph_modality,,,
+ml\outputs\calibration\sets\other_radiograph\124_jpg.rf.dab4a5f6292af8332da8f9bad9751ba6.png,negative,other_radiograph_modality,,,
+ml\outputs\calibration\sets\other_radiograph\12_jpg.rf.3e4b2f52016c100e9f869397933ef2d3.png,negative,other_radiograph_modality,,,
+ml\outputs\calibration\sets\other_radiograph\131_jpg.rf.1a70e4c9e91ea953aa55988ab20fa95a.png,negative,other_radiograph_modality,,,
+ml\outputs\calibration\sets\other_radiograph\135_jpg.rf.a8cbe93a3de035a4927b20c42604ae4c.png,negative,other_radiograph_modality,,,
+ml\outputs\calibration\sets\other_radiograph\145_jpg.rf.5a3d6fbf3dcb9d88626ba82182f29254.png,negative,other_radiograph_modality,,,
+ml\outputs\calibration\sets\other_radiograph\164_jpg.rf.9a5230f67ddc2426d52597a70c6984f9.png,negative,other_radiograph_modality,,,
+ml\outputs\calibration\sets\other_radiograph\165_jpg.rf.e831420b761a317ab9fb725e12781bd8.png,negative,other_radiograph_modality,,,
+ml\outputs\calibration\sets\other_radiograph\16_jpg.rf.0ef960d157f3f332421d9d5a8248a00f.png,negative,other_radiograph_modality,,,
+ml\outputs\calibration\sets\other_radiograph\173_jpg.rf.7bcde8912d29eb7f5409d79c922924cd.png,negative,other_radiograph_modality,,,
+ml\outputs\calibration\sets\other_radiograph\186_jpg.rf.3d96cc9db76cb67ec0bab598d4208152.png,negative,other_radiograph_modality,,,
+ml\outputs\calibration\sets\other_radiograph\194_jpg.rf.b8e95cf106dfe177aa13ff892562c641.png,negative,other_radiograph_modality,,,
+ml\outputs\calibration\sets\other_radiograph\201_jpg.rf.6c78e7e06349770df39f8f8a01a06908.png,negative,other_radiograph_modality,,,
+ml\outputs\calibration\sets\other_radiograph\202_jpg.rf.896abd97885d07442a74be88a00c73e2.png,negative,other_radiograph_modality,,,
+ml\outputs\calibration\sets\other_radiograph\204_jpg.rf.3c47ac3c43fab1b4d62a19ceed8c8231.png,negative,other_radiograph_modality,,,
+ml\outputs\calibration\sets\other_radiograph\205_jpg.rf.b30bdf73b6009d15a54011fd1acab0d0.png,negative,other_radiograph_modality,,,
+ml\outputs\calibration\sets\other_radiograph\206_jpg.rf.3854aa9bcfdf9e6321ef94c5584f51ab.png,negative,other_radiograph_modality,,,
+ml\outputs\calibration\sets\other_radiograph\208_jpg.rf.11baac82fd392341802eabf670ade349.png,negative,other_radiograph_modality,,,
+ml\outputs\calibration\sets\other_radiograph\212_jpg.rf.24251e3e1177eae5ca265eac655a799f.png,negative,other_radiograph_modality,,,
+ml\outputs\calibration\sets\other_radiograph\239_jpg.rf.a3c439a0dc2f4c4e5db8b3a4c4a2180c.png,negative,other_radiograph_modality,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1000.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1001.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1002.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1003.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1004.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1005.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1006.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1008.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1009.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1010.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1011.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1012.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1013.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1014.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1015.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1016.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1018.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1019.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1020.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1021.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1022.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1023.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1024.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1025.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1026.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1027.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1028.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1029.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1031.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1032.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1033.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1035.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1036.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1037.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1038.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1039.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1040.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1041.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1042.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1043.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1044.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1045.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1047.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1048.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1049.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1050.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1051.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1052.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1053.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1054.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1055.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1056.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1057.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1058.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1059.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1060.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1061.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1062.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1063.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\natural_photograph\photo_1064.png,negative,natural_photograph,,,
+ml\outputs\calibration\sets\scanned_document\report_page_00.png,negative,scanned_document,,,
+ml\outputs\calibration\sets\scanned_document\report_page_01.png,negative,scanned_document,,,
+ml\outputs\calibration\sets\scanned_document\report_page_02.png,negative,scanned_document,,,
+ml\outputs\calibration\sets\scanned_document\report_page_03.png,negative,scanned_document,,,
+ml\outputs\calibration\sets\scanned_document\report_page_04.png,negative,scanned_document,,,
+ml\outputs\calibration\sets\scanned_document\report_page_05.png,negative,scanned_document,,,
+ml\outputs\calibration\sets\scanned_document\report_page_06.png,negative,scanned_document,,,
+ml\outputs\calibration\sets\scanned_document\report_page_07.png,negative,scanned_document,,,
+ml\outputs\calibration\sets\scanned_document\report_page_08.png,negative,scanned_document,,,
+ml\outputs\calibration\sets\scanned_document\report_page_09.png,negative,scanned_document,,,
+ml\outputs\calibration\sets\scanned_document\report_page_10.png,negative,scanned_document,,,
+ml\outputs\calibration\sets\scanned_document\report_page_11.png,negative,scanned_document,,,
+ml\outputs\calibration\sets\scanned_document\report_page_12.png,negative,scanned_document,,,
+ml\outputs\calibration\sets\scanned_document\report_page_13.png,negative,scanned_document,,,
+ml\outputs\calibration\sets\scanned_document\report_page_14.png,negative,scanned_document,,,
+ml\outputs\calibration\sets\scanned_document\report_page_15.png,negative,scanned_document,,,
+ml\outputs\calibration\sets\scanned_document\report_page_16.png,negative,scanned_document,,,
+ml\outputs\calibration\sets\scanned_document\report_page_17.png,negative,scanned_document,,,
+ml\outputs\calibration\sets\scanned_document\report_page_18.png,negative,scanned_document,,,
+ml\outputs\calibration\sets\scanned_document\report_page_19.png,negative,scanned_document,,,
+ml\outputs\calibration\sets\damaged\3789_IM-1902-1001.dcm.png,negative,damaged_image,,,
+ml\outputs\calibration\sets\damaged\3592_IM-1771-2001.dcm.png,negative,damaged_image,,,
+ml\outputs\calibration\sets\damaged\1725_IM-0478-2001.dcm.png,negative,damaged_image,,,
+ml\outputs\calibration\sets\damaged\911_IM-2417-1002.dcm.png,negative,damaged_image,,,
+ml\outputs\calibration\sets\damaged\425_IM-2068-1001.dcm.png,negative,damaged_image,,,
+ml\outputs\calibration\sets\damaged\3746_IM-1872-1001.dcm.png,negative,damaged_image,,,
+ml\outputs\calibration\sets\damaged\1463_IM-0300-1001.dcm.png,negative,damaged_image,,,
+ml\outputs\calibration\sets\damaged\1327_IM-0211-1001.dcm.png,negative,damaged_image,,,
+ml\outputs\calibration\sets\damaged\3370_IM-1622-2001.dcm.png,negative,damaged_image,,,
+ml\outputs\calibration\sets\damaged\2863_IM-1271-2001.dcm.png,negative,damaged_image,,,
+ml\outputs\calibration\sets\damaged\2565_IM-1068-1002.dcm.png,negative,damaged_image,,,
+ml\outputs\calibration\sets\damaged\1314_IM-0204-1001.dcm.png,negative,damaged_image,,,
+ml\outputs\calibration\sets\damaged\2632_IM-1119-1001.dcm.png,negative,damaged_image,,,
+ml\outputs\calibration\sets\damaged\48_IM-2103-2001.dcm.png,negative,damaged_image,,,
+ml\outputs\calibration\sets\damaged\1345_IM-0223-2001.dcm.png,negative,damaged_image,,,
+ml\outputs\calibration\sets\damaged\3656_IM-1817-1001.dcm.png,negative,damaged_image,,,
+ml\outputs\calibration\sets\damaged\3837_IM-1939-2001.dcm.png,negative,damaged_image,,,
+ml\outputs\calibration\sets\damaged\2586_IM-1083-1001.dcm.png,negative,damaged_image,,,
+ml\outputs\calibration\sets\damaged\3521_IM-1719-1001.dcm.png,negative,damaged_image,,,
+ml\outputs\calibration\sets\damaged\2916_IM-1318-1001.dcm.png,negative,damaged_image,,,

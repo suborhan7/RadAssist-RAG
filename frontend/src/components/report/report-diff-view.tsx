@@ -1,9 +1,10 @@
+"use client";
+
 import type { Change } from "diff";
-import { REPORT_CONTENT_FIELDS } from "@/components/report/report-document-view";
+import { REPORT_FIELD_LABEL_KEY } from "@/components/report/report-document-view";
+import { useT } from "@/lib/i18n";
 import type { ReportDiffSummary } from "@/lib/report-diff";
 import { cn } from "@/lib/cn";
-
-const FIELD_LABELS = new Map(REPORT_CONTENT_FIELDS.map(({ key, label }) => [key, label]));
 
 /**
  * Phase 18 Step 3 / Phase 19 extraction: the actual word-diff markup
@@ -64,27 +65,28 @@ export function DiffMarkup({ diff }: { diff: Change[] }) {
  * the same "addition vs. removal" semantic, not decoration.
  */
 export function ReportDiffView({ summary }: { summary: ReportDiffSummary }) {
+  const { t } = useT();
   const changedSections = summary.sections.filter((section) => section.changed);
 
   return (
     <div className="flex flex-col gap-16">
       <p className="text-sm text-text-secondary">
         <span className="font-medium text-text-primary">
-          {summary.sectionsChanged} of {summary.sections.length} sections changed
+          {t("report.sectionsChanged", { changed: summary.sectionsChanged, total: summary.sections.length })}
         </span>{" "}
-        &middot; {summary.editPercentage.toFixed(1)}% of the AI draft was edited
+        &middot; {t("report.editedOfDraft", { pct: summary.editPercentage.toFixed(1) })}
       </p>
 
       {changedSections.length === 0 ? (
         <p className="rounded-panel border border-hairline bg-bg-hover px-14 py-12 text-sm text-text-secondary">
-          No edits made.
+          {t("report.noEdits")}
         </p>
       ) : (
         <div className="flex flex-col">
           {changedSections.map((section) => (
             <div key={section.field} className="border-b border-hairline py-16 first:pt-0 last:border-0 last:pb-0">
               <h3 className="font-mono text-eyebrow uppercase text-text-tertiary">
-                {FIELD_LABELS.get(section.field) ?? section.field}
+                {REPORT_FIELD_LABEL_KEY[section.field] ? t(REPORT_FIELD_LABEL_KEY[section.field]) : section.field}
               </h3>
               <DiffMarkup diff={section.diff} />
             </div>
@@ -97,8 +99,7 @@ export function ReportDiffView({ summary }: { summary: ReportDiffSummary }) {
           never snapshots content at each edit, so there is no
           intermediate state to reconstruct here. */}
       <p className="text-caption text-text-tertiary">
-        Comparing the original AI draft against the current report. This shows what changed overall,
-        not a step-by-step edit history.
+        {t("report.diffFooter")}
       </p>
     </div>
   );

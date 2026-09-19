@@ -26,7 +26,7 @@ describe("REPORT_CONTENT_FIELDS (canonical 7-field label list)", () => {
     ]);
   });
 
-  it("page.tsx and compare/page.tsx no longer redeclare their own copy", () => {
+  it("no consumer redeclares its own copy of the list", () => {
     const repoSrc = fileURLToPath(new URL("../../..", import.meta.url));
 
     const pageSource = readFileSync(`${repoSrc}/src/app/reports/[reportId]/page.tsx`, "utf-8");
@@ -45,12 +45,19 @@ describe("REPORT_CONTENT_FIELDS (canonical 7-field label list)", () => {
     expect(pageSource).not.toMatch(duplicateDeclarationPattern);
     expect(compareSource).not.toMatch(duplicateDeclarationPattern);
 
-    // Both must import the canonical list instead.
+    // The workspace renders all 7 sections, so it must import the canonical
+    // list rather than restate it.
     expect(pageSource).toContain(
       'import { REPORT_CONTENT_FIELDS as CONTENT_FIELDS } from "@/components/report/report-document-view"',
     );
-    expect(compareSource).toContain(
-      'import { REPORT_CONTENT_FIELDS as CONTENT_FIELDS } from "@/components/report/report-document-view"',
-    );
+
+    // Compare deliberately does NOT: the Reading Room redesign replaced its
+    // side-by-side full-report dump with the two impressions (see that file's
+    // docstring), so it renders no field list at all. This assertion used to
+    // require the import here too and had been failing at HEAD ever since that
+    // redesign landed -- the requirement went away, the test did not. What
+    // still matters is the rule above: if it ever renders the list again, it
+    // imports the canonical one.
+    expect(compareSource).not.toMatch(duplicateDeclarationPattern);
   });
 });

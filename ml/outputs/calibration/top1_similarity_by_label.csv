@@ -1,0 +1,601 @@
+study_uid,projection,primary_label,top1_similarity,top_voted_label,agreement
+2239.0,Frontal,Support Devices,0.9424658417701721,Lung Opacity,0.8
+473.0,Frontal,Normal,0.9780001640319824,Normal,0.4
+2579.0,Frontal,Normal,0.9686221480369568,Normal,0.8
+3111.0,Frontal,Edema/Congestion,0.9510152339935303,Cardiomegaly,0.8
+3158.0,Frontal,Scarring,0.9372182488441467,Normal,0.4
+739.0,Frontal,Normal,0.978301465511322,Normal,0.6
+3658.0,Frontal,Nodule/Mass,0.9617653489112854,Normal,0.6
+2394.0,Frontal,Normal,0.9737105369567871,Normal,0.8
+3687.0,Frontal,Atelectasis,0.9532315135002136,Support Devices,0.6
+2859.0,Frontal,Pneumonia,0.9323377013206482,Atelectasis,0.6
+2868.0,Frontal,Degenerative/Bone,0.9688911437988281,Degenerative/Bone,0.4
+1239.0,Frontal,Normal,0.9606492519378662,Normal,0.4
+3229.0,Frontal,Other Abnormality,0.9596320986747742,Normal,0.6
+3663.0,Frontal,Normal,0.9730775952339172,Normal,0.8
+2864.0,Frontal,Lung Opacity,0.9521725177764893,Normal,0.6
+2456.0,Frontal,Cardiomegaly,0.9701105356216431,Normal,0.8
+844.0,Frontal,Normal,0.9798585176467896,Normal,0.6
+2958.0,Frontal,Fibrosis/Interstitial,0.8953335881233215,Lung Opacity,0.8
+1721.0,Frontal,Normal,0.9752860069274902,Normal,0.6
+2575.0,Frontal,Other Abnormality,0.9768035411834717,Normal,0.6
+3428.0,Frontal,Degenerative/Bone,0.9689763188362122,Normal,0.6
+3688.0,Frontal,Pleural Effusion,0.8906208872795105,Atelectasis,0.8
+2263.0,Frontal,Atelectasis,0.9693953990936279,Granuloma,0.6
+2174.0,Frontal,Normal,0.950167179107666,Normal,0.8
+1913.0,Frontal,Other Abnormality,0.9719984531402588,Normal,0.6
+3486.0,Frontal,Other Abnormality,0.9831092953681946,Normal,0.8
+741.0,Frontal,Normal,0.9670509099960327,Normal,0.6
+3189.0,Frontal,Other Abnormality,0.9736449718475342,Nodule/Mass,0.4
+560.0,Frontal,Normal,0.9766954779624939,Normal,1.0
+3137.0,Frontal,Calcinosis/Atherosclerosis,0.9755133986473083,Normal,0.8
+3195.0,Frontal,Support Devices,0.9418352842330933,Normal,0.6
+3826.0,Frontal,Normal,0.9649120569229126,Normal,0.4
+2036.0,Frontal,Atelectasis,0.9528571367263794,Atelectasis,0.4
+3611.0,Frontal,Degenerative/Bone,0.9396010637283325,Cardiomegaly,0.4
+2631.0,Frontal,Support Devices,0.9618868827819824,Granuloma,0.4
+430.0,Frontal,Normal,0.9748795628547668,Normal,0.8
+3682.0,Frontal,Other Abnormality,0.9735054969787598,Normal,0.6
+2367.0,Frontal,Normal,0.945590615272522,Normal,0.4
+2920.0,Frontal,Normal,0.98076331615448,Normal,0.4
+2712.0,Frontal,Granuloma,0.9855087995529175,Normal,0.4
+2490.0,Frontal,Granuloma,0.976452112197876,Normal,0.8
+899.0,Frontal,Normal,0.9711780548095703,Normal,0.6
+2759.0,Frontal,Other Abnormality,0.9765247702598572,Granuloma,0.4
+3165.0,Frontal,Degenerative/Bone,0.9613434076309204,Cardiomegaly,0.4
+3766.0,Frontal,Degenerative/Bone,0.9768223166465759,Other Abnormality,0.4
+2981.0,Frontal,Degenerative/Bone,0.9713424444198608,Normal,0.8
+1729.0,Frontal,Emphysema/COPD,0.980668842792511,Normal,0.6
+2623.0,Frontal,Normal,0.9747865796089172,Normal,0.8
+3045.0,Frontal,Normal,0.9410207271575928,Atelectasis,0.4
+2728.0,Frontal,Edema/Congestion,0.9799054861068726,Cardiomegaly,0.8
+3408.0,Frontal,Degenerative/Bone,0.9499597549438477,Other Abnormality,0.6
+2439.0,Frontal,Emphysema/COPD,0.9403181076049805,Normal,0.4
+2891.0,Frontal,Hernia/Diaphragm,0.9509414434432983,Lung Opacity,1.0
+3243.0,Frontal,Lung Opacity,0.9123267531394958,Normal,0.6
+3642.0,Frontal,Other Abnormality,0.9774824380874634,Normal,1.0
+2131.0,Frontal,Normal,0.980381190776825,Other Abnormality,0.4
+287.0,Frontal,Normal,0.9574488997459412,Cardiomegaly,0.8
+2671.0,Frontal,Other Abnormality,0.948343813419342,Degenerative/Bone,0.6
+3103.0,Frontal,Hernia/Diaphragm,0.9806996583938599,Normal,0.4
+3247.0,Frontal,Normal,0.9728657007217407,Degenerative/Bone,0.4
+2580.0,Frontal,Scarring,0.9696906805038452,Atelectasis,0.4
+3600.0,Frontal,Scarring,0.9179782271385193,Other Abnormality,0.4
+1676.0,Frontal,Emphysema/COPD,0.964730441570282,Normal,0.6
+1994.0,Frontal,Normal,0.9796673059463501,Normal,1.0
+3069.0,Frontal,Pneumonia,0.9340918064117432,Lung Opacity,0.6
+2544.0,Frontal,Cardiomegaly,0.9499593377113342,Cardiomegaly,0.6
+2578.0,Frontal,Degenerative/Bone,0.9832444787025452,Normal,0.4
+3798.0,Frontal,Lung Opacity,0.9756693840026855,Normal,0.6
+986.0,Frontal,Normal,0.9846697449684143,Other Abnormality,0.4
+3430.0,Frontal,Edema/Congestion,0.9507023096084595,Other Abnormality,0.4
+1534.0,Frontal,Degenerative/Bone,0.9594058990478516,Cardiomegaly,0.4
+3406.0,Frontal,Granuloma,0.9821776747703552,Normal,0.8
+3987.0,Frontal,Degenerative/Bone,0.9700916409492493,Normal,0.6
+3581.0,Frontal,Degenerative/Bone,0.9727048873901367,Normal,0.6
+3454.0,Frontal,Support Devices,0.9629058837890625,Normal,0.8
+2161.0,Frontal,Normal,0.9642505645751953,Other Abnormality,0.4
+3457.0,Frontal,Degenerative/Bone,0.9700598120689392,Granuloma,0.6
+3117.0,Frontal,Normal,0.9749953150749207,Normal,0.8
+3013.0,Frontal,Cardiomegaly,0.9421671628952026,Lung Opacity,0.8
+2223.0,Frontal,Normal,0.950834333896637,Cardiomegaly,0.8
+943.0,Frontal,Normal,0.9702692031860352,Normal,0.4
+3807.0,Frontal,Other Abnormality,0.935531735420227,Support Devices,0.4
+1384.0,Frontal,Normal,0.9768458008766174,Normal,0.8
+3662.0,Frontal,Calcinosis/Atherosclerosis,0.9758514761924744,Normal,0.4
+1944.0,Frontal,Calcinosis/Atherosclerosis,0.951353907585144,Degenerative/Bone,0.4
+3803.0,Frontal,Emphysema/COPD,0.9644604921340942,Normal,0.6
+3690.0,Frontal,Cardiomegaly,0.9671796560287476,Normal,0.6
+3814.0,Frontal,Normal,0.956207275390625,Degenerative/Bone,0.4
+3467.0,Frontal,Calcinosis/Atherosclerosis,0.9672788381576538,Normal,0.6
+496.0,Frontal,Normal,0.9734830856323242,Normal,0.8
+1267.0,Frontal,Normal,0.9720025658607483,Normal,0.6
+2014.0,Frontal,Other Abnormality,0.9696890115737915,Normal,0.6
+3471.0,Frontal,Hernia/Diaphragm,0.9784854054450989,Normal,0.8
+2434.0,Frontal,Scarring,0.9780075550079346,Granuloma,0.4
+2517.0,Frontal,Normal,0.9813250303268433,Normal,0.4
+3028.0,Frontal,Calcinosis/Atherosclerosis,0.9592558741569519,Degenerative/Bone,0.4
+238.0,Frontal,Normal,0.9826639294624329,Normal,0.6
+3891.0,Frontal,Pneumothorax,0.9372559189796448,Lung Opacity,0.4
+2467.0,Frontal,Lung Opacity,0.9595130681991577,Normal,0.6
+2865.0,Frontal,Support Devices,0.9263005256652832,Normal,0.4
+1645.0,Frontal,Lung Opacity,0.9539323449134827,Lung Opacity,0.4
+3553.0,Frontal,Normal,0.970213770866394,Normal,1.0
+3232.0,Frontal,Nodule/Mass,0.96034836769104,Calcinosis/Atherosclerosis,0.4
+3765.0,Frontal,Normal,0.9605438709259033,Other Abnormality,0.4
+3477.0,Frontal,Normal,0.9622451066970825,Normal,0.6
+727.0,Frontal,Normal,0.973311185836792,Normal,0.8
+951.0,Frontal,Normal,0.9665719866752625,Normal,0.6
+3983.0,Frontal,Atelectasis,0.9747262001037598,Normal,0.6
+1615.0,Frontal,Normal,0.9600824117660522,Normal,0.4
+3363.0,Frontal,Support Devices,0.9470338821411133,Normal,0.4
+3424.0,Frontal,Granuloma,0.9724522829055786,Normal,0.6
+1758.0,Frontal,Other Abnormality,0.954919695854187,Normal,0.4
+2384.0,Frontal,Hernia/Diaphragm,0.9610159397125244,Other Abnormality,0.4
+2275.0,Frontal,Nodule/Mass,0.948857307434082,Normal,0.6
+2844.0,Frontal,Degenerative/Bone,0.932558536529541,Normal,0.4
+428.0,Frontal,Normal,0.9677793979644775,Other Abnormality,0.4
+1685.0,Frontal,Other Abnormality,0.9752781391143799,Normal,0.8
+2401.0,Frontal,Normal,0.9658923149108887,Normal,0.8
+2457.0,Frontal,Normal,0.9744101166725159,Normal,1.0
+1683.0,Frontal,Other Abnormality,0.9731643199920654,Granuloma,0.4
+632.0,Frontal,Normal,0.9663296341896057,Normal,0.8
+2960.0,Frontal,Normal,0.9731136560440063,Normal,0.6
+110.0,Frontal,Normal,0.9681029319763184,Degenerative/Bone,0.4
+2765.0,Frontal,Normal,0.9596211910247803,Normal,0.6
+3331.0,Frontal,Granuloma,0.9761127233505249,Normal,0.4
+3713.0,Frontal,Other Abnormality,0.9714148044586182,Normal,1.0
+2066.0,Frontal,Atelectasis,0.972923755645752,Normal,0.8
+3322.0,Frontal,Granuloma,0.9752317070960999,Normal,0.8
+3311.0,Frontal,Normal,0.9679422378540039,Lung Opacity,0.4
+3615.0,Frontal,Support Devices,0.9562492370605469,Support Devices,0.4
+3557.0,Frontal,Pleural Effusion,0.9569674730300903,Normal,0.4
+2447.0,Frontal,Calcinosis/Atherosclerosis,0.9806144833564758,Other Abnormality,0.4
+2847.0,Frontal,Support Devices,0.9596788287162781,Degenerative/Bone,0.4
+2726.0,Frontal,Normal,0.9524074792861938,Atelectasis,0.6
+2636.0,Frontal,Other Abnormality,0.9603512287139893,Degenerative/Bone,0.4
+2831.0,Frontal,Pneumothorax,0.9461345076560974,Normal,0.8
+2295.0,Frontal,Calcinosis/Atherosclerosis,0.9653756022453308,Cardiomegaly,0.2
+3099.0,Frontal,Calcinosis/Atherosclerosis,0.982944667339325,Normal,0.8
+3781.0,Frontal,Normal,0.9738308191299438,Granuloma,0.4
+3415.0,Frontal,Atelectasis,0.9677742123603821,Degenerative/Bone,0.4
+2448.0,Frontal,Pneumothorax,0.9239983558654785,Pleural Effusion,0.6
+3120.0,Frontal,Degenerative/Bone,0.9824654459953308,Normal,0.8
+1927.0,Frontal,Granuloma,0.9840254783630371,Normal,0.4
+1894.0,Frontal,Lung Opacity,0.9636014699935913,Normal,0.6
+2616.0,Frontal,Hernia/Diaphragm,0.9425857663154602,Lung Opacity,0.4
+2487.0,Frontal,Normal,0.9697242975234985,Normal,0.6
+691.0,Frontal,Normal,0.9740567207336426,Normal,0.4
+2383.0,Frontal,Cardiomegaly,0.9692476987838745,Normal,0.6
+2143.0,Frontal,Nodule/Mass,0.9563072323799133,Lung Opacity,0.4
+2105.0,Frontal,Granuloma,0.9718563556671143,Normal,1.0
+1512.0,Frontal,Normal,0.9721419811248779,Normal,0.6
+1781.0,Frontal,Other Abnormality,0.9813840985298157,Normal,0.8
+338.0,Frontal,Normal,0.9674742221832275,Normal,0.8
+272.0,Frontal,Normal,0.9611566662788391,Degenerative/Bone,0.6
+3327.0,Frontal,Calcinosis/Atherosclerosis,0.9517309069633484,Calcinosis/Atherosclerosis,0.4
+1205.0,Frontal,Normal,0.9560878276824951,Normal,0.6
+450.0,Frontal,Normal,0.9831171035766602,Normal,0.6
+3320.0,Frontal,Normal,0.9717056155204773,Normal,0.6
+1950.0,Frontal,Normal,0.9588064551353455,Normal,0.6
+2685.0,Frontal,Hernia/Diaphragm,0.9655120968818665,Granuloma,0.4
+2750.0,Frontal,Lung Opacity,0.9649105668067932,Lung Opacity,0.6
+3785.0,Frontal,Lung Opacity,0.9551013112068176,Normal,0.8
+1814.0,Frontal,Normal,0.9753587245941162,Normal,0.6
+24.0,Frontal,Normal,0.9643610715866089,Normal,0.6
+3582.0,Frontal,Normal,0.9711268544197083,Normal,0.4
+2600.0,Frontal,Support Devices,0.9478099942207336,Calcinosis/Atherosclerosis,0.4
+3934.0,Frontal,Fibrosis/Interstitial,0.9771210551261902,Granuloma,0.6
+3040.0,Frontal,Support Devices,0.9362021088600159,Lung Opacity,0.6
+3233.0,Frontal,Emphysema/COPD,0.9603201746940613,Calcinosis/Atherosclerosis,0.4
+2115.0,Frontal,Normal,0.9589720368385315,Lung Opacity,0.6
+3840.0,Frontal,Edema/Congestion,0.9217855930328369,Cardiomegaly,0.4
+492.0,Frontal,Normal,0.9780189990997314,Normal,0.6
+518.0,Frontal,Normal,0.9692825675010681,Normal,1.0
+2038.0,Frontal,Normal,0.9752980470657349,Normal,0.8
+2229.0,Frontal,Support Devices,0.9788801074028015,Normal,1.0
+894.0,Frontal,Normal,0.9105581641197205,Atelectasis,0.6
+1462.0,Frontal,Normal,0.9750158190727234,Normal,0.4
+2693.0,Frontal,Other Abnormality,0.9734232425689697,Normal,0.6
+3808.0,Frontal,Calcinosis/Atherosclerosis,0.9511489272117615,Normal,0.6
+2032.0,Frontal,Normal,0.9690186977386475,Normal,0.6
+2652.0,Frontal,Calcinosis/Atherosclerosis,0.98103928565979,Normal,0.8
+2125.0,Frontal,Lung Opacity,0.9506548643112183,Lung Opacity,0.8
+1648.0,Frontal,Other Abnormality,0.9341762065887451,Normal,0.6
+3795.0,Frontal,Degenerative/Bone,0.8955084085464478,Support Devices,0.6
+2444.0,Frontal,Other Abnormality,0.9868297576904297,Normal,0.8
+2354.0,Frontal,Normal,0.9819878339767456,Normal,1.0
+3940.0,Frontal,Scarring,0.968122661113739,Normal,0.6
+2352.0,Frontal,Emphysema/COPD,0.9630995988845825,Granuloma,0.4
+536.0,Frontal,Normal,0.979782223701477,Normal,0.4
+2065.0,Frontal,Granuloma,0.9662805795669556,Normal,0.4
+538.0,Frontal,Normal,0.9564518332481384,Normal,0.8
+1933.0,Frontal,Other Abnormality,0.9697848558425903,Normal,0.8
+135.0,Frontal,Normal,0.9721896648406982,Normal,0.6
+2190.0,Frontal,Support Devices,0.9726766347885132,Normal,0.6
+2709.0,Frontal,Lung Opacity,0.9598205089569092,Normal,0.4
+2483.0,Frontal,Support Devices,0.9506443738937378,Cardiomegaly,0.4
+3360.0,Frontal,Scarring,0.9752920866012573,Normal,0.6
+2934.0,Frontal,Emphysema/COPD,0.9744792580604553,Normal,0.6
+3752.0,Frontal,Cardiomegaly,0.9482206702232361,Other Abnormality,0.2
+1560.0,Frontal,Normal,0.9771507978439331,Normal,0.6
+3626.0,Frontal,Pleural Effusion,0.9637272357940674,Cardiomegaly,0.6
+2206.0,Frontal,Atelectasis,0.9732162952423096,Normal,1.0
+3491.0,Frontal,Calcinosis/Atherosclerosis,0.967345118522644,Degenerative/Bone,0.4
+3014.0,Frontal,Atelectasis,0.9633604288101196,Atelectasis,0.2
+2072.0,Frontal,Granuloma,0.9630844593048096,Atelectasis,0.4
+3905.0,Frontal,Cardiomegaly,0.9651906490325928,Edema/Congestion,0.4
+2507.0,Frontal,Scarring,0.958486795425415,Lung Opacity,0.6
+3208.0,Frontal,Normal,0.9601354598999023,Normal,0.4
+3882.0,Frontal,Hernia/Diaphragm,0.9737964868545532,Other Abnormality,0.4
+1813.0,Frontal,Normal,0.9665114879608154,Degenerative/Bone,0.6
+3141.0,Frontal,Normal,0.9766987562179565,Other Abnormality,0.2
+3999.0,Frontal,Normal,0.9696140289306641,Normal,0.6
+16.0,Frontal,Normal,0.9731515645980835,Degenerative/Bone,0.4
+3412.0,Frontal,Other Abnormality,0.9597345590591431,Normal,0.6
+2798.0,Frontal,Degenerative/Bone,0.9709787368774414,Normal,0.6
+3572.0,Frontal,Other Abnormality,0.9655040502548218,Normal,0.8
+3545.0,Frontal,Calcinosis/Atherosclerosis,0.9615746736526489,Calcinosis/Atherosclerosis,0.6
+3190.0,Frontal,Atelectasis,0.9556587934494019,Normal,0.4
+3435.0,Frontal,Cardiomegaly,0.9359575510025024,Normal,0.4
+2760.0,Frontal,Scarring,0.955288290977478,Fibrosis/Interstitial,0.2
+3481.0,Frontal,Other Abnormality,0.9705544114112854,Normal,0.4
+1712.0,Frontal,Other Abnormality,0.96529221534729,Normal,1.0
+1876.0,Frontal,Emphysema/COPD,0.9531405568122864,Normal,0.6
+3149.0,Frontal,Other Abnormality,0.9800335168838501,Normal,0.6
+2373.0,Frontal,Emphysema/COPD,0.9787009954452515,Normal,0.6
+3725.0,Frontal,Granuloma,0.9773609638214111,Normal,0.4
+2436.0,Frontal,Normal,0.9757073521614075,Normal,0.4
+1828.0,Frontal,Normal,0.9784770011901855,Normal,0.8
+3091.0,Frontal,Cardiomegaly,0.9724949598312378,Normal,0.4
+3818.0,Frontal,Normal,0.9773192405700684,Degenerative/Bone,0.4
+2144.0,Frontal,Calcinosis/Atherosclerosis,0.9758004546165466,Normal,0.8
+2254.0,Frontal,Support Devices,0.9761435389518738,Normal,0.6
+2880.0,Frontal,Normal,0.9799138903617859,Normal,0.6
+2236.0,Frontal,Normal,0.9704316854476929,Normal,0.6
+3514.0,Frontal,Lung Opacity,0.9666634798049927,Cardiomegaly,0.4
+3202.0,Frontal,Degenerative/Bone,0.9793596267700195,Normal,1.0
+3980.0,Frontal,Hernia/Diaphragm,0.9634757041931152,Lung Opacity,0.6
+3078.0,Frontal,Pneumonia,0.9591171145439148,Normal,0.6
+2070.0,Frontal,Other Abnormality,0.9791564345359802,Normal,0.6
+2034.0,Frontal,Emphysema/COPD,0.951042890548706,Normal,0.8
+3869.0,Frontal,Cardiomegaly,0.9642875790596008,Other Abnormality,0.6
+3758.0,Frontal,Support Devices,0.9438170194625854,Lung Opacity,0.4
+2264.0,Frontal,Other Abnormality,0.9611412286758423,Degenerative/Bone,0.6
+941.0,Frontal,Normal,0.9693849086761475,Normal,1.0
+2927.0,Frontal,Calcinosis/Atherosclerosis,0.9746063947677612,Normal,0.4
+470.0,Frontal,Normal,0.9601017236709595,Granuloma,0.4
+2283.0,Frontal,Other Abnormality,0.974949300289154,Lung Opacity,0.4
+1706.0,Frontal,Other Abnormality,0.9623069763183594,Normal,0.8
+1046.0,Frontal,Normal,0.9652085304260254,Lung Opacity,0.4
+2441.0,Frontal,Degenerative/Bone,0.9829200506210327,Normal,0.8
+1969.0,Frontal,Normal,0.9616024494171143,Normal,0.6
+241.0,Frontal,Normal,0.9829387664794922,Normal,0.6
+602.0,Frontal,Normal,0.9635218977928162,Normal,1.0
+2601.0,Frontal,Normal,0.901200532913208,Normal,0.6
+363.0,Frontal,Normal,0.9658606648445129,Normal,0.6
+3534.0,Frontal,Other Abnormality,0.9639360308647156,Calcinosis/Atherosclerosis,0.4
+3216.0,Frontal,Normal,0.9822428226470947,Hernia/Diaphragm,0.2
+2012.0,Frontal,Normal,0.966331958770752,Normal,0.4
+3927.0,Frontal,Support Devices,0.9490135908126831,Degenerative/Bone,0.4
+3462.0,Frontal,Support Devices,0.9670147895812988,Normal,0.8
+3303.0,Frontal,Lung Opacity,0.9770530462265015,Normal,0.6
+3862.0,Frontal,Other Abnormality,0.9525485038757324,Degenerative/Bone,0.6
+3630.0,Frontal,Calcinosis/Atherosclerosis,0.9644180536270142,Atelectasis,0.4
+3668.0,Frontal,Lung Opacity,0.9458059072494507,Granuloma,0.6
+2646.0,Frontal,Degenerative/Bone,0.9786715507507324,Normal,0.8
+3469.0,Frontal,Scarring,0.9210084676742554,Support Devices,0.4
+3789.0,Frontal,Cardiomegaly,0.9744231700897217,Normal,0.4
+3383.0,Frontal,Granuloma,0.9758744835853577,Normal,0.6
+3672.0,Frontal,Edema/Congestion,0.9555859565734863,Granuloma,0.4
+502.0,Frontal,Normal,0.9691318869590759,Normal,0.6
+3727.0,Frontal,Support Devices,0.9619963765144348,Calcinosis/Atherosclerosis,0.4
+799.0,Frontal,Normal,0.9706035256385803,Lung Opacity,0.6
+3096.0,Frontal,Nodule/Mass,0.9356018304824829,Lung Opacity,0.6
+2589.0,Frontal,Cardiomegaly,0.976338803768158,Normal,0.4
+3241.0,Frontal,Atelectasis,0.9619224071502686,Lung Opacity,0.4
+2028.0,Frontal,Normal,0.9672396779060364,Normal,0.8
+3908.0,Frontal,Degenerative/Bone,0.9699464440345764,Normal,0.6
+2171.0,Frontal,Granuloma,0.978164792060852,Normal,0.8
+1551.0,Frontal,Normal,0.9879647493362427,Normal,0.8
+2704.0,Frontal,Scarring,0.968163013458252,Normal,0.4
+3240.0,Frontal,Emphysema/COPD,0.9791068434715271,Normal,0.8
+965.0,Frontal,Normal,0.976193904876709,Calcinosis/Atherosclerosis,0.4
+2351.0,Frontal,Calcinosis/Atherosclerosis,0.9624919295310974,Normal,0.4
+2826.0,Frontal,Fibrosis/Interstitial,0.9814609289169312,Degenerative/Bone,0.4
+2681.0,Frontal,Support Devices,0.9689894914627075,Degenerative/Bone,0.4
+3992.0,Frontal,Edema/Congestion,0.9684569239616394,Granuloma,0.4
+2179.0,Frontal,Other Abnormality,0.972133994102478,Atelectasis,0.4
+2209.0,Frontal,Emphysema/COPD,0.968159556388855,Normal,0.6
+1896.0,Frontal,Normal,0.9873790144920349,Normal,0.8
+2172.0,Frontal,Nodule/Mass,0.9872649908065796,Normal,0.6
+2716.0,Frontal,Pleural Effusion,0.9657157063484192,Pleural Effusion,1.0
+2752.0,Frontal,Edema/Congestion,0.9300148487091064,Pleural Effusion,0.8
+3455.0,Frontal,Edema/Congestion,0.9431055784225464,Cardiomegaly,0.4
+1218.0,Frontal,Normal,0.9476665258407593,Normal,0.4
+3256.0,Frontal,Pleural Effusion,0.9712125062942505,Lung Opacity,0.4
+3001.0,Frontal,Other Abnormality,0.9732874631881714,Normal,0.8
+3516.0,Frontal,Other Abnormality,0.9750301837921143,Granuloma,0.4
+2852.0,Frontal,Normal,0.9753339290618896,Normal,0.6
+2982.0,Frontal,Scarring,0.9721927642822266,Normal,0.6
+2946.0,Frontal,Other Abnormality,0.9717190265655518,Scarring,0.4
+2553.0,Lateral,Granuloma,0.7523358464241028,Normal,0.6
+2066.0,Lateral,Atelectasis,0.7609641551971436,Other Abnormality,0.4
+2186.0,Lateral,Other Abnormality,0.7893741130828857,Other Abnormality,0.6
+326.0,Lateral,Normal,0.7399351596832275,Atelectasis,0.4
+2479.0,Lateral,Support Devices,0.807280957698822,Normal,0.4
+1706.0,Lateral,Other Abnormality,0.7935178279876709,Lung Opacity,0.8
+2628.0,Lateral,Scarring,0.7579956650733948,Other Abnormality,0.4
+1587.0,Lateral,Normal,0.794964075088501,Normal,0.4
+2688.0,Lateral,Cardiomegaly,0.7024333477020264,Cardiomegaly,0.4
+2927.0,Lateral,Calcinosis/Atherosclerosis,0.775412917137146,Support Devices,0.4
+2283.0,Lateral,Other Abnormality,0.7557755708694458,Normal,0.4
+2086.0,Lateral,Normal,0.7918456792831421,Other Abnormality,0.4
+3327.0,Lateral,Calcinosis/Atherosclerosis,0.7557203769683838,Normal,0.8
+3594.0,Lateral,Normal,0.7813413143157959,Lung Opacity,0.4
+3773.0,Lateral,Normal,0.7754310965538025,Normal,0.6
+1330.0,Lateral,Normal,0.7869633436203003,Lung Opacity,0.4
+1676.0,Lateral,Emphysema/COPD,0.7695484161376953,Lung Opacity,0.8
+3614.0,Lateral,Edema/Congestion,0.7760581374168396,Lung Opacity,0.4
+3825.0,Lateral,Support Devices,0.7847227454185486,Other Abnormality,0.4
+2810.0,Lateral,Other Abnormality,0.8122174739837646,Cardiomegaly,0.4
+1618.0,Lateral,Normal,0.8018055558204651,Degenerative/Bone,0.4
+3256.0,Lateral,Pleural Effusion,0.7515482902526855,Cardiomegaly,0.8
+2335.0,Lateral,Degenerative/Bone,0.7962448000907898,Cardiomegaly,0.4
+3177.0,Lateral,Emphysema/COPD,0.7931115627288818,Lung Opacity,0.4
+1545.0,Lateral,Normal,0.7963162064552307,Support Devices,0.4
+2579.0,Lateral,Normal,0.7702698707580566,Degenerative/Bone,0.6
+696.0,Lateral,Normal,0.7825216054916382,Granuloma,0.4
+3518.0,Lateral,Degenerative/Bone,0.7595272064208984,Support Devices,0.6
+3815.0,Lateral,Lung Opacity,0.7829141020774841,Normal,0.4
+2436.0,Lateral,Normal,0.7469308376312256,Support Devices,0.6
+1709.0,Lateral,Lung Opacity,0.7846130132675171,Other Abnormality,0.2
+3149.0,Lateral,Other Abnormality,0.7755706310272217,Support Devices,0.6
+2496.0,Lateral,Cardiomegaly,0.7757142186164856,Other Abnormality,0.2
+536.0,Lateral,Normal,0.7559511065483093,Cardiomegaly,0.6
+3118.0,Lateral,Granuloma,0.7905738353729248,Other Abnormality,0.6
+3000.0,Lateral,Nodule/Mass,0.7673855423927307,Other Abnormality,0.4
+3269.0,Lateral,Normal,0.7863942384719849,Normal,0.4
+2671.0,Lateral,Other Abnormality,0.7894752621650696,Scarring,0.4
+2989.0,Lateral,Support Devices,0.755160927772522,Support Devices,0.6
+3082.0,Lateral,Edema/Congestion,0.7559886574745178,Other Abnormality,0.6
+2531.0,Lateral,Granuloma,0.737494945526123,Cardiomegaly,0.4
+2538.0,Lateral,Normal,0.7724571228027344,Other Abnormality,0.4
+3423.0,Lateral,Other Abnormality,0.7932554483413696,Degenerative/Bone,0.4
+1851.0,Lateral,Normal,0.7824677228927612,Other Abnormality,0.2
+3987.0,Lateral,Degenerative/Bone,0.7777568697929382,Other Abnormality,0.6
+881.0,Lateral,Normal,0.769752025604248,Lung Opacity,0.6
+1356.0,Lateral,Normal,0.7724531888961792,Calcinosis/Atherosclerosis,0.4
+1756.0,Lateral,Normal,0.7983573079109192,Lung Opacity,0.4
+3267.0,Lateral,Normal,0.7627131938934326,Other Abnormality,0.4
+1046.0,Lateral,Normal,0.8057763576507568,Other Abnormality,0.4
+2014.0,Lateral,Other Abnormality,0.8089032173156738,Other Abnormality,0.4
+865.0,Lateral,Normal,0.7937501072883606,Calcinosis/Atherosclerosis,0.4
+2317.0,Lateral,Granuloma,0.7913892865180969,Other Abnormality,0.4
+1734.0,Lateral,Normal,0.8032222986221313,Other Abnormality,0.6
+2581.0,Lateral,Other Abnormality,0.7642794251441956,Degenerative/Bone,0.4
+3126.0,Lateral,Normal,0.7835503816604614,Other Abnormality,0.4
+3393.0,Lateral,Nodule/Mass,0.7440807223320007,Other Abnormality,0.6
+2713.0,Lateral,Atelectasis,0.7697371244430542,Cardiomegaly,0.6
+2664.0,Lateral,Atelectasis,0.7622857093811035,Support Devices,0.6
+3757.0,Lateral,Other Abnormality,0.7786141633987427,Other Abnormality,0.4
+2134.0,Lateral,Other Abnormality,0.7453305125236511,Normal,0.4
+3094.0,Lateral,Other Abnormality,0.7450560927391052,Support Devices,0.4
+3627.0,Lateral,Atelectasis,0.7547455430030823,Granuloma,0.4
+2789.0,Lateral,Nodule/Mass,0.7788944244384766,Other Abnormality,0.4
+3382.0,Lateral,Pleural Effusion,0.7302064895629883,Lung Opacity,0.4
+2481.0,Lateral,Atelectasis,0.7759886384010315,Lung Opacity,0.8
+2174.0,Lateral,Normal,0.7718566060066223,Calcinosis/Atherosclerosis,0.4
+2214.0,Lateral,Normal,0.8138034343719482,Calcinosis/Atherosclerosis,0.6
+3336.0,Lateral,Degenerative/Bone,0.798317551612854,Degenerative/Bone,0.6
+3790.0,Lateral,Calcinosis/Atherosclerosis,0.7627708911895752,Other Abnormality,0.2
+3089.0,Lateral,Normal,0.8005740642547607,Calcinosis/Atherosclerosis,0.4
+3312.0,Lateral,Pneumonia,0.7875219583511353,Normal,0.4
+2028.0,Lateral,Normal,0.7797062993049622,Cardiomegaly,0.2
+2793.0,Lateral,Other Abnormality,0.7460435628890991,Normal,0.4
+3251.0,Lateral,Nodule/Mass,0.7896136045455933,Cardiomegaly,0.6
+941.0,Lateral,Normal,0.8052306771278381,Support Devices,0.4
+2516.0,Lateral,Scarring,0.768195390701294,Pneumothorax,0.4
+470.0,Lateral,Normal,0.8015416860580444,Normal,0.4
+3600.0,Lateral,Scarring,0.8053463101387024,Calcinosis/Atherosclerosis,0.4
+3748.0,Lateral,Scarring,0.7561526298522949,Granuloma,0.4
+2847.0,Lateral,Support Devices,0.7578554153442383,Support Devices,0.4
+737.0,Lateral,Normal,0.7959411144256592,Other Abnormality,0.4
+121.0,Lateral,Normal,0.84847092628479,Support Devices,0.4
+2724.0,Lateral,Other Abnormality,0.7710770964622498,Degenerative/Bone,0.4
+3311.0,Lateral,Normal,0.8361340761184692,Lung Opacity,0.4
+2369.0,Lateral,Fibrosis/Interstitial,0.7404212951660156,Emphysema/COPD,0.6
+2482.0,Lateral,Pneumothorax,0.7513115406036377,Normal,0.4
+2761.0,Lateral,Fibrosis/Interstitial,0.7837725281715393,Normal,0.4
+2434.0,Lateral,Scarring,0.7590288519859314,Normal,0.4
+3388.0,Lateral,Calcinosis/Atherosclerosis,0.7996678948402405,Atelectasis,0.4
+2440.0,Lateral,Emphysema/COPD,0.7970621585845947,Support Devices,0.4
+3092.0,Lateral,Degenerative/Bone,0.7886537909507751,Support Devices,0.6
+2469.0,Lateral,Lung Opacity,0.76699298620224,Granuloma,0.4
+1469.0,Lateral,Normal,0.7803881764411926,Other Abnormality,0.6
+3999.0,Lateral,Normal,0.76038658618927,Normal,0.4
+1312.0,Lateral,Normal,0.7725105285644531,Support Devices,0.4
+2382.0,Lateral,Cardiomegaly,0.8137897849082947,Other Abnormality,0.4
+2323.0,Lateral,Normal,0.7752181887626648,Other Abnormality,0.4
+1740.0,Lateral,Lung Opacity,0.7553302645683289,Other Abnormality,0.4
+1008.0,Lateral,Normal,0.7874286770820618,Support Devices,0.4
+3940.0,Lateral,Scarring,0.7323073148727417,Degenerative/Bone,0.2
+3628.0,Lateral,Other Abnormality,0.7913733720779419,Other Abnormality,0.4
+1067.0,Lateral,Normal,0.7891988754272461,Other Abnormality,0.4
+3601.0,Lateral,Hernia/Diaphragm,0.7500693798065186,Other Abnormality,0.4
+2426.0,Lateral,Other Abnormality,0.7728287577629089,Other Abnormality,0.6
+2631.0,Lateral,Support Devices,0.7727311253547668,Calcinosis/Atherosclerosis,0.4
+2904.0,Lateral,Cardiomegaly,0.7613272070884705,Lung Opacity,0.4
+3681.0,Lateral,Other Abnormality,0.7977542281150818,Normal,0.6
+967.0,Lateral,Normal,0.8011329174041748,Lung Opacity,0.2
+3645.0,Lateral,Other Abnormality,0.7702339887619019,Lung Opacity,0.4
+2345.0,Lateral,Other Abnormality,0.7997854351997375,Pneumothorax,0.2
+758.0,Lateral,Normal,0.7929530739784241,Cardiomegaly,0.4
+3190.0,Lateral,Atelectasis,0.7862889766693115,Other Abnormality,0.4
+2856.0,Lateral,Normal,0.801400899887085,Other Abnormality,0.4
+3441.0,Lateral,Normal,0.7792960405349731,Other Abnormality,0.4
+815.0,Lateral,Normal,0.7694941759109497,Scarring,0.4
+2201.0,Lateral,Granuloma,0.784079909324646,Pneumothorax,0.4
+3412.0,Lateral,Other Abnormality,0.8007175922393799,Support Devices,0.4
+1645.0,Lateral,Lung Opacity,0.7695785760879517,Lung Opacity,0.4
+259.0,Lateral,Normal,0.7732530832290649,Cardiomegaly,0.4
+2406.0,Lateral,Hernia/Diaphragm,0.753113329410553,Cardiomegaly,0.2
+2743.0,Lateral,Calcinosis/Atherosclerosis,0.7849001884460449,Normal,0.4
+363.0,Lateral,Normal,0.8028988838195801,Calcinosis/Atherosclerosis,0.6
+319.0,Lateral,Normal,0.793644368648529,Granuloma,0.4
+3608.0,Lateral,Cardiomegaly,0.7935143709182739,Cardiomegaly,0.8
+3439.0,Lateral,Normal,0.8252955079078674,Normal,0.4
+2210.0,Lateral,Normal,0.8088284730911255,Other Abnormality,0.4
+3992.0,Lateral,Edema/Congestion,0.7717772126197815,Other Abnormality,0.6
+502.0,Lateral,Normal,0.7557681202888489,Lung Opacity,0.4
+2264.0,Lateral,Other Abnormality,0.7717096209526062,Other Abnormality,0.4
+2420.0,Lateral,Support Devices,0.7782774567604065,Granuloma,0.4
+3110.0,Lateral,Other Abnormality,0.7533292174339294,Normal,0.4
+2036.0,Lateral,Atelectasis,0.7275424003601074,Degenerative/Bone,0.6
+2859.0,Lateral,Pneumonia,0.7927432060241699,Other Abnormality,0.6
+24.0,Lateral,Normal,0.8214026689529419,Granuloma,0.4
+3584.0,Lateral,Atelectasis,0.7732521891593933,Degenerative/Bone,0.4
+2279.0,Lateral,Atelectasis,0.8148219585418701,Emphysema/COPD,0.4
+2288.0,Lateral,Normal,0.783505380153656,Degenerative/Bone,0.2
+3182.0,Lateral,Nodule/Mass,0.7816594243049622,Support Devices,0.4
+2684.0,Lateral,Calcinosis/Atherosclerosis,0.7807087898254395,Support Devices,0.4
+3141.0,Lateral,Normal,0.8132909536361694,Other Abnormality,0.2
+529.0,Lateral,Normal,0.7915608882904053,Degenerative/Bone,0.4
+581.0,Lateral,Normal,0.7917977571487427,Calcinosis/Atherosclerosis,0.6
+3408.0,Lateral,Degenerative/Bone,0.7698917388916016,Other Abnormality,0.4
+3533.0,Lateral,Other Abnormality,0.7314724922180176,Support Devices,0.4
+965.0,Lateral,Normal,0.7830791473388672,Support Devices,0.4
+2627.0,Lateral,Other Abnormality,0.7753942608833313,Scarring,0.4
+2138.0,Lateral,Degenerative/Bone,0.79600989818573,Normal,0.4
+2544.0,Lateral,Cardiomegaly,0.7642002701759338,Support Devices,0.6
+3740.0,Lateral,Pneumonia,0.7798398733139038,Cardiomegaly,0.6
+3804.0,Lateral,Calcinosis/Atherosclerosis,0.8036516308784485,Other Abnormality,0.4
+1750.0,Lateral,Emphysema/COPD,0.7797647714614868,Cardiomegaly,0.4
+2058.0,Lateral,Other Abnormality,0.7790471315383911,Lung Opacity,0.4
+2738.0,Lateral,Other Abnormality,0.7648893594741821,Other Abnormality,0.4
+2212.0,Lateral,Normal,0.8037323951721191,Other Abnormality,0.4
+3642.0,Lateral,Other Abnormality,0.7931751012802124,Lung Opacity,0.4
+618.0,Lateral,Normal,0.7783898115158081,Normal,0.4
+2206.0,Lateral,Atelectasis,0.7763150334358215,Cardiomegaly,0.4
+630.0,Lateral,Normal,0.7769738435745239,Other Abnormality,0.4
+2803.0,Lateral,Other Abnormality,0.8022518754005432,Support Devices,0.6
+149.0,Lateral,Normal,0.8102624416351318,Lung Opacity,0.4
+2137.0,Lateral,Granuloma,0.7967195510864258,Normal,0.6
+1930.0,Lateral,Other Abnormality,0.7640339136123657,Other Abnormality,0.6
+3694.0,Lateral,Pneumothorax,0.7708867788314819,Other Abnormality,0.4
+2776.0,Lateral,Nodule/Mass,0.7770463228225708,Normal,0.4
+2886.0,Lateral,Pleural Effusion,0.7631069421768188,Lung Opacity,0.4
+3121.0,Lateral,Granuloma,0.7551256418228149,Support Devices,0.4
+2093.0,Lateral,Support Devices,0.7773785591125488,Other Abnormality,0.6
+3391.0,Lateral,Granuloma,0.8024551868438721,Normal,1.0
+2811.0,Lateral,Normal,0.836152195930481,Normal,0.4
+3660.0,Lateral,Normal,0.8045072555541992,Degenerative/Bone,0.2
+3759.0,Lateral,Emphysema/COPD,0.7955731153488159,Cardiomegaly,0.4
+3808.0,Lateral,Calcinosis/Atherosclerosis,0.757768988609314,Normal,0.4
+3137.0,Lateral,Calcinosis/Atherosclerosis,0.8138085603713989,Scarring,0.4
+1896.0,Lateral,Normal,0.7550255656242371,Normal,0.4
+2032.0,Lateral,Normal,0.7452100515365601,Support Devices,0.4
+3320.0,Lateral,Normal,0.8022297620773315,Calcinosis/Atherosclerosis,0.6
+16.0,Lateral,Normal,0.7914687395095825,Granuloma,0.4
+3651.0,Lateral,Scarring,0.796064019203186,Other Abnormality,0.4
+3948.0,Lateral,Normal,0.7724126577377319,Support Devices,0.4
+2906.0,Lateral,Degenerative/Bone,0.7482224106788635,Normal,0.4
+3785.0,Lateral,Lung Opacity,0.8336457014083862,Normal,0.4
+3952.0,Lateral,Cardiomegaly,0.7567148804664612,Degenerative/Bone,0.4
+3068.0,Lateral,Cardiomegaly,0.7737439870834351,Scarring,0.4
+3477.0,Lateral,Normal,0.8121090531349182,Other Abnormality,0.4
+2281.0,Lateral,Normal,0.8194279074668884,Other Abnormality,0.4
+2307.0,Lateral,Emphysema/COPD,0.7689716815948486,Cardiomegaly,0.4
+2687.0,Lateral,Support Devices,0.7739998698234558,Other Abnormality,0.4
+1944.0,Lateral,Calcinosis/Atherosclerosis,0.7634327411651611,Other Abnormality,0.4
+3924.0,Lateral,Degenerative/Bone,0.7928317785263062,Normal,0.6
+3429.0,Lateral,Support Devices,0.8103740811347961,Calcinosis/Atherosclerosis,0.4
+3908.0,Lateral,Degenerative/Bone,0.7791428565979004,Normal,0.6
+2179.0,Lateral,Other Abnormality,0.7622506022453308,Other Abnormality,0.6
+3455.0,Lateral,Edema/Congestion,0.7999595999717712,Lung Opacity,0.4
+1883.0,Lateral,Support Devices,0.8206154108047485,Normal,0.4
+1765.0,Lateral,Calcinosis/Atherosclerosis,0.8015401363372803,Lung Opacity,0.4
+3072.0,Lateral,Scarring,0.7419868111610413,Lung Opacity,0.6
+3273.0,Lateral,Cardiomegaly,0.7769319415092468,Other Abnormality,0.4
+3410.0,Lateral,Emphysema/COPD,0.7843658924102783,Support Devices,0.6
+2620.0,Lateral,Normal,0.7997033596038818,Normal,0.2
+3874.0,Lateral,Calcinosis/Atherosclerosis,0.7806258201599121,Lung Opacity,0.4
+2507.0,Lateral,Scarring,0.8154670000076294,Lung Opacity,1.0
+1006.0,Lateral,Normal,0.7648405432701111,Lung Opacity,0.6
+2867.0,Lateral,Emphysema/COPD,0.7784135937690735,Scarring,0.4
+505.0,Lateral,Normal,0.7654561996459961,Lung Opacity,0.6
+1178.0,Lateral,Normal,0.7803057432174683,Other Abnormality,0.2
+3066.0,Lateral,Emphysema/COPD,0.7735477685928345,Cardiomegaly,0.4
+272.0,Lateral,Normal,0.7762788534164429,Degenerative/Bone,0.4
+719.0,Lateral,Normal,0.7775489091873169,Other Abnormality,0.6
+2216.0,Lateral,Other Abnormality,0.7720940113067627,Other Abnormality,0.4
+428.0,Lateral,Normal,0.8120765089988708,Other Abnormality,0.4
+2131.0,Lateral,Normal,0.7581554651260376,Support Devices,0.6
+3078.0,Lateral,Pneumonia,0.8025496006011963,Normal,0.4
+2969.0,Lateral,Emphysema/COPD,0.7694026827812195,Lung Opacity,0.8
+3430.0,Lateral,Edema/Congestion,0.7875999808311462,Degenerative/Bone,0.4
+3016.0,Lateral,Degenerative/Bone,0.8308122158050537,Scarring,0.4
+3170.0,Lateral,Degenerative/Bone,0.7674286365509033,Other Abnormality,0.4
+2070.0,Lateral,Other Abnormality,0.7861796617507935,Other Abnormality,0.4
+2128.0,Lateral,Emphysema/COPD,0.7824459075927734,Lung Opacity,0.4
+2759.0,Lateral,Other Abnormality,0.7410725355148315,Cardiomegaly,0.4
+2816.0,Lateral,Granuloma,0.7963664531707764,Normal,0.8
+3169.0,Lateral,Emphysema/COPD,0.7576197385787964,Calcinosis/Atherosclerosis,0.4
+1815.0,Lateral,Other Abnormality,0.7953088283538818,Degenerative/Bone,0.4
+2733.0,Lateral,Lung Opacity,0.8124227523803711,Pleural Effusion,0.4
+3008.0,Lateral,Normal,0.783461332321167,Cardiomegaly,0.4
+1736.0,Lateral,Other Abnormality,0.7995707988739014,Calcinosis/Atherosclerosis,0.4
+2223.0,Lateral,Normal,0.8039249777793884,Normal,0.4
+3934.0,Lateral,Fibrosis/Interstitial,0.7463111281394958,Normal,0.4
+3866.0,Lateral,Pneumonia,0.7350509762763977,Other Abnormality,0.4
+3831.0,Lateral,Normal,0.8099941611289978,Calcinosis/Atherosclerosis,0.4
+2329.0,Lateral,Normal,0.7879667282104492,Normal,0.4
+538.0,Lateral,Normal,0.8137016296386719,Granuloma,0.6
+2444.0,Lateral,Other Abnormality,0.8022006750106812,Normal,0.4
+3386.0,Lateral,Normal,0.7712485790252686,Calcinosis/Atherosclerosis,0.6
+911.0,Lateral,Normal,0.8174718618392944,Normal,0.6
+3404.0,Lateral,Other Abnormality,0.7726300358772278,Other Abnormality,0.4
+3013.0,Lateral,Cardiomegaly,0.7953206896781921,Normal,0.6
+3345.0,Lateral,Normal,0.8176776766777039,Other Abnormality,0.6
+3188.0,Lateral,Support Devices,0.7869521379470825,Other Abnormality,0.4
+2650.0,Lateral,Cardiomegaly,0.758301317691803,Lung Opacity,0.8
+1971.0,Lateral,Normal,0.7858632802963257,Support Devices,0.4
+1882.0,Lateral,Normal,0.809292197227478,Normal,0.4
+3534.0,Lateral,Other Abnormality,0.7930518984794617,Lung Opacity,0.6
+3155.0,Lateral,Cardiomegaly,0.7219551801681519,Other Abnormality,0.4
+3448.0,Lateral,Calcinosis/Atherosclerosis,0.7738206386566162,Support Devices,0.6
+2749.0,Lateral,Other Abnormality,0.7975356578826904,Support Devices,0.4
+2073.0,Lateral,Other Abnormality,0.7579829692840576,Support Devices,0.4
+2255.0,Lateral,Calcinosis/Atherosclerosis,0.7967789769172668,Lung Opacity,0.4
+2096.0,Lateral,Normal,0.7967932224273682,Lung Opacity,0.4
+2652.0,Lateral,Calcinosis/Atherosclerosis,0.8066759705543518,Lung Opacity,0.6
+1639.0,Lateral,Other Abnormality,0.7892394065856934,Lung Opacity,0.4
+2923.0,Lateral,Normal,0.7766028642654419,Scarring,0.4
+2486.0,Lateral,Other Abnormality,0.7883879542350769,Calcinosis/Atherosclerosis,0.4
+1051.0,Lateral,Normal,0.7638591527938843,Support Devices,0.4
+3680.0,Lateral,Atelectasis,0.8066655397415161,Support Devices,0.6
+3541.0,Lateral,Atelectasis,0.7854453325271606,Other Abnormality,0.4
+2961.0,Lateral,Pneumonia,0.7895204424858093,Other Abnormality,0.4
+2781.0,Lateral,Normal,0.7998659610748291,Other Abnormality,0.6
+3502.0,Lateral,Edema/Congestion,0.7479909062385559,Normal,0.8
+3736.0,Lateral,Other Abnormality,0.7921841144561768,Other Abnormality,0.6
+2247.0,Lateral,Normal,0.7714587450027466,Normal,0.4
+2150.0,Lateral,Nodule/Mass,0.7844781875610352,Normal,0.4
+1946.0,Lateral,Support Devices,0.8009588122367859,Normal,0.6
+2100.0,Lateral,Calcinosis/Atherosclerosis,0.7657212018966675,Normal,0.4
+3605.0,Lateral,Normal,0.7788731455802917,Normal,0.4
+3418.0,Lateral,Other Abnormality,0.7797658443450928,Other Abnormality,0.4
+1316.0,Lateral,Normal,0.7893384695053101,Normal,0.4
+2313.0,Lateral,Normal,0.7643795013427734,Other Abnormality,0.4
+3525.0,Lateral,Support Devices,0.7238984107971191,Normal,0.4
+3672.0,Lateral,Edema/Congestion,0.6937752366065979,Support Devices,0.4
+3508.0,Lateral,Pleural Effusion,0.741154670715332,Scarring,0.4
+2902.0,Lateral,Normal,0.7325421571731567,Granuloma,0.4
+310.0,Lateral,Normal,0.7961174249649048,Granuloma,0.4
+1520.0,Lateral,Normal,0.828533411026001,Other Abnormality,0.6
+1902.0,Lateral,Normal,0.8000563383102417,Lung Opacity,0.6
+2181.0,Lateral,Cardiomegaly,0.8233222961425781,Normal,0.8
+3148.0,Lateral,Pleural Effusion,0.8255751729011536,Lung Opacity,0.8
+3192.0,Lateral,Hernia/Diaphragm,0.7559304237365723,Other Abnormality,0.4
+2287.0,Lateral,Cardiomegaly,0.7756032943725586,Normal,0.4
+2963.0,Lateral,Normal,0.8040412664413452,Calcinosis/Atherosclerosis,0.4
+2752.0,Lateral,Edema/Congestion,0.7813035845756531,Normal,0.6
+609.0,Lateral,Normal,0.782291054725647,Other Abnormality,0.6
+2384.0,Lateral,Hernia/Diaphragm,0.758045494556427,Support Devices,0.4
+3661.0,Lateral,Normal,0.7995423078536987,Normal,0.4
+1920.0,Lateral,Normal,0.764753520488739,Pleural Effusion,0.4
+3237.0,Lateral,Cardiomegaly,0.7155196666717529,Calcinosis/Atherosclerosis,0.4
+3216.0,Lateral,Normal,0.8078500032424927,Lung Opacity,0.4
+1778.0,Lateral,Normal,0.7799500226974487,Calcinosis/Atherosclerosis,0.8
+1844.0,Lateral,Other Abnormality,0.7412413358688354,Normal,0.4
+2645.0,Lateral,Support Devices,0.7624127864837646,Cardiomegaly,0.4
+2966.0,Lateral,Degenerative/Bone,0.7670497894287109,Other Abnormality,0.4
+3873.0,Lateral,Lung Opacity,0.727279782295227,Cardiomegaly,0.4
+2928.0,Lateral,Hernia/Diaphragm,0.7480019330978394,Degenerative/Bone,0.4
+3840.0,Lateral,Edema/Congestion,0.8358935117721558,Degenerative/Bone,0.4
+1911.0,Lateral,Normal,0.7575304508209229,Support Devices,0.4
+2892.0,Lateral,Granuloma,0.7550951838493347,Other Abnormality,0.4
+2467.0,Lateral,Lung Opacity,0.7796758413314819,Other Abnormality,0.4
+708.0,Lateral,Normal,0.8246903419494629,Granuloma,0.4
+921.0,Lateral,Normal,0.7797887325286865,Other Abnormality,0.6
+336.0,Lateral,Normal,0.8070077300071716,Other Abnormality,0.2

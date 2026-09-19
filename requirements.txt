@@ -46,6 +46,16 @@ httpx>=0.27
 argon2-cffi>=23.1
 pyjwt>=2.8
 
+# Input Admission and Modality Gate -- test-only. Used by
+# backend/tests/integration/admission_fixtures.py to BUILD a JPEG carrying
+# EXIF for acceptance test T7 ("a JPEG file with EXIF metadata passes, the
+# normalized PNG file has no EXIF metadata"). Nothing under backend/app/
+# imports it: requirement A12 removes EXIF by re-encoding from the pixel
+# array alone, so the production path never needs to parse an EXIF block,
+# only to not carry one forward. Pillow can read EXIF but cannot write an
+# arbitrary one, which is why the fixture needs this and the app does not.
+piexif>=1.1.3
+
 # shared/ and backend/ are editable-installed as local packages so
 # `from shared.embeddings...` and `from app...` resolve regardless of the
 # process's CWD -- replaces the sys.path hacks/conftest.py shim used

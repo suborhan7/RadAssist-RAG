@@ -5,14 +5,30 @@
    CONTAIN HEX. Enforced by scripts/check-design-tokens.mjs (P0 gate).
    ============================================================ */
 
+/* ────────────────────────────────────────────────────────────────────────────
+ * THEMES
+ *
+ * Dark is the default and is what "Reading Room" was designed for. Light was
+ * added on request after a tester asked for a mode switch.
+ *
+ * Everything between the THEME:START and THEME:END markers below must be
+ * redefined in the light block, and `scripts/check-design-tokens.mjs` enforces
+ * that pairing. The reason is the same one check-i18n.mjs exists for: a token
+ * missing from the light block does not error, it silently inherits the dark
+ * value, so one white-on-white label could ship unnoticed. Tokens declared
+ * OUTSIDE the markers (film, spacing, radius, motion, illustration) are
+ * theme-invariant by construction and must not be duplicated.
+ * ──────────────────────────────────────────────────────────────────────────── */
 :root {
+  /* ==== THEME:START ==== */
+  color-scheme: dark;
+
   /* ---- backgrounds — near-black so film is the brightest thing on screen ---- */
   --bg-page:         #04070A;
   --bg-app:          #0A0D10;
   --bg-raised:       #0E1318;
   --bg-hover:        #12181E;
   --bg-hover-alt:    #151B21;
-  --bg-film:         #000000;
 
   /* ---- borders ---- */
   --border-hairline: #1B2229;
@@ -29,21 +45,63 @@
 
   /* ---- accents: exactly two, each with one job.
      cyan = retrieval and interaction. amber = look here / unsupported.
-     A new state needing emphasis is one of these two — never a third hue. ---- */
-  --accent-cyan:       #22E3E8;
-  --accent-cyan-ink:   #04181A;
-  --accent-cyan-wash:  rgba(34, 227, 232, .12);
-  --accent-cyan-line:  rgba(34, 227, 232, .45);
+     A new state needing emphasis is one of these two — never a third hue.
+     Values come from the bright primitives below, which .on-film also uses,
+     so the two places that need the bright set share one definition. ---- */
+  --accent-cyan:       var(--bright-cyan);
+  --accent-cyan-ink:   var(--bright-cyan-ink);
+  --accent-cyan-wash:  var(--bright-cyan-wash);
+  --accent-cyan-line:  var(--bright-cyan-line);
 
-  --accent-amber:      #FFB020;
-  --accent-amber-ink:  #1A1200;
-  --accent-amber-wash: rgba(255, 176, 32, .10);
-  --accent-amber-line: rgba(255, 176, 32, .50);
+  --accent-amber:      var(--bright-amber);
+  --accent-amber-ink:  var(--bright-amber-ink);
+  --accent-amber-wash: var(--bright-amber-wash);
+  --accent-amber-line: var(--bright-amber-line);
 
   /* ---- ownership texture — carried over pending the owner-chip
      restyle decision in the primitives pass; value re-tuned for the
      dark surface (old .10 was calibrated against a light --sunken). ---- */
-  --hatch: rgba(230, 237, 243, .08);
+  --hatch: var(--bright-hatch);
+  /* ==== THEME:END ==== */
+
+  /* ---- film: the radiograph surround. Deliberately NOT theme-varying.
+     A chest X-ray is read against black in both modes — that surface is a
+     clinical condition, not a decorative choice, and lightening it in light
+     mode would change how the image reads. Kept outside the markers so this
+     stays a stated decision rather than something a later pass "completes". ---- */
+  --bg-film:         #000000;
+
+  /* ---- BRIGHT PRIMITIVES: the light-on-dark set, held in one place because
+     TWO consumers need it — the dark theme above, and .on-film below, which
+     applies in either theme because the film surround is always black.
+     Without this the same eleven values would be written twice and could
+     drift apart silently, which is the failure this whole file is organised
+     against. These are raw values; nothing outside :root and .on-film should
+     reference them.
+
+     The need was found by looking at the light theme rather than reasoning
+     about it: the login page's film panel rendered near-black text on black
+     — invisible — because its heading used --text-primary like every other
+     heading in the app. ---- */
+  --bright-text-primary:   #E6EDF3;
+  --bright-text-secondary: #8C9AA8;
+  --bright-text-tertiary:  #96A3B0;
+  --bright-text-muted:     #61707E;
+  --bright-bg-raised:      #0E1318;
+  --bright-border-hairline:#1B2229;
+  --bright-border-strong:  #2A343D;
+
+  --bright-cyan:       #22E3E8;
+  --bright-cyan-ink:   #04181A;
+  --bright-cyan-wash:  rgba(34, 227, 232, .12);
+  --bright-cyan-line:  rgba(34, 227, 232, .45);
+
+  --bright-amber:      #FFB020;
+  --bright-amber-ink:  #1A1200;
+  --bright-amber-wash: rgba(255, 176, 32, .10);
+  --bright-amber-line: rgba(255, 176, 32, .50);
+
+  --bright-hatch: rgba(230, 237, 243, .08);
 
   /* ---- spacing scale — every padding/gap value the mock actually uses.
      The README names a 14-value "scale in use", but its own component
@@ -125,6 +183,104 @@
   --illustration-vignette-edge:   #08090B;
   --illustration-highlight-start: rgba(224, 235, 246, .40);
   --illustration-highlight-end:   rgba(224, 235, 246, .26);
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * LIGHT
+ *
+ * Not a tint of the dark palette — re-derived, because the two accents do not
+ * survive inversion. #22E3E8 on a light surface measures 1.5:1 and is
+ * unreadable; #FFB020 is worse. Both are replaced by dark, saturated versions
+ * of the same two hues, so the vocabulary is unchanged (cyan still means
+ * retrieval and interaction, amber still means look here) while the luminance
+ * relationship flips. The `-ink` tokens flip with them: in dark they are the
+ * near-black text printed on a bright accent fill, in light they are the
+ * near-white text printed on a dark accent fill. Same role, opposite end.
+ *
+ * Every pair below was measured, not estimated. Body text ≥ 4.5:1 and UI text
+ * ≥ 3:1 against bg-app, bg-raised AND bg-hover, plus ink-on-accent for the
+ * solid buttons. Lowest measured value in this palette is 3.99:1 (text-muted
+ * on bg-hover, a 3:1 target). Re-measure before changing any value here.
+ * ──────────────────────────────────────────────────────────────────────────── */
+:root[data-theme="light"] {
+  /* ==== THEME:START ==== */
+  color-scheme: light;
+
+  /* ---- backgrounds — paper, with the raised surface as the brightest ---- */
+  --bg-page:         #E9EDF1;
+  --bg-app:          #F7F9FB;
+  --bg-raised:       #FFFFFF;
+  --bg-hover:        #EDF1F5;
+  --bg-hover-alt:    #E4EAEF;
+
+  /* ---- borders ---- */
+  --border-hairline: #DDE3E9;
+  --border-strong:   #BFC9D2;
+
+  /* ---- text — mirrors the dark ramp's ordering, including tertiary sitting
+     a step stronger than secondary (7.02:1 vs 8.08:1 on bg-app), which is how
+     the dark palette already ranks them. ---- */
+  --text-primary:    #0D141A;
+  --text-secondary:  #4A5763;
+  --text-tertiary:   #414E5A;
+  --text-muted:      #6B7883;
+
+  /* ---- accents: same two hues, darkened until they are legible on paper.
+     Washes and lines are re-derived from the new base, not carried over —
+     a 12% tint of bright cyan is invisible on white. ---- */
+  --accent-cyan:       #00696E;
+  --accent-cyan-ink:   #F0FDFE;
+  --accent-cyan-wash:  rgba(0, 105, 110, .10);
+  --accent-cyan-line:  rgba(0, 105, 110, .40);
+
+  --accent-amber:      #7A4E00;
+  --accent-amber-ink:  #FFF8EC;
+  --accent-amber-wash: rgba(122, 78, 0, .09);
+  --accent-amber-line: rgba(122, 78, 0, .38);
+
+  /* ---- ownership texture — dark strokes on a light surface, the inverse of
+     the dark theme's light-on-dark hatch. ---- */
+  --hatch: rgba(13, 20, 26, .07);
+  /* ==== THEME:END ==== */
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * ON-FILM SCOPE
+ *
+ * The film surround is black in both themes, so anything drawn on it has to
+ * stay on the dark ramp even when the rest of the app is light. Rather than
+ * rewriting every caption, badge and overlay that sits on film to use a second
+ * set of class names, this remaps the ordinary tokens locally: a component
+ * inside .on-film keeps using text-text-primary and gets the on-film value.
+ *
+ * That means the film panels needed one class added each, and nothing inside
+ * them changed at all — including components shared with non-film screens,
+ * which would otherwise have needed a variant.
+ *
+ * color-scheme is remapped too, so any native control rendered over film keeps
+ * its dark widget styling.
+ * ──────────────────────────────────────────────────────────────────────────── */
+.on-film {
+  color-scheme: dark;
+  --text-primary:    var(--bright-text-primary);
+  --text-secondary:  var(--bright-text-secondary);
+  --text-tertiary:   var(--bright-text-tertiary);
+  --text-muted:      var(--bright-text-muted);
+  --bg-raised:       var(--bright-bg-raised);
+  --bg-app:          var(--bg-film);
+  --border-hairline: var(--bright-border-hairline);
+  --border-strong:   var(--bright-border-strong);
+  /* The accents stay bright on film for the same reason the text does: the
+     light theme's #00696E is invisible against black. */
+  --accent-cyan:       var(--bright-cyan);
+  --accent-cyan-ink:   var(--bright-cyan-ink);
+  --accent-cyan-wash:  var(--bright-cyan-wash);
+  --accent-cyan-line:  var(--bright-cyan-line);
+  --accent-amber:      var(--bright-amber);
+  --accent-amber-ink:  var(--bright-amber-ink);
+  --accent-amber-wash: var(--bright-amber-wash);
+  --accent-amber-line: var(--bright-amber-line);
+  --hatch: var(--bright-hatch);
 }
 
 /* Motion is functional. When it is unwelcome, it is off. */

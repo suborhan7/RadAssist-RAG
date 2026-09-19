@@ -62,11 +62,16 @@ from __future__ import annotations
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_current_doctor, get_db
-from app.api.schemas import PatientHistoryReportResponse, PatientResponse, ReportContentResponse
+from app.api.schemas import (
+    PatientHistoryReportResponse,
+    PatientResponse,
+    ReportContentResponse,
+    validate_date_of_birth,
+)
 from app.domain.entities import Doctor, Patient, Report
 from app.models.retrieval_session import RetrievalSession
 from app.services.patient_service import PatientService
@@ -78,6 +83,18 @@ class CreatePatientRequest(BaseModel):
     name: str
     date_of_birth: str
     gender: str
+
+    # QA fix: the registration form's native date input accepts a year of any
+    # length (Chrome allows up to 275760), and the six-digit year that a tester
+    # actually entered reached date.fromisoformat() inside PatientService and
+    # raised there -- an unhandled 500, not a field error. The bound belongs
+    # here, at the edge, so the failure is a 422 naming date_of_birth. The
+    # matching min/max on the input itself is a courtesy; this is the check
+    # that holds for any client.
+    @field_validator("date_of_birth")
+    @classmethod
+    def _check_date_of_birth(cls, value: str) -> str:
+        return validate_date_of_birth(value)
 
 
 def _build_patient_response(patient: Patient) -> PatientResponse:
@@ -128,6 +145,20 @@ def create_patient(
     return _build_patient_response(patient)
 
 
+@router.get("/patients", response_model=list[PatientResponse])
+def list_patients(
+    db: Session = Depends(get_db),
+    current_doctor: Doctor = Depends(get_current_doctor),
+) -> list[PatientResponse]:
+    # Phase 12 (additive): the whole shared registry for the frontend Patients
+    # directory, in registration order. A browse/listing affordance -- the
+    # identity-critical selection path stays /patients/search's exact match.
+    # Declared before /patients/{patient_id} so the static path isn't captured
+    # by the dynamic segment (same ordering rule as /patients/search).
+    service = PatientService(db=db)
+    return [_build_patient_response(p) for p in service.list_all()]
+
+
 @router.get("/patients/search", response_model=list[PatientResponse])
 def search_patients(
     code: str | None = None,
@@ -142,6 +173,15 @@ def search_patients(
         found = service.find_by_code(code)
         patients = [found] if found is not None else []
     elif name is not None and dob is not None:
+        # Same edge-validation as patient creation: find_by_name_and_dob()
+        # hands `dob` to date.fromisoformat() too, so a malformed one raised
+        # there as a 500 rather than a bad-request. A query parameter cannot
+        # carry a Pydantic field validator, so the shared checker is called
+        # directly -- one definition of a plausible DOB, two call sites.
+        try:
+            validate_date_of_birth(dob)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
         patients = service.find_by_name_and_dob(name, dob)
     else:
         raise HTTPException(

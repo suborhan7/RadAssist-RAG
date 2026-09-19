@@ -234,6 +234,11 @@ class IPatientRepository(Protocol):
     def find_by_name_and_dob(self, name: str, date_of_birth: str) -> list[Patient]: ...
     def find_by_id(self, patient_id: str) -> Patient | None: ...
     def get_history(self, patient_id: str) -> list[Report]: ...  # chronological
+    # Phase 12 (additive, frontend Patients directory): the whole shared
+    # registry, in registration order. This is a browse/listing affordance,
+    # NOT the frozen exact-match search (find_by_code / find_by_name_and_dob),
+    # which stays the identity-critical selection path.
+    def list_all(self) -> list[Patient]: ...  # registration order (by patient_code)
 
 
 @runtime_checkable

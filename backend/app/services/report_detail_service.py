@@ -97,6 +97,12 @@ class ReportDetail:
     finalized_at: str | None = None
     finalized_by: str | None = None
     audit_log: tuple[ReportAuditLogEntry, ...] = ()
+    # Input Admission and Modality Gate §7.3/§7.4: the stored evidence
+    # support state. Nullable -- a report generated before the S5 columns
+    # existed has none recorded, which is not the same as being below the
+    # floor.
+    retrieval_support: str | None = None
+    top1_similarity: float | None = None
 
 
 @dataclass(frozen=True)
@@ -223,4 +229,13 @@ class ReportDetailService:
                 )
                 for row in audit_rows
             ),
+            # Input Admission and Modality Gate §7.4 (S8): read straight
+            # off the persisted row S5 wrote at generation time. Not
+            # recomputed from `retrieved_cases` above -- those come back
+            # through IVectorStore.get_by_ids(), which forces similarity
+            # to 1.0 for every case because an ID fetch has no ranking, so
+            # a recomputed category here would report every report as
+            # at-or-above the floor.
+            retrieval_support=record.retrieval_support,
+            top1_similarity=record.top1_similarity,
         )

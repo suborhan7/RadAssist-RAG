@@ -104,7 +104,7 @@ def _real_visit(client, image_path: Path, patient_id: str) -> dict:
         retrieve_response = client.post(
             "/retrieve",
             files={"file": (image_path.name, f, "image/png")},
-            data={"top_k": "5", "min_similarity": "0.0", "patient_id": patient_id},
+            data={"top_k": "5", "min_similarity": "0.0", "declared_projection": "PA", "patient_id": patient_id},
         )
     assert retrieve_response.status_code == 200, f"failed real /retrieve: {retrieve_response.text}"
     session_id = retrieve_response.json()["session_id"]

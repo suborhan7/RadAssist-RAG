@@ -102,6 +102,12 @@ def generate_report(
         llm_orchestrator=request.app.state.llm_orchestrator,
         response_validator=request.app.state.response_validator,
         report_formatter=request.app.state.report_formatter,
+        # Input Admission and Modality Gate §7: the SAME ModalityGateService
+        # singleton POST /retrieve gated the upload with, so the retrieval
+        # floor that decided this report's support category is the identical
+        # instance-held value that decided the category returned at
+        # retrieval time.
+        modality_gate_service=request.app.state.modality_gate_service,
     )
 
     try:

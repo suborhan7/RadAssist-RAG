@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { CHROMELESS_ROUTES } from "@/lib/chromeless-routes";
 import { AppRail } from "./app-rail";
 
 /**
@@ -9,8 +10,10 @@ import { AppRail } from "./app-rail";
  * AppNavbar carried). Every other route sits inside the rail + scrolling main
  * layout. When AppRail returns null (no authenticated doctor), main simply
  * fills the width and the page handles its own redirect, exactly as before.
+ *
+ * The route set lives in lib/chromeless-routes.ts because DoctorProvider needs
+ * it too and importing this module would close a cycle through AppRail.
  */
-const CHROMELESS_ROUTES = new Set(["/", "/login", "/register"]);
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 import { BUTTON_BASE, SIZE, VARIANT } from "@/components/ui/button";
 import { DiffMarkup } from "@/components/report/report-diff-view";
+import { useT } from "@/lib/i18n";
 import type { SectionDiff } from "@/lib/report-diff";
 
 /**
@@ -75,6 +76,7 @@ export function EditableReportSection({
   onAcceptRegeneration?: () => void;
   onDiscardRegeneration?: () => void;
 }) {
+  const { t } = useT();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -126,13 +128,13 @@ export function EditableReportSection({
         {isEdited && (
           <span
             className="inline-block h-5 w-5 rounded-full bg-cyan"
-            title="Edited by doctor"
-            aria-label="Edited"
+            title={t("report.editedByDoctor")}
+            aria-label={t("report.editedAria")}
           />
         )}
-        {isEdited && <span className="font-mono text-eyebrow uppercase text-cyan">Edited</span>}
-        {saving && <span className="ml-auto text-caption text-text-tertiary">Saving…</span>}
-        {regenerating && <span className="ml-auto text-caption text-text-tertiary">Regenerating…</span>}
+        {isEdited && <span className="font-mono text-eyebrow uppercase text-cyan">{t("report.edited")}</span>}
+        {saving && <span className="ml-auto text-caption text-text-tertiary">{t("report.saving")}</span>}
+        {regenerating && <span className="ml-auto text-caption text-text-tertiary">{t("report.regenerating")}</span>}
         {canEdit && !editing && !saving && !regenerating && !regenerationPreview && (
           <div className="ml-auto flex items-center gap-14 opacity-0 transition-opacity duration-hover group-hover:opacity-100 group-focus-within:opacity-100">
             {canRegenerate && onRegenerate && (
@@ -141,7 +143,7 @@ export function EditableReportSection({
                 onClick={onRegenerate}
                 className="font-mono text-eyebrow uppercase tracking-[0.14em] text-text-tertiary transition-colors duration-hover hover:text-cyan"
               >
-                Regenerate
+                {t("report.regenerate")}
               </button>
             )}
             <button
@@ -149,7 +151,7 @@ export function EditableReportSection({
               onClick={startEditing}
               className="text-caption text-text-tertiary transition-colors duration-hover hover:text-cyan"
             >
-              Edit
+              {t("report.edit")}
             </button>
           </div>
         )}
@@ -177,7 +179,7 @@ export function EditableReportSection({
           )}
         />
       ) : (
-        <p className="mt-8 whitespace-pre-wrap text-findings text-text-secondary">{value || "(none)"}</p>
+        <p className="mt-8 whitespace-pre-wrap text-findings text-text-secondary">{value || t("compare.none")}</p>
       )}
 
       {regenerationError && (
@@ -188,11 +190,10 @@ export function EditableReportSection({
 
       {regenerationPreview && (
         <div className="mt-14 rounded-panel border border-cyan-line bg-cyan-wash p-14">
-          <h4 className="font-mono text-eyebrow uppercase text-cyan">Regenerated candidate, not applied</h4>
+          <h4 className="font-mono text-eyebrow uppercase text-cyan">{t("report.candidateNotApplied")}</h4>
           {regenerationContextIncomplete && (
             <p className="mt-8 rounded-field border border-amber-line bg-amber-wash px-14 py-12 text-sm text-amber">
-              This report predates full context capture. This candidate was generated from retrieved
-              evidence only, so it may not reflect the original questionnaire context.
+              {t("report.contextIncomplete")}
             </p>
           )}
           <div className="mt-8">
@@ -204,16 +205,16 @@ export function EditableReportSection({
               onClick={onAcceptRegeneration}
               className={cn(BUTTON_BASE, VARIANT.primary, SIZE.sm)}
             >
-              Accept
+              {t("report.accept")}
             </button>
             <button
               type="button"
               onClick={onDiscardRegeneration}
               className={cn(BUTTON_BASE, VARIANT.secondary, SIZE.sm)}
             >
-              Discard
+              {t("report.discard")}
             </button>
-            <span className="ml-auto text-caption text-text-tertiary">Discarding fires no request.</span>
+            <span className="ml-auto text-caption text-text-tertiary">{t("report.discardNote")}</span>
           </div>
         </div>
       )}

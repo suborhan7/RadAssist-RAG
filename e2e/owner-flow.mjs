@@ -100,15 +100,40 @@ export async function runOwnerFlow(cfg) {
   await send("Emulation.setDeviceMetricsOverride", { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false });
   await send("Network.setCookie", { name: "radassist_token", value: jwt, domain: "localhost", path: "/", httpOnly: true, secure: false, sameSite: "Lax" });
 
+  // Optional hook for callers that need to change something about the doctor
+  // BEFORE the upload screen renders (qa-fixes.mjs sets default_top_k here, so
+  // the screen has to read the preference rather than a literal).
+  if (typeof cfg.beforeUpload === "function") await cfg.beforeUpload({ jwt, doctorId: createdIds.doctorId });
+
   // --- 2. Upload page + real file input --------------------------------------
   await navigate(`${frontendBase}/patients/${patientId}/upload`);
   await sleep(1200); await shot("01-upload");
+  // The header's k readout, captured from the DOM. It used to be the literal
+  // string "K=5" sitting beside a literal `topK: 5`; both now read one value,
+  // and this is how a caller proves the label agrees with the request.
+  mark("k_label", await evalJs(`(document.querySelector('header')?.innerText || '').replace(/\\s+/g,' ').trim()`));
   const { root } = await send("DOM.getDocument", { depth: -1 });
   const { nodeId } = await send("DOM.querySelector", { nodeId: root.nodeId, selector: "input[type=file]" });
   await send("DOM.setFileInputFiles", { nodeId, files: [imagePath] });
   await sleep(1500); await shot("02-file-selected");
-  // Once a file is chosen the upload page swaps the <input> for the film preview,
-  // so assert the file was *accepted* (Start enabled), not that the input remains.
+
+  // --- 2b. Declare the projection (requirement A14) --------------------------
+  // Added when input_admission_projection_gate_architecture_v1.1 landed.
+  // A14 makes the declared projection mandatory and A15 forbids a default,
+  // so "Start examination" now stays disabled until a view is chosen. A file
+  // alone is no longer enough, and without this step the harness clicked a
+  // disabled button and the flow stalled with no error.
+  //
+  // Scoped to `button[aria-pressed]`, the projection group's own hook, rather
+  // than matching the visible text "PA" across the whole document -- a
+  // two-letter label is too easy to collide with.
+  const projection = await evalJs(`(()=>{const b=[...document.querySelectorAll('button[aria-pressed]')].find(x=>x.textContent.trim()==='PA');if(!b)return null;b.click();return b.textContent.trim();})()`);
+  mark("projection_declared", projection === "PA" ? "PASS" : "FAIL");
+  await sleep(400); await shot("02b-projection-declared");
+
+  // Once a file is chosen AND a projection is declared, the upload page swaps
+  // the <input> for the film preview, so assert the file was *accepted*
+  // (Start enabled), not that the input remains.
   mark("file_accepted", (await evalJs(`(()=>{const b=[...document.querySelectorAll('button')].find(x=>x.textContent.includes('Start examination'));return b?!b.disabled:false;})()`)) ? "PASS" : "WARN");
 
   // --- 3. Run pipeline; wait for the questionnaire Skip button ----------------
@@ -154,5 +179,8 @@ export async function runOwnerFlow(cfg) {
   mark("compare", (await evalJs(`/RESOLVED|PERSISTENT|Narrative/.test(document.body.innerText)`)) ? "PASS" : "check");
 
   ws.close();
-  return { createdIds, results, issues };
+  // jwt is returned so a caller can keep acting as this doctor after the flow
+  // (qa-fixes.mjs checks DOB bounds and DELETE with it) without registering a
+  // second account whose rows would then need their own cleanup.
+  return { createdIds, results, issues, jwt };
 }

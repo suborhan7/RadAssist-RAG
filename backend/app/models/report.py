@@ -83,4 +83,49 @@ class ReportRecord(Base):
     questionnaire_answers: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     clinical_notes: Mapped[str | None] = mapped_column(String, nullable=True)
 
+    # Input Admission and Modality Gate §7.3 (S5): the retrieval support
+    # category and the top-1 similarity it was derived from, both stored
+    # WITH the report and both written at generation time.
+    #
+    # S5's Note gives the reason, and it is the same reason decision D4
+    # gives for storing voted_labels/agreement at generation time: the
+    # evidence state must not change after the report exists. A category
+    # recomputed at read time would drift the moment the ChromaDB
+    # collection is rebuilt or RETRIEVAL_FLOOR is recalibrated, and a
+    # finalized report would then start describing its own evidence
+    # differently than it did when the radiologist signed it.
+    #
+    # top1_similarity is stored alongside the category, not just the
+    # category, so a stored report can still say WHAT was measured and not
+    # only which side of the floor it fell on -- §7.2's Rule requires the
+    # disclaimer to state the measurement, and re-deriving it later from
+    # retrieved_evidence would reintroduce exactly the drift above.
+    #
+    # Both nullable: every report generated before this migration has no
+    # recorded support state, and NULL says that honestly. It does not mean
+    # BELOW_FLOOR, and no read path may treat it as a category.
+    retrieval_support: Mapped[str | None] = mapped_column(String, nullable=True)
+    top1_similarity: Mapped[float | None] = mapped_column(Float, nullable=True)
+
+    # Requirement S7 / decision D4 (migration c3d81b6a4f27): the other two
+    # fields of the evidence snapshot. Stored at generation time for the
+    # same reason as the two above -- the evidence state must not change
+    # after the report exists.
+    #
+    # Together with retrieval_support/top1_similarity these four columns
+    # are what makes a finalized report reconstructable. §7.3's Warning
+    # describes the half-written state this completes: with only one of
+    # the disclaimer's two signals stored, the report appeared
+    # reproducible and was not.
+    #
+    # `agreement` is stored beside `voted_labels` rather than left to be
+    # dug out of voted_labels[0] at read time -- see the migration's
+    # docstring; the frontend's known re-derivation defect is what that
+    # costs.
+    #
+    # Both nullable: NULL means "this report predates the snapshot", never
+    # "no labels were voted".
+    voted_labels: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    agreement: Mapped[float | None] = mapped_column(Float, nullable=True)
+
     session: Mapped["RetrievalSession"] = relationship()

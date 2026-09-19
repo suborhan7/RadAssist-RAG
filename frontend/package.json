@@ -9,6 +9,7 @@
     "lint": "eslint",
     "generate-types": "openapi-typescript http://127.0.0.1:8000/openapi.json -o src/lib/generated/api.d.ts",
     "check:design": "node scripts/check-design-tokens.mjs",
+    "check:i18n": "node scripts/check-i18n.mjs",
     "test": "vitest run"
   },
   "dependencies": {

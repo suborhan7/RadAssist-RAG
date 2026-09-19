@@ -15,7 +15,48 @@ after an untyped-dict gap like Phase 4 Step 12 had to fix.
 """
 from __future__ import annotations
 
-from pydantic import BaseModel
+from datetime import date
+from typing import Literal
+
+from pydantic import BaseModel, Field
+
+# Retrieval-k bounds, mirroring frontend/src/lib/doctor-defaults.ts. The
+# collection is the IU/Indiana train split and the evidence panel is laid out
+# for a handful of cases; a k outside this range is a data-entry mistake.
+MIN_TOP_K = 1
+MAX_TOP_K = 10
+
+# Date-of-birth bounds. 1900 is comfortably before any living patient's birth
+# year, and a DOB in the future is not a date of birth. Without these,
+# `<input type="date">` happily accepts a six-digit year (Chrome allows up to
+# 275760) and PatientService's date.fromisoformat() raises on it -- a reported
+# QA finding that surfaced as an unhandled 500 rather than a field error.
+MIN_DATE_OF_BIRTH = date(1900, 1, 1)
+
+
+def validate_date_of_birth(value: str) -> str:
+    """Parse-and-bound a YYYY-MM-DD date of birth, or raise ValueError.
+
+    Shared by every endpoint that accepts a DOB (patient creation and
+    name+DOB search), because both hand the string to
+    date.fromisoformat() deeper in PatientService and both would
+    otherwise raise there, unhandled, as a 500. Validating at the edge
+    turns the same bad input into a 4xx that names the field -- and
+    keeps a single definition of what a plausible DOB is, rather than
+    one rule at the form and a different one (or none) at the API.
+    """
+    try:
+        parsed = date.fromisoformat(value)
+    except ValueError as exc:
+        # date.fromisoformat is itself the 4-digit-year check: "20k-10-02"
+        # and "200000-10-02" both land here.
+        raise ValueError("date_of_birth must be a real date in YYYY-MM-DD form.") from exc
+
+    if parsed < MIN_DATE_OF_BIRTH:
+        raise ValueError(f"date_of_birth must not be earlier than {MIN_DATE_OF_BIRTH.isoformat()}.")
+    if parsed > date.today():
+        raise ValueError("date_of_birth must not be in the future.")
+    return value
 
 
 class ServiceStatusResponse(BaseModel):
@@ -61,6 +102,21 @@ class RetrieveResponse(BaseModel):
     collection_name: str
     retrieved_cases: list[RetrievedCaseResponse]
     voted_labels: list[VotedLabelResponse]
+    # Input Admission and Modality Gate, §7.4 S8: the backend calculates
+    # the retrieval support category and the frontend SHOWS it. S9 forbids
+    # the frontend from deriving it from retrieved_cases[0].similarity
+    # itself, which is why the category ships as its own value rather than
+    # being left implicit in data the client already has.
+    #
+    # `retrieval_support` is RetrievalSupport's string value
+    # ("at_or_above_floor" / "below_floor"). `top1_similarity` is nullable
+    # for a retrieval that returned no case at all -- null means the
+    # measurement was never taken, which is not the same as 0.0.
+    # `modality_score` is the M4 score of the image that passed the gate;
+    # an image that failed never reaches this response at all (DR-1).
+    modality_score: float | None = None
+    retrieval_support: str | None = None
+    top1_similarity: float | None = None
 
 
 class ReportContentResponse(BaseModel):
@@ -202,6 +258,20 @@ class ReportDetailResponse(BaseModel):
     finalized_at: str | None = None
     finalized_by: str | None = None
     audit_log: list[ReportAuditLogEntryResponse] = []
+    # Input Admission and Modality Gate §7.4 (S8/S9): served straight from
+    # the stored reports.retrieval_support / reports.top1_similarity
+    # columns S5 wrote at generation time -- NOT recomputed here from
+    # retrieved_cases. S9 forbids the frontend from deriving the category
+    # from raw similarity scores, and a backend that recomputed it on
+    # every read would have the same defect one layer down: the value a
+    # radiologist sees could drift away from the value stored with the
+    # report the moment the collection or the floor changed.
+    #
+    # Both nullable: a report generated before this column existed has no
+    # recorded support state, and null says so. The frontend must render
+    # that as "not recorded", never as below_floor.
+    retrieval_support: str | None = None
+    top1_similarity: float | None = None
 
 
 class ReportListItemResponse(BaseModel):
@@ -271,12 +341,23 @@ class UpdateProfileRequest(BaseModel):
     """Phase 16: PATCH /auth/me. Every field optional -- a partial update,
     not a full replace; omitted fields are left untouched. email is
     deliberately not here -- no re-verification workflow exists for
-    changing it."""
+    changing it.
+
+    QA fix: default_top_k is now bounded. It was previously an unconstrained
+    int, and since nothing read it back the absence of validation was
+    invisible; now that the upload flow honours it, an out-of-range k would
+    reach a real ChromaDB query. The client clamps to the same MIN/MAX
+    (frontend/src/lib/doctor-defaults.ts), but a client-side bound is a
+    convenience, not a guarantee -- this is the one that holds.
+    default_language is likewise restricted to the two languages the
+    dictionaries actually define; anything else would silently fall back to
+    English at render time with no error, the same quiet failure the i18n
+    parity gate exists to prevent."""
 
     full_name: str | None = None
     bmdc_number: str | None = None
-    default_top_k: int | None = None
-    default_language: str | None = None
+    default_top_k: int | None = Field(default=None, ge=MIN_TOP_K, le=MAX_TOP_K)
+    default_language: Literal["en", "bn"] | None = None
     default_questionnaire_skip: bool | None = None
     default_rail_state: str | None = None
     default_export_format: str | None = None

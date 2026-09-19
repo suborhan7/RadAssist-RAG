@@ -56,7 +56,7 @@ derive from the single EditableReportField enum (app/domain/entities.py).
 """
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -156,6 +156,9 @@ def _build_response(detail: ReportDetail) -> ReportDetailResponse:
         ],
         finalized_at=detail.finalized_at,
         finalized_by=detail.finalized_by,
+        # §7.4 S8: the backend calculates the category, the frontend shows it.
+        retrieval_support=detail.retrieval_support,
+        top1_similarity=detail.top1_similarity,
         audit_log=[
             ReportAuditLogEntryResponse(
                 id=entry.id, doctor_id=entry.doctor_id, action=entry.action, at=entry.at
@@ -263,6 +266,37 @@ def update_report(
     )
     detail = detail_service.get_report_detail(report_id)
     return _build_response(detail)
+
+
+@router.delete("/reports/{report_id}", status_code=204)
+def delete_report(
+    report_id: str,
+    db: Session = Depends(get_db),
+    current_doctor: Doctor = Depends(get_current_doctor),
+) -> Response:
+    """Discard an unfinalized draft. Owner only; finalized reports refuse.
+
+    The first DELETE route in this API, added for the reported "no way to
+    remove a queue entry" -- a draft the doctor abandons had no exit and sat
+    in the reading queue forever. Exception mapping is identical to the two
+    PATCH routes above (404 / 403 / 409) because it is the identical guard:
+    ReportEditService.delete() calls the same _check_ownership, so a
+    non-owner is refused here exactly as they are refused an edit, and a
+    finalized report is protected exactly as it is against editing.
+
+    204 with no body: there is no report left to serialize.
+    """
+    edit_service = ReportEditService(db=db)
+    try:
+        edit_service.delete(report_id, current_doctor.id)
+    except ReportNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ForbiddenError as exc:
+        raise HTTPException(status_code=403, detail=str(exc)) from exc
+    except ReportAlreadyFinalizedError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+    return Response(status_code=204)
 
 
 @router.patch("/reports/{report_id}/finalize", response_model=ReportDetailResponse)

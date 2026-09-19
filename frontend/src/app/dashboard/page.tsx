@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import {
   ApiError,
+  deleteReport,
   getCurrentDoctor,
   getDashboardStats,
   listReports,
@@ -11,8 +12,10 @@ import {
 import { ScreenHeader } from "@/components/layout/screen-header";
 import { BUTTON_BASE, SIZE, VARIANT } from "@/components/ui/button";
 import { StatusChip } from "@/components/ui/chip";
+import { DiscardIcon } from "@/components/layout/rail-icons";
 import { toChipReportStatus } from "@/lib/report-status";
 import { computeReportDiff, editableRecordFrom } from "@/lib/report-diff";
+import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/cn";
 import type { paths } from "@/lib/generated/api";
 
@@ -20,6 +23,9 @@ type DashboardStatsResponse =
   paths["/dashboard/stats"]["get"]["responses"][200]["content"]["application/json"];
 type ReportListItemResponse =
   paths["/reports"]["get"]["responses"][200]["content"]["application/json"][number];
+
+/** The clock never changes after mount, so the store never notifies. */
+const subscribeNever = () => () => {};
 
 const RECENT_ACTIVITY_LIMIT = 8;
 const LATE_AFTER_DAYS = 1;
@@ -38,17 +44,28 @@ const LATE_AFTER_DAYS = 1;
  * per the mock, which shows no status here).
  */
 export default function DashboardPage() {
-  const [now, setNow] = useState<Date | null>(null);
+  const { t } = useT();
+  // The header clock is client-only: rendering a time on the server and a
+  // different one on the client is a hydration mismatch. This was previously a
+  // setNow(new Date()) inside the mount effect, which is the pattern
+  // react-hooks/set-state-in-effect rejects (it was failing lint at HEAD).
+  // useSyncExternalStore's server snapshot is the supported way to say "this
+  // value does not exist until hydration" without a render-triggering write.
+  const mounted = useSyncExternalStore(subscribeNever, () => true, () => false);
+  const now = mounted ? new Date() : null;
   const [doctorName, setDoctorName] = useState<string | null>(null);
   const [stats, setStats] = useState<DashboardStatsResponse | null>(null);
   const [statsError, setStatsError] = useState<string | null>(null);
   const [recentReports, setRecentReports] = useState<ReportListItemResponse[] | null>(null);
   const [recentError, setRecentError] = useState<string | null>(null);
+  // Separate from recentError on purpose: recentError REPLACES the table (the
+  // list could not be loaded, so there is nothing to show). A failed discard
+  // must not do that -- the queue is still there and still readable, and
+  // hiding eight rows because one delete was refused would be a worse outcome
+  // than the failure itself.
+  const [discardError, setDiscardError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Set on the client to avoid an SSR/CSR clock mismatch.
-    setNow(new Date());
-
     getCurrentDoctor()
       .then((doctor) => setDoctorName(doctor?.full_name ?? null))
       .catch(() => setDoctorName(null));
@@ -56,14 +73,15 @@ export default function DashboardPage() {
     getDashboardStats()
       .then(setStats)
       .catch((err) => {
-        setStatsError(err instanceof ApiError ? err.message : "Failed to load dashboard stats.");
+        setStatsError(err instanceof ApiError ? err.message : t("dashboard.errStats"));
       });
 
     listReports(RECENT_ACTIVITY_LIMIT)
       .then(setRecentReports)
       .catch((err) => {
-        setRecentError(err instanceof ApiError ? err.message : "Failed to load recent activity.");
+        setRecentError(err instanceof ApiError ? err.message : t("dashboard.errRecent"));
       });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const awaiting = stats?.awaiting_review ?? 0;
@@ -82,15 +100,15 @@ export default function DashboardPage() {
   return (
     <>
       <ScreenHeader
-        title="Reading queue"
+        title={t("dashboard.title")}
         meta={now ? formatClock(now) : ""}
         actions={
           <div className="flex items-center gap-12">
             <Link href="/patients/search" className={cn(BUTTON_BASE, VARIANT.secondary, SIZE.md)}>
-              Find patient
+              {t("nav.find")}
             </Link>
             <Link href="/patients/new" className={cn(BUTTON_BASE, VARIANT.primary, SIZE.md)}>
-              New examination
+              {t("nav.newExam")}
             </Link>
           </div>
         }
@@ -103,15 +121,15 @@ export default function DashboardPage() {
             <div className="min-w-0 flex-1">
               {stats === null ? (
                 <h1 className="text-page-title text-text-tertiary">
-                  {statsError ? "Your reading queue" : "Loading your queue…"}
+                  {statsError ? t("dashboard.queueFallback") : t("dashboard.queueLoading")}
                 </h1>
               ) : (
                 <h1 className="text-page-title text-text-primary">
                   {hasAwaiting
-                    ? `${awaiting} ${awaiting === 1 ? "report is" : "reports are"} waiting on you.`
+                    ? t("dashboard.awaiting", { count: awaiting })
                     : firstName
-                      ? `Your queue is clear, ${firstName}.`
-                      : "Your queue is clear."}
+                      ? t("dashboard.clearNamed", { name: firstName })
+                      : t("dashboard.clear")}
                 </h1>
               )}
 
@@ -121,12 +139,12 @@ export default function DashboardPage() {
                     href={`/reports/${stats.oldest_awaiting_review_report_id}`}
                     className={cn(BUTTON_BASE, VARIANT.primary, SIZE.md)}
                   >
-                    Open the oldest
+                    {t("dashboard.openOldest")}
                   </Link>
                   {oldestAge !== null && (
                     <span className="text-sm text-amber">
                       {oldestName ? `${oldestName} · ` : ""}
-                      waiting {oldestAge} {oldestAge === 1 ? "day" : "days"}
+                      {t("dashboard.waitingDays", { count: oldestAge })}
                     </span>
                   )}
                 </div>
@@ -134,9 +152,9 @@ export default function DashboardPage() {
             </div>
 
             <div className="flex flex-none gap-34">
-              <Metric value={stats?.examinations_today} label="examinations today" />
-              <Metric value={stats?.my_reports} label="reports by you" />
-              <Metric value={stats?.my_patients} label="patients reported" />
+              <Metric value={stats?.examinations_today} label={t("dashboard.examToday")} />
+              <Metric value={stats?.my_reports} label={t("dashboard.reportsByYou")} />
+              <Metric value={stats?.my_patients} label={t("dashboard.patientsReported")} />
             </div>
           </div>
 
@@ -146,25 +164,31 @@ export default function DashboardPage() {
             </p>
           )}
 
+          {discardError && (
+            <p className="mb-16 rounded-field border border-amber-line bg-amber-wash px-14 py-12 text-sm text-amber">
+              {discardError}
+            </p>
+          )}
+
           {/* Queue table: PATIENT / WAITING / STATUS / EDITED / action.
               Fixed-width columns scroll horizontally on narrow viewports. */}
           <div className="overflow-x-auto">
-            <div className="min-w-[720px] border-t border-hairline">
-              <div className="grid grid-cols-[minmax(0,1.6fr)_130px_150px_100px_110px] gap-14 border-b border-hairline px-4 py-12 font-mono text-eyebrow uppercase text-text-tertiary">
-                <span>Patient</span>
-                <span>Waiting</span>
-                <span>Status</span>
-                <span>Edited</span>
+            <div className="min-w-[790px] border-t border-hairline">
+              <div className="grid grid-cols-[minmax(0,1.6fr)_120px_140px_90px_190px] gap-14 border-b border-hairline px-4 py-12 font-mono text-eyebrow uppercase text-text-tertiary">
+                <span>{t("dashboard.colPatient")}</span>
+                <span>{t("dashboard.colWaiting")}</span>
+                <span>{t("dashboard.colStatus")}</span>
+                <span>{t("dashboard.colEdited")}</span>
                 <span />
               </div>
 
               {recentError ? (
                 <p className="px-4 py-16 text-sm text-amber">{recentError}</p>
               ) : recentReports === null ? (
-                <p className="px-4 py-16 text-sm text-text-tertiary">Loading queue…</p>
+                <p className="px-4 py-16 text-sm text-text-tertiary">{t("dashboard.loadingQueue")}</p>
               ) : recentReports.length === 0 ? (
                 <p className="px-4 py-16 text-sm text-text-secondary">
-                  No reports yet. Start a new examination to build the queue.
+                  {t("dashboard.emptyQueue")}
                 </p>
               ) : (
                 recentReports.map((item) => {
@@ -176,15 +200,23 @@ export default function DashboardPage() {
                   ).editPercentage;
 
                   return (
-                    <Link
+                    // The row was a single <Link> wrapping every cell. Delete
+                    // needs its own control, and an interactive element cannot
+                    // nest inside an anchor, so the row is now a grid whose
+                    // first cell carries a stretched link (::after covering the
+                    // row) and whose delete button sits above it on z-10. The
+                    // whole row still opens the report on click.
+                    <div
                       key={item.report_id}
-                      href={`/reports/${item.report_id}`}
-                      className="group grid grid-cols-[minmax(0,1.6fr)_130px_150px_100px_110px] items-center gap-14 border-b border-hairline px-4 py-14 transition-colors duration-hover last:border-0 hover:bg-bg-hover"
+                      className="group relative grid grid-cols-[minmax(0,1.6fr)_120px_140px_90px_190px] items-center gap-14 border-b border-hairline px-4 py-14 transition-colors duration-hover last:border-0 hover:bg-bg-hover"
                     >
                       <div className="min-w-0">
-                        <div className="truncate text-base font-medium text-text-primary">
-                          {item.patient_name ?? "No patient linked"}
-                        </div>
+                        <Link
+                          href={`/reports/${item.report_id}`}
+                          className="truncate text-base font-medium text-text-primary after:absolute after:inset-0 after:content-['']"
+                        >
+                          {item.patient_name ?? t("dashboard.noPatientLinked")}
+                        </Link>
                         {item.patient_code && (
                           <div className="mt-2 truncate font-mono text-mono-meta text-text-tertiary">
                             {item.patient_code}
@@ -192,7 +224,7 @@ export default function DashboardPage() {
                         )}
                       </div>
                       <div className={cn("text-sm", late ? "text-amber" : "text-text-secondary")}>
-                        {relTime(item.created_at)}
+                        {relTime(item.created_at, t)}
                       </div>
                       <div>
                         <StatusChip status={chipStatus} />
@@ -200,12 +232,35 @@ export default function DashboardPage() {
                       <div className="font-mono text-sm text-text-secondary">
                         {editPercentage.toFixed(1)}%
                       </div>
-                      <div className="text-right">
+                      <div className="flex items-center justify-end gap-12">
                         <span className="text-sm text-cyan transition-colors duration-hover group-hover:text-text-primary">
-                          {rowAction(chipStatus)}
+                          {rowAction(chipStatus, t)}
                         </span>
+                        {/* Finalized reports are signed records and the server
+                            refuses to delete them (409), so the control is not
+                            offered for one -- a button whose only outcome is a
+                            rejection is worse than its absence. */}
+                        {chipStatus !== "final" && (
+                          <DeleteRowButton
+                            reportId={item.report_id}
+                            patientLabel={item.patient_name ?? item.patient_code ?? ""}
+                            onDeleted={() => {
+                              setRecentReports((prev) =>
+                                (prev ?? []).filter((r) => r.report_id !== item.report_id),
+                              );
+                              setDiscardError(null);
+                              // The metric tiles above are derived from the same
+                              // reports this row was one of. Dropping the row
+                              // without re-reading them would leave the count
+                              // disagreeing with the list -- the exact defect
+                              // this queue was reported for.
+                              getDashboardStats().then(setStats).catch(() => {});
+                            }}
+                            onError={setDiscardError}
+                          />
+                        )}
                       </div>
-                    </Link>
+                    </div>
                   );
                 })
               )}
@@ -216,17 +271,94 @@ export default function DashboardPage() {
               back until the counts exist -- a half-empty sentence is noise. */}
           {stats && (
             <p className="mt-30 max-w-[56ch] text-sm leading-relaxed text-text-secondary">
-              You have reported on{" "}
-              <span className="text-text-primary">{stats.my_patients}</span>{" "}
-              of the hospital&rsquo;s{" "}
-              <span className="text-text-primary">{stats.total_patients}</span>{" "}
-              registered patients. You can open any colleague&rsquo;s patient; you cannot open their
-              unsigned drafts.
+              {t("dashboard.ownership", { reported: stats.my_patients, total: stats.total_patients })}
             </p>
           )}
         </div>
       </div>
     </>
+  );
+}
+
+/**
+ * Per-row discard. Two-step by design: the first press arms it, the second
+ * confirms, and it disarms on blur or after a few seconds. A destructive
+ * action reachable in one click, inside a row whose entire surface is already
+ * a link to somewhere else, is a misclick waiting to happen -- and there is no
+ * undo behind this, the report and its audit rows are gone.
+ */
+function DeleteRowButton({
+  reportId,
+  patientLabel,
+  onDeleted,
+  onError,
+}: {
+  reportId: string;
+  patientLabel: string;
+  onDeleted: () => void;
+  onError: (message: string) => void;
+}) {
+  const { t } = useT();
+  const [armed, setArmed] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    if (!armed) return;
+    const timer = setTimeout(() => setArmed(false), 4000);
+    return () => clearTimeout(timer);
+  }, [armed]);
+
+  async function handleClick(event: React.MouseEvent) {
+    // The row's stretched link would otherwise navigate on the same click.
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (!armed) {
+      setArmed(true);
+      return;
+    }
+
+    setDeleting(true);
+    try {
+      await deleteReport(reportId);
+      onDeleted();
+    } catch (err) {
+      onError(err instanceof ApiError ? err.message : t("dashboard.errDelete"));
+      setArmed(false);
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      onBlur={() => setArmed(false)}
+      disabled={deleting}
+      // The visible label is short enough for the column; the accessible name
+      // says which row it belongs to, since "Discard" alone is ambiguous when
+      // a screen reader reaches four of them in a row.
+      aria-label={t("dashboard.deleteAria", { patient: patientLabel })}
+      className={cn(
+        // transition-colors alone was a bug: the hover reveal below animates
+        // OPACITY, which transition-colors does not cover, so the control
+        // snapped in instead of fading. Name the properties being animated.
+        "relative z-10 flex items-center gap-6 rounded-chip px-8 py-4 text-sm",
+        "transition-[opacity,color] duration-hover active:scale-[0.98]",
+        armed
+          ? "bg-amber-wash text-amber"
+          : // Revealed on row hover so the queue stays calm, but ONLY where
+            // hovering exists. On a touch screen there is no hover state, so an
+            // opacity-0 default would make discard permanently unreachable --
+            // the control would simply not be in the product on those devices.
+            "text-text-muted hover:text-amber focus-visible:opacity-100 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100",
+        deleting && "opacity-50",
+      )}
+    >
+      <DiscardIcon className="flex-none" />
+      <span>{t(armed ? "dashboard.deleteConfirm" : "dashboard.delete")}</span>
+    </button>
   );
 }
 
@@ -245,14 +377,17 @@ function Metric({ value, label }: { value: number | undefined; label: string }) 
   );
 }
 
-function rowAction(status: ReturnType<typeof toChipReportStatus>): string {
+function rowAction(
+  status: ReturnType<typeof toChipReportStatus>,
+  t: (key: string, params?: Record<string, unknown>) => string,
+): string {
   switch (status) {
     case "draft":
-      return "Review";
+      return t("dashboard.actionReview");
     case "final":
-      return "Open";
+      return t("dashboard.actionOpen");
     default:
-      return "Resume";
+      return t("dashboard.actionResume");
   }
 }
 
@@ -261,14 +396,14 @@ function daysAgo(dateOnly: string): number {
   return Math.max(0, Math.round((Date.now() - then) / 86_400_000));
 }
 
-/** Compact "waiting" duration: 25 min | 3 hours | 2 days. */
-function relTime(iso: string): string {
+/** Compact "waiting" duration: 25 min | 3 hours | 2 days (units localized). */
+function relTime(iso: string, t: (key: string, params?: Record<string, unknown>) => string): string {
   const mins = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60_000));
-  if (mins < 60) return `${mins} min`;
+  if (mins < 60) return t("dashboard.unitMin", { count: mins });
   const hours = Math.round(mins / 60);
-  if (hours < 24) return `${hours} ${hours === 1 ? "hour" : "hours"}`;
+  if (hours < 24) return t("dashboard.unitHours", { count: hours });
   const days = Math.round(hours / 24);
-  return `${days} ${days === 1 ? "day" : "days"}`;
+  return t("dashboard.unitDays", { count: days });
 }
 
 /** THU 31 JUL 2026 · 09:14 -- mono metadata in the screen header. */

@@ -80,7 +80,7 @@ def real_report_id(client) -> str:
         retrieve_response = client.post(
             "/retrieve",
             files={"file": (sample.name, f, "image/png")},
-            data={"top_k": "5", "min_similarity": "0.0"},
+            data={"top_k": "5", "min_similarity": "0.0", "declared_projection": "PA"},
         )
     assert retrieve_response.status_code == 200, f"failed to create a real retrieval session: {retrieve_response.text}"
     session_id = retrieve_response.json()["session_id"]

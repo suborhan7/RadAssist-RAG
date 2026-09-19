@@ -6,6 +6,8 @@ import { useEffect, useState } from "react";
 import { ApiError, createComparison, getCurrentDoctor, getReport, retrievalSessionImageUrl } from "@/lib/api-client";
 import { StepProgress, type WorkflowStepDisplay } from "@/components/workflow/StepProgress";
 import { OwnerChip } from "@/components/ui/owner-chip";
+import { BackLink } from "@/components/layout/screen-header";
+import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/cn";
 import type { paths } from "@/lib/generated/api";
 
@@ -31,6 +33,7 @@ type ComparisonResponse =
  * click away in the workspace.
  */
 export default function ComparePage() {
+  const { t } = useT();
   const params = useParams<{ reportId: string }>();
   const searchParams = useSearchParams();
   const reportId = params.reportId;
@@ -61,14 +64,14 @@ export default function ComparePage() {
       } catch (err) {
         if (!cancelled) {
           setStatus("error");
-          setErrorDetail(err instanceof ApiError ? err.message : "Failed to load current report.");
+          setErrorDetail(err instanceof ApiError ? err.message : t("compare.errCurrent"));
         }
         return;
       }
 
       if (!current.patient_id) {
         setStatus("error");
-        setErrorDetail("This report has no patient linked, so it cannot be compared against patient history.");
+        setErrorDetail(t("compare.errNoPatient"));
         return;
       }
 
@@ -85,7 +88,7 @@ export default function ComparePage() {
       } catch (err) {
         if (!cancelled) {
           setStatus("error");
-          setErrorDetail(err instanceof ApiError ? err.message : "Failed to generate comparison.");
+          setErrorDetail(err instanceof ApiError ? err.message : t("compare.errGenerate"));
         }
         return;
       }
@@ -98,7 +101,7 @@ export default function ComparePage() {
       } catch (err) {
         if (!cancelled) {
           setStatus("error");
-          setErrorDetail(err instanceof ApiError ? err.message : "Failed to load previous report.");
+          setErrorDetail(err instanceof ApiError ? err.message : t("compare.errPrevious"));
         }
       }
     }
@@ -107,35 +110,36 @@ export default function ComparePage() {
     return () => {
       cancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reportId, against]);
 
   const stepDisplay: WorkflowStepDisplay = {
     id: "comparing",
-    label: "Generating comparison",
+    label: t("compare.stepGenerating"),
     status: status === "comparing" || status === "loading" ? "active" : status === "done" ? "done" : "error",
   };
 
   const header = (
     <header className="flex h-header-bar flex-none items-center gap-14 border-b border-hairline px-30">
-      <Link
-        href={`/reports/${reportId}`}
-        className="text-sm text-text-tertiary transition-colors duration-hover hover:text-cyan"
-      >
-        Workspace
-      </Link>
-      <span className="text-text-muted">/</span>
-      <h1 className="text-screen-title text-text-primary">Compare</h1>
+      {/* Back moved from a trailing right-hand link to the leading arrow every
+          screen now carries. One position, one behaviour -- a return control
+          that sits somewhere different on each screen is the reason the
+          workspace's was never found. */}
+      <BackLink href={`/reports/${reportId}`} labelKey="compare.backToWorkspace" />
+      <h1 className="text-screen-title text-text-primary">{t("nav.compare")}</h1>
       {status === "done" && comparison && (
         <span className="whitespace-nowrap font-mono text-mono-meta-lg uppercase text-text-tertiary">
-          {comparison.facts.days_between_studies} days apart
+          {t("compare.daysApart", { count: comparison.facts.days_between_studies })}
         </span>
       )}
       <span className="flex-1" />
+      {/* Same discoverability fix as the workspace: the explainability screen
+          exists, so say so from here. */}
       <Link
-        href={`/reports/${reportId}`}
-        className="text-sm text-cyan transition-colors duration-hover hover:text-text-primary"
+        href={`/reports/${reportId}/explain`}
+        className="text-sm text-text-secondary transition-colors duration-hover hover:text-cyan"
       >
-        Back to workspace
+        {t("workspace.askAbout")}
       </Link>
     </header>
   );
@@ -177,29 +181,29 @@ export default function ComparePage() {
 
       {/* Safety principle (Phase 11): the comparison is a draft for review. */}
       <div className="flex-none border-b border-hairline bg-amber-wash px-30 py-12 text-sm font-medium text-amber">
-        Doctor review required. This AI-generated comparison is a draft, not a final verdict.
+        {t("compare.reviewBanner")}
       </div>
 
       {/* Two studies, side by side */}
       <div className="grid min-h-0 flex-1 grid-cols-1 overflow-auto lg:grid-cols-2">
         <StudyColumn
-          eyebrow={`Prior · ${previousReport.report_date}`}
+          eyebrow={t("compare.priorEyebrow", { date: previousReport.report_date })}
           eyebrowClass="text-text-tertiary"
           ownerId={previousReport.doctor_id ?? null}
           currentDoctorId={currentDoctorId}
           imageUrl={retrievalSessionImageUrl(previousReport.session_id)}
-          imageAlt="Prior chest X-ray"
+          imageAlt={t("compare.altPrior")}
           impression={previousReport.content.impression}
           impressionClass="text-text-secondary"
           className="border-b border-hairline lg:border-b-0 lg:border-r"
         />
         <StudyColumn
-          eyebrow={`This study · ${currentReport.report_date}`}
+          eyebrow={t("compare.thisStudyEyebrow", { date: currentReport.report_date })}
           eyebrowClass="text-cyan"
           ownerId={currentReport.doctor_id ?? null}
           currentDoctorId={currentDoctorId}
           imageUrl={retrievalSessionImageUrl(currentReport.session_id)}
-          imageAlt="Current chest X-ray"
+          imageAlt={t("compare.altCurrent")}
           impression={currentReport.content.impression}
           impressionClass="font-medium text-text-primary"
         />
@@ -207,12 +211,12 @@ export default function ComparePage() {
 
       {/* Provenance split: deterministic findings, then the model's narrative */}
       <div className="flex-none grid grid-cols-1 gap-24 border-t border-hairline px-30 py-22 md:grid-cols-2 lg:grid-cols-[150px_190px_240px_1fr]">
-        <FindingsColumn label="Resolved" items={comparison.facts.resolved_findings} />
-        <FindingsColumn label="Persistent" items={comparison.facts.persistent_findings} />
-        <FindingsColumn label="New" items={comparison.facts.new_findings} accent />
+        <FindingsColumn label={t("compare.resolved")} items={comparison.facts.resolved_findings} />
+        <FindingsColumn label={t("compare.persistent")} items={comparison.facts.persistent_findings} />
+        <FindingsColumn label={t("compare.new")} items={comparison.facts.new_findings} accent />
         <div className="min-w-0">
           <h3 className="mb-8 font-mono text-eyebrow uppercase text-text-tertiary">
-            Narrative · written by the model from the split at left
+            {t("compare.narrativeHeading")}
           </h3>
           <p className="whitespace-pre-wrap text-sm leading-relaxed text-text-secondary">
             {comparison.narrative}
@@ -221,9 +225,7 @@ export default function ComparePage() {
       </div>
 
       <p className="flex-none border-t border-hairline px-30 py-12 text-caption text-text-tertiary">
-        Resolved, persistent and new findings are computed by ComparisonService (deterministic),{" "}
-        {days} days between studies. The narrative is generated by an LLM from that diff only; the
-        diff itself is not decided by the model.
+        {t("compare.provenanceNote", { days })}
       </p>
     </div>
   );
@@ -250,6 +252,7 @@ function StudyColumn({
   impressionClass: string;
   className?: string;
 }) {
+  const { t } = useT();
   return (
     <div className={cn("flex min-h-0 flex-col", className)}>
       <div className="flex flex-none items-center gap-12 border-b border-hairline px-22 py-14">
@@ -257,26 +260,27 @@ function StudyColumn({
         <span className="flex-1" />
         <OwnerChip ownerId={ownerId} currentDoctorId={currentDoctorId} />
       </div>
-      <div className="flex h-[300px] flex-none items-center justify-center bg-bg-film p-16">
+      <div className="flex h-[300px] flex-none items-center justify-center on-film bg-bg-film p-16">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={imageUrl} alt={imageAlt} className="max-h-full max-w-full object-contain" />
       </div>
       <div className="px-22 py-20">
-        <h3 className="mb-8 font-mono text-eyebrow uppercase text-text-tertiary">Impression</h3>
-        <p className={cn("text-findings", impressionClass)}>{impression || "(none)"}</p>
+        <h3 className="mb-8 font-mono text-eyebrow uppercase text-text-tertiary">{t("compare.impression")}</h3>
+        <p className={cn("text-findings", impressionClass)}>{impression || t("compare.none")}</p>
       </div>
     </div>
   );
 }
 
 function FindingsColumn({ label, items, accent = false }: { label: string; items: string[]; accent?: boolean }) {
+  const { t } = useT();
   return (
     <div className="min-w-0">
       <h3 className={cn("mb-8 font-mono text-eyebrow uppercase", accent ? "text-amber" : "text-text-tertiary")}>
         {label}
       </h3>
       {items.length === 0 ? (
-        <p className="text-sm text-text-muted">none</p>
+        <p className="text-sm text-text-muted">{t("compare.noneLower")}</p>
       ) : (
         <ul className="flex flex-col gap-4 text-sm">
           {items.map((item) => (

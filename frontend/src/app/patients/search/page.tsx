@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ApiError, searchPatients } from "@/lib/api-client";
 import { BUTTON_BASE, Button, SIZE, VARIANT } from "@/components/ui/button";
+import { MIN_DATE_OF_BIRTH, todayISO } from "@/lib/date-bounds";
+import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/cn";
 import type { paths } from "@/lib/generated/api";
 
@@ -19,6 +21,7 @@ type SearchState =
 
 export default function SearchPatientsPage() {
   const router = useRouter();
+  const { t } = useT();
   const [mode, setMode] = useState<"code" | "name-dob">("code");
   const [code, setCode] = useState("");
   const [name, setName] = useState("");
@@ -39,7 +42,7 @@ export default function SearchPatientsPage() {
     } catch (err) {
       // A malformed request is a distinct error from a well-formed search
       // finding zero matches -- mirroring the backend's Phase 11 distinction.
-      setState({ kind: "error", message: err instanceof ApiError ? err.message : "Search failed." });
+      setState({ kind: "error", message: err instanceof ApiError ? err.message : t("search.errFailed") });
     } finally {
       setSearching(false);
     }
@@ -52,27 +55,27 @@ export default function SearchPatientsPage() {
           href="/dashboard"
           className="text-sm text-text-tertiary transition-colors duration-hover hover:text-cyan"
         >
-          Queue
+          {t("nav.queue")}
         </Link>
         <span className="text-text-muted">/</span>
-        <h1 className="text-screen-title text-text-primary">Find patient</h1>
+        <h1 className="text-screen-title text-text-primary">{t("nav.find")}</h1>
       </header>
 
       <div className="flex-1 overflow-auto px-30 py-34">
         <div className="mx-auto max-w-[900px]">
           <div className="mb-16 flex gap-8">
             <Button type="button" variant={mode === "code" ? "primary" : "secondary"} size="sm" onClick={() => setMode("code")}>
-              By patient code
+              {t("search.byCode")}
             </Button>
             <Button type="button" variant={mode === "name-dob" ? "primary" : "secondary"} size="sm" onClick={() => setMode("name-dob")}>
-              By name and date of birth
+              {t("search.byNameDob")}
             </Button>
           </div>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-12 sm:flex-row sm:items-end">
             {mode === "code" ? (
               <label className="flex flex-1 flex-col gap-8">
-                <span className="text-sm text-text-secondary">Patient code</span>
+                <span className="text-sm text-text-secondary">{t("search.patientCode")}</span>
                 <input
                   required
                   placeholder="PAT-000001"
@@ -84,7 +87,7 @@ export default function SearchPatientsPage() {
             ) : (
               <>
                 <label className="flex flex-1 flex-col gap-8">
-                  <span className="text-sm text-text-secondary">Name</span>
+                  <span className="text-sm text-text-secondary">{t("search.name")}</span>
                   <input
                     required
                     value={name}
@@ -93,10 +96,12 @@ export default function SearchPatientsPage() {
                   />
                 </label>
                 <label className="flex flex-col gap-8">
-                  <span className="text-sm text-text-secondary">Date of birth</span>
+                  <span className="text-sm text-text-secondary">{t("search.dob")}</span>
                   <input
                     required
                     type="date"
+                    min={MIN_DATE_OF_BIRTH}
+                    max={todayISO()}
                     value={dob}
                     onChange={(e) => setDob(e.target.value)}
                     className="h-46 rounded-field border border-strong bg-bg-raised px-16 font-mono text-text-primary placeholder:text-text-muted"
@@ -105,13 +110,12 @@ export default function SearchPatientsPage() {
               </>
             )}
             <Button type="submit" variant="primary" size="lg" loading={searching}>
-              {searching ? "Searching…" : "Search"}
+              {searching ? t("search.searching") : t("search.search")}
             </Button>
           </form>
 
           <p className="mt-16 max-w-[66ch] text-sm leading-relaxed text-text-secondary">
-            One code, or a name and date of birth. Spelling is never the reason you cannot find a
-            patient.
+            {t("search.helper")}
           </p>
 
           {state.kind === "error" && (
@@ -123,11 +127,10 @@ export default function SearchPatientsPage() {
           {state.kind === "zero-matches" && (
             <div className="mt-24 flex flex-wrap items-center gap-18">
               <p className="max-w-[58ch] flex-1 text-sm leading-relaxed text-text-secondary">
-                A well-formed search that finds nothing is not an error. Register the patient, or add
-                a date of birth to narrow a common name.
+                {t("search.zeroMatches")}
               </p>
               <Link href="/patients/new" className={cn(BUTTON_BASE, VARIANT.primary, SIZE.md)}>
-                Register new patient
+                {t("common.registerNewPatient")}
               </Link>
             </div>
           )}
@@ -135,7 +138,7 @@ export default function SearchPatientsPage() {
           {state.kind === "results" && (
             <div className="mt-24">
               <div className="mb-6 font-mono text-eyebrow uppercase text-text-tertiary">
-                {state.patients.length} {state.patients.length === 1 ? "match" : "matches"}
+                {t("search.matches", { count: state.patients.length })}
               </div>
               <div className="border-t border-hairline">
                 {state.patients.map((patient) => (
@@ -156,7 +159,7 @@ export default function SearchPatientsPage() {
                     <span className="hidden whitespace-nowrap text-sm text-text-secondary sm:inline">
                       {patient.gender}
                     </span>
-                    <span className="whitespace-nowrap text-sm text-cyan">Open</span>
+                    <span className="whitespace-nowrap text-sm text-cyan">{t("common.open")}</span>
                   </button>
                 ))}
               </div>

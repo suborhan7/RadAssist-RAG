@@ -92,7 +92,11 @@ def validate(
         errors.append(f"duplicate uid in embedding cache: {dup_cache[:10]}")
 
     # 4. no missing required fields
-    for field_name in ("masked_image_path", "primary_label", "study_uid"):
+    # `projection` joins this list under section 15: now that the metadata
+    # value is read from the row rather than written as a literal, a
+    # missing value would be stored as the string "nan" and would silently
+    # assert a projection no image has.
+    for field_name in ("masked_image_path", "primary_label", "study_uid", "projection"):
         n_missing = train_df[field_name].isna().sum()
         if n_missing > 0:
             errors.append(f"{n_missing} rows missing required field '{field_name}'")
@@ -139,7 +143,28 @@ def build_metadata_records(train_df: pd.DataFrame, cfg: dict, indexed_at: str) -
             "study_uid": str(row["study_uid"]),
             "patient_uid": str(row.get("patient_uid", "")),
             "image_path": str(row["masked_image_path"]),
-            "projection": "Frontal",
+            # Section 15 of input_admission_projection_gate_architecture_
+            # v1.1_FROZEN.md. This was the literal string "Frontal".
+            #
+            # The literal was CORRECT but only by luck: the filter at
+            # ml/preprocessing/build_study_index.py line 91 admits frontal
+            # rows only, so every row happened to match the constant. If
+            # the archive ever holds another projection, a literal reports
+            # a value that is not true and no test can find it -- the
+            # metadata would assert frontality that the pixels do not have,
+            # which is exactly the claim the section 6.2 mismatch check
+            # relies on.
+            #
+            # The value now comes FROM THE DATA ROW. `projection` is
+            # written by prepare_train_metadata.py, which resolves it from
+            # the indexed image's own filename against the dataset's
+            # projections CSV -- so it describes the image that was
+            # actually embedded, not the filter that selected it.
+            #
+            # Per section 15's Note this does not change the current index
+            # contents: the value written stays "Frontal" for every current
+            # row, because every current row IS frontal.
+            "projection": str(row["projection"]),
             "primary_label": str(row["primary_label"]),
             "label_set": str(row.get("label_set", "")),
             "is_normal": bool(row["primary_label"] == "Normal"),

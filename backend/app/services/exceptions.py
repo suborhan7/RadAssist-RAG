@@ -127,6 +127,144 @@ class ReportAlreadyFinalizedError(Exception):
     requested mutation."""
 
 
+class InputAdmissionError(Exception):
+    """Base for every ImageAdmissionService rejection (input_admission_
+    projection_gate_architecture_v1.1_FROZEN.md §10). Exists so the API
+    layer and the DR-2 audit path can catch "the upload was rejected at
+    admission" once, while still mapping each concrete subclass below to
+    its own distinct HTTP status -- the §10 table gives three different
+    statuses for three different admission failures, so the subclasses
+    are not interchangeable and this base never gets raised directly.
+
+    **No instance of this class or any subclass may ever carry the
+    uploaded file's name in its message.** That is DR-2's Warning and
+    §10's closing Rule, and it is enforced structurally rather than by
+    review: ImageAdmissionService is never given the file name in the
+    first place (it takes raw bytes and a declared EXTENSION), so there
+    is no name in scope at any raise site.
+    """
+
+    def __init__(self, message: str, reason_code: str, stage: str) -> None:
+        super().__init__(message)
+        # Carried on the exception, not re-derived by the caller: DR-2
+        # requires a rejection reason code and a stage of rejection in
+        # every audit row, and the raise site is the only place that
+        # actually knows which control fired.
+        self.reason_code = reason_code
+        self.stage = stage
+
+
+class UnsupportedImageFormatError(InputAdmissionError):
+    """§10: bad extension (A1) or a magic-byte signature that disagrees
+    with the declared extension (A2/A4). HTTP 415."""
+
+
+class ImageTooLargeError(InputAdmissionError):
+    """§10: file size above UPLOAD_MAX_BYTES (A5). HTTP 413. Split from
+    InvalidImageError because §10's table gives it its own status --
+    "too big" is a payload-size problem the client can act on, not a
+    "this file is broken" problem."""
+
+
+class InvalidImageError(InputAdmissionError):
+    """§10: file too small (A6), damaged/undecodable (A7/A8), over the
+    pixel limit (A9), or outside the dimension bounds (A10/A11).
+    HTTP 422. One type for all of these because §10's table groups them
+    into one status deliberately -- they are all "this file is not a
+    usable image", and the specific control that fired is carried in
+    `reason_code`/`stage` for the audit row rather than in the type."""
+
+
+class LateralProjectionError(Exception):
+    """§10 / A16 of input_admission_projection_gate_architecture_v1.1: the
+    doctor DECLARED the projection LATERAL. Reason code `DECLARED_LATERAL`,
+    HTTP 422.
+
+    Deliberately NOT an InputAdmissionError subclass and deliberately NOT
+    merged with ProjectionMismatchError or NotAChestRadiographError. §10's
+    Rule is explicit: "A lateral image **is** a chest radiograph. A joined
+    type makes the rejection counts wrong." The three types answer three
+    different questions:
+
+      NotAChestRadiographError  this is not a radiograph at all      (M5)
+      LateralProjectionError    it is a radiograph, declared lateral (A16)
+      ProjectionMismatchError   it measures as not-frontal           (M10)
+
+    Merging any two of them would make the audit table unable to
+    distinguish an out-of-scope-but-valid film from a strawberry, which is
+    the count DR-2's reason-code field exists to produce.
+
+    Raised at admission, before masking, embedding or any ChromaDB query
+    (A17), so it carries no modality score -- none was calculated.
+
+    `message_key` rather than a message: §10.1's Rule says to translate
+    both projection messages through the i18n key set and not to write
+    English text in the response body.
+    """
+
+    reason_code = "DECLARED_LATERAL"
+    stage = "admission_projection"
+    message_key = "error.projection.declaredLateral"
+
+    def __init__(self, declared_projection: str) -> None:
+        # The declared projection is a closed enum value the client itself
+        # sent, never free text and never a file name -- safe to carry.
+        super().__init__(f"declared projection {declared_projection!r} is not accepted")
+        self.declared_projection = declared_projection
+
+
+class ProjectionMismatchError(Exception):
+    """§10 / M10-M12: the top-1 similarity is below the projection reject
+    threshold. Reason code `FRONTAL_MISMATCH`, HTTP 422.
+
+    Distinct from LateralProjectionError above even though both concern
+    projection: that one is a rejection of what the doctor SAID, this one
+    is a rejection of what the pixels MEASURE. A lateral image reaches
+    this check only when the declaration was wrong.
+
+    M12 governs the message: it must not tell the doctor the image is
+    wrong, it must ask them to check the projection. The reason is in
+    §6.2's Note -- a correct frontal image from a different hospital
+    produces the same measurement as a mis-declared lateral, and the two
+    causes are indistinguishable at this point. The message states a
+    doubt, not a fact.
+    """
+
+    reason_code = "FRONTAL_MISMATCH"
+    stage = "projection_mismatch"
+    message_key = "error.projection.frontalMismatch"
+
+    def __init__(self, top1_similarity: float, reject_threshold: float) -> None:
+        super().__init__(
+            f"top-1 similarity {top1_similarity:.4f} is below the projection reject "
+            f"threshold {reject_threshold:.4f}"
+        )
+        self.top1_similarity = top1_similarity
+        self.reject_threshold = reject_threshold
+
+
+class NotAChestRadiographError(Exception):
+    """§10: the modality score is below MODALITY_THRESHOLD (M5). HTTP 422.
+
+    Deliberately NOT an InputAdmissionError subclass, even though both
+    reject an upload: §1 and §10 are emphatic that the file check and the
+    content check are different controls in different services at
+    different points of the pipeline (§9 puts admission before the mask
+    and the gate after the embed). A shared base would invite one
+    `except` clause to swallow both, which is exactly the conflation the
+    architecture forbids.
+
+    Carries the measured modality score because DR-2's audit table
+    records it ("Modality score, if calculated") and the raise site is
+    the only place it exists."""
+
+    def __init__(self, message: str, modality_score: float) -> None:
+        super().__init__(message)
+        self.modality_score = modality_score
+        self.reason_code = "MODALITY_BELOW_THRESHOLD"
+        self.stage = "modality_gate"
+
+
 class ReportValidationError(Exception):
     """Phase 17: raised by ReportEditService.finalize() when
     final_content's findings or impression is empty/whitespace-only.

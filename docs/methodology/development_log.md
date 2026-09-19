@@ -10001,3 +10001,861 @@ harness is now ID-scoped, fail-closed, and disposable-DB-backed. Four open items
 carried forward above -- none blocking, one (`func.now()` semantics) to resolve
 before RunPod. Every number in this entry was produced by real execution against the
 live stack, not asserted in advance of running it.
+
+## Patients Directory — list-all + name/ID search — COMPLETE
+
+### Why (the gap)
+
+The left-rail split between **"Find patient"** and **"Patients"** did not serve the
+navigation it implied. "Patients" was inert unless a `patient_id` was already in the
+URL (it self-linked to the current patient), and the only real entry point,
+`/patients/search`, forced either an exact `patient_code` or an exact **name plus a
+mandatory date of birth**. There was no way to simply see who is registered, and a
+doctor who half-remembered a name but not the DOB was stuck. The request: make
+"Patients" a real **directory** that lists the whole registry, searchable by name OR
+patient ID, with **no DOB requirement**.
+
+### Implementation
+
+One **additive** backend route, then a frontend directory page — the existing
+exact-match search was left completely untouched.
+
+- **Backend (`GET /patients`).** Added `list_all()` to the `IPatientRepository`
+  Protocol (`app/domain/interfaces.py`) and its implementation in `PatientService`
+  (`app/services/patient_service.py`) — `ORDER BY patient_code ASC`, which is
+  sequential and fixed-width (`PAT-000001`), so a plain lexicographic sort equals
+  registration order without exposing `created_at`. The route
+  (`app/api/patients.py`) is declared **before** `/patients/{patient_id}` so the
+  static path is not swallowed by the dynamic segment (the same ordering discipline
+  the file already applies to `/patients/search`), and carries the same
+  `Depends(get_current_doctor)` guard as every other patients route.
+- **Deliberate, scoped relaxation of Phase 11 Decision 4 ("no fuzzy matching").**
+  Decision 4 forbade substring/fuzzy patient matching because a doctor picking the
+  wrong patient off a fuzzy list is a worse failure than being asked to retype a
+  name. That reasoning is about the *identity-critical selection* path — attaching a
+  study to a patient — and it is **preserved intact**: `/patients/search` still does
+  exact `code`, or exact `name`+`dob`, and remains the flow the "Find patient" screen
+  uses. The new directory is a *browse/listing* affordance: it loads the full list
+  and filters **client-side** (case-insensitive substring over `name` OR
+  `patient_code`), and every row shows name + code + DOB + sex, so the doctor still
+  verifies identity before opening a profile. Listing the whole registry to any
+  authenticated doctor is consistent with the app's existing shared-registry model
+  (the dashboard already states "you can open any colleague's patient").
+- **Frontend.** New `app/patients/page.tsx`: a search box + **Search** button
+  (applies on click/Enter; a **Clear** button appears once a query is active) over a
+  dashboard-style table (Name · Patient ID mono · Date of birth mono · Sex · Open).
+  Added `listPatients()` to `api-client.ts` and regenerated `api.d.ts` from the live
+  OpenAPI. The rail's "Patients" item now always links to `/patients`. Fully wired to
+  the i18n layer — a new `directory.*` namespace in `en.ts`/`bn.ts`, reusing existing
+  keys (`nav.patients`, `search.search`, `search.name`, `search.dob`,
+  `newPatient.sex`, `common.open`, `common.registerNewPatient`).
+
+### Validation (real execution)
+
+- `npm run check:i18n` → **332 keys, en/bn parity**. `npm run check:design` → **0
+  violations**. `npx tsc --noEmit` → clean. `next build` → clean; `/patients` builds.
+- `GET /patients` unauthenticated → **401**; present in the live OpenAPI.
+- Headless-Edge screenshots (authenticated via a **disposable doctor with ID-scoped
+  cleanup**, so `dev.db` was held at 32 doctors before/after): the directory renders
+  the full registry in **English and বাংলা** — translated chrome and column headers,
+  with patient codes, DOBs and the numeric count kept Latin/mono. Driving the Search
+  box with real typed input: **"borhan"** (name) narrowed the list to its matches,
+  and **"PAT-000003"** (ID) narrowed to the single patient `Timeline Demo Patient ·
+  PAT-000003`, with **Clear** restoring the full list. No DOB anywhere in the flow;
+  `/patients/search` verified unchanged.
+
+### How to Write This in Your Thesis
+
+Frame it as **separating two operations the original design had conflated under one
+rule**. Phase 11's "no fuzzy matching" is a safety constraint on *binding a study to
+a patient* — there, a wrong pick corrupts the record, so exact match is correct and
+stays. *Browsing the registry* is a different operation with a different failure
+mode: the risk is not-finding, and the doctor still confirms identity from the full
+row before acting. Making the constraint follow the operation, rather than the noun
+"search," is the defensible move; the honest sentence is that the strict path was
+kept and the relaxation was scoped to browse-and-verify, not that a safety rule was
+dropped. The backend change is a textbook additive extension (one Protocol method,
+one service method, one route) that touched no existing endpoint — the kind of change
+that should not require re-verifying the rest of the surface, and here did not.
+
+**Status: implemented and verified end-to-end against the live stack; not committed
+or pushed at time of writing.** One additive endpoint, one new route, the exact-match
+search and the Patient schema untouched; directory filtering is client-side over the
+full list (adequate at this app's scale — server-side search is a later option if the
+registry grows large).
+
+---
+
+## QA Report (Sumaiyah) — 13 Findings Triaged, One Dead Settings Screen, and a Measured Non-Determinism Cause — COMPLETE
+
+### Context
+
+An external tester (Sumaiyah) drove the full owner flow through the real UI and filed
+13 findings across registration, upload, workspace, compare and the reading queue.
+They were not one kind of thing, and treating them as one list would have hidden the
+important one:
+
+- **six real defects** with a locatable root cause,
+- **five missing affordances** (back navigation, discard, emphasis, discoverability),
+- **one theming request** the design system was explicitly built to exclude,
+- **one already fixed** by the uncommitted i18n work the tester did not have,
+- **one that could not be called a bug until it was measured.**
+
+The most consequential finding is not in the report. Tracing "set k=3, the UI still
+shows k=5" revealed that **every preference the Settings screen saved was write-only**:
+`default_top_k`, `default_language`, `default_questionnaire_skip`, `default_rail_state`
+and `default_export_format` were all persisted to the `doctors` table and read by
+nothing, anywhere. Settings saved successfully, showed a success state, and changed
+nothing about the system. The reported k symptom was one visible corner of a screen
+that was entirely inert — the same "documented system that nothing consumes" failure
+`check-design-tokens.mjs` was written to prevent one layer down, in CSS.
+
+### Implementation & Validation
+
+**1. Preferences made real (the k bug).** The upload flow passed a literal `topK: 5`
+to the API client, the API client independently defaulted to `?? 5`, and the screen
+header independently rendered the literal string `"K=5"`. Three unrelated fives, none
+of them connected to the stored preference. Added `lib/doctor-defaults.ts` (one
+`DEFAULT_TOP_K`, bounds, and a `resolveTopK` that **clamps** rather than discards, so
+a legacy value above the new maximum does not silently become 5) and a `DoctorProvider`
+(`lib/doctor.tsx`) that fetches `/auth/me` once per navigation and is consumed by the
+rail, the upload flow and Settings. The header now renders the same `topK` variable the
+retrieval call is given. `default_language` seeds the interface language only when the
+browser has no `rr_lang` cookie, so an explicit toggle is never silently reverted;
+`default_questionnaire_skip` goes straight to drafting. `default_rail_state` and
+`default_export_format` were **removed from the UI** rather than restyled: the rail is
+deliberately non-collapsible and PDF export does not exist, and a control whose choice
+cannot be honoured is the same defect as the k preference, not a smaller one.
+
+**2. Date-of-birth bounds, both sides.** `<input type="date">` accepts any year up to
+275760; the six-digit year the tester entered reached `date.fromisoformat()` inside
+`PatientService` and raised there — an unhandled 500, not a field error. Added
+`min`/`max` on both date inputs and a shared `validate_date_of_birth()` in
+`app/api/schemas.py`, applied as a `field_validator` on `CreatePatientRequest` **and**
+called directly by `/patients/search` (a query parameter cannot carry a validator, and
+that path had the identical unhandled parse).
+
+**3. The calendar icon.** Not a missing control: the dark palette never declared
+`color-scheme`, so Chrome painted its native date-picker indicator in light-mode
+colours on `#0E1318`. Fixed as a side effect of the theme work, which declares
+`color-scheme` per palette.
+
+**4. Rail items that did nothing.** Four of seven items rendered as inert
+`<span aria-disabled>` whenever no patient/report id was in the URL — on the queue and
+Find-patient screens, the two most-used, styled almost identically to a live item. Every
+item now routes: to the destination when the id exists, otherwise to the screen where
+you pick the missing thing, dimmed a step with a `title` naming what it needs.
+
+**5. Queue count vs. queue rows.** `examinations_today` counted `RetrievalSession` rows
+while the table beneath it lists `ReportRecord` rows, so a session abandoned before
+generation was counted in the tile and appeared nowhere in the list — and nothing in the
+UI renders a report-less session, so the row could not be reached at all. The count now
+joins to `reports`, which makes the tile agree with the list by construction rather than
+by coincidence. Abandoned sessions are excluded deliberately: an abandoned upload is not
+an examination performed.
+
+**6. Discard (the first DELETE in this API).** `DELETE /reports/{report_id}`, reusing
+`ReportEditService`'s existing `_check_ownership` rather than writing a second guard for
+a destructive route. Owner-only; **finalized reports refuse with 409** — a signed report
+is an audit record, and deleting one would erase the evidence that it was signed.
+Dependent audit-log, explanation and comparison rows (from *either* side of a comparison)
+are removed explicitly rather than by database cascade, because SQLite does not enforce
+foreign keys by default and a cascade here would appear to work while orphaning rows.
+The queue control is two-step, revealed on row hover only where hover exists
+(`@media (hover:hover)`), so it is not unreachable on touch.
+
+**7. Light palette.** `tokens.css` was a single dark `:root`. Added a light palette that
+is **re-derived, not inverted**: `#22E3E8` measures 1.5:1 on a light surface. Both
+accents were replaced by dark versions of the same two hues, so the vocabulary is
+unchanged while the luminance relationship flips, and the `-ink` tokens flip with them.
+Every pair was measured, not estimated; the lowest value in the palette is 3.99:1 against
+a 3:1 target. `--bg-film` stays `#000000` in both themes — a radiograph is read against
+black, and that surface is a clinical condition, not a decorative choice. That decision
+created a real bug found by *looking* rather than reasoning: the login film panel went to
+near-black text on black, because its heading used `--text-primary` like every other
+heading. Fixed with an `.on-film` scope that remaps the ordinary tokens locally, so
+components on film needed no changes at all. `check-design-tokens.mjs` gained a
+**palette-parity rule** (a themed token missing from the light block does not error, it
+silently inherits the dark value — the same failure `check-i18n.mjs` exists for); the gate
+was verified to fail by deleting a token and observing it fail. Theme persistence reuses
+the language toggle's mechanism verbatim, including the server-side cookie read that
+prevents a full-screen flash on every navigation.
+
+**8. Navigation, discoverability, emphasis.** A single `BackLink` on the header of five
+screens — the workspace previously had no exit but the patient's name styled as a
+heading. The ask/answer feature already existed at `/reports/{id}/explain`; nothing
+pointed at it, so it was reported as missing — now linked from the workspace and compare.
+The questionnaire panel, the one moment the pipeline stops for the reader, is a raised
+cyan-edged card that scrolls itself into view.
+
+**9. Non-determinism — measured before fixing.** Three candidates were identified by
+reading the code (sampling, the content-retry path substituting `build_retry_prompt`,
+retrieval variance). Measuring first was correct, because the result was not what the
+obvious fix assumes:
+
+- `temperature=0.0` with no seed: five identical requests produced **two distinct
+  reports**, diverging inside the IMPRESSION section. Temperature 0 picks the
+  highest-probability token; it does not pin the sampler's starting state.
+- With `seed=42`: five runs byte-identical.
+- **But the seed alone is not sufficient.** With the seed pinned, the first inference
+  after Ollama loads the model still differs from every later one. Over three
+  unload/load cycles: cold `a29be3c2` (246 chars) / warm `4e78b784` (238 chars), the
+  same values every cycle. Each state is perfectly reproducible; they are reproducibly
+  *different* from each other.
+
+So generation is deterministic **conditional on whether the model was resident**, and
+Ollama evicts it after five idle minutes by default — which is precisely the reported
+symptom: draft a report, come back later, upload the same image, get different words with
+nothing in the system having changed. Added `LLM_SEED` and `OLLAMA_KEEP_ALIVE` to
+`config.py` (never hardcoded in the adapter), plus unit tests asserting the outbound
+options payload, since a dropped key would leave the system working and quietly
+irreproducible. The residual cold/warm boundary is documented rather than papered over:
+it is llama.cpp warm-up state, not sampling, and nothing at this layer can remove it.
+
+**10. Two pre-existing red tests, fixed.** `test_report_detail_service` asserted the
+naive `finalized_at` format that commit b6b5091 had deliberately changed, and
+`report-document-view.test.ts` still required `compare/page.tsx` to import a field list
+the Reading Room redesign had removed from it. Both were failing at HEAD, independent of
+this work; corrected rather than carried.
+
+### Validation (real execution)
+
+- **Backend: 226 passed** (from 215 passed / 1 failed at HEAD). New coverage: DELETE
+  (removes dependents, non-owner `ForbiddenError`, finalized refusal, missing id),
+  `examinations_today` (ignores report-less sessions, counts a session once), Ollama
+  options (seed + keep-alive + identical requests for identical prompts).
+- **Frontend gates:** `tsc --noEmit` clean · `eslint` **0 problems** (one pre-existing
+  error in `dashboard/page.tsx` fixed via `useSyncExternalStore`) · `check:design`
+  **0 violations, 21 themed tokens in both palettes** · `check:i18n` **343 keys, en/bn
+  parity** · `vitest` 7 passed.
+- **E2E, all three harnesses, disposable DB, `dev.db` unchanged in every run:**
+  - `run.mjs` — full owner happy path PASS; console 0, exceptions 0, http 4xx/5xx 0.
+  - `readonly-ownership.mjs` — extended with DELETE: doctor B gets **403 on PATCH,
+    finalize, regenerate AND delete**, `GET` stays 200, and the report is asserted to
+    still exist afterwards (a 403 that deleted anyway would otherwise read as "rejected").
+  - `qa-fixes.mjs` (new) — the k fix proven **through the real browser UI**: preference
+    set to 3 before the upload screen renders, header DOM reads
+    `Patient New examination K=3 · EN`, and `retrieval_sessions.top_k` = **3**. Plus
+    authenticated DOB bounds (200/422/422/422) and DELETE semantics (409 on finalized
+    with the row still present, 404 on unknown).
+- **Both themes inspected as rendered**, not asserted: login, register and landing
+  screenshotted in dark and light. The film panel stays black in light mode with its
+  dark-ramp ink intact.
+
+### Deferred — forgot password
+
+Reported and **not built**, recorded as a scope boundary rather than silently absent.
+There is no reset-token table and no mail transport, and self-registration already has
+no email/identity verification — a boundary this project already documents in
+`config.py`. The two related gaps now sit together instead of one being visible and the
+other implied.
+
+### How to Write This in Your Thesis
+
+The defensible frame is **triage, and the difference between a symptom and a cause**.
+Two of the thirteen findings are worth a paragraph each and the rest are a table.
+
+The k finding is the stronger of the two because the reported symptom was cosmetic
+("the UI shows the wrong number") and the cause was structural: a settings screen whose
+entire output was unread. The honest sentence is that a user-visible inconsistency
+surfaced a class of dead configuration, and that the fix was to give the preference one
+definition and one consumer rather than to correct a label. It also motivates the
+palette-parity gate: this codebase has now been bitten twice by *declared-but-unconsumed*
+state, once in CSS and once in a database column, and a gate that fails the build is the
+only thing that catches it, because neither failure produces an error.
+
+The determinism finding is the one to be careful with, because the intuitive fix is
+incomplete and the write-up should say so. Pinning a seed is necessary and not
+sufficient; the residual variance is a model-load boundary, is itself perfectly
+reproducible on each side, and is a property of the inference runtime rather than of this
+system's design. Claiming "generation is now deterministic" would be false. The accurate
+claim is that generation is deterministic for a resident model, that the system now keeps
+the model resident during use, and that a draft produced immediately after a restart may
+differ in wording — grounded in the same retrieved evidence either way. That is a
+reproducibility limitation stated precisely, which is worth more in a thesis than a
+reproducibility claim stated loosely.
+
+Note also what was *declined*: two Settings controls were deleted rather than kept,
+because offering a choice the system cannot honour is the same defect the report was
+filed about. Removing a feature is a legitimate response to a bug report.
+
+**Status: implemented and verified end-to-end against the live stack; not committed or
+pushed at time of writing.** One new endpoint (`DELETE /reports/{id}`), one new E2E
+script (`e2e/qa-fixes.mjs`), one new gate rule, a second palette. The exact-match search
+path, the retrieval/generation pipeline, and every Phase 4-11 service's business logic
+are untouched.
+
+---
+
+## Input Admission and Modality Gate (Defect P0-1) — COMPLETE
+
+### Context
+
+Defect P0-1: the upload endpoint accepted all file types, and the system produced a
+full radiology report from a photograph of a strawberry. The validation panel behaved
+correctly and flagged the unsupported statements — the output layer worked. There was
+no input layer at all.
+
+`docs/methodology/input_admission_modality_gate_architecture_v1.0_FROZEN.md` was frozen
+at Gate A on 17 August 2026 and specifies two new services, a corrected pipeline
+invariant, an evidence-support signal, three decision records, and a thirteen-test
+acceptance gate. This entry records implementing exactly that document, the three places
+where the document's premises did not match this repository, and the Gate B calibration
+that the document deliberately left unmeasured.
+
+Two absent controls, not one. §4 is explicit that they are different problems: the
+strawberry file was a *correct* JPEG, so no file-level check would ever have stopped it,
+and a modality check alone would not stop a decompression bomb or a polyglot. That is
+why §1 and §10 forbid merging `ImageAdmissionService` and `ModalityGateService`, and why
+both are kept out of `PrivacyService` and `EmbeddingService`.
+
+### Three places the frozen document did not match this repository
+
+All three were resolved without changing §5–§10, and all three are recorded here rather
+than absorbed silently, because in each case the document asserts something about the
+codebase that is not true of it.
+
+**1. §7's S3 says "use the existing server-rendered parameterised template". No such
+template exists.** `disclaimer` is one of the seven fields the *LLM itself* writes
+(`REPORT_CONTENT_FIELDS`), so the disclaimer has always been model-authored free text.
+The Phase 7 dev-log sample above — `"Clinical uncertainty due to low agreement score
+(0.60)"` — is the shape of the problem exactly: prose the model chose, reading **one**
+signal. That single-signal reading is precisely the failure §7.1's Warning describes.
+So S3's *substance* (server-rendered, parameterised, never static, reads both signals)
+was implemented as `app/services/evidence_disclaimer.py`; only the word "existing" is
+wrong about this repository. Building the template a requirement names is not a change
+to the architecture that names it. `disclaimer` was already AI-set-once and outside the
+five doctor-editable fields, so nothing a doctor can edit changed hands — it moved from
+model-authored to server-authored, the direction S3, S8 and S9 all point.
+
+**2. §7.3's S6/S7 both presume a "D4 migration". There is none.** S5's Note states that
+"Decision D4 already stores `voted_labels` and `agreement` at generation time" — in this
+codebase it does not: `reports` has no such column, no migration mentions either, and
+`agreement` is recomputed on every read. S6's branch ("add these two fields to the D4
+migration") therefore has no target to edit. S7's rule is the one whose *reason* survives
+the missing precondition: every migration here is applied (`alembic current` = head), so
+anything this were folded into would be an applied migration. A new gated revision
+(`a1f4c72b9e30`) was written, which is what S7 requires.
+
+**3. §6's M2/M4 do not name a softmax temperature, and taken literally the provisional
+threshold is unreachable.** Measured before writing any code, on 8 held-out IU frontals
+plus one natural photograph: softmax over *raw* cosine similarities put every chest
+radiograph at **0.228–0.232** and the photograph at **0.190**. The classes separate, but
+the entire range sits far below §11.1's provisional `MODALITY_THRESHOLD = 0.60`, so a
+literal temperature of 1.0 makes that value unreachable by any real radiograph — the gate
+would reject 100% of uploads. `MODALITY_SOFTMAX_TEMPERATURE` was added as a Gate B
+parameter, defaulting to the reciprocal of BiomedCLIP's own learned `logit_scale`
+(`85.2322769165039`), i.e. the temperature the frozen encoder was contrastively trained
+at — not a number picked to make a test pass. At that temperature the same probe gives
+0.9997–1.0000 for the radiographs and 0.0000 for the photograph.
+
+### Implementation & Validation
+
+**1. `ImageAdmissionService` (A1–A13).** Takes raw bytes and a declared *extension* —
+never a file name. That is DR-2's Warning and §10's Rule enforced structurally rather
+than by careful writing: no raise site in the module has a name in scope to leak. Format
+sniffing by magic bytes with the extension checked *against* them (A2/A4), never used to
+*determine* the format (A3); size bounds (A5/A6); `verify()` then a second open and
+`load()` (A7/A8); a pixel ceiling (A9); dimension bounds (A10/A11); and a re-encode from
+the decoded pixel array alone (A12/A13). The re-encode is what makes A12's Note true by
+construction — a new image is built from `tobytes()`/`frombytes()`, so Pillow's `info`
+dict (where EXIF, ICC profiles and text chunks live) is left behind entirely rather than
+excluded by a per-format list. The raw upload bytes are never written to disk at any
+point.
+
+**2. `ModalityGateService` (M1–M9, S1).** Two entry points at two pipeline positions,
+kept in one service per §9's design decision. `gate()` takes the already-computed vector
+(M1 — the image is never re-encoded), computes cosine similarities against the cached
+prompt vectors (M2, M6 — cached once in `lifespan`, not per request), applies a
+temperature-scaled softmax (M4) and blocks below the threshold (M5, DR-1).
+`classify_retrieval_support()` compares the top-1 similarity with the floor and returns a
+category without ever raising (M7–M9, DR-3, and §10's Note that a low support is not an
+error). The prompt set is split positive/negative so §11.2 Step 6's anticipated lateral
+prompt can be added without reinterpreting M4; with §11.1's one-positive initial set the
+score is bit-identical to a literal M4.
+
+**3. The pipeline order changed, per §3.3 and §9.** Masking **moved from after retrieval
+to before embedding**. It previously ran last, purely so a masked copy could be persisted
+for the Comparison page, while the vector was computed from the *raw* upload. The frozen
+invariant is `admit → mask → embed → gate → retrieve`. Embedding and querying are also no
+longer one call: `RetrievalService.retrieve_by_vector()` was extracted so the gate can sit
+between them, with `retrieve()` now calling it — one query path, not two, which is why the
+Phase 4 regression still describes real behavior (T13).
+
+**4. DR-2 audit (`upload_rejection_log`).** The column list is DR-2's "Record these
+fields" table and nothing else. What is *absent* is equally a requirement: there is no
+`filename` column for a later change to start populating, no image bytes, no masked
+image, no EXIF. `modality_score` is nullable because DR-2 says "if calculated" — an
+upload rejected at admission never reached the embedder, and NULL means *not calculated*,
+never zero. `UploadAuditService` has no logger at all, because
+`logger.warning("rejected %s", filename)` is exactly the leak DR-2 names.
+
+**5. The evidence support signal (S1–S9).** `reports.retrieval_support` and
+`reports.top1_similarity` are written at generation time (S5). The top-1 is read back out
+of `retrieved_evidence`, **not** off the reconstructed cases — `get_by_ids()` is an
+ID fetch with no ranking and documents that it forces similarity to 1.0, so using it
+would have recorded *every* report as at-or-above the floor. The disclaimer is rendered
+server-side from both signals (S2/S3) and states the low-support fact in the report
+itself (S4). §7.2's closing Rule is enforced in the wording and asserted in the tests: the
+measurement shows the top-1 is below the configured floor, **not** that the archive holds
+no similar case. The API serves the stored category (S8); the frontend renders it and
+computes nothing (S9).
+
+**6. No parameter value is written in any source file (§11.1's Rule).** Every bound,
+prompt, threshold and floor lives in `Settings` and arrives through a constructor. Gate A
+values are marked frozen; Gate B values are marked as calibration outputs individually.
+
+### Acceptance gate — T1 to T13, real command output
+
+`python -m pytest tests/integration/test_input_admission_modality_gate.py -v -s`
+→ **14 passed** (T1–T13 plus a T11b). Real BiomedCLIP, real ChromaDB, real PHI masker,
+real Ollama, real database; nothing mocked.
+
+| Test | Result |
+| --- | --- |
+| **T1** frontal passes, report made | `modality_score=0.999994 top1=0.9557 support=at_or_above_floor` |
+| **T2** lateral passes | `modality_score=0.999097 top1=0.7781` |
+| **T3** strawberry fails at M5 | `422`, `stage=modality_gate`, `score=0.00000005` |
+| **T4** text file named `.png` fails at A4 | `415 file content does not match the declared '.png' extension` |
+| **T5** 2 kB image fails at A6 | `1874 bytes → 422 below the minimum of 20480 bytes` |
+| **T6** bomb fails at A9, process survives | `40000x40000 = 1,600,000,000 px in a 38,952-byte file → 422 PIXEL_LIMIT_EXCEEDED`; `/health` still 200 |
+| **T7** EXIF JPEG passes, normalized PNG has none | uploaded 3 EXIF tags incl. a patient name → stored PNG, **0 tags** |
+| **T8** one metadata-only audit row | columns = `at, declared_extension, doctor_id, file_size_bytes, id, modality_score, raw_sha256, reason_code, stage` — no name, no bytes |
+| **T9** below-floor makes a report with the weak-support statement | `top1=0.7515 floor=0.7603`, disclaimer carries S4's sentence |
+| **T10** high agreement + low support does not read as confidence | `agreement=0.80 (high) support=below_floor` |
+| **T11** report row holds both fields | `retrieval_support='below_floor' top1_similarity=0.7515197992324829` |
+| **T12** calibration tables exist with real numbers | 746 scored rows, 101 thresholds, 600 support rows, 18 labels |
+| **T13** existing retrieval regression passes | `6 passed` |
+
+T3 asserts the *stage*, not just the status: a 422 obtained by accidentally rejecting the
+strawberry at A7 would look identical from outside while proving the opposite of what T3
+exists to prove. T6 asserts the process survives by making a second real request
+afterwards, since a status code alone would pass against a worker left in a broken state.
+T8 inspects the table's **columns**, not the row's values — asserting "this row does not
+contain the name" would pass on a schema that *had* a filename column this path happened
+to leave empty.
+
+**Full suites:** backend `314 passed` (baseline before this work: 226 — +74 unit, +14
+acceptance). Frontend `tsc` clean · `check:design` **0 violations** · `check:i18n` **350
+keys parity** · `vitest` **7 passed**.
+
+One pre-existing test changed status deliberately:
+`test_retrieve_with_corrupt_file_returns_422` → `_returns_415`. A text file sent as
+`garbage.png` is T4's exact case, and §10's table maps a signature/extension mismatch to
+**415**. The old blanket 422 came from Phase 4's `ImageValidator` raising an
+undifferentiated `ValueError`; §10 splits that one status into three.
+
+### Gate B calibration — measured, and not treated as validated
+
+`ml/calibration/build_calibration_sets.py` then `calibrate_modality_gate.py`.
+Positive set: **600 held-out IU studies** (300 frontal, 300 lateral) from the val/test
+splits — the ChromaDB collection indexes *train*, so this is Step 1's held-out condition
+by construction rather than by an exclusion list. Negative set: **126** across four
+sub-classes — 76 natural photographs, 25 real non-chest radiographs, 23 scanned/rendered
+document pages, 20 damaged files, 2 other medical imaging.
+
+**The headline result is a split, and reporting only the pooled rate would hide it.**
+
+| Negative sub-class | False-positive rate @0.60 | @0.90 |
+| --- | --- | --- |
+| natural photographs | **0.0000** | 0.0000 |
+| scanned documents | **0.0000** | 0.0000 |
+| other medical imaging | **0.0000** | 0.0000 |
+| **other radiograph modalities** | **0.8636** | 0.5909 |
+
+The P0-1 defect is closed completely: the gate separates chest radiographs from
+photographs and documents perfectly on this set, at every threshold tested. It does
+**not** reliably separate chest radiographs from *other radiographs* — non-chest plain
+films (hand, arm, leg) score a mean modality score of 0.84 against the chest prompt, and
+§11.1's prompt set already contains "an abdominal radiograph" as a negative prompt and
+still does not discriminate. The pooled FPR of 0.19 at the provisional threshold is
+entirely this one sub-class. This is a real limitation, not a tuning oversight, and the
+available lever is a Gate B one (a richer negative prompt set) — deliberately **not**
+pulled here, since selecting prompts is a calibration decision, not an implementation
+one.
+
+False negatives at the provisional 0.60: **frontal 0.0000, lateral 0.0300.** §11.2 Step 2
+anticipated exactly this, and Step 6's remedy is to *add a lateral prompt*, never to lower
+the threshold. Recorded, not applied, for the same reason.
+
+**Step 7's selection rule had to be corrected during this work, and the correction is
+worth recording.** "Give more importance to a low false-negative rate" was first read as
+a pure lexicographic minimization. Against this data that degenerates: the FNR reaches
+exactly 0.0000 around threshold 0.01, so an FNR-first rule selects 0.01 and never
+consults the FPR at all — it chose a threshold at which **31% of the negative set passes
+the gate**. A control admitting a third of all non-radiographs does not implement DR-1.
+"More importance" is a weighting instruction, not a licence to ignore the other rate, so
+the rule became an explicit **FNR budget** (default 0.02) with the trade-off recorded as a
+selection *input*, and the selection printed under four budgets so the sensitivity is
+visible rather than buried.
+
+**Gate B outputs (`ml/outputs/calibration/gate_b_selected_values.csv`):**
+`MODALITY_THRESHOLD` **0.82** (FNR 0.0183, FPR 0.1616, n_pos=600 n_neg=99),
+`RETRIEVAL_FLOOR` **0.7603** (10th percentile of positive-set top-1; Step 9's per-label
+check found **0** populous labels below it, so one global floor, not per-label floors).
+
+**The measured threshold was deliberately NOT adopted as the default.** `MODALITY_THRESHOLD`
+stays at §11.1's provisional **0.60**, per rules F2/F4 and the standing instruction that
+these are Gate B outputs not to be treated as validated. `RETRIEVAL_FLOOR` *is* set to the
+measured 0.7603, because §11.1 lists it as "Not selected" — there is no provisional value
+to fall back on, and a measured number is more honest than an invented one. Both are
+labelled in `config.py` as measurements, not constants.
+
+### §7.1's Warning, measured
+
+§7 is built entirely on the claim that agreement and retrieval support are independent and
+can disagree. That claim is now evidenced rather than assumed. Support-matrix occupancy
+across the 600 held-out radiographs (floor 0.7603, agreement threshold 0.5):
+
+| | high agreement | low agreement |
+| --- | --- | --- |
+| at or above floor | 243 | 297 |
+| **below floor** | **15** | 45 |
+
+**15 of 600 (2.5%)** land in the cell §7.1 warns about — high agreement on evidence that
+does not meet the support threshold. Those are the cases where a disclaimer reading only
+the agreement score would report confidence on weak evidence. T10 runs against one of
+them, confirmed through the live pipeline rather than trusted from the calibration file.
+
+An unrelated and larger effect surfaced in Step 8 that §11.2 does not ask about, and it
+matters more than the label split the step *does* ask about: **top-1 similarity is driven
+by projection, not by disease label.** Frontal mean **0.964**, lateral mean **0.780** —
+because the indexed knowledge base is frontal-only. Every disease label's mean sits
+between 0.835 and 0.893, a far narrower spread. Step 9's per-label criterion is therefore
+satisfied (one global floor) while a projection-stratified floor is the question the data
+actually raises. Recorded as a Gate B finding for the next calibration, not acted on.
+
+### Gaps, stated rather than papered over
+
+- **§11.2 Step 3's "other radiograph modalities" is thin (25 images) and sourced from a
+  public bone-fracture dataset**, because no offline source exists in this repository.
+  The 0.7273 FPR on that sub-class rests on 25 images and should be re-measured on a
+  larger set before it is written up as a rate rather than as a direction.
+- **Damaged images (20) never reach the modality gate** — they are rejected at admission,
+  which is correct, so they are reported under the admission control and excluded from the
+  score distributions. Counting them as gate true-negatives would credit this control with
+  rejections a different control made.
+- **The calibration embeds raw images; the live pipeline embeds admitted-and-masked ones.**
+  The vectors differ slightly and the retrieved neighbour set can shift by a case, which
+  moves the agreement score — a study measured at 0.60 agreement offline came back at 0.40
+  through the API. The calibration therefore *ranks* candidates; the acceptance tests
+  *confirm* the cell against the live pipeline.
+- **The Bangla disclaimer templates are PROVISIONAL and UNREVIEWED**, carrying the same
+  caveat as `report_formatter.py`'s section headers under Phase 8 Decision 5 — and the
+  caveat matters more here, since this is a safety disclaimer rather than a heading.
+- **§12 (Phase 21's disclaimer confound) is out of scope by that document's own F5.**
+  DR-3 makes the disclaimer text vary with retrieval quality, so it now varies across
+  Phase 21's three arms and would confound any metric computed over full report text. The
+  rule belongs in the Phase 21 document and is **not** selected here.
+
+### How to Write This in Your Thesis
+
+The defensible frame is **an input layer, and why one control could not have been two
+halves of the same check**. The strawberry defect is a good thesis anecdote precisely
+because the naive reading of it is wrong: the file was valid, so "validate the upload"
+would not have caught it, and the report that resulted was correctly flagged by the
+output-side validator, so "check the output harder" would not have caught it either. The
+honest sentence is that the system had two output-side controls and zero input-side ones,
+and that the two input controls added are not redundant — one reads bytes, one reads
+content, and §4's own framing is that neither substitutes for the other.
+
+The vocabulary lock is worth a short paragraph on its own. "Validate" meant three
+different things in this project, and the frozen document's §3 resolves an apparent
+contradiction in decision D1 that was purely terminological — D1's invariant now reads
+`admit → mask → embed → gate → retrieve`, and the *intent* never changed, only the words.
+That is a clean example of a specification defect that costs nothing to fix on paper and
+would have cost a re-architecture to fix in code.
+
+The calibration is the strongest result and must be reported as a **split, never as a
+pooled rate**. "The modality gate achieves a 0.19 false-positive rate" is true and
+useless. The accurate claim is that the gate rejects photographs, documents and
+non-radiograph medical imaging perfectly on this evaluation set, and that it does not
+distinguish chest radiographs from other plain radiographs — which is a precise statement
+of what was fixed (the reported defect) and what was not (a modality gate in the general
+sense). Report the sub-class table. Note that the negative prompt set already contained
+"an abdominal radiograph", because that is the interesting part: the failure is not an
+oversight in prompt selection, it is a limit of what this encoder's text space separates.
+
+The §7.1 measurement is the second result worth a paragraph. A design document asserted
+that two evidence signals can disagree and built a four-cell disclaimer matrix on it;
+this measured how often they actually disagree on held-out data (2.5%) rather than leaving
+the premise as an argument. That is the difference between a justified design and a
+plausible one. Pair it with the disclaimer wording rule — the system says "no retrieved
+case meets the minimum retrieval-support threshold", never "no similar case exists" —
+because §7.2's own worked example (0.52 against a floor of 0.60) is a clean illustration
+of a system stating its measurement instead of overclaiming from it.
+
+Be careful with two things. First, do **not** report `MODALITY_THRESHOLD = 0.82` as this
+system's threshold: it is a Gate B measurement, the deployed default remains the
+provisional 0.60, and rule F4 forbids putting a threshold in the thesis before the
+calibration output exists for it — it now does, so the number is reportable *as a
+measurement*, with the FNR/FPR and the sample sizes attached, and with the FNR budget
+named as the selection input it is. Second, the projection effect (frontal 0.964 vs
+lateral 0.780) is a finding about the *knowledge base*, not about the gate: the index is
+frontal-only, so laterals retrieve worse by construction, and roughly a quarter of lateral
+uploads will legitimately be marked weakly supported. That is DR-3 working as designed —
+the report is still produced and the weakness is stated — but it should be presented as a
+known property of a frontal-only index, not as a defect discovered in the support signal.
+
+**Status: implemented and verified end-to-end against the live stack; not committed or
+pushed at time of writing.** Two new services, one new audit table, one new gated
+migration (`a1f4c72b9e30`, applied), one new frontend component, two new calibration
+scripts, four Gate B tables. Sections 5–10 of the frozen document were not modified, and
+no architectural change was made — the three premise mismatches above were resolved
+within the frozen design and are recorded, not adapted.
+
+---
+
+## Input Admission and Projection Gate (architecture v1.1) — COMPLETE
+
+### Context
+
+`input_admission_projection_gate_architecture_v1.1_FROZEN.md` was frozen at Gate A on
+18 August 2026 and supersedes v1.0 (frozen 17 August). It exists because v1.0 described a
+repository state that was partly not correct, and because it assumed the archive holds
+both projections. **The archive holds frontal images only** — 2,462 vectors, all frontal,
+established by the read-only inspection of 18 August.
+
+No service was added, removed, renamed, merged or split. v1.1 adds two controls inside the
+existing boundaries, and both are architectural rather than editorial: **DR-4** adds a
+declared-projection branch at admission, and **DR-5** adds a post-retrieval
+projection-mismatch branch. §9's pipeline therefore has two decision points v1.0 did not
+have.
+
+### Retraction of a claim made in this log
+
+The v1.0 entry above states, as a measured result, that the high-agreement/low-support
+combination "occurs in 15 of 600 held-out radiographs (2.5%)", and presents it as evidence
+that §7.1's premise is measured rather than assumed. **§7.1 of v1.1 withdraws that
+statement, and this entry withdraws it here.**
+
+All 15 of those cases are lateral images. All 60 below-floor rows are lateral. A16 now
+rejects lateral inputs, so those 15 cases show an **out-of-scope input, not an evidence
+conflict**. The combination has not been observed in a frontal image. The premise of §7.1
+is a design assumption and must not be written up as a measured result. The earlier
+paragraph is left in place rather than edited, so the correction is visible as a
+correction.
+
+### 1. Migration S7 — done first, because it blocked everything
+
+`c3d81b6a4f27`, chained off `a1f4c72b9e30`, which is **not modified** (S7 forbids it; it is
+applied). Adds `reports.voted_labels` (JSON) and `reports.agreement` (Float), both nullable
+with no backfill.
+
+§7.3's Warning is what this closes, and it is worth stating precisely because it is a
+clinical-audit argument rather than a completeness one: the disclaimer reads two signals,
+v1.0 stored one, so nobody could show which disclaimer a doctor signed. That state is
+**worse than storing neither**, because it appears reproducible and is not. All four
+snapshot fields — `retrieval_support`, `top1_similarity`, `agreement`, `voted_labels` — are
+now written at generation time, from the same vote the disclaimer was rendered from rather
+than a second one.
+
+### 2. Sections 5.5, 6.1, 6.2, 7, 10 and 15
+
+**§5.5 (A14–A17), declared projection.** `ImageAdmissionService.check_declared_projection()`.
+A15 forbids selecting a default, so an absent field is a rejection and whitespace counts as
+absent. An unrecognised value maps to `PROJECTION_NOT_DECLARED`, deliberately **not** to
+`DECLARED_LATERAL` — that code means "the doctor told us it is lateral", and using it for a
+typo would make DR-2's rejection counts wrong. A17 is satisfied by call position, and the
+method structurally cannot violate it: it is handed the declared value and holds no image,
+masker, embedder or vector store.
+
+**§6.1/§6.2 (M7–M12), three bands.** `check_projection_band()`. Two thresholds held in two
+attributes, compared in two statements. §6.1's Warning — a single threshold empties the low
+support band and §7 then has no function — is enforced at construction: a gate whose reject
+threshold is not strictly below the floor raises. An unconfigured reject threshold also
+raises rather than skipping the control, because a gate that quietly stops gating is the
+failure mode this whole document exists to prevent.
+
+**§7.** S5 and S7 together; the disclaimer template from 17 August is unchanged and now
+reads a complete snapshot.
+
+**§10.** Three distinct exception types with three distinct reason codes, never merged —
+§10's Rule states the reason plainly: *a lateral image **is** a chest radiograph*, and a
+joined type makes the rejection counts wrong. Two pre-existing codes were aligned to §10's
+table: `MODALITY_SCORE_BELOW_THRESHOLD` → `MODALITY_BELOW_THRESHOLD`, and the two format
+codes → `FORMAT_MISMATCH`.
+
+**§10.1.** Both projection messages travel as i18n **keys**, not sentences. The response
+body carries `{reason_code, message_key}` and no English. The two strings differ in force
+on purpose: A16 knows the projection is lateral because the doctor said so and states a
+fact; M10 only knows the top-1 is below the reject threshold, and §6.2's Note is that a
+correct frontal image from a different hospital produces the same measurement — so per M12
+it states a doubt and asks the doctor to check.
+
+**§15.** `build_chroma_index.py` line 142 no longer writes the literal `"Frontal"`. The
+value is read from the data row, and `prepare_train_metadata.py` resolves it from the
+indexed image's own filename against the projections CSV, failing loudly on any unresolved
+row. Re-ran: 2,462 rows, all `Frontal` — index contents unchanged, exactly as §15's Note
+predicts. It was correct by luck; it is now correct by construction.
+
+### 3. Gate B calibration (§11.2–11.5)
+
+`ml/calibration/calibrate_gate_b_v1_1.py`, a new file rather than an edit of the v1.0
+script, so the v1.0 run stays reproducible and the two populations cannot be confused.
+
+Step 2's correction is the substantive one: **the positive set is frontal only** (300).
+The 300 lateral images are a separate diagnostic set (Step 6) whose false-negative rate
+does not select the threshold. Step 3a reports two denominators per negative class and
+Step 3b computes the false-positive rate against the count that reached the gate; Step 3c
+forbids a pooled rate. Step 7's budget is declared in source before any result is read.
+
+Each rule was printed before its value was computed, per Step R1:
+
+| Setting | Rule | Value |
+| --- | --- | --- |
+| `MODALITY_THRESHOLD` | §11.3, selected on measurement | **0.60** |
+| `PROJECTION_REJECT_THRESHOLD` | §11.4 — midpoint of the observed separation gap | **0.8695459067821503** |
+| `RETRIEVAL_FLOOR` | §11.5 R1 — 0th percentile of the frontal set | **0.8906208872795105** |
+| (selection input) FN budget | §11.2 Step 7 | 0.02 |
+
+Step P1 confirmed: **300/300 lateral rejected, 0/300 frontal rejected**. The gap does not
+overlap (lateral max 0.848471, frontal min 0.890621).
+
+Step R2 is a result, not a shortfall: **0 of 300 held-out frontal cases fall below the
+floor. The low-support mechanism is not exercised in this distribution.** The 0th
+percentile was chosen because §11.5's Warning says the frontal distribution has no low tail
+and that any value *inside* the band is a chosen percentile rather than a measured
+boundary; the 0th is the only lower-tail percentile that puts the boundary at the edge of
+the observed band instead of inside it. Step R3's purpose stands: the mechanism detects a
+distribution shift at deployment, which the IU dataset cannot measure.
+
+Full precision is kept in settings. §11.4's prose gives 0.8696, which is the midpoint of
+two values already rounded to four decimals; the midpoint of the unrounded measurements is
+0.86954590678.
+
+### 4. Acceptance gate — T1 and T3 to T21
+
+**21 passed.** T2 is absent by instruction: it asserted a lateral image passes all checks,
+which contradicts DR-4, and T15 tests the correct behaviour. Real BiomedCLIP, real
+ChromaDB, real PHI masker, real Ollama, real database.
+
+| Test | Result |
+| --- | --- |
+| **T1** frontal passes, report made | `modality_score=0.999994 top1=0.9557 support=at_or_above_floor` |
+| **T3** strawberry fails at M5 | `422`, stage `modality_gate`, `MODALITY_BELOW_THRESHOLD`, score `0.00000005` |
+| **T4** text file as `.png` | `415 FORMAT_MISMATCH` |
+| **T5** 2 kB image | `1874 bytes → 422 FILE_TOO_SMALL` |
+| **T6** decompression bomb | `40000x40000 = 1.6e9 px in 38,952 bytes → 422 PIXEL_LIMIT_EXCEEDED`; `/health` still 200 |
+| **T7** EXIF JPEG | 3 tags incl. a patient name in → stored PNG, **0 tags** |
+| **T8** audit row | columns hold no name, no bytes; `Abdur`/`Rahman` absent from row and response |
+| **T9** low support band | fixture: **adjusted floor**; S4 statement present |
+| **T10** high agreement + low support | agreement 0.60, `below_floor`, no confidence language |
+| **T11** stored support + top-1 | `retrieval_support='below_floor' top1_similarity=0.9557085633277893` |
+| **T12** calibration tables | 101 thresholds, `n_frontal=300`, all three selected values present |
+| **T13** retrieval regression | `6 passed` |
+| **T14** no declared projection | `422 PROJECTION_NOT_DECLARED`, `modality_score=None` |
+| **T15** declared LATERAL | `422 DECLARED_LATERAL`; **call counts `{'mask': 0, 'embed': 0, 'query': 0}`** |
+| **T16** lateral declared PA | `422 FRONTAL_MISMATCH`, `modality_score=0.999097` (passed M5, then failed M10) |
+| **T16a** lateral reaching M10 | **9 (3.00%) rejected by M5 first; 291 (97.00%) reach M10** |
+| **T17** distinct types/codes | `DECLARED_LATERAL` (admission_projection) vs `FRONTAL_MISMATCH` (projection_mismatch) |
+| **T18** frontal unaffected | 200, no audit row, `at_or_above_floor` |
+| **T19** both messages, en + bn | both keys present in both dictionaries; 255 Bengali codepoints |
+| **T20** voted_labels + agreement | `agreement=0.6`, `voted_labels=<5 entries>`, snapshot complete |
+| **T21** projection from data row | rows declaring `['Lateral','Frontal']` → `['Lateral','Frontal']` |
+
+T15's three negatives are counted, not inferred from the status code, and the spies wrap
+and delegate to the real objects — a passing test cannot be an artifact of replacing the
+pipeline with no-ops. T21 feeds the function a row whose projection is **not** `Frontal`,
+because a test that only checked for `Frontal` would pass against the literal it exists to
+catch.
+
+**T9/T10 fixture method: adjusted floor**, recorded in the test output as §13 requires. No
+in-scope frontal case can fall in the low support band — the Gate B floor *is* the frontal
+minimum, which is §11.5 R2's own result. The floor was raised above one real frontal
+radiograph's real top-1 (0.9557 → 0.9567) and the same real image re-uploaded; everything
+else is the production path. A synthetic image was rejected as the method because it would
+also move the modality score, the retrieved neighbours and the agreement score, and T10 is
+specifically about the combination of a **real** agreement score with a low support
+category.
+
+**Regression:** backend **349 passed** (226 before this work began, 321 at the close of the
+v1.1 implementation, +28 unit tests for the new controls). Frontend `tsc` clean,
+`check:design` 0 violations, `check:i18n` 357-key parity, `vitest` 7 passed.
+
+### S3a — the evaluation artifact check
+
+**Answered: the harness never scored the disclaimer.** `GROUND_TRUTH_FIELDS = ("findings",
+"impression")` in both `ml/evaluation/run_generation_eval.py` (line 80) and
+`ml/evaluation/score_chexbert.py` (line 93). All seven fields were captured per case, but
+only findings and impression were scored. **The cleared ROUGE, METEOR and CheXbert results
+were therefore not computed on a different artifact, and are unaffected by the disclaimer
+becoming server-authored.** No re-run is required on this account.
+
+### One measurement that does not match the document
+
+§11.3's table states that moving the modality threshold from 0.60 to 0.82 "costs 2
+rejections of true frontal radiographs". Measured, it costs **1**: the frontal
+false-negative rate moves 0.0000 → 0.0033 over n=300, which is one image (study 2115, score
+0.6544). The other three rows of that table reproduce exactly. The decision is unaffected —
+0.60 is still selected — but the number in the prose is off by one, and the thesis should
+use 1. Reported rather than adapted; this is a Gate B narrative slip, not an architecture
+problem, so it does not trigger the new-draft rule.
+
+### Consequences worth recording
+
+**A14 is a breaking API change.** Every `/retrieve` caller must now declare a projection.
+Fifteen existing backend test call sites, the frontend upload flow, and the e2e harness all
+needed updating — the harness clicked "Start examination" while the new required selector
+kept it disabled, so the flow stalled with no error until a projection step was added. The
+upload page now has a required PA/AP/LATERAL selector with **nothing pre-selected**, since
+a client-side default would defeat A15 exactly as effectively as a server-side one.
+
+**LATERAL is offered in the UI and then rejected by the backend**, rather than hidden. A
+doctor holding a lateral film needs to be told what to do — §10.1's message asks for the
+frontal image of the same study — and a missing option would read as a broken form instead
+of an answer.
+
+**§16's dataset limitations stand as measured:** 3,648 lateral images excluded by design;
+162 studies hold no frontal image at all and cannot be reported; 129 surplus frontal images
+dropped by the one-image-per-study rule; the selection is deterministic because `(uid,
+filename)` pairs are unique across all 7,466 rows. **L6 remains open:** only two negative
+sub-classes reached the gate with a usable count (75 natural photographs, 22 other-modality
+radiographs); `damaged_image` gave 0 of 20 and `scanned_document` 1 of 23, because the
+rendered pages compress below the 20 kB minimum. Those two sub-classes must be rebuilt at a
+realistic file size before any claim about documents or damaged files.
+
+### How to Write This in Your Thesis
+
+The defensible frame is **scope discovered by measurement, and an input layer corrected to
+match it**. The strongest sentence available is not that the gate works; it is that a
+diagnostic run found the archive to be frontal-only, that four documents had recorded the
+decision while admission had never applied it to the input, and that the architecture was
+re-frozen rather than patched. DR-4's Note is the line to quote: the frontal-only archive
+is not a defect — `build_study_index.py` line 91 holds an explicit filter — the defect was
+that admission did not apply the same scope to the input.
+
+DR-5 deserves its own short paragraph, because the naive design is one threshold and the
+reason it fails is not obvious. Two thresholds on the same measurement look redundant until
+you name the two populations: the reject band holds lateral images and images from another
+distribution, and the low support band holds frontal images with weak archive support.
+DR-3 exists for the second population only. Collapsing them deletes the low support band
+and, with it, everything §7 was built to do.
+
+Report the projection reject threshold **as an observed separation point, never as a
+validated frontal/lateral boundary** (§11.4 Step P2). It comes from 300 images of each
+projection from one dataset, the two ranges happen not to overlap, and 300/300 versus 0/300
+is a clean result that establishes nothing universal about cosine geometry.
+
+The retrieval floor is the most intellectually honest result in this phase and should be
+written as such rather than apologised for. The rule was fixed before the number was known;
+the number turned out to place 0 of 300 held-out frontal cases below the floor; and the
+correct conclusion is that **the mechanism is unexercised on this distribution**, serving a
+deployment-time distribution shift the IU dataset cannot measure. §11.5's own Note says a
+stated non-result is stronger than a fitted number, and that is right — it states what the
+measurement shows and what it cannot show.
+
+Two things to be careful with. First, do not repeat the retracted 15-of-600 claim; all 15
+are lateral, and the high-agreement/low-support combination has never been observed in a
+frontal image. Say the premise of §7.1 is a design assumption. Second, the modality gate's
+limitation is unchanged and must still be reported as a split rather than a pooled rate:
+the prompt set cannot separate a chest radiograph from another plain radiograph, the
+measured cosine between the chest prompt and the abdominal prompt is 0.827 — the largest
+off-diagonal value in the 5x5 matrix — and more prompts will not correct it.
+
+**Status: implemented and verified end-to-end against the live stack; not committed or
+pushed at time of writing.** One new gated migration (`c3d81b6a4f27`, applied), two new
+exception types, one new admission control, one new gate entry point, one new calibration
+script, one rewritten acceptance suite (the v1.0 suite deleted, not kept), and one code
+defect corrected in the indexer. Sections 5 to 10 of the frozen document were not modified,
+and no architecture decision was taken during implementation.

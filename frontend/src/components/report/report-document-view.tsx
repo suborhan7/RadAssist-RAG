@@ -1,9 +1,15 @@
+"use client";
+
+import { useT } from "@/lib/i18n";
 import type { paths } from "@/lib/generated/api";
 
 type ReportDetailResponse =
   paths["/reports/{report_id}"]["get"]["responses"][200]["content"]["application/json"];
 type ReportContentResponse = ReportDetailResponse["content"];
 
+// The canonical 7-field list. `label` stays English: it is the stable
+// identifier a snapshot test pins and the ultimate fallback. For DISPLAY, use
+// REPORT_FIELD_LABEL_KEY[key] with t() so the heading follows the language.
 export const REPORT_CONTENT_FIELDS: { key: keyof ReportContentResponse; label: string }[] = [
   { key: "examination", label: "Examination" },
   { key: "clinical_history", label: "Clinical History" },
@@ -13,6 +19,17 @@ export const REPORT_CONTENT_FIELDS: { key: keyof ReportContentResponse; label: s
   { key: "recommendation", label: "Recommendation" },
   { key: "disclaimer", label: "Disclaimer" },
 ];
+
+/** Field key -> i18n key for the section heading (translated at render). */
+export const REPORT_FIELD_LABEL_KEY: Record<keyof ReportContentResponse, string> = {
+  examination: "report.examination",
+  clinical_history: "report.clinicalHistory",
+  technique: "report.technique",
+  findings: "report.findings",
+  impression: "report.impression",
+  recommendation: "report.recommendation",
+  disclaimer: "report.disclaimer",
+};
 
 /**
  * Phase 12's original report-as-document rendering, extracted here in
@@ -42,13 +59,14 @@ export const REPORT_CONTENT_FIELDS: { key: keyof ReportContentResponse; label: s
  * exported and already reused once, by Phase 18's ReportDiffView.
  */
 export function ReportDocumentView({ content }: { content: ReportContentResponse }) {
+  const { t } = useT();
   return (
     <div className="flex flex-col">
-      {REPORT_CONTENT_FIELDS.map(({ key, label }) => (
+      {REPORT_CONTENT_FIELDS.map(({ key }) => (
         <div key={key} className="border-b border-hairline py-16 first:pt-0 last:border-0 last:pb-0">
-          <h3 className="font-mono text-eyebrow uppercase text-text-tertiary">{label}</h3>
+          <h3 className="font-mono text-eyebrow uppercase text-text-tertiary">{t(REPORT_FIELD_LABEL_KEY[key])}</h3>
           <p className="mt-8 whitespace-pre-wrap text-findings text-text-secondary">
-            {content[key] || "(none)"}
+            {content[key] || t("compare.none")}
           </p>
         </div>
       ))}

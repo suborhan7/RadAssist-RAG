@@ -82,6 +82,15 @@ class PatientService:
         )
         return [self._to_domain(r) for r in records]
 
+    def list_all(self) -> list[Patient]:
+        # The whole shared registry for the frontend Patients directory, ordered
+        # by patient_code -- which is sequential and zero-padded to a fixed width
+        # (PAT-000001), so a plain lexicographic ORDER BY equals registration
+        # order without exposing created_at. A browse/listing path, deliberately
+        # separate from the frozen exact-match search above.
+        records = self._db.query(PatientRecord).order_by(PatientRecord.patient_code.asc()).all()
+        return [self._to_domain(r) for r in records]
+
     def get_history(self, patient_id: str) -> list[Report]:
         patient_uuid = uuid.UUID(patient_id)
         records = (

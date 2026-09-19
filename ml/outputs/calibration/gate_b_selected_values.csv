@@ -1,0 +1,7 @@
+setting,selected_value,evidence
+MODALITY_PROMPTS_POSITIVE,a chest radiograph,"initial set, §11.1; Step 6 check reported above"
+MODALITY_PROMPTS_NEGATIVE,a photograph of an object|an abdominal radiograph|a document or a scanned page|a photograph of a person,"initial set, §11.1"
+MODALITY_SOFTMAX_TEMPERATURE,0.011732644441490516,reciprocal of BiomedCLIP's learned logit_scale (85.2322769165039)
+MODALITY_THRESHOLD,0.82,"Step 7; highest threshold whose false-negative rate stays within the budget 0.02; among those, the lowest false-positive rate (0.1616); FNR=0.0183 (frontal 0.0033 / lateral 0.0333), FPR=0.1616, n_pos=600, n_neg=99"
+(selection input) FNR budget,0.02,"Step 7's 'give more importance to a low false-negative rate', as an explicit budget; see _select_threshold()"
+RETRIEVAL_FLOOR,0.7603,Step 9; 10th percentile of positive-set top-1 similarity (n=600); 0 populous labels below it -> one global floor

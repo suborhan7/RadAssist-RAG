@@ -54,6 +54,8 @@ from app.domain.interfaces import (
     IVectorStore,
 )
 from app.models.report import ReportRecord
+from app.models.retrieved_evidence import RetrievedEvidence
+from app.services.evidence_disclaimer import render_disclaimer
 from app.services.session_reconstruction import reconstruct_session_evidence
 
 
@@ -67,6 +69,7 @@ class ReportGenerationService:
         llm_orchestrator: ILLMOrchestrator,
         response_validator: IResponseValidator,
         report_formatter: IReportFormatter,
+        modality_gate_service=None,
     ) -> None:
         self._db = db
         self._vector_store = vector_store
@@ -75,6 +78,20 @@ class ReportGenerationService:
         self._llm_orchestrator = llm_orchestrator
         self._response_validator = response_validator
         self._report_formatter = report_formatter
+        # Input Admission and Modality Gate §7: the ONE implementation of
+        # S1 ("calculate the retrieval support category from the top-1
+        # similarity and the retrieval floor") lives on ModalityGateService
+        # and is reused here rather than reimplemented, so /retrieve's
+        # M7-M9 category and the report's stored S5 category can never be
+        # computed by two rules that drift apart.
+        #
+        # Defaulted to None so the eight existing unit tests that construct
+        # this service with seven positional collaborators keep working
+        # unchanged. A None gate means the support signal is simply not
+        # computed and both columns stay NULL -- which is the same honest
+        # "no recorded support state" that pre-migration rows carry, not a
+        # silent fallback to some assumed category.
+        self._modality_gate_service = modality_gate_service
 
     def generate(
         self,
@@ -130,6 +147,53 @@ class ReportGenerationService:
             content, context.evidence_summary, voted_labels
         )
 
+        # --- Input Admission and Modality Gate §7: the evidence support
+        # signal (S1, S2, S5). ---
+        #
+        # The top-1 similarity is read back out of `retrieved_evidence`,
+        # NOT off the reconstructed `retrieved_cases`. That is not a
+        # roundabout way of getting the same number: reconstruct_session_
+        # evidence() fetches cases through IVectorStore.get_by_ids(), an
+        # ID-based fetch with no ranking, which documents that it forces
+        # distance 0.0 and therefore reports similarity 1.0 for every case.
+        # Using that value would record every single report as being at or
+        # above the floor. The real, ranked similarity from the original
+        # query survives only in the retrieved_evidence rows Phase 4
+        # persisted at /retrieve time -- which is also what S5 means by
+        # storing the evidence state as it was, rather than as it can be
+        # re-derived later.
+        top1_similarity = self._top1_similarity(retrieval_session.id)
+        top_agreement = voted_labels[0].agreement if voted_labels else None
+
+        retrieval_support = None
+        if self._modality_gate_service is not None:
+            retrieval_support = self._modality_gate_service.classify_retrieval_support(
+                top1_similarity
+            )
+
+            # S2 + S3: the disclaimer is rendered here, on the server, from
+            # a parameterised template fed BOTH signals -- replacing the
+            # text the LLM wrote into this field. §7.1's Rule is that the
+            # disclaimer must read both signals; a model-authored
+            # disclaimer reads whichever it feels like, and the Phase 7 dev
+            # log's real sample ("Clinical uncertainty due to low agreement
+            # score (0.60)") shows it reading only agreement -- the exact
+            # single-signal failure §7.1's Warning describes.
+            #
+            # This runs AFTER validate_semantic() on purpose. That
+            # validator's subject is the model's clinical claims in
+            # findings/impression; handing it a server-authored string that
+            # no model produced would be validating this system's own
+            # template output as though it were generated content.
+            content.disclaimer = render_disclaimer(
+                agreement=top_agreement,
+                support=retrieval_support,
+                top1_similarity=top1_similarity,
+                retrieval_floor=self._modality_gate_service.retrieval_floor,
+                agreement_threshold=settings.DISCLAIMER_AGREEMENT_THRESHOLD,
+                language=language,
+            )
+
         # report_date generated HERE, not inside ReportFormatter (which must
         # stay a pure, deterministic function -- Phase 8 Decision 4).
         report_date = datetime.now(timezone.utc).date().isoformat()
@@ -170,6 +234,25 @@ class ReportGenerationService:
             collection_name=retrieval_metadata.collection_name,
             questionnaire_answers=questionnaire_answers,
             clinical_notes=clinical_notes,
+            # S5: stored WITH the report, at generation time. Written from
+            # the same two values the disclaimer above was rendered from,
+            # not re-derived, so the stored category and the sentence the
+            # radiologist reads can never describe different measurements.
+            retrieval_support=retrieval_support.value if retrieval_support is not None else None,
+            top1_similarity=top1_similarity,
+            # S7 / D4: the other two fields of the evidence snapshot,
+            # written from the SAME `voted_labels` this method already
+            # voted, built the context from, validated against and
+            # rendered the disclaimer from -- not re-voted here, so the
+            # stored snapshot and the report's own reasoning cannot
+            # describe different votes.
+            #
+            # The whole descending-sorted list is stored, not just the
+            # top entry: the disclaimer, the semantic validator and the
+            # frontend each read different parts of it (see the
+            # migration's docstring).
+            voted_labels=[asdict(v) for v in voted_labels],
+            agreement=top_agreement,
         )
         self._db.add(report_record)
         try:
@@ -196,3 +279,27 @@ class ReportGenerationService:
         # layer (Step 7) converts to str for JSON serialization, same as
         # app/api/retrieval.py's _build_response() does for session_id.
         return report_record.id, formatted_report, validation_result, generation_metadata
+
+    def _top1_similarity(self, session_id: uuid.UUID) -> float | None:
+        """The rank-1 similarity actually measured by the original
+        /retrieve call (§7 M7's "top-1 similarity score from the
+        RetrievalService").
+
+        Ordered by rank rather than by max(similarity): rank 1 IS the top-1
+        result by definition, SimilaritySearchPolicy having already sorted
+        descending before these rows were written. Reading the rank is
+        reading what was recorded; recomputing a max would be a second,
+        independently-derivable opinion about the same fact.
+
+        None when the session has no evidence rows at all -- a retrieval
+        that returned nothing. ModalityGateService.classify_retrieval_
+        support() maps that to BELOW_FLOOR, since no retrieved case meets
+        the threshold when there is no retrieved case.
+        """
+        row = (
+            self._db.query(RetrievedEvidence)
+            .filter(RetrievedEvidence.session_id == session_id)
+            .order_by(RetrievedEvidence.rank)
+            .first()
+        )
+        return row.similarity if row is not None else None

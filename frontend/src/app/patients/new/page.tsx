@@ -1,14 +1,21 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ApiError, createPatient } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
+import { BackLink } from "@/components/layout/screen-header";
+import { MIN_DATE_OF_BIRTH, todayISO } from "@/lib/date-bounds";
+import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/cn";
 
 const FIELD = "h-46 rounded-field border border-strong bg-bg-raised px-16 text-text-primary placeholder:text-text-muted";
-const SEX_OPTIONS = ["Female", "Male", "Other"];
+// Value stored as `gender` stays English; label is looked up per option.
+const SEX_OPTIONS: { value: string; labelKey: string }[] = [
+  { value: "Female", labelKey: "newPatient.sexFemale" },
+  { value: "Male", labelKey: "newPatient.sexMale" },
+  { value: "Other", labelKey: "newPatient.sexOther" },
+];
 
 /**
  * Register patient (Phase 11/12, ported to the Reading Room theme in the
@@ -21,6 +28,7 @@ const SEX_OPTIONS = ["Female", "Male", "Other"];
  */
 export default function RegisterPatientPage() {
   const router = useRouter();
+  const { t } = useT();
   const [name, setName] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [gender, setGender] = useState("");
@@ -38,7 +46,7 @@ export default function RegisterPatientPage() {
       setCreatedPatientCode(patient.patient_code);
       setTimeout(() => router.push(`/patients/${patient.id}`), 1200);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Failed to register patient.");
+      setError(err instanceof ApiError ? err.message : t("newPatient.errFailed"));
     } finally {
       setSubmitting(false);
     }
@@ -47,14 +55,8 @@ export default function RegisterPatientPage() {
   return (
     <div className="flex h-[100dvh] flex-col overflow-hidden bg-bg-app">
       <header className="flex h-header-bar flex-none items-center gap-14 border-b border-hairline px-30">
-        <Link
-          href="/patients/search"
-          className="text-sm text-text-tertiary transition-colors duration-hover hover:text-cyan"
-        >
-          Find patient
-        </Link>
-        <span className="text-text-muted">/</span>
-        <h1 className="text-screen-title text-text-primary">Register patient</h1>
+        <BackLink href="/patients/search" labelKey="nav.find" />
+        <h1 className="text-screen-title text-text-primary">{t("newPatient.title")}</h1>
       </header>
 
       <div className="flex-1 overflow-auto px-30 py-34">
@@ -62,16 +64,22 @@ export default function RegisterPatientPage() {
           {/* Form */}
           <form onSubmit={handleSubmit} className="flex flex-col gap-18">
             <label className="flex flex-col gap-8">
-              <span className="text-sm text-text-secondary">Full name</span>
+              <span className="text-sm text-text-secondary">{t("newPatient.fullName")}</span>
               <input required value={name} onChange={(e) => setName(e.target.value)} className={FIELD} />
             </label>
 
             <div className="grid grid-cols-1 gap-18 sm:grid-cols-2">
+              {/* min/max bound the native year spinner, which otherwise
+                  accepts any year up to 275760 -- a tester reached the form's
+                  own 500 by typing one. The server enforces the same range;
+                  this just makes the browser refuse it first, in place. */}
               <label className="flex flex-col gap-8">
-                <span className="text-sm text-text-secondary">Date of birth</span>
+                <span className="text-sm text-text-secondary">{t("search.dob")}</span>
                 <input
                   required
                   type="date"
+                  min={MIN_DATE_OF_BIRTH}
+                  max={todayISO()}
                   value={dateOfBirth}
                   onChange={(e) => setDateOfBirth(e.target.value)}
                   className={`${FIELD} font-mono`}
@@ -79,15 +87,15 @@ export default function RegisterPatientPage() {
               </label>
 
               <div className="flex flex-col gap-8">
-                <span className="text-sm text-text-secondary">Sex</span>
+                <span className="text-sm text-text-secondary">{t("newPatient.sex")}</span>
                 <div className="flex flex-wrap gap-9">
                   {SEX_OPTIONS.map((option) => {
-                    const selected = gender === option;
+                    const selected = gender === option.value;
                     return (
                       <button
-                        key={option}
+                        key={option.value}
                         type="button"
-                        onClick={() => setGender(option)}
+                        onClick={() => setGender(option.value)}
                         aria-pressed={selected}
                         className={cn(
                           "rounded-full border px-20 py-9 text-sm transition-colors duration-hover",
@@ -96,7 +104,7 @@ export default function RegisterPatientPage() {
                             : "border-strong text-text-secondary hover:text-text-primary",
                         )}
                       >
-                        {option}
+                        {t(option.labelKey)}
                       </button>
                     );
                   })}
@@ -106,7 +114,7 @@ export default function RegisterPatientPage() {
 
             <div className="pt-4">
               <Button type="submit" variant="primary" size="lg" loading={submitting} disabled={!gender}>
-                {submitting ? "Registering…" : "Register patient"}
+                {submitting ? t("newPatient.registering") : t("newPatient.title")}
               </Button>
             </div>
 
@@ -118,9 +126,9 @@ export default function RegisterPatientPage() {
 
             {createdPatientCode && (
               <p className="rounded-field border border-cyan-line bg-cyan-wash px-14 py-12 text-sm text-cyan">
-                Patient registered as{" "}
-                <span className="font-mono font-semibold">{createdPatientCode}</span>. Opening the
-                profile…
+                {t("newPatient.registeredPre")}{" "}
+                <span className="font-mono font-semibold">{createdPatientCode}</span>
+                {t("newPatient.registeredPost")}
               </p>
             )}
           </form>
@@ -128,11 +136,10 @@ export default function RegisterPatientPage() {
           {/* Assigned-code panel */}
           <aside className="flex flex-col gap-26">
             <div>
-              <div className="font-mono text-eyebrow uppercase text-text-tertiary">Will be assigned</div>
+              <div className="font-mono text-eyebrow uppercase text-text-tertiary">{t("newPatient.willAssign")}</div>
               <div className="mt-10 font-mono text-metric-sm text-text-primary">PAT-XXXXXX</div>
               <p className="mt-8 text-sm-tight leading-relaxed text-text-secondary">
-                Sequential and permanent, assigned on registration. Written on the film envelope at
-                reception.
+                {t("newPatient.assignNote")}
               </p>
             </div>
           </aside>

@@ -1,0 +1,8 @@
+setting,value,rule_or_evidence
+MODALITY_PROMPTS_POSITIVE,a chest radiograph,section 11.1 prompt set
+MODALITY_PROMPTS_NEGATIVE,a photograph of an object|an abdominal radiograph|a document or a scanned page|a photograph of a person,section 11.1 prompt set
+MODALITY_SOFTMAX_TEMPERATURE,0.011732644441490516,M4b: 1 / effective logit scale (85.2322769165039)
+MODALITY_THRESHOLD,0.60,"section 11.3; frontal FNR 0.0000 (n=300); 0.82 declined, see the 11.3 table above"
+PROJECTION_REJECT_THRESHOLD,0.8695,"section 11.4 rule: midpoint of the separation gap (0.8485, 0.8906); P1 300/300 lateral, 0/300 frontal"
+RETRIEVAL_FLOOR,0.8906,section 11.5 Step R1 rule: 0th percentile of the frontal set (n=300); R2: 0/300 below; mechanism unexercised
+(selection input) FALSE_NEGATIVE_BUDGET,0.02,Step 7; stated in source before results were read

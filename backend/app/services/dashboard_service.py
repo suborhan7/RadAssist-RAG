@@ -94,8 +94,24 @@ class DashboardService:
         # "Today" is a plain date-equality filter on the same created_at
         # column every other doctor-scoped count here already reads --
         # no new query logic, just one more predicate.
+        #
+        # QA fix: this counts only sessions that produced a report. It used to
+        # count RetrievalSession rows outright, while the queue the number sits
+        # above lists ReportRecord rows -- so a session abandoned before
+        # generation (or whose generation failed) was counted in the tile and
+        # appeared nowhere in the list. A tester read that gap correctly as
+        # "examinations are disappearing but the total keeps climbing", and
+        # there was no way to reach the missing rows because nothing renders a
+        # report-less session. The join makes the tile agree with the list by
+        # construction: it can no longer count something the queue cannot show.
+        #
+        # Sessions without a report are therefore deliberately excluded rather
+        # than surfaced -- same reasoning as my_patients above, which counts
+        # what the doctor actually has rather than every row that mentions
+        # them. An abandoned upload is not an examination performed.
         examinations_today = (
-            self._db.query(func.count(RetrievalSession.id))
+            self._db.query(func.count(func.distinct(RetrievalSession.id)))
+            .join(ReportRecord, ReportRecord.session_id == RetrievalSession.id)
             .filter(
                 RetrievalSession.doctor_id == current_doctor_uuid,
                 func.date(RetrievalSession.created_at) == date.today().isoformat(),

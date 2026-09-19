@@ -6,6 +6,7 @@ import { BUTTON_BASE, SIZE, VARIANT } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import { ReportDocumentView } from "@/components/report/report-document-view";
 import { ReportDiffView } from "@/components/report/report-diff-view";
+import { useT } from "@/lib/i18n";
 import type { ReportDiffSummary } from "@/lib/report-diff";
 import type { paths } from "@/lib/generated/api";
 
@@ -38,6 +39,7 @@ export function FinalizePreview({
   onConfirm: () => Promise<void>;
   onCancel: () => void;
 }) {
+  const { t } = useT();
   const [finalizing, setFinalizing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showDiff, setShowDiff] = useState(false);
@@ -48,7 +50,7 @@ export function FinalizePreview({
     try {
       await onConfirm();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to finalize report.");
+      setError(err instanceof Error ? err.message : t("report.errFinalize"));
     } finally {
       setFinalizing(false);
     }
@@ -59,9 +61,9 @@ export function FinalizePreview({
       <Card className="flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden">
         <div className="flex items-center justify-between border-b border-hairline px-24 py-20">
           <div>
-            <h2 className="text-panel text-text-primary">Preview before finalizing</h2>
+            <h2 className="text-panel text-text-primary">{t("report.previewTitle")}</h2>
             <p className="mt-3 text-sm text-text-secondary">
-              Once finalized, this report cannot be edited further.
+              {t("report.previewDesc")}
             </p>
           </div>
           <button
@@ -69,7 +71,7 @@ export function FinalizePreview({
             onClick={() => setShowDiff((prev) => !prev)}
             className="shrink-0 text-sm font-medium text-text-secondary transition-colors duration-hover hover:text-cyan"
           >
-            {showDiff ? "Hide changes vs AI draft" : "Changes vs AI draft"}
+            {showDiff ? t("report.hideChangesAi") : t("report.changesAi")}
           </button>
         </div>
 
@@ -78,7 +80,7 @@ export function FinalizePreview({
             <ReportDiffView summary={diffSummary} />
           ) : (
             <>
-              <h3 className="font-mono text-eyebrow uppercase text-text-tertiary">Report &middot; {reportDate}</h3>
+              <h3 className="font-mono text-eyebrow uppercase text-text-tertiary">{t("workspace.reportFallback")} &middot; {reportDate}</h3>
               <div className="mt-14">
                 <ReportDocumentView content={report.content} />
               </div>
@@ -99,7 +101,7 @@ export function FinalizePreview({
             disabled={finalizing}
             className={cn(BUTTON_BASE, VARIANT.secondary, SIZE.md)}
           >
-            Back to Edit
+            {t("report.backToEdit")}
           </button>
           <button
             type="button"
@@ -107,7 +109,7 @@ export function FinalizePreview({
             disabled={finalizing}
             className={cn(BUTTON_BASE, VARIANT.primary, SIZE.md)}
           >
-            {finalizing ? "Finalizing…" : "Confirm Finalize"}
+            {finalizing ? t("report.finalizing") : t("report.confirmFinalize")}
           </button>
         </div>
       </Card>

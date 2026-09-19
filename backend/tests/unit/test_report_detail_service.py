@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import asdict
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 
 import pytest
 from sqlalchemy import create_engine
@@ -194,7 +194,11 @@ def test_edited_and_finalized_report_surfaces_audit_log_and_finalized_fields():
     assert detail.content == edited_content
     assert detail.ai_draft_content == CONTENT  # immutable original, untouched by the edit
     assert detail.status == ReportStatus.FINAL
-    assert detail.finalized_at == finalized_at.isoformat()
+    # finalized_at is stored naive but is always UTC (see report_detail_service.py's
+    # comment); serialization stamps the offset so a client cannot read it as local
+    # time. This assertion was left behind by that fix and asserted the old naive
+    # form, failing at HEAD -- corrected here rather than carried as a known-red test.
+    assert detail.finalized_at == finalized_at.replace(tzinfo=timezone.utc).isoformat()
     assert detail.finalized_by == str(doctor_id)
     assert len(detail.audit_log) == 2
     # oldest first

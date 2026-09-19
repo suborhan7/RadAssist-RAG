@@ -70,8 +70,54 @@ def test_examinations_today_counts_only_todays_sessions_for_this_doctor():
     db = sessionmaker(bind=engine)()
     doctor_id = uuid.uuid4()
 
-    _seed_session(db, doctor_id, created_at=datetime.combine(date.today(), datetime.min.time()))
-    _seed_session(db, doctor_id, created_at=datetime.now() - timedelta(days=1))
+    today = _seed_session(db, doctor_id, created_at=datetime.combine(date.today(), datetime.min.time()))
+    _seed_report(db, today)
+    yesterday = _seed_session(db, doctor_id, created_at=datetime.now() - timedelta(days=1))
+    _seed_report(db, yesterday)
+
+    stats = DashboardService(db=db).get_stats(str(doctor_id))
+    assert stats.examinations_today == 1
+
+    db.close()
+
+
+def test_examinations_today_ignores_sessions_that_never_produced_a_report():
+    """The reported "examinations disappear but the total keeps climbing".
+
+    The tile sits directly above a queue that lists reports. Counting bare
+    retrieval sessions meant an upload abandoned before generation was added
+    to the number while appearing nowhere in the list, and nothing in the UI
+    renders a report-less session, so the row could not be reached at all. The
+    count is now defined by the same join the queue is, which makes the two
+    agree by construction rather than by coincidence.
+    """
+    engine = _make_engine()
+    db = sessionmaker(bind=engine)()
+    doctor_id = uuid.uuid4()
+    start_of_today = datetime.combine(date.today(), datetime.min.time())
+
+    completed = _seed_session(db, doctor_id, created_at=start_of_today)
+    _seed_report(db, completed)
+    # Abandoned: retrieval ran, generation never did.
+    _seed_session(db, doctor_id, created_at=start_of_today)
+
+    stats = DashboardService(db=db).get_stats(str(doctor_id))
+    assert stats.examinations_today == 1
+
+    db.close()
+
+
+def test_examinations_today_counts_a_session_once_even_with_several_reports():
+    """func.distinct guards the join: one examination, not one per report."""
+    engine = _make_engine()
+    db = sessionmaker(bind=engine)()
+    doctor_id = uuid.uuid4()
+
+    session_id = _seed_session(
+        db, doctor_id, created_at=datetime.combine(date.today(), datetime.min.time())
+    )
+    _seed_report(db, session_id)
+    _seed_report(db, session_id)
 
     stats = DashboardService(db=db).get_stats(str(doctor_id))
     assert stats.examinations_today == 1

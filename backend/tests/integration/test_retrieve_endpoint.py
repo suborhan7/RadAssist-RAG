@@ -70,7 +70,7 @@ def test_retrieve_with_real_image_returns_full_contract(client):
         response = client.post(
             "/retrieve",
             files={"file": (sample.name, f, "image/png")},
-            data={"top_k": "5", "min_similarity": "0.0"},
+            data={"top_k": "5", "min_similarity": "0.0", "declared_projection": "PA"},
         )
     assert response.status_code == 200
     body = response.json()
@@ -102,7 +102,7 @@ def test_retrieve_with_real_image_returns_full_contract(client):
 def test_db_rows_match_successful_response(client):
     sample = _pick_sample_image()
     with open(sample, "rb") as f:
-        response = client.post("/retrieve", files={"file": (sample.name, f, "image/png")})
+        response = client.post("/retrieve", files={"file": (sample.name, f, "image/png")}, data={"declared_projection": "PA"})
     assert response.status_code == 200
     body = response.json()
     session_id = uuid.UUID(body["session_id"])
@@ -118,7 +118,27 @@ def test_db_rows_match_successful_response(client):
         db.close()
 
 
-def test_retrieve_with_corrupt_file_returns_422_and_no_db_rows(client):
+def test_retrieve_with_corrupt_file_returns_415_and_no_session_rows(client):
+    """Status updated from 422 to 415, and the name from _returns_422_ to
+    match, when the Input Admission and Modality Gate architecture
+    (input_admission_modality_gate_architecture_v1.0_FROZEN.md) landed.
+
+    This is the frozen §10 status table taking effect, not a regression.
+    The payload here -- plain text, sent as `garbage.png` -- is a declared
+    extension that disagrees with the file's actual bytes, which §5.1's A4
+    rejects and §10's table maps to **415 Unsupported Media Type**. The
+    former blanket 422 came from Phase 4's ImageValidator raising a
+    ValueError that app/api/retrieval.py translated without distinguishing
+    WHY the file was unusable; §10 splits that one status into three (415
+    format, 413 size, 422 damaged/dimensions), so this case moves.
+
+    The row-count assertion is narrowed to the two tables this endpoint
+    creates on the success path. It deliberately does NOT assert that the
+    whole database is unchanged any more: DR-2 requires a rejected upload
+    to WRITE one audit row to upload_rejection_log ("proof that the gate
+    operated"), so an unchanged total row count would now mean the audit
+    requirement had been violated.
+    """
     db = SessionLocal()
     try:
         before = _row_counts(db)
@@ -129,7 +149,7 @@ def test_retrieve_with_corrupt_file_returns_422_and_no_db_rows(client):
         "/retrieve",
         files={"file": ("garbage.png", b"this is not a real image file", "image/png")},
     )
-    assert response.status_code == 422
+    assert response.status_code == 415
 
     db = SessionLocal()
     try:
@@ -144,13 +164,13 @@ def test_model_loaded_once_requests_much_faster_than_startup(client):
 
     with open(sample, "rb") as f:
         start_1 = time.perf_counter()
-        r1 = client.post("/retrieve", files={"file": (sample.name, f, "image/png")})
+        r1 = client.post("/retrieve", files={"file": (sample.name, f, "image/png")}, data={"declared_projection": "PA"})
         elapsed_1 = time.perf_counter() - start_1
     assert r1.status_code == 200
 
     with open(sample, "rb") as f:
         start_2 = time.perf_counter()
-        r2 = client.post("/retrieve", files={"file": (sample.name, f, "image/png")})
+        r2 = client.post("/retrieve", files={"file": (sample.name, f, "image/png")}, data={"declared_projection": "PA"})
         elapsed_2 = time.perf_counter() - start_2
     assert r2.status_code == 200
 
@@ -186,7 +206,7 @@ def test_transaction_atomicity_on_persistence_failure(client, monkeypatch):
 
     sample = _pick_sample_image()
     with open(sample, "rb") as f:
-        response = client.post("/retrieve", files={"file": (sample.name, f, "image/png")})
+        response = client.post("/retrieve", files={"file": (sample.name, f, "image/png")}, data={"declared_projection": "PA"})
 
     assert response.status_code == 500
 

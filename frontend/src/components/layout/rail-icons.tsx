@@ -1,5 +1,5 @@
 /**
- * Rail icons. The prototype used Unicode geometric glyphs (▤ ⌕ ◫ ＋ ▥ ? ⇄ ◍ →)
+ * App icons (originally the rail set, now the whole family). The prototype used Unicode geometric glyphs (▤ ⌕ ◫ ＋ ▥ ? ⇄ ◍ →)
  * as placeholders and warned they risk rendering as tofu (a ⏻ power symbol did,
  * and was swapped for →). The repo ships no icon library, so these are small
  * hand-authored inline SVGs: 18px, 1px currentColor stroke, aria-hidden. The
@@ -106,6 +106,50 @@ export function SignOutIcon({ className }: IconProps) {
     <svg {...base} className={className}>
       <line x1="3.5" y1="9" x2="14" y2="9" />
       <path d="M10.5 5.5 14 9l-3.5 3.5" />
+    </svg>
+  );
+}
+
+/**
+ * Back -- chevron left. Not a rail item: it lives on the screen headers, but
+ * it belongs to this family and is declared here so it inherits the same 18px
+ * box, 1.4 stroke and round joins. An icon drawn to its own spec beside these
+ * reads as borrowed from somewhere else.
+ */
+export function BackArrowIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className}>
+      <path d="M11 4 6 9l5 5" />
+    </svg>
+  );
+}
+
+/** Dark appearance -- crescent. */
+export function MoonIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className}>
+      <path d="M14.8 10.6A6.6 6.6 0 0 1 7.4 3.2a6.6 6.6 0 1 0 7.4 7.4Z" />
+    </svg>
+  );
+}
+
+/** Light appearance -- sun with rays. */
+export function SunIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className}>
+      <circle cx="9" cy="9" r="3.4" />
+      <path d="M9 1.6v1.7M9 14.7v1.7M16.4 9h-1.7M3.3 9H1.6M14.23 3.77l-1.2 1.2M4.97 13.03l-1.2 1.2M14.23 14.23l-1.2-1.2M4.97 4.97l-1.2-1.2" />
+    </svg>
+  );
+}
+
+/** Discard a draft -- waste bin. */
+export function DiscardIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className}>
+      <path d="M3.5 5h11" />
+      <path d="M7 5V3.5h4V5" />
+      <path d="M5 5l.7 9.1a.9.9 0 0 0 .9.9h4.8a.9.9 0 0 0 .9-.9L13 5" />
     </svg>
   );
 }

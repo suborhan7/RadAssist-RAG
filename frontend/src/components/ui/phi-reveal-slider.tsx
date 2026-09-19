@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/cn";
 
 /**
@@ -24,6 +25,7 @@ export function PhiRevealSlider({
   originalSrc: string;
   className?: string;
 }) {
+  const { t } = useT();
   const [percent, setPercent] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
@@ -56,12 +58,12 @@ export function PhiRevealSlider({
         }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={maskedSrc} alt="Masked chest X-ray" className="absolute inset-0 h-full w-full object-contain" />
+        <img src={maskedSrc} alt={t("phi.altMasked")} className="absolute inset-0 h-full w-full object-contain" />
         <div className="absolute inset-0" style={{ clipPath: `inset(0 ${100 - percent}% 0 0)` }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={originalSrc}
-            alt="Original chest X-ray, before masking"
+            alt={t("phi.altOriginal")}
             className="absolute inset-0 h-full w-full object-contain"
           />
         </div>
@@ -76,13 +78,12 @@ export function PhiRevealSlider({
           max={100}
           value={percent}
           onChange={(e) => setPercent(Number(e.target.value))}
-          aria-label="Reveal original image beneath the masked copy"
+          aria-label={t("phi.ariaReveal")}
           className="absolute inset-x-8 bottom-8 w-[calc(100%-16px)] accent-cyan"
         />
       </div>
       <p className="text-sm text-text-tertiary">
-        Drag to reveal the original beneath the masked copy. Original shown from this session
-        only. Not stored.
+        {t("phi.caption")}
       </p>
     </div>
   );

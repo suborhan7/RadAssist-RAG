@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState, type ComponentType } from "react";
-import { getCurrentDoctor, logoutDoctor } from "@/lib/api-client";
+import { useState, type ComponentType } from "react";
+import { logoutDoctor } from "@/lib/api-client";
+import { useDoctor } from "@/lib/doctor";
+import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/cn";
 import {
   QueueIcon,
@@ -21,10 +23,18 @@ export type DoctorInfo = { full_name: string; bmdc_number?: string | null };
 
 export type NavItem = {
   key: string;
-  label: string;
+  label: string; // an i18n key (e.g. "nav.queue"); translated at render in RailItem
   Icon: ComponentType<{ className?: string }>;
-  href: string | null; // null => present but non-navigable (no context id in URL)
+  href: string;
   active: boolean;
+  /**
+   * i18n key for "what this item needs before it can take you anywhere",
+   * set when the item has no report/patient in context and is therefore
+   * routing to a chooser rather than straight to the destination. Rendered
+   * as the title so hovering explains the redirect instead of surprising
+   * the reader with it.
+   */
+  requiresKey?: string;
 };
 
 /**
@@ -40,22 +50,15 @@ export type NavItem = {
 export function AppRail() {
   const router = useRouter();
   const pathname = usePathname();
-  const [doctor, setDoctor] = useState<DoctorInfo | null>(null);
+  // The /auth/me fetch this component used to own now lives on DoctorProvider,
+  // so the rail, the upload flow and Settings share one result instead of three
+  // independent requests per navigation.
+  const { doctor: currentDoctor } = useDoctor();
   const [loggingOut, setLoggingOut] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
-    getCurrentDoctor()
-      .then((d) => {
-        if (!cancelled) setDoctor(d ? { full_name: d.full_name, bmdc_number: d.bmdc_number } : null);
-      })
-      .catch(() => {
-        if (!cancelled) setDoctor(null);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [pathname]);
+  const doctor: DoctorInfo | null = currentDoctor
+    ? { full_name: currentDoctor.full_name, bmdc_number: currentDoctor.bmdc_number }
+    : null;
 
   if (!doctor) return null;
 
@@ -82,11 +85,21 @@ export function AppRail() {
 
 /**
  * Five of the seven nav destinations are contextual (they need a patient or
- * report id). When the current URL supplies that id the item links and lights;
- * otherwise it renders in the rest style but is non-navigable, so the rail
- * looks complete on every screen without inventing a destination that doesn't
- * exist. (Flagged for review -- the prototype's single-canvas nav sidesteps
- * this because it has no real routing.)
+ * report id).
+ *
+ * These used to render as inert `<span>`s whenever the id was missing --
+ * styled almost identically to a live item, and silent on click. On the two
+ * most-used screens (the queue and Find patient) that left four of seven rail
+ * items dead, and a tester reported exactly that: "the icons are
+ * non-clickable/unresponsive". A nav item that looks like a nav item must go
+ * somewhere.
+ *
+ * So every item now routes. When the id is present it goes straight to the
+ * destination; when it isn't, it goes to the screen where you pick the missing
+ * thing -- New examination sends you to patient search, and the three
+ * report-scoped views send you to the queue, which is the list of reports.
+ * `requiresKey` carries the reason so the item can say what it's doing instead
+ * of appearing to misfire.
  */
 export function buildNav(pathname: string): NavItem[] {
   const patientMatch = pathname.match(/^\/patients\/([^/]+)/);
@@ -101,14 +114,47 @@ export function buildNav(pathname: string): NavItem[] {
   const isExplain = reportId != null && /\/explain$/.test(pathname);
   const isCompare = reportId != null && /\/compare$/.test(pathname);
 
+  // Where a report-scoped item goes when no report is in context: the queue,
+  // which is the list of reports to choose from.
+  const PICK_REPORT = "/dashboard";
+  const PICK_PATIENT = "/patients/search";
+
   return [
-    { key: "queue", label: "Queue", Icon: QueueIcon, href: "/dashboard", active: pathname === "/dashboard" },
-    { key: "find", label: "Find patient", Icon: SearchIcon, href: "/patients/search", active: pathname === "/patients/search" },
-    { key: "patients", label: "Patients", Icon: PatientsIcon, href: patientId ? `/patients/${patientId}` : null, active: isPatientProfile },
-    { key: "new-exam", label: "New examination", Icon: NewExamIcon, href: patientId ? `/patients/${patientId}/upload` : null, active: isUpload },
-    { key: "workspace", label: "Workspace", Icon: WorkspaceIcon, href: reportId ? `/reports/${reportId}` : null, active: isWorkspace },
-    { key: "explain", label: "Explainability", Icon: ExplainIcon, href: reportId ? `/reports/${reportId}/explain` : null, active: isExplain },
-    { key: "compare", label: "Compare", Icon: CompareIcon, href: reportId ? `/reports/${reportId}/compare` : null, active: isCompare },
+    { key: "queue", label: "nav.queue", Icon: QueueIcon, href: "/dashboard", active: pathname === "/dashboard" },
+    { key: "find", label: "nav.find", Icon: SearchIcon, href: "/patients/search", active: pathname === "/patients/search" },
+    { key: "patients", label: "nav.patients", Icon: PatientsIcon, href: "/patients", active: pathname === "/patients" || isPatientProfile },
+    {
+      key: "new-exam",
+      label: "nav.newExam",
+      Icon: NewExamIcon,
+      href: patientId ? `/patients/${patientId}/upload` : PICK_PATIENT,
+      active: isUpload,
+      requiresKey: patientId ? undefined : "nav.requiresPatient",
+    },
+    {
+      key: "workspace",
+      label: "nav.workspace",
+      Icon: WorkspaceIcon,
+      href: reportId ? `/reports/${reportId}` : PICK_REPORT,
+      active: isWorkspace,
+      requiresKey: reportId ? undefined : "nav.requiresReport",
+    },
+    {
+      key: "explain",
+      label: "nav.explain",
+      Icon: ExplainIcon,
+      href: reportId ? `/reports/${reportId}/explain` : PICK_REPORT,
+      active: isExplain,
+      requiresKey: reportId ? undefined : "nav.requiresReport",
+    },
+    {
+      key: "compare",
+      label: "nav.compare",
+      Icon: CompareIcon,
+      href: reportId ? `/reports/${reportId}/compare` : PICK_REPORT,
+      active: isCompare,
+      requiresKey: reportId ? undefined : "nav.requiresReport",
+    },
   ];
 }
 
@@ -126,6 +172,7 @@ export function RailView({
   loggingOut: boolean;
   onLogout: () => void;
 }) {
+  const { t } = useT();
   const bmdcLine = doctor.bmdc_number ? `BMDC ${doctor.bmdc_number}` : null;
 
   return (
@@ -148,7 +195,7 @@ export function RailView({
         <RailItem
           item={{
             key: "settings",
-            label: "Settings",
+            label: "nav.settings",
             Icon: SettingsIcon,
             href: "/settings",
             active: settingsActive,
@@ -164,7 +211,7 @@ export function RailView({
           )}
         >
           <SignOutIcon className="flex-none" />
-          <span>{loggingOut ? "Signing out…" : "Sign out"}</span>
+          <span>{loggingOut ? t("nav.signingOut") : t("nav.signOut")}</span>
         </button>
 
         {/* Profile -- routes to /settings. Avatar here is display-only. */}
@@ -184,30 +231,28 @@ export function RailView({
 }
 
 function RailItem({ item }: { item: NavItem }) {
+  const { t } = useT();
+  // An item routing to a chooser is dimmed a step, so the rail still reads as
+  // "these three are about the report you have open" -- but it is a real link
+  // either way, never a decoration that swallows the click.
   const cls = cn(
     "flex items-center gap-12 rounded-control px-12 py-9 text-sm transition-colors duration-hover",
     item.active
       ? "bg-cyan-wash font-medium text-cyan"
-      : "font-normal text-text-secondary hover:bg-bg-hover",
-    item.href == null && "cursor-default text-text-muted hover:bg-transparent",
-  );
-  const inner = (
-    <>
-      <item.Icon className="flex-none" />
-      <span className="truncate">{item.label}</span>
-    </>
+      : item.requiresKey
+        ? "font-normal text-text-muted hover:bg-bg-hover hover:text-text-secondary"
+        : "font-normal text-text-secondary hover:bg-bg-hover",
   );
 
-  if (item.href == null) {
-    return (
-      <span className={cls} aria-disabled>
-        {inner}
-      </span>
-    );
-  }
   return (
-    <Link href={item.href} className={cls} aria-current={item.active ? "page" : undefined}>
-      {inner}
+    <Link
+      href={item.href}
+      className={cls}
+      aria-current={item.active ? "page" : undefined}
+      title={item.requiresKey ? t(item.requiresKey) : undefined}
+    >
+      <item.Icon className="flex-none" />
+      <span className="truncate">{t(item.label)}</span>
     </Link>
   );
 }

@@ -10,6 +10,7 @@
 //       PATCH /reports/{id}                 -> 403
 //       PATCH /reports/{id}/finalize        -> 403
 //       POST  /reports/{id}/regenerate-section -> 403
+//       DELETE /reports/{id}                  -> 403  (and the report survives)
 //       GET   /reports/{id}                 -> 200
 //   - leaves the report's updated_at unchanged (a 403 that still mutated would
 //     be worse than a 200).
@@ -118,24 +119,34 @@ async function main() {
   const patch = await apiAs(b.jwt, "PATCH", `/reports/${reportId}`, { findings: "OWNERSHIP TEST - this write must be rejected" });
   const finalize = await apiAs(b.jwt, "PATCH", `/reports/${reportId}/finalize`);
   const regen = await apiAs(b.jwt, "POST", `/reports/${reportId}/regenerate-section`, { field: "findings" });
+  // DELETE is the newest write and the only irreversible one, so it is the one
+  // a missing ownership check would cost the most. B must be refused it exactly
+  // like every other write -- and the report must still be there afterwards,
+  // which the reportStillExists check below proves independently of the status
+  // code (a 403 that deleted anyway would still read as "rejected" here).
+  const del = await apiAs(b.jwt, "DELETE", `/reports/${reportId}`);
   const get = await apiAs(b.jwt, "GET", `/reports/${reportId}`);
   const afterUpdatedAt = readUpdatedAt(reportId);
+  const reportStillExists = get.status === 200;
 
   log(`\n=== B's direct API calls on A's report ===`);
   log(`  PATCH  /reports/{id}                  -> ${patch.status}  ${JSON.stringify(patch.body)}`);
   log(`  PATCH  /reports/{id}/finalize         -> ${finalize.status}  ${JSON.stringify(finalize.body)}`);
   log(`  POST   /reports/{id}/regenerate-section -> ${regen.status}  ${JSON.stringify(regen.body)}`);
+  log(`  DELETE /reports/{id}                  -> ${del.status}  ${JSON.stringify(del.body)}`);
   log(`  GET    /reports/{id}                  -> ${get.status}  (read permitted)`);
+  log(`  report still exists after DELETE      -> ${reportStillExists}`);
   log(`\n=== updated_at unchanged after rejected writes ===`);
   log(`  before: ${beforeUpdatedAt}`);
   log(`  after : ${afterUpdatedAt}`);
 
   // --- Verdict ---------------------------------------------------------------
-  const writesRejected = patch.status === 403 && finalize.status === 403 && regen.status === 403;
+  const writesRejected =
+    patch.status === 403 && finalize.status === 403 && regen.status === 403 && del.status === 403;
   const readOk = get.status === 200 && patient.status === 200 && history.status === 200;
   const uiReadOnly = !ui.finalizeBtn && !ui.editBtn && !ui.regenerateBtn && !ui.restore && ui.belongsToBanner && !ui.ownerChipSaysYou;
-  const stateIntact = beforeUpdatedAt === afterUpdatedAt;
-  const anyWriteAccepted = [patch, finalize, regen].some((r) => r.status < 300);
+  const stateIntact = beforeUpdatedAt === afterUpdatedAt && reportStillExists;
+  const anyWriteAccepted = [patch, finalize, regen, del].some((r) => r.status < 300);
   if (anyWriteAccepted) log("\n!!! SECURITY FAILURE: a non-owner write was ACCEPTED !!!");
 
   // --- Cleanup (ID-scoped): A's recorded set + B's doctor row ---------------

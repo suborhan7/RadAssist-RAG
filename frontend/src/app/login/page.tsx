@@ -7,6 +7,7 @@ import { ApiError, getHealth, loginDoctor } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
 import { ServiceChip } from "@/components/ui/chip";
 import { ChestXrayIllustration } from "@/components/ui/chest-xray-illustration";
+import { useT } from "@/lib/i18n";
 import type { paths } from "@/lib/generated/api";
 
 type HealthResponse = paths["/health"]["get"]["responses"][200]["content"]["application/json"];
@@ -35,6 +36,7 @@ function serviceValue(service: ServiceStatus): string {
  */
 export default function LoginPage() {
   const router = useRouter();
+  const { t } = useT();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -63,9 +65,9 @@ export default function LoginPage() {
       router.push(destination);
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
-        setError("Email or password is incorrect.");
+        setError(t("login.errCredentials"));
       } else {
-        setError(err instanceof ApiError ? err.message : "Login failed.");
+        setError(err instanceof ApiError ? err.message : t("login.errFailed"));
       }
     } finally {
       setSubmitting(false);
@@ -75,25 +77,24 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen bg-bg-app">
       {/* Film panel -- the only pure-black surface */}
-      <div className="relative hidden flex-1 flex-col justify-between overflow-hidden bg-bg-film px-50 py-44 lg:flex">
+      <div className="relative hidden flex-1 flex-col justify-between overflow-hidden on-film bg-bg-film px-50 py-44 lg:flex">
         <ChestXrayIllustration className="pointer-events-none absolute inset-0 h-full w-full opacity-50" />
         <div className="relative">
           <p className="font-mono text-eyebrow uppercase text-text-tertiary">RadAssist-RAG</p>
           <h1 className="mt-14 max-w-md text-display text-text-primary">
-            Retrieval-grounded chest X-ray reporting.
+            {t("login.filmTitle")}
           </h1>
         </div>
         <div className="relative flex flex-col gap-16">
           <p className="max-w-md text-sm leading-relaxed text-text-secondary">
-            Every AI draft cites the retrieved cases it was grounded in. 0 reports have ever been
-            finalised without a radiologist.
+            {t("login.filmBody")}
           </p>
           <div className="max-w-md rounded-panel border border-strong bg-bg-raised px-16 py-14">
             <p className="font-mono text-mono-meta uppercase tracking-[0.14em] text-amber">
-              Research prototype
+              {t("common.researchPrototype")}
             </p>
             <p className="mt-6 text-sm text-text-secondary">
-              Not for clinical use. Every report requires review by a qualified radiologist.
+              {t("login.notForClinical")}
             </p>
           </div>
         </div>
@@ -103,14 +104,14 @@ export default function LoginPage() {
       <div className="flex flex-1 flex-col items-center justify-center px-30 py-44">
         <div className="flex w-full max-w-sm flex-col gap-24">
           <div>
-            <h2 className="text-page-title text-text-primary">Sign in</h2>
-            <p className="mt-6 text-sm text-text-secondary">RadAssist-RAG · Radiologist workflow</p>
+            <h2 className="text-page-title text-text-primary">{t("login.heading")}</h2>
+            <p className="mt-6 text-sm text-text-secondary">{t("login.subtitle")}</p>
           </div>
 
           <div className="rounded-panel border border-hairline bg-bg-raised px-16 py-6">
-            <p className="pt-8 font-mono text-eyebrow uppercase text-text-tertiary">System status</p>
+            <p className="pt-8 font-mono text-eyebrow uppercase text-text-tertiary">{t("login.systemStatus")}</p>
             {healthUnreachable ? (
-              <p className="py-12 text-sm text-amber">Backend unreachable.</p>
+              <p className="py-12 text-sm text-amber">{t("login.backendUnreachable")}</p>
             ) : (
               <>
                 <ServiceChip name="FastAPI" value={serviceValue(health?.fastapi)} state={toChipState(health?.fastapi?.status)} />
@@ -123,17 +124,17 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-16">
             <label className="flex flex-col gap-8">
-              <span className="text-sm text-text-secondary">Email</span>
+              <span className="text-sm text-text-secondary">{t("common.email")}</span>
               <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={FIELD} />
             </label>
 
             <label className="flex flex-col gap-8">
-              <span className="text-sm text-text-secondary">Password</span>
+              <span className="text-sm text-text-secondary">{t("common.password")}</span>
               <input required type="password" value={password} onChange={(e) => setPassword(e.target.value)} className={FIELD} />
             </label>
 
             <Button type="submit" variant="primary" size="lg" block loading={submitting}>
-              {submitting ? "Signing in…" : "Sign in"}
+              {submitting ? t("login.signingIn") : t("login.heading")}
             </Button>
           </form>
 
@@ -144,9 +145,9 @@ export default function LoginPage() {
           )}
 
           <p className="text-center text-sm text-text-secondary">
-            No account?{" "}
+            {t("login.noAccount")}{" "}
             <Link href="/register" className="text-cyan transition-colors duration-hover hover:text-text-primary">
-              Register
+              {t("common.register")}
             </Link>
           </p>
         </div>

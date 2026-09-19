@@ -29,6 +29,7 @@
  * despite a valid cookie sitting in the browser. retrieveWithProgress()
  * gets the equivalent via `xhr.withCredentials = true`.
  */
+import { DEFAULT_TOP_K } from "./doctor-defaults";
 import { API_URL } from "./env";
 import type { paths } from "./generated/api";
 
@@ -37,11 +38,25 @@ type HealthResponse =
 
 export class ApiError extends Error {
   status: number;
+  /**
+   * i18n key for errors whose text the SERVER refuses to write.
+   *
+   * §10.1 of input_admission_projection_gate_architecture_v1.1_FROZEN.md:
+   * the two projection rejections must be translated through the i18n key
+   * set, and the response body must hold no English. Those responses send
+   * `{reason_code, message_key}` instead of a sentence, so the caller
+   * translates this key rather than displaying `message`.
+   */
+  messageKey?: string;
+  /** Machine-readable cause, e.g. DECLARED_LATERAL / FRONTAL_MISMATCH. */
+  reasonCode?: string;
 
-  constructor(status: number, message: string) {
+  constructor(status: number, message: string, messageKey?: string, reasonCode?: string) {
     super(message);
     this.name = "ApiError";
     this.status = status;
+    this.messageKey = messageKey;
+    this.reasonCode = reasonCode;
   }
 }
 
@@ -122,6 +137,17 @@ export async function createPatient(body: CreatePatientRequest): Promise<Patient
   return response.json() as Promise<PatientResponse>;
 }
 
+type ListPatientsResponse =
+  paths["/patients"]["get"]["responses"][200]["content"]["application/json"];
+
+export async function listPatients(): Promise<ListPatientsResponse> {
+  const response = await fetch(`${API_URL}/patients`, { credentials: "include" });
+  if (!response.ok) {
+    await throwApiError(response, `GET /patients failed: ${response.status}`);
+  }
+  return response.json() as Promise<ListPatientsResponse>;
+}
+
 type SearchPatientsQuery = NonNullable<
   paths["/patients/search"]["get"]["parameters"]["query"]
 >;
@@ -184,14 +210,26 @@ type RetrieveResponse =
  */
 export function retrieveWithProgress(
   file: File,
-  options: { topK?: number; minSimilarity?: number; patientId?: string },
+  options: {
+    topK?: number;
+    minSimilarity?: number;
+    patientId?: string;
+    /**
+     * Requirement A14: the request MUST carry a declared projection. It is
+     * a required parameter here, with no default anywhere in this file --
+     * A15 forbids selecting one, and a client-side default would defeat
+     * the control just as effectively as a server-side one.
+     */
+    declaredProjection: "PA" | "AP" | "LATERAL";
+  },
   callbacks: { onUploadComplete: () => void },
 ): Promise<RetrieveResponse> {
   return new Promise((resolve, reject) => {
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("top_k", String(options.topK ?? 5));
+    formData.append("top_k", String(options.topK ?? DEFAULT_TOP_K));
     formData.append("min_similarity", String(options.minSimilarity ?? 0.0));
+    formData.append("declared_projection", options.declaredProjection);
     if (options.patientId) formData.append("patient_id", options.patientId);
 
     const xhr = new XMLHttpRequest();
@@ -203,16 +241,38 @@ export function retrieveWithProgress(
         resolve(JSON.parse(xhr.responseText) as RetrieveResponse);
       } else {
         let detail: string | null = null;
+        let messageKey: string | undefined;
+        let reasonCode: string | undefined;
         try {
           const parsed: unknown = JSON.parse(xhr.responseText);
           if (parsed && typeof parsed === "object" && "detail" in parsed) {
-            detail = String((parsed as { detail: unknown }).detail);
+            const raw = (parsed as { detail: unknown }).detail;
+            // §10.1: the two projection rejections send a structured body
+            // carrying an i18n KEY, never a sentence. Stringifying it the
+            // way a plain-text detail is stringified would show the doctor
+            // "[object Object]", so the shape is checked before it is used.
+            if (raw && typeof raw === "object" && "message_key" in raw) {
+              const structured = raw as { message_key?: unknown; reason_code?: unknown };
+              messageKey =
+                typeof structured.message_key === "string" ? structured.message_key : undefined;
+              reasonCode =
+                typeof structured.reason_code === "string" ? structured.reason_code : undefined;
+            } else {
+              detail = String(raw);
+            }
           }
         } catch {
           // response body wasn't JSON -- fall through to the generic message
         }
         redirectToLoginOn401(xhr.status);
-        reject(new ApiError(xhr.status, detail ?? `POST /retrieve failed: ${xhr.status}`));
+        reject(
+          new ApiError(
+            xhr.status,
+            detail ?? `POST /retrieve failed: ${xhr.status}`,
+            messageKey,
+            reasonCode,
+          ),
+        );
       }
     };
     xhr.onerror = () => reject(new Error("POST /retrieve: network error"));
@@ -320,6 +380,22 @@ export async function finalizeReport(reportId: string): Promise<ReportDetailResp
     await throwApiError(response, `PATCH /reports/${reportId}/finalize failed: ${response.status}`);
   }
   return response.json() as Promise<ReportDetailResponse>;
+}
+
+/**
+ * Discard an unfinalized draft. Owner-only and finalized-refusing on the
+ * server (409); GET /reports is already ownership-scoped, so every row the
+ * queue can offer this on is one the viewer owns. Returns 204 with no body --
+ * there is no report left to parse.
+ */
+export async function deleteReport(reportId: string): Promise<void> {
+  const response = await fetch(`${API_URL}/reports/${reportId}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+  if (!response.ok) {
+    await throwApiError(response, `DELETE /reports/${reportId} failed: ${response.status}`);
+  }
 }
 
 type RegenerateSectionRequest =

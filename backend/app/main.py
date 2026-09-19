@@ -84,7 +84,9 @@ from app.infrastructure.ollama_client import OllamaClient
 from app.infrastructure.password_hasher import Argon2PasswordHasher
 from app.services.context_builder import ContextBuilder
 from app.services.deterministic_comparator import DeterministicComparator
+from app.services.image_admission_service import ImageAdmissionService
 from app.services.image_validator import ImageValidator
+from app.services.modality_gate_service import ModalityGateService
 from app.services.label_voting_service import LabelVotingService
 from app.services.llm_orchestrator import LLMOrchestrator
 from app.services.prompt_builder import PromptBuilder
@@ -108,6 +110,52 @@ async def lifespan(app: FastAPI):
     search_policy = SimilaritySearchPolicy()
     logger.info("lifespan startup: loading PHIMasker (EasyOCR model load, should log exactly once)")
     app.state.phi_masker = PHIMasker()
+
+    # Input Admission and Modality Gate (input_admission_modality_gate_
+    # architecture_v1.0_FROZEN.md). Two separate singletons for two
+    # separate services -- §1's closing line and §10 forbid merging them,
+    # and they sit at different points of §9's pipeline (admission before
+    # the PHI mask, the gate after the embed).
+    #
+    # Every parameter comes off `settings` (§11.1's Rule: no parameter
+    # value in the source code). The constructor arguments are read here,
+    # once, rather than inside either service, so a running process cannot
+    # end up with one control on a stale value and another on a fresh one.
+    app.state.image_admission_service = ImageAdmissionService(
+        allowed_extensions=settings.upload_allowed_extensions,
+        max_bytes=settings.UPLOAD_MAX_BYTES,
+        min_bytes=settings.UPLOAD_MIN_BYTES,
+        min_dimension_px=settings.IMAGE_MIN_DIMENSION_PX,
+        max_dimension_px=settings.IMAGE_MAX_DIMENSION_PX,
+        max_pixels=settings.IMAGE_MAX_PIXELS,
+        # §5.5 (A14-A17). DR-4: the accepted set is PA/AP; the declarable
+        # set additionally holds LATERAL, so declaring it is a distinct,
+        # separately-coded rejection rather than an unrecognised value.
+        accepted_projections=settings.accepted_projections,
+        declared_projection_values=settings.declared_projection_values,
+    )
+    # M6: the prompt text vectors are encoded inside this constructor, so
+    # this line IS the "cache the text vectors at start-up" requirement --
+    # it runs in lifespan, exactly once per process, and shares the one
+    # already-loaded BiomedCLIP embedder rather than loading a second copy.
+    logger.info("lifespan startup: caching ModalityGateService prompt vectors (M6, once per app lifetime)")
+    app.state.modality_gate_service = ModalityGateService(
+        embedder=embedder,
+        positive_prompts=settings.modality_prompts_positive,
+        negative_prompts=settings.modality_prompts_negative,
+        softmax_temperature=settings.MODALITY_SOFTMAX_TEMPERATURE,
+        modality_threshold=settings.MODALITY_THRESHOLD,
+        retrieval_floor=settings.RETRIEVAL_FLOOR,
+        # DR-5 / §6.1: the second, independent threshold on the top-1
+        # similarity. Read here alongside the floor so one process cannot
+        # hold a stale value of one and a fresh value of the other -- the
+        # three bands are defined by the pair, not by either alone.
+        projection_reject_threshold=settings.PROJECTION_REJECT_THRESHOLD,
+    )
+    # Shared with app/api/retrieval.py's gate step: the SAME embedder
+    # instance the retrieval path uses, so the vector the gate judges and
+    # the vector ChromaDB is queried with are guaranteed identical (M1).
+    app.state.embedder = embedder
 
     app.state.vector_store = vector_store
     app.state.retrieval_service = RetrievalService(

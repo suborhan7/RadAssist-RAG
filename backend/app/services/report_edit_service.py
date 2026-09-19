@@ -45,6 +45,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime, timezone
 
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.domain.entities import EditableReportField, ReportStatus, RetrievalMetadata
@@ -55,6 +56,8 @@ from app.domain.interfaces import (
     IPromptBuilder,
     IVectorStore,
 )
+from app.models.comparison import ComparisonRecord
+from app.models.explanation import Explanation
 from app.models.report import ReportRecord
 from app.models.report_audit_log import ReportAuditLog
 from app.models.retrieval_session import RetrievalSession
@@ -212,3 +215,57 @@ class ReportEditService:
             raise
 
         return record
+
+    def delete(self, report_id: str, current_doctor_id: str) -> None:
+        """Discard an unfinalized draft and everything that hangs off it.
+
+        Added for the reported "no way to remove a queue entry": a draft the
+        doctor does not intend to finish had no exit at all -- it sat in the
+        queue permanently, and there was no DELETE route anywhere in this API.
+
+        Two constraints, both deliberate:
+
+        * **Owner only.** Reuses _check_ownership, the same guard update_content
+          and finalize already apply -- a second, hand-rolled ownership check
+          for a destructive route is exactly where the two would drift apart.
+        * **Finalized reports are never deletable.** A finalized report is a
+          signed clinical record with an audit trail behind it; deleting one
+          would erase the evidence that it was signed. ReportAlreadyFinalizedError
+          (-> 409) is the same refusal update_content gives for editing one, for
+          the same reason.
+
+        Dependent rows are removed explicitly rather than left to a database
+        cascade: SQLite does not enforce foreign keys by default, so relying on
+        ON DELETE here would appear to work and silently orphan audit-log and
+        explanation rows. Comparisons referencing this report from EITHER side
+        go too -- a comparison is a statement about two studies, and one that
+        has lost half its subject is not a record, just a dangling id.
+        """
+        record, owner_doctor_id = _load_report_and_owner(self._db, report_id)
+        _check_ownership(owner_doctor_id, current_doctor_id)
+
+        if record.status == ReportStatus.FINAL:
+            raise ReportAlreadyFinalizedError(
+                f"report {report_id} is finalized and cannot be deleted"
+            )
+
+        report_uuid = record.id
+        self._db.query(ComparisonRecord).filter(
+            or_(
+                ComparisonRecord.previous_report_id == report_uuid,
+                ComparisonRecord.current_report_id == report_uuid,
+            )
+        ).delete(synchronize_session=False)
+        self._db.query(Explanation).filter(
+            Explanation.report_id == report_uuid
+        ).delete(synchronize_session=False)
+        self._db.query(ReportAuditLog).filter(
+            ReportAuditLog.report_id == report_uuid
+        ).delete(synchronize_session=False)
+        self._db.delete(record)
+
+        try:
+            self._db.commit()
+        except Exception:
+            self._db.rollback()
+            raise

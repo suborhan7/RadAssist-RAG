@@ -1,23 +1,20 @@
 "use client";
 
-import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ApiError, explainReport, getReport } from "@/lib/api-client";
 import { StepProgress, type WorkflowStepDisplay } from "@/components/workflow/StepProgress";
 import { Button } from "@/components/ui/button";
+import { BackLink } from "@/components/layout/screen-header";
+import { useT } from "@/lib/i18n";
 import type { paths } from "@/lib/generated/api";
 
 type ReportDetailResponse =
   paths["/reports/{report_id}"]["get"]["responses"][200]["content"]["application/json"];
 
 // Meta-questions about the grounding, not fabricated clinical facts -- they
-// only prefill the input, which the doctor still sends.
-const SUGGESTED_QUESTIONS = [
-  "Why this impression?",
-  "Which retrieved case is closest?",
-  "What would change this impression?",
-];
+// only prefill the input, which the doctor still sends (in the active language).
+const SUGGESTED_QUESTION_KEYS = ["explain.q1", "explain.q2", "explain.q3"];
 
 /**
  * Explainability (Phase 12 Step 6, restyled Phase 14 per
@@ -40,6 +37,7 @@ const SUGGESTED_QUESTIONS = [
  * report impression stands in as the real anchoring text.
  */
 export default function ExplainPage() {
+  const { t } = useT();
   const params = useParams<{ reportId: string }>();
   const reportId = params.reportId;
 
@@ -57,8 +55,9 @@ export default function ExplainPage() {
     getReport(reportId)
       .then(setReport)
       .catch((err) => {
-        setReportLoadError(err instanceof ApiError ? err.message : "Failed to load report.");
+        setReportLoadError(err instanceof ApiError ? err.message : t("workspace.errLoad"));
       });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reportId]);
 
   async function handleAsk(event: React.FormEvent) {
@@ -79,18 +78,18 @@ export default function ExplainPage() {
     } catch (err) {
       setStatus("error");
       if (err instanceof ApiError && err.status === 502) {
-        setErrorDetail(`The AI assistant is temporarily unavailable (LLM transport failure): ${err.message}`);
+        setErrorDetail(t("explain.err502", { msg: err.message }));
       } else if (err instanceof ApiError && err.status === 404) {
-        setErrorDetail(`Report not found: ${err.message}`);
+        setErrorDetail(t("explain.err404", { msg: err.message }));
       } else {
-        setErrorDetail(err instanceof ApiError ? err.message : "Failed to get an answer.");
+        setErrorDetail(err instanceof ApiError ? err.message : t("explain.errGeneric"));
       }
     }
   }
 
   const stepDisplay: WorkflowStepDisplay = {
     id: "explaining",
-    label: "Asking AI assistant",
+    label: t("explain.stepAsking"),
     status: status === "asking" ? "active" : status === "done" ? "done" : status === "error" ? "error" : "pending",
     elapsedMs: status === "done" ? elapsedMs : undefined,
     detail: status === "error" ? (errorDetail ?? undefined) : undefined,
@@ -99,21 +98,10 @@ export default function ExplainPage() {
   return (
     <div className="flex h-[100dvh] flex-col overflow-hidden bg-bg-app">
       <header className="flex h-header-bar flex-none items-center gap-14 border-b border-hairline px-30">
-        <Link
-          href={`/reports/${reportId}`}
-          className="text-sm text-text-tertiary transition-colors duration-hover hover:text-cyan"
-        >
-          Workspace
-        </Link>
-        <span className="text-text-muted">/</span>
-        <h1 className="text-screen-title text-text-primary">Explainability</h1>
+        {/* Leading back arrow, same control and position as every other screen. */}
+        <BackLink href={`/reports/${reportId}`} labelKey="compare.backToWorkspace" />
+        <h1 className="text-screen-title text-text-primary">{t("nav.explain")}</h1>
         <span className="flex-1" />
-        <Link
-          href={`/reports/${reportId}`}
-          className="text-sm text-cyan transition-colors duration-hover hover:text-text-primary"
-        >
-          Back to workspace
-        </Link>
       </header>
 
       <div className="flex min-h-0 flex-1 overflow-x-auto">
@@ -121,8 +109,7 @@ export default function ExplainPage() {
         <div className="flex min-w-[420px] flex-1 flex-col">
           {/* Grounding notice -- real constraint on the prompt, not decoration */}
           <p className="flex-none border-b border-hairline px-30 py-16 text-sm leading-relaxed text-cyan">
-            Answers are grounded in the retrieved cases and this report. The assistant cannot
-            introduce new findings, and it is not a second opinion.
+            {t("explain.grounding")}
           </p>
 
           <div className="flex-1 overflow-auto px-30 py-30">
@@ -150,8 +137,7 @@ export default function ExplainPage() {
                 </article>
               ) : status === "idle" ? (
                 <p className="text-findings text-text-tertiary">
-                  Ask a question about this report to see a grounded answer. Every answer is drawn
-                  only from the retrieved cases and the report text.
+                  {t("explain.idlePrompt")}
                 </p>
               ) : null}
             </div>
@@ -161,16 +147,19 @@ export default function ExplainPage() {
           <div className="flex-none border-t border-hairline px-30 py-18">
             {status !== "asking" && (
               <div className="mb-14 flex flex-wrap gap-9">
-                {SUGGESTED_QUESTIONS.map((q) => (
-                  <button
-                    key={q}
-                    type="button"
-                    onClick={() => setQuestion(q)}
-                    className="rounded-full border border-strong px-14 py-7 text-sm-tight text-text-secondary transition-colors duration-hover hover:border-cyan-line hover:text-cyan"
-                  >
-                    {q}
-                  </button>
-                ))}
+                {SUGGESTED_QUESTION_KEYS.map((key) => {
+                  const q = t(key);
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => setQuestion(q)}
+                      className="rounded-full border border-strong px-14 py-7 text-sm-tight text-text-secondary transition-colors duration-hover hover:border-cyan-line hover:text-cyan"
+                    >
+                      {q}
+                    </button>
+                  );
+                })}
               </div>
             )}
             <form onSubmit={handleAsk} className="flex gap-12">
@@ -178,12 +167,12 @@ export default function ExplainPage() {
                 type="text"
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
-                aria-label="Ask a question about this report"
-                placeholder="Ask about a sentence in this report…"
+                aria-label={t("explain.ariaAsk")}
+                placeholder={t("explain.placeholder")}
                 className="h-46 flex-1 rounded-field border border-strong bg-bg-raised px-16 text-text-primary placeholder:text-text-muted"
               />
               <Button type="submit" variant="primary" size="lg" disabled={status === "asking" || !question.trim()}>
-                Ask
+                {t("explain.ask")}
               </Button>
             </form>
           </div>
@@ -194,14 +183,14 @@ export default function ExplainPage() {
           {report && (
             <>
               <h3 className="mb-14 font-mono text-eyebrow uppercase text-text-tertiary">
-                Report impression
+                {t("explain.reportImpression")}
               </h3>
               <blockquote className="mb-28 border-l-2 border-cyan pl-16 text-findings text-text-primary">
-                {report.content.impression || "(none)"}
+                {report.content.impression || t("compare.none")}
               </blockquote>
 
               <h3 className="mb-14 font-mono text-eyebrow uppercase text-text-tertiary">
-                Cases in context
+                {t("explain.casesInContext")}
               </h3>
               <div className="flex flex-col gap-16 border-t border-hairline pt-16">
                 {report.retrieved_cases.map((c) => (
@@ -220,7 +209,7 @@ export default function ExplainPage() {
               </div>
 
               <p className="mt-24 text-caption leading-relaxed text-text-tertiary">
-                Questions and answers stay with the report as part of its audit trail.
+                {t("explain.auditNote")}
               </p>
             </>
           )}

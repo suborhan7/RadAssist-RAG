@@ -6,17 +6,8 @@ import { getCurrentDoctor } from "@/lib/api-client";
 import { BUTTON_BASE, SIZE, VARIANT } from "@/components/ui/button";
 import { Tag } from "@/components/ui/chip";
 import { ChestXrayIllustration } from "@/components/ui/chest-xray-illustration";
+import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/cn";
-
-const PIPELINE_STAGES = [
-  "Chest X-ray",
-  "PHI protection",
-  "BiomedCLIP",
-  "ChromaDB",
-  "Similar cases",
-  "AI draft",
-  "Radiologist review",
-];
 
 /**
  * Public Landing page (design_specification.md §8.1, ported to the Reading
@@ -27,6 +18,7 @@ const PIPELINE_STAGES = [
  * than forcing a redirect. Auth-state logic unchanged.
  */
 export default function LandingPage() {
+  const { t } = useT();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -36,7 +28,18 @@ export default function LandingPage() {
   }, []);
 
   const primaryHref = isAuthenticated ? "/dashboard" : "/login";
-  const primaryLabel = isAuthenticated ? "Go to your dashboard" : "Sign in to your workspace";
+  const primaryLabel = isAuthenticated ? t("landing.ctaDashboard") : t("landing.ctaSignIn");
+
+  // Product names (BiomedCLIP, ChromaDB) are never translated; the rest are.
+  const pipelineStages = [
+    t("landing.stageChestXray"),
+    t("landing.stagePhi"),
+    "BiomedCLIP",
+    "ChromaDB",
+    t("landing.stageSimilar"),
+    t("landing.stageAiDraft"),
+    t("landing.stageReview"),
+  ];
 
   return (
     <div className="flex min-h-screen flex-col bg-bg-app">
@@ -46,7 +49,7 @@ export default function LandingPage() {
           RadAssist<span className="font-mono text-text-tertiary">-RAG</span>
         </span>
         <Link href={primaryHref} className={cn(BUTTON_BASE, VARIANT.primary, SIZE.sm)}>
-          {isAuthenticated ? "Dashboard" : "Sign in"}
+          {isAuthenticated ? t("landing.headerCtaDashboard") : t("landing.headerCtaSignIn")}
         </Link>
       </header>
 
@@ -54,24 +57,23 @@ export default function LandingPage() {
       <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-30 px-30 py-44 lg:flex-row lg:items-center">
         <div className="flex flex-1 flex-col gap-24">
           <h1 className="max-w-xl text-display text-text-primary">
-            Evidence-grounded chest X-ray reporting.
+            {t("landing.heroTitle")}
           </h1>
           <p className="max-w-md text-prose text-text-secondary">
-            Every AI draft is grounded in real, retrieved prior cases. Never generated from nothing,
-            and never signed without a radiologist.
+            {t("landing.heroSubtitle")}
           </p>
 
           {/* Proof card -- one real-looking cited sentence, not a stat row */}
           <div className="max-w-md rounded-panel border border-hairline bg-bg-raised p-20">
-            <Tag tone="steel">AI Draft</Tag>
+            <Tag tone="steel">{t("landing.aiDraft")}</Tag>
             <p className="mt-14 text-findings text-text-secondary">
               <span className="underline decoration-cyan decoration-dotted underline-offset-4">
-                Diffuse interstitial markings are prominent throughout both lungs
+                {t("landing.proofPhrase1")}
               </span>
               <sup className="ml-2 font-mono text-mono-meta text-cyan">1,3</sup>
-              {", consistent with "}
+              {t("landing.proofConnective")}
               <span className="underline decoration-cyan decoration-dotted underline-offset-4">
-                fibrotic change rather than acute infection
+                {t("landing.proofPhrase2")}
               </span>
               <sup className="ml-2 font-mono text-mono-meta text-cyan">1,2,3</sup>.
             </p>
@@ -81,7 +83,7 @@ export default function LandingPage() {
               <Tag tone="steel">CXR-3390 · 94.2%</Tag>
             </div>
             <p className="mt-14 text-sm text-text-tertiary">
-              Every underlined statement traces to the retrieved cases that support it.
+              {t("landing.proofTrace")}
             </p>
           </div>
 
@@ -90,12 +92,12 @@ export default function LandingPage() {
               {primaryLabel}
             </Link>
             <p className="text-sm text-text-tertiary">
-              0 reports have ever been finalised without a radiologist.
+              {t("landing.neverFinalized")}
             </p>
           </div>
         </div>
 
-        <div className="flex flex-1 items-center justify-center overflow-hidden rounded-panel bg-bg-film">
+        <div className="flex flex-1 items-center justify-center overflow-hidden rounded-panel on-film bg-bg-film">
           <ChestXrayIllustration className="h-[420px] w-full" />
         </div>
       </div>
@@ -103,10 +105,10 @@ export default function LandingPage() {
       {/* Pipeline strip */}
       <div className="flex-none border-t border-hairline bg-bg-raised px-30 py-16">
         <div className="mx-auto flex max-w-6xl flex-col gap-12 overflow-x-auto">
-          <p className="font-mono text-eyebrow uppercase text-text-tertiary">How a report is grounded</p>
+          <p className="font-mono text-eyebrow uppercase text-text-tertiary">{t("landing.pipelineTitle")}</p>
           <div className="flex gap-8">
-            {PIPELINE_STAGES.map((stage, i) => {
-              const isLast = i === PIPELINE_STAGES.length - 1;
+            {pipelineStages.map((stage, i) => {
+              const isLast = i === pipelineStages.length - 1;
               return (
                 <div
                   key={stage}
@@ -128,8 +130,7 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="flex-none border-t border-hairline px-30 py-16 text-center text-sm text-text-tertiary">
-        Research prototype. Not for clinical use. Every report requires review by a qualified
-        radiologist.
+        {t("landing.footer")}
         <br />
         Brac University · Department of Computer Science and Engineering
       </footer>
