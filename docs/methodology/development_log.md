@@ -11695,3 +11695,57 @@ narrowing ratio is 2.05 (previously 2.06 — computed from rounded bounds rather
 than stored ones).
 
 **COMPLETE**
+
+---
+
+## CODE FREEZE — 2026-09-19
+
+**Declared after the Phase 21 results manifest landed (`149b3fb6`).**
+
+### Scope
+
+**Frozen: `backend/`, `ml/`, and all thresholds.** No further changes to
+application code, evaluation code, model configuration, gate thresholds,
+prompts, or any parameter that could alter a produced or reported number.
+
+Thresholds frozen at their current values, for the avoidance of doubt:
+`PROJECTION_REJECT_THRESHOLD = 0.8500`, `PHI_MASK_MAX_REGION_AREA_FRACTION =
+0.08`, `TOP_LABEL_AGREEMENT_THRESHOLD = 0.5`, `LLM_SEED = 42`,
+`OLLAMA_KEEP_ALIVE = "30m"`, `EVIDENCE_MODE` default `FULL`, modality-gate
+temperature and prompt sets as shipped.
+
+### The rule
+
+**Anything found from this point is recorded as a limitation, not fixed.**
+
+This applies to defects as well as improvements. A fix after freeze would mean
+the reported results were produced by code that no longer exists, which is the
+precise failure this freeze exists to prevent. Two defects found during closing
+verification are already handled this way and stand as the worked example:
+
+1. **The false multi-label comment** in `app/api/retrieval.py` — 654 of 2,462
+   indexed cases are genuinely multi-label, contradicting a comment claiming
+   degeneracy. The voting code is correct; only the comment is wrong. Not fixed.
+2. **Agreement provenance** — the frontend re-derives agreement from
+   `primary_label` alone while the backend votes over the full label set; they
+   disagree on 101 of 477 real retrieved sets (21.2%). Display-only, outside
+   every measurement path. Not fixed.
+
+### What remains permitted
+
+- **Documentation**: this log, the methodology documents, and the thesis text.
+  Recording a limitation is the sanctioned response to a post-freeze finding,
+  so documentation must stay writable for the freeze rule to function at all.
+- **Reading and reporting** from existing artefacts, including rebuilding the
+  results manifest, which reads files and computes nothing.
+
+### Unfreezing
+
+Requires an explicit, recorded decision naming what is being unfrozen and why,
+in the manner of §6.3.1's extension decision — written **before** the change,
+not after. Every affected measurement must then be re-run and re-reported, and
+the pre-freeze numbers retained alongside, per the §6.11 precedent that two
+differently-produced results are both reported and neither is presented as a
+correction of the other.
+
+**FROZEN.**
