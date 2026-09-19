@@ -17,6 +17,8 @@ from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from app.domain.entities import EvidenceMode
+
 # Anchored via this file's own location, not the process's CWD -- same
 # reasoning as chroma_store.py's DEFAULT_PERSIST_PATH (see that file's
 # comment for the incident that made this necessary).
@@ -90,6 +92,14 @@ DEFAULT_LLM_SEED = 42
 # generated during a warm session. Content is grounded in the same retrieved
 # evidence either way; it is the phrasing that moves.
 DEFAULT_OLLAMA_KEEP_ALIVE = "30m"
+
+# Phase 21 §2.2 -- which retrieval-derived evidence reaches ClinicalContext.
+# Defaults to FULL, which is production behaviour; the default is never changed
+# in any committed configuration file. Each ablation arm runs by restarting the
+# backend with an EVIDENCE_MODE environment override, so the arms exercise the
+# real code path rather than an evaluation-only branch (§2.2's rejected
+# alternatives).
+DEFAULT_EVIDENCE_MODE = EvidenceMode.FULL
 
 # Phase 12 Step 1 -- local dev only (frozen spec's Decision 6: deployment
 # packaging/CORS-for-production is explicitly out of scope). The Next.js
@@ -330,6 +340,7 @@ class Settings(BaseSettings):
     LLM_TEMPERATURE: float = DEFAULT_LLM_TEMPERATURE
     LLM_SEED: int = DEFAULT_LLM_SEED
     OLLAMA_KEEP_ALIVE: str = DEFAULT_OLLAMA_KEEP_ALIVE
+    EVIDENCE_MODE: EvidenceMode = DEFAULT_EVIDENCE_MODE
     CORS_ALLOWED_ORIGINS: str = DEFAULT_CORS_ALLOWED_ORIGINS
     UPLOADED_IMAGES_DIR: str = DEFAULT_UPLOADED_IMAGES_DIR
     JWT_SECRET_KEY: str = DEFAULT_JWT_SECRET_KEY

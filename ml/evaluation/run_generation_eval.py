@@ -226,24 +226,85 @@ def _git_commit_hash(path: Path) -> str:
         return "unknown"
 
 
+def _backend_evidence_mode(session_or_url, api_url: str | None = None) -> str:
+    """Read EVIDENCE_MODE off the LIVE backend (GET /system/stats).
+
+    The --arm flag records intent; this records fact. They are compared before
+    any generation runs, because the arms are selected by restarting the
+    backend with an environment override (Phase 21 §2.2) and a forgotten
+    restart is invisible afterwards -- the output text would look perfectly
+    normal while belonging to the wrong arm.
+    """
+    session, url = (session_or_url, api_url) if api_url is not None else (requests, session_or_url)
+    try:
+        response = session.get(f"{url}/system/stats", timeout=10)
+        if response.status_code != 200:
+            return f"unreadable (HTTP {response.status_code})"
+        return response.json().get("evidence_mode", "absent-from-response")
+    except requests.RequestException as exc:
+        return f"unreachable ({exc.__class__.__name__})"
+
+
+def assert_arm_matches_backend(session, api_url: str, declared_arm: str | None) -> str:
+    """Fail-closed arm check. Refuses to run rather than mislabel output."""
+    live = _backend_evidence_mode(session, api_url)
+    if declared_arm is None:
+        return live
+    if live != declared_arm:
+        raise SystemExit(
+            "[run_generation_eval] ARM MISMATCH -- refusing to run.\n"
+            f"  --arm says      : {declared_arm}\n"
+            f"  backend reports : {live}\n"
+            "  The backend selects the arm via EVIDENCE_MODE and needs a restart\n"
+            f"  to change it. Restart with EVIDENCE_MODE={declared_arm}, or correct\n"
+            f"  --arm. Running now would write {live} output into the {declared_arm}\n"
+            "  directory and corrupt the paired comparison."
+        )
+    print(f"[run_generation_eval] arm verified against live backend: {live}")
+    return live
+
 def get_real_generation_settings(api_url: str) -> dict:
-    """Decision 5 -- report exactly what's real, don't guess. Only
-    model/temperature are ever configured by this backend (confirmed in
-    Step 4); everything else is Ollama's own silent default."""
-    ollama_base_url = "http://localhost:11434"  # real default, matches backend/app/core/config.py
+    """Report the generation settings ACTUALLY IN EFFECT, read from the live
+    configuration -- never a hardcoded claim about what is or is not set.
+
+    This function previously hardcoded its answer, including
+    `"seed": "not set by this system -- Ollama default applied"`. That became
+    false at c39654a6, which pinned LLM_SEED=42 and OLLAMA_KEEP_ALIVE=30m to
+    fix a measured reproducibility defect. Nothing detected the drift, because
+    a hardcoded string cannot disagree with itself -- it would simply have
+    written the falsehood into evaluation_config.json and, from there, into
+    anything that cited it.
+
+    Values come from `Settings`, the same object the backend constructs its
+    Ollama client from, so the file records configuration rather than belief.
+    Parameters this system does not set are reported as not set, derived from
+    the adapter's actual payload rather than asserted.
+    """
+    from app.core.config import settings  # deferred: ml/ only imports this in-process
+
+    ollama_base_url = settings.OLLAMA_BASE_URL
     try:
         version_response = requests.get(f"{ollama_base_url}/api/version", timeout=5)
         ollama_version = version_response.json().get("version", "unknown")
     except requests.RequestException:
         ollama_version = "unreachable"
 
+    unset = "not set by this system -- Ollama default applied"
     return {
-        "model": "llama3:8b",       # settings.OLLAMA_MODEL, confirmed Step 4
-        "temperature": 0.0,          # settings.LLM_TEMPERATURE, confirmed Step 4
-        "top_p": "not set by this system -- Ollama default applied",
-        "repeat_penalty": "not set by this system -- Ollama default applied",
-        "seed": "not set by this system -- Ollama default applied",
-        "max_tokens": "not set by this system -- Ollama default applied",
+        "model": settings.OLLAMA_MODEL,
+        "temperature": settings.LLM_TEMPERATURE,
+        "seed": settings.LLM_SEED,
+        "keep_alive": settings.OLLAMA_KEEP_ALIVE,
+        # Not sampling parameters, but they shape what a failure looks like,
+        # so a reader reconstructing a run needs them.
+        "timeout_seconds": settings.OLLAMA_TIMEOUT_SECONDS,
+        "content_retry_count": settings.LLM_CONTENT_RETRY_COUNT,
+        "transport_retry_count": settings.LLM_TRANSPORT_RETRY_COUNT,
+        # Genuinely unset -- see ollama_client.py's request body.
+        "top_p": unset,
+        "repeat_penalty": unset,
+        "max_tokens": unset,
+        "ollama_base_url": ollama_base_url,
         "ollama_version": ollama_version,
     }
 
@@ -255,6 +316,16 @@ def main() -> None:
     ap.add_argument("--n-samples", type=int, default=100)
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument(
+        "--arm", default=None, choices=["full", "labels_only", "empty"],
+        help="Phase 21 ablation arm this run is measuring. This flag does NOT "
+             "set the arm -- the backend does, from its EVIDENCE_MODE setting, "
+             "and it takes a restart. The flag RECORDS which arm the operator "
+             "believes is running, and the value is cross-checked against the "
+             "live backend before any generation starts (see the mismatch "
+             "guard below). Writing arm output into the wrong directory is the "
+             "single easiest way to silently corrupt a paired comparison.",
+    )
+    ap.add_argument(
         "--append", action="store_true",
         help="Extend an existing per_case_results.csv rather than overwrite it: "
              "excludes study_uids already present, samples --n-samples from the "
@@ -264,7 +335,14 @@ def main() -> None:
     args = ap.parse_args()
 
     data_root = Path(args.data_root)
-    out_dir = data_root / "ml/outputs/evaluation/generation"
+    # Arms write to sibling directories so one arm can never overwrite another,
+    # and so an interrupted run is resumable per arm. With no --arm the path is
+    # unchanged, which keeps Phase 20's outputs exactly where they are.
+    out_dir = (
+        data_root / "ml/outputs/evaluation/generation"
+        if args.arm is None
+        else data_root / f"ml/outputs/evaluation/generation_arm_{args.arm}"
+    )
     out_dir.mkdir(parents=True, exist_ok=True)
     text_dir = out_dir / "generated_text"
     text_dir.mkdir(parents=True, exist_ok=True)
@@ -285,6 +363,10 @@ def main() -> None:
     print(f"[run_generation_eval] eligible pool (remaining): {len(eligible)}, sampling {n} (seed={args.seed})")
 
     session = register_and_login(args.api_url)
+
+    # Fail closed BEFORE any generation: verify the live backend is actually in
+    # the arm this run claims to be measuring (Phase 21 §2.2).
+    verified_arm = assert_arm_matches_backend(session, args.api_url, args.arm)
     print("[run_generation_eval] real doctor account registered for this run")
 
     rows = []
@@ -329,7 +411,11 @@ def main() -> None:
               f"{len(combined_df)} rows in {results_path.name}")
 
     config = {
-        "phase": 20,
+        "phase": 20 if args.arm is None else 21,
+        "arm": args.arm,
+        # Recorded from the LIVE backend, not from the flag, so the file states
+        # what actually produced the text rather than what was intended.
+        "evidence_mode_reported_by_backend": verified_arm,
         "evaluation_date": datetime.now(timezone.utc).isoformat(),
         "sample_size": len(combined_df),
         "sample_source": f"{len(eligible) + (len(existing_df) if existing_df is not None else 0)} real eligible test-split cases (frontal + real findings + real impression)",

@@ -13,8 +13,11 @@ source_uid), never from dict/set iteration order.
 """
 from __future__ import annotations
 
+from dataclasses import replace
+
 from app.domain.entities import (
     ClinicalContext,
+    EvidenceMode,
     EvidenceSummary,
     LabelEvidencePartition,
     RetrievalMetadata,
@@ -25,7 +28,23 @@ from app.domain.entities import (
 
 
 class ContextBuilder:
-    """Satisfies domain.interfaces.IContextBuilder."""
+    """Satisfies domain.interfaces.IContextBuilder.
+
+    Phase 21 §2.2: the evidence mode is injected, not read from `settings`
+    here. Step 0 established that this class had NO constructor at all and
+    received nothing by injection, so the injection is added rather than
+    assumed -- and the injected thing is the MODE, not the whole Settings
+    object, matching ModalityGateService's established pattern of taking the
+    individual values it needs. That keeps this class testable without a
+    Settings instance and keeps "no parameter value in the source" intact.
+
+    The default is FULL, so every existing caller that constructs
+    `ContextBuilder()` with no arguments keeps production behaviour
+    byte-identically.
+    """
+
+    def __init__(self, evidence_mode: EvidenceMode = EvidenceMode.FULL) -> None:
+        self._evidence_mode = evidence_mode
 
     def build(
         self,
@@ -40,14 +59,55 @@ class ContextBuilder:
         sorted_cases = sorted(retrieved, key=lambda c: (-c.similarity, c.source_uid))
         deduped_cases = self._collapse_near_duplicates(sorted_cases)
 
-        top_retrieved_case = deduped_cases[0] if deduped_cases else None
-        findings_evidence, impressions_evidence = self._build_text_evidence(deduped_cases)
+        # --- Phase 21 ablation (§2.2) -------------------------------------
+        # The arm is applied HERE and nowhere else. Retrieval, embedding,
+        # dedup, voting and the stats above all run identically in every arm;
+        # what changes is only which of their products survive into the
+        # context the LLM is given. Suppression is expressed as two booleans
+        # derived from one enum so the three arms cannot drift into four
+        # states, and so a reader can see at a glance that B differs from C
+        # by exactly one thing.
+        #
+        # §2.1: LABELS_ONLY is retrieval-as-classifier. Retrieval still ran;
+        # its free text is withheld and its vote is kept.
+        include_case_text = self._evidence_mode is EvidenceMode.FULL
+        include_labels = self._evidence_mode is not EvidenceMode.EMPTY
+
+        # top_retrieved_case carries findings/impression prose, so it is
+        # withheld with the rest of the case text -- not kept "because it is
+        # only one case".
+        top_retrieved_case = (deduped_cases[0] if deduped_cases else None) if include_case_text else None
+        findings_evidence, impressions_evidence = (
+            self._build_text_evidence(deduped_cases) if include_case_text else ((), ())
+        )
+        # Stats are counts and similarities, never prose, and PromptBuilder
+        # does not render them into the prompt at all. They are retained in
+        # every arm so the context still records what retrieval actually did,
+        # which is what makes the failure-rate parity check (§6.4) and the
+        # latency work (§7) interpretable per arm.
         retrieval_stats = self._compute_stats(retrieved, deduped_cases)
 
         label_evidence: tuple[LabelEvidencePartition, ...] = ()
-        if voted_labels:
+        if voted_labels and include_labels:
             top_label = voted_labels[0]
             supporting, contradictory = self._partition_for_label(deduped_cases, top_label.label)
+            if not include_case_text:
+                # The partition holds whole RetrievedCase objects, and those
+                # carry findings/impression prose. PromptBuilder currently
+                # renders only len() of each bucket, so today the prose does
+                # not reach the LLM -- but "today" is not a guarantee, and a
+                # LABELS_ONLY context that still CONTAINS the case text is not
+                # an honest record of what the arm withheld. Found by the
+                # leak test in test_context_builder_evidence_mode.py, not by
+                # reading the code.
+                #
+                # The counts are the label evidence and must survive, so the
+                # cases are kept and stripped rather than dropped: len() is
+                # unchanged, uid/similarity/labels remain (a uid is not case
+                # text, and the labels ARE the vote this arm is built on),
+                # and only the prose is removed.
+                supporting = tuple(replace(c, findings="", impression="") for c in supporting)
+                contradictory = tuple(replace(c, findings="", impression="") for c in contradictory)
             label_evidence = (
                 LabelEvidencePartition(
                     label=top_label.label,
@@ -68,8 +128,12 @@ class ContextBuilder:
         )
 
         return ClinicalContext(
-            retrieved_cases=tuple(deduped_cases),
-            voted_labels=tuple(voted_labels),
+            # Withheld in A and B for the same reason as the text above: this
+            # tuple carries each case's findings and impression prose, and a
+            # context that still contained it would not be an honest record of
+            # what the arm made available.
+            retrieved_cases=tuple(deduped_cases) if include_case_text else (),
+            voted_labels=tuple(voted_labels) if include_labels else (),
             questionnaire_answers=questionnaire_answers,
             clinical_notes=clinical_notes,
             evidence_summary=evidence_summary,

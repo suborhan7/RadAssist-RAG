@@ -104,6 +104,20 @@ class Study:
         return next((img for img in self.images if img.projection == "Frontal"), None)
 
 
+class EvidenceMode(str, Enum):
+    """Phase 21 §2.2: which retrieval-derived evidence reaches ClinicalContext.
+
+    An enum rather than a bool pair because the three arms are mutually
+    exclusive states, and because §2.1's naming discipline is load-bearing:
+    LABELS_ONLY is "retrieval-as-classifier", NOT "no retrieval". Retrieval
+    executes in every mode; only what survives into the context differs.
+    """
+
+    FULL = "full"
+    LABELS_ONLY = "labels_only"
+    EMPTY = "empty"
+
+
 @dataclass(frozen=True)
 class RetrievedCase:
     """One neighbor returned by RetrievalService, with full provenance."""

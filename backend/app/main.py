@@ -170,7 +170,9 @@ async def lifespan(app: FastAPI):
         search_policy=search_policy,
     )
     app.state.label_voting_service = LabelVotingService()
-    app.state.context_builder = ContextBuilder()
+    # Phase 21 §2.2: the arm comes from configuration, so an evaluation run is
+    # a backend restart with an env override, not a different code path.
+    app.state.context_builder = ContextBuilder(evidence_mode=settings.EVIDENCE_MODE)
     prompt_builder = PromptBuilder()
     app.state.prompt_builder = prompt_builder
     app.state.llm_orchestrator = LLMOrchestrator(

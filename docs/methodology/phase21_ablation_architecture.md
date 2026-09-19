@@ -81,6 +81,28 @@ Any deviation in these three must be recorded as a deviation and argued for expl
 
 This does **not** make Arm C's numbers continuous with Phase 20's. See §5.1.
 
+### 2.4 Arm A is an evidence-plus-instruction contrast — named 2026-08-20, before any run
+
+Discovered while proving that the arms differ only in evidence: **they do not, for Arm A.**
+
+`PromptBuilder.build_generation_prompt()` calls `_confidence_instruction(context.voted_labels)`. With voted labels present it emits the agreement sentence; with none, it falls back to *"No label-voting evidence is available for this case. Do not state any diagnosis with certainty…"*. Arm A has no voted labels, so **Arm A's prompt differs from C's outside the evidence block as well as inside it.**
+
+Measured on identical inputs (full-prompt diff):
+
+| Contrast | Differing lines | Confined to the evidence block? |
+|---|---|---|
+| **C vs B** | 8 | **Yes** — the six case-prose lines replaced by `(none provided)` ×2 |
+| B vs A | 15 | **No** — also the confidence instruction |
+
+**The fallback is not changed, and must not be.** It is correct production behaviour for any case where retrieval returns nothing (§3.5 already requires the same fallback for the disclaimer), and special-casing it for the evaluation would mean the ablation no longer measured the shipped system — the objection §2.2 raised against a dedicated evaluation endpoint, reappearing in a subtler form. A prompt that asserted an agreement score Arm A does not have would also be false.
+
+**Consequences, fixed here rather than argued after the results:**
+
+1. **A-vs-C is an evidence-plus-instruction contrast**, not a pure evidence contrast. Any A-vs-C difference is attributable to the joint removal of retrieved evidence *and* the change in confidence instruction that removal correctly triggers. It may not be described as "the effect of removing evidence".
+2. **B-vs-C is pure** — confined entirely to the evidence block — and is already the pre-registered primary endpoint (§6.3). The headline result is unaffected by this.
+3. **Arm A's role is a floor, not the headline.** It answers "what does the system produce with no retrieval-derived evidence at all", which is a bound, not a controlled contrast.
+4. **This wording carries into the results section verbatim.** Wherever an A number appears, points 1 and 3 appear with it, in the same paragraph, not in a footnote.
+
 ---
 
 ## 3. Prerequisite fix — disclaimer removal from LLM output schema
@@ -124,6 +146,18 @@ REPORT_DISCLAIMER_NO_EVIDENCE_BN = "..."
 ```
 
 The `{band}` qualifier (`low` / `moderate` / `high`) comes from the existing rule-based confidence banding, not from the model.
+
+> **WITHDRAWN during implementation, 2026-08-20. This design is not implemented and Step 2 is not executed.**
+>
+> The premise above is false. **There is no backend low/moderate/high banding rule.** Verified: the only agreement threshold in `backend/` is `TOP_LABEL_AGREEMENT_THRESHOLD = 0.5` in `response_validator.py`, a binary cutoff used to raise a warning. The three-band rule exists only in the frontend, at `frontend/src/lib/evidence-agreement.ts`, and its own docstring disqualifies it:
+>
+> > *"Strong/Mixed/Weak thresholds are a frontend-only display convenience, not a backend-computed clinical classification — design_specification.md §10.2 requires a headline word, but names no numeric threshold … These are picked reasonably and documented here, **not silently presented as a validated clinical cutoff**."*
+>
+> Implementing `{band}` would therefore mean taking a threshold that its author explicitly marked as *not* a validated clinical cutoff and promoting it into **rendered clinical report text**, where it would read as a clinical judgement the system had made. That is a new unvalidated threshold entering the product, not a wiring detail.
+>
+> Doing it **inside Phase 21** is worse than doing it at all: it would change report content in the same code version that runs the ablation, confounding a behaviour change with the arm effect. §5's whole purpose is to keep Phase 21's conditions clean.
+>
+> **The server-authored disclaimer stays exactly as it currently ships.** Nothing in §3 is implemented. Whether a calibrated agreement banding should exist at all is a separate question with its own evidential burden, and belongs after the defense, on its own merits — the same reasoning §4.2 applies to pinning production sampling parameters.
 
 This is **strictly better than the current behaviour**, not merely equivalent:
 
@@ -181,13 +215,35 @@ Phase 20 Step 4 established that only `model` and `temperature` have ever been c
 
 A paired experiment cannot rest on unpinned sampling parameters. But Phase 21 needing controlled generation is **not** a sufficient reason to permanently change what ships.
 
-### 4.1 Capability added, default preserved
+### 4.1 Capability added, default preserved — REWRITTEN 2026-08-20, the document was wrong
 
-The four parameters are added to `Settings` and passed through `OllamaClient` **only when set**, each defaulting to unset. With no environment override, the request body sent to Ollama is byte-identical to today's — production behaviour is unchanged, not merely "expected to be similar."
+**The original text of this section is withdrawn.** It required the parameters to default to **unset**, so that "the request body sent to Ollama is byte-identical to today's". That clause referred to a **pre-`c39654a6` baseline and no longer applies.** The baseline moved after this document was frozen, and the code is right — the document was stale.
 
-Phase 21's evaluation runs launch the backend with explicit overrides, using the same environment-variable mechanism as `EVIDENCE_MODE` (§2.2). One mechanism, two uses, no evaluation-only code path.
+`c39654a6` shipped `LLM_SEED` and `OLLAMA_KEEP_ALIVE` as **set** defaults, in response to a reproducibility defect found in real measurement: with `temperature=0.0` and no seed, five identical requests to `llama3:8b` produced **two distinct reports**, diverging inside the IMPRESSION section. **Phase 21's paired design depends on that pinned seed.** Unsetting it to satisfy the withdrawn clause would reintroduce the exact non-determinism §4.3's gate exists to detect.
 
-**Verification:** the unset-default case is covered by a unit test asserting that the outbound options payload contains no key for any unset parameter. "Defaults to unset" is a claim that has to be tested, not asserted.
+**The real current baseline**, read from `Settings` and from the outbound payload in `ollama_client.py`:
+
+| Parameter | State | Value | Where |
+|---|---|---|---|
+| `model` | set | `llama3:8b` | request body |
+| `temperature` | set | `0.0` | `options` |
+| **`seed`** | **set** | **`42`** | `options` |
+| **`keep_alive`** | **set** | **`30m`** | request body |
+| `top_p` | **not set** | — | Ollama's own default applies |
+| `repeat_penalty` | **not set** | — | Ollama's own default applies |
+| `max_tokens` / `num_predict` | **not set** | — | Ollama's own default applies |
+
+`OLLAMA_TIMEOUT_SECONDS` (120), `LLM_CONTENT_RETRY_COUNT` (2) and `LLM_TRANSPORT_RETRY_COUNT` (1) are transport/retry budgets, not sampling parameters, and are unchanged.
+
+**Nothing is unset.** No parameter currently set is reverted by Phase 21.
+
+Phase 21's evaluation runs may still override any of these by environment variable, using the same mechanism as `EVIDENCE_MODE` (§2.2). One mechanism, two uses, no evaluation-only code path.
+
+**Verification (replaces the withdrawn unset-default test):** `evaluation_config.json` must report the settings **actually in effect at run time**, read from the live configuration rather than hardcoded in the harness. A test asserts the recorded settings match `Settings`, and fails if they diverge. This replaces a hardcoded block in `get_real_generation_settings()` which had gone stale and was claiming `"seed": "not set by this system"` — false since `c39654a6`, and it would have written that falsehood straight into a Phase 21 config file.
+
+### 4.1.1 Residual limitation, unchanged
+
+Three sampling parameters remain at the inference server's own defaults (`top_p`, `repeat_penalty`, `max_tokens`). Determinism therefore rests on `temperature=0.0` plus the pinned seed, not on a fully specified sampler. §4.3's gate measures whether that suffices in practice rather than assuming it, and the cold/warm model-load boundary documented at `DEFAULT_OLLAMA_KEEP_ALIVE` remains a known source of variation that `keep_alive` mitigates but does not eliminate.
 
 ### 4.2 Consequence, stated rather than buried
 

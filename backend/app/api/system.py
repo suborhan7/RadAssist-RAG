@@ -13,6 +13,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, Request
 
+from app.core.config import settings
 from app.api.dependencies import get_current_doctor
 from app.api.schemas import SystemStatsResponse
 from app.domain.entities import Doctor
@@ -35,4 +36,5 @@ def get_system_stats(
         embedding_model=stats.embedding_model,
         embedding_version=stats.embedding_version,
         collection_name=stats.collection_name,
+        evidence_mode=settings.EVIDENCE_MODE.value,
     )

@@ -423,3 +423,10 @@ class SystemStatsResponse(BaseModel):
     embedding_model: str
     embedding_version: str
     collection_name: str
+    # Phase 21 §2.2. Additive, and reported so an ablation run can VERIFY which
+    # arm the live backend is actually in rather than trusting the operator to
+    # have restarted it correctly. Writing one arm's output into another arm's
+    # directory would silently corrupt the paired comparison, and nothing else
+    # in the system could detect it afterwards. Defaults to "full" in
+    # production, where it is simply a statement of normal configuration.
+    evidence_mode: str
