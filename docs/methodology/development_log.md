@@ -11053,3 +11053,295 @@ the architecture are untouched. Every value changed is a Gate B value, which §1
 not frozen. `e2e/` was not run; the four demo studies were verified through the real service
 objects rather than over HTTP, so auth, persistence and the API layer are not covered by
 tonight's evidence.
+
+---
+
+## Finding: Session Reconstruction Discarded the Persisted Similarity, and All Phase 20 Generation Ran Under It — 2026-08-20
+
+### What the defect was
+
+`reconstruct_session_evidence()` read each `RetrievedEvidence` row for its
+`study_uid` and threw away the `similarity` on the same row, then called
+`ChromaVectorStore.get_by_ids()`, which stamps `similarity = 1.0` on every case.
+
+The sentinel is correct where it is defined. `get_by_ids()` is an ID fetch, not a
+ranked search, so it genuinely has no distance to report, and its docstring says
+so: *"1.0 reads honestly as 'not a ranked result' rather than fabricating a
+plausible-looking but meaningless score."* The defect is not that value existing;
+it is that three downstream consumers read it as a measurement.
+
+The real scores were never lost. `POST /retrieve` performs a genuine ranked query
+and persists each case's true cosine to `retrieved_evidence.similarity`. Every
+consumer then re-fetched by id and discarded them.
+
+### Call path, traced rather than assumed
+
+`ml/evaluation/run_generation_eval.py` drives real HTTP:
+
+```
+169:            retrieve_response = session.post(f"{api_url}/retrieve", ...)
+181:        session_id = retrieve_response.json()["session_id"]
+183:        generate_response = session.post(f"{api_url}/generate-report", ...)
+```
+
+At `b8fffb4f` — the commit Phase 20's own `evaluation_config.json` records —
+the chain was already as follows:
+
+```
+report_generation_service.py
+  57:from app.services.session_reconstruction import reconstruct_session_evidence
+ 107:        retrieval_session, retrieved_cases, voted_labels = reconstruct_session_evidence(
+
+session_reconstruction.py
+  57:    study_uids = [row.study_uid for row in evidence_rows]     <- similarity read, then dropped
+  59:    retrieved_cases = vector_store.get_by_ids(study_uids)
+
+chroma_store.py
+  64:        similarity score to report. distance is forced to 0.0 for every result,
+  66:        to similarity = 1.0.
+```
+
+### Which request types hit it
+
+| Request | Path | Affected |
+|---|---|---|
+| `POST /retrieve` | `retrieval_service` → `vector_store.query()` | **No** — real ranked distances, persisted |
+| `POST /generate-report` | → `reconstruct_session_evidence` → `get_by_ids` | **Yes** |
+| `POST /reports/{id}/regenerate-section` | → `reconstruct_session_evidence` | **Yes** |
+| `POST /reports/{id}/explain` | → `reconstruct_session_evidence` | **Yes** |
+| `GET /reports/{id}` | → `reconstruct_session_evidence` | **Yes** |
+| `GET /questionnaire/{session_id}` | → `reconstruct_session_evidence` | **Yes** (voted labels) |
+
+Retrieval was correct and correctly measured throughout. The defect sits entirely
+in the step between retrieval and everything that consumes it.
+
+### What changed in the prompt
+
+1. **Evidence ordering.** `ContextBuilder` sorts by `(-similarity, source_uid)`.
+   With every similarity identical, that degenerates to lexicographic `source_uid`
+   order. `_evidence_section()` then rendered the result under the literal heading
+   `"Retrieved findings from similar cases (most similar first):"`. The heading was
+   false for the list beneath it.
+2. **Vote weight.** `LabelVotingService.vote()` accumulates
+   `weights[label] += case.similarity`, so each weight became the plain case count
+   (`3.00` where the true similarity-weighted value was, in a re-measured example,
+   `2.87`). That number is printed into the prompt at `prompt_builder.py:431` as
+   `- Vote weight: {:.2f}`.
+3. **Near-duplicate representative.** `_collapse_near_duplicates()` keeps
+   first-seen-per-cluster, and its docstring explicitly relies on the sort:
+   *"within any real cluster_id group the first occurrence encountered here is the
+   highest-similarity one."* Under the defect it kept the **lowest uid** instead.
+   All 2,462 indexed studies carry a real `cluster_id` (1,678 distinct clusters,
+   zero unset), so wherever two retrieved neighbours shared a cluster, a
+   **different case's findings text** entered the prompt.
+4. **`top_retrieved_case`** — `deduped_cases[0]`, therefore whichever case sorted
+   first under uid order rather than the most similar one.
+5. **`retrieval_stats`** — `mean_similarity`, `min_similarity` and
+   `max_similarity` were all 1.0.
+
+### What did NOT change
+
+- **The set of retrieved uids.** `get_by_ids()` fetches exactly the `study_uid`s
+  that `POST /retrieve` persisted, so the same five studies were always present.
+- **Agreement.** `counts[label] / n` is count-based and never touched similarity.
+- **Supporting / contradictory case counts.** Set membership on `case.labels`.
+- **Each case's findings and impression text.** Content came from ChromaDB
+  metadata, unaffected.
+
+So the same evidence was present in every prompt, in the wrong order, with a wrong
+weight number, and — where clusters collided — represented by a different member.
+
+### Magnitude: NOT MEASURED
+
+**How many of the 460 Phase 20 reports changed materially as a result is unknown
+and was not measured.** No count, proportion or severity estimate exists for it,
+and none may be implied in the thesis or anywhere else. The honest statement is
+that the condition applied to all 460 and that its effect per report was not
+quantified. Phase 20 was deliberately **not** re-run.
+
+### The fix
+
+`session_reconstruction.py` now rebuilds each case with its persisted score:
+
+```python
+persisted_similarity = {row.study_uid: row.similarity for row in evidence_rows}
+retrieved_cases = [
+    replace(case, similarity=persisted_similarity[case.source_uid])
+    if case.source_uid in persisted_similarity else case
+    for case in vector_store.get_by_ids(study_uids)
+]
+```
+
+Keyed by uid rather than zipped positionally: `get_by_ids()` documents that it
+reorders to match the request, but it can also return fewer results if a uid is
+missing from the collection, and a positional zip would then pair the wrong score
+with the wrong case.
+
+Verified on a real report: reconstructed similarities `0.9662 / 0.9571 / 0.9550 /
+0.9545 / 0.9525`, and vote weights `Normal 2.8737`, `Granuloma 0.9571`,
+`Support Devices 0.9545` — previously `1.0` across the board and `3.00 / 1.00 /
+1.00`. Three unit tests asserted the old pass-through behaviour and now assert the
+new contract, with the reasoning inline.
+
+Commit: `5b19a0fe`.
+
+### How to Write This in Your Thesis
+
+Report it as a defect in the seam between two correct components, not as a bug in
+either. `get_by_ids()` was right to refuse to invent a score; the consumers were
+wrong to treat its refusal as a number. The generalisable point is that a sentinel
+value is only safe while every reader knows it is one, and nothing in the type
+system said so — `similarity: float` looks identical whether it is measured or
+placeheld.
+
+Be careful to state what was and was not affected. Retrieval itself was never
+wrong, so Phase 0's retrieval-validation results and Phase 20's retrieval metrics
+are untouched. What moved is the evidence handed to the generator. And say plainly
+that the magnitude was not measured; a reader will ask, and "we did not measure
+it" is a better answer than a number that was never computed.
+
+---
+
+## Explainability Card and Report Typography — COMPLETE
+
+### Context
+
+Two user reports, both of which turned out to be information architecture rather
+than styling.
+
+The explainability answer rendered as one unbroken paragraph under a bold line,
+with the elapsed time competing with the clinical content and nothing marking
+which part was the question and which the answer. Separately, the report document
+was set in `text-text-secondary` — the mid-grey this app reserves for captions and
+metadata — so an entire clinical document was rendered in the colour used for
+labels, and was reported as unreadable.
+
+### Changes
+
+**Explainability reasoning card** (`impression-explanation.tsx`). Structured in
+the order a radiologist reads: impression, evidence strength, the report's own
+findings, then the model's prose. Timing demoted to metadata; reasoning
+collapsible, default open, never hiding the impression.
+
+What it deliberately does **not** do: it does not manufacture a "supporting
+findings" checklist from the model's answer. The API returns one free-text string
+and carries no structured evidence, so a ticked list built from it would assert a
+finding-to-impression relationship that nothing in the system computed. The
+findings list is a presentation split of the report's own findings section on
+sentence boundaries — guarded so measurements like "1.9 cm" are not split, and
+degrading to a single item rather than mangling clinical text — shown with a
+neutral dash, not a checkmark. A tick claims "this supports the impression"; a
+dash claims only "the report says this", which is all that is true. Evidence
+strength is real structured data via `computeAgreement`.
+
+The impression was removed from the right rail, since it now leads the card and
+one screen showing the same sentence twice is noise.
+
+**Report typography** (`report-typography.ts`). One rule for every surface that
+renders a report. `EditableReportSection` had used `text-text-primary` for a
+sentence being edited and `text-text-secondary` the moment it was committed, so
+text visibly dimmed on becoming real. All seven fields also shared one size, so
+the impression was set identically to the boilerplate disclaimer. Hierarchy now
+follows what the field is for: impression at 19px/500 via the `impression-report`
+token (defined for exactly this and never wired up), disclaimer quiet at 14px,
+everything else primary at 16/30, absent values muted. Section labels boxed,
+filled and raised to 12.5px, with IMPRESSION alone carrying the cyan accent —
+marking all seven would mark nothing.
+
+Adds a reusable `CopyButton` that reports failure rather than showing a tick the
+clipboard never earned.
+
+### Validation (real execution)
+
+Verified on rendered output at 1500 / 1280 / 1024 px, through the live stack with
+a disposable doctor and ID-scoped cleanup, not from source inspection.
+`check:design` 0 violations, `check:i18n` 370 keys in en/bn parity, `tsc` and
+`eslint` clean, `vitest` 7 passed. Backend suite 349 passed on the same tree.
+
+Commit: `bd0ce97a`.
+
+---
+
+## Phase 20 / Phase 21 Boundary: Code State, Tag, and What Phase 21 Runs On — 2026-08-20
+
+### What code state Phase 20 actually ran on
+
+`ml/outputs/evaluation/generation/evaluation_config.json` records:
+
+```
+git_commit_ml      : b8fffb4f181ee5e59f7f64cc884e5ebbf174ca2b
+git_commit_backend : b8fffb4f181ee5e59f7f64cc884e5ebbf174ca2b
+evaluation_date    : 2026-07-22T01:18:55.923188+00:00
+```
+
+That commit exists in this repository and **is on `main`'s ancestry**
+(`git merge-base --is-ancestor b8fffb4f main` → true). It is dated
+`2026-07-22T05:33:15+06:00`, i.e. `2026-07-21T23:33:15Z`, so the evaluation began
+**1 h 45 m 40 s after the commit**, against a live server process.
+
+**The working-tree state at run time is not verifiable from the repository.** The
+recorded hash tells us which commit was checked out; it cannot tell us whether the
+running backend had uncommitted modifications, nor which build the live process
+had loaded. **Phase 20 is therefore not provably reproducible from a commit
+alone.** This is recorded as a limitation, not resolved — resolving it after the
+fact is not possible, and asserting reproducibility we cannot demonstrate would be
+worse than naming the gap.
+
+What can be said with confidence is narrower and still useful: the defect
+described in the finding above was present in `b8fffb4f`, so regardless of any
+uncommitted drift, Phase 20's generation ran with `similarity = 1.0` unless
+someone had locally fixed the very line that was still unfixed a month later —
+which the repository gives no reason to believe.
+
+### The boundary
+
+Tag: **`phase20-to-phase21-boundary`**
+
+**Phase 21 runs on that tagged commit.** It is the first state in which:
+
+- session reconstruction supplies true persisted similarities (`5b19a0fe`);
+- Gate B carries the recalibrated projection threshold, modality prompt set and
+  PHI mask area cap (`0f4c9159`);
+- the admission gate, v1.1 projection gate and S7 migrations are on `main`
+  (`c39654a6`).
+
+### Phase 21 also runs after the typography and explainability work — and that is presentation-only
+
+`bd0ce97a` landed after the reconstruction fix, so Phase 21 necessarily runs after
+it too. **Verified, not assumed**, that it cannot affect generated report content:
+
+- `git show --name-only bd0ce97a | grep -E "^(backend|ml|shared|e2e)/"` returns
+  nothing. All 11 files are under `frontend/`.
+- No added line in the commit touches `generateReport`, `retrieveWithProgress`,
+  `explainReport`, `regenerateSection`, `updateReport`, `fetch(`, `language:`,
+  `top_k` or `topK`.
+- `EditableReportSection`'s diff is confined to an added `fieldKey` prop and two
+  `className` expressions; `commit()` / `onCommit` are untouched.
+- `report-typography.ts` contains no text transformation — both exported functions
+  return class-name strings only.
+- The one prose transformation added anywhere (`splitStatements`, which breaks a
+  findings paragraph into lines for display) lives in the render path of
+  `impression-explanation.tsx` and writes nothing back.
+
+So Phase 21's generation conditions are set by `c39654a6`, `0f4c9159` and
+`5b19a0fe`. `bd0ce97a` changes only what a human sees.
+
+### Note on the Gate B entry
+
+Gate B recalibration (commit `0f4c9159`) is **already fully documented** in this
+log under *"Gate B Recalibration After a Real Out-of-Distribution Rejection —
+POST-HOC, and Recorded as Such"*, including its context, the post-hoc ordering,
+the measured diagnosis, the validation counts, the outcome that did not go as
+intended, and the §11.3 correction. It is not repeated here.
+
+### Standing rule
+
+**No Phase 20 generation number may be presented alongside a Phase 21 generation
+number as if the two were continuous.** Phase 20's Tier 1/2/3 results were
+produced under the reconstruction defect; Phase 21's will not be. They are
+measurements of different systems and must be labelled as such wherever they
+appear together.
+
+Phase 20 conclusions that do not depend on evidence ordering are unaffected and
+remain citable: the BLEU-unsuitability finding, the single-root-cause diagnosis of
+the 17/477 generation failures, and the CheXbert random-baseline validity finding.
