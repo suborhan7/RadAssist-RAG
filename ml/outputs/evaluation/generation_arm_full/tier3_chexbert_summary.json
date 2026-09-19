@@ -1,0 +1,84 @@
+{
+  "findings": {
+    "n": 100,
+    "micro_f1": 0.2679425837320574,
+    "micro_f1_ci": [
+      0.18181818181818182,
+      0.3571428571428571
+    ],
+    "macro_f1": 0.15390087853323148,
+    "macro_f1_ci": [
+      0.09043618356433482,
+      0.210438689993007
+    ],
+    "per_label_f1": {
+      "Enlarged Cardiomediastinum": 0.23529411764705882,
+      "Cardiomegaly": 0.4444444444444445,
+      "Lung Opacity": 0.43749999999999994,
+      "Lung Lesion": 0.0,
+      "Edema": 0.3333333333333333,
+      "Consolidation": 0.0,
+      "Pneumonia": 0.0,
+      "Atelectasis": 0.22222222222222224,
+      "Pneumothorax": 0.0,
+      "Pleural Effusion": 0.18181818181818182,
+      "Pleural Other": 0.0,
+      "Fracture": 0.0,
+      "Support Devices": 0.0,
+      "No Finding": 0.30000000000000004
+    },
+    "random_baseline_micro_f1": 0.19138755980861244,
+    "random_baseline_macro_f1": 0.09027264946382593,
+    "random_baseline_macro_f1_ci": [
+      0.050454396272065445,
+      0.12702593158475506
+    ],
+    "real_minus_baseline_macro_f1_diff": 0.06362822906940555,
+    "real_minus_baseline_macro_f1_diff_ci": [
+      -0.008007936404200128,
+      0.13663604849816297
+    ],
+    "real_minus_baseline_excludes_zero": false
+  },
+  "impression": {
+    "n": 100,
+    "micro_f1": 0.558139534883721,
+    "micro_f1_ci": [
+      0.4600634107676361,
+      0.6538594470046082
+    ],
+    "macro_f1": 0.1388773228467885,
+    "macro_f1_ci": [
+      0.08813892740778091,
+      0.1794224379593993
+    ],
+    "per_label_f1": {
+      "Enlarged Cardiomediastinum": 0.0,
+      "Cardiomegaly": 0.26666666666666666,
+      "Lung Opacity": 0.45454545454545453,
+      "Lung Lesion": 0.0,
+      "Edema": 0.0,
+      "Consolidation": 0.0,
+      "Pneumonia": 0.0,
+      "Atelectasis": 0.0,
+      "Pneumothorax": 0.0,
+      "Pleural Effusion": 0.4444444444444444,
+      "Pleural Other": 0.0,
+      "Fracture": 0.0,
+      "Support Devices": 0.0,
+      "No Finding": 0.7786259541984734
+    },
+    "random_baseline_micro_f1": 0.39069767441860465,
+    "random_baseline_macro_f1": 0.07139001795490345,
+    "random_baseline_macro_f1_ci": [
+      0.042064705882352935,
+      0.10194110576923072
+    ],
+    "real_minus_baseline_macro_f1_diff": 0.06748730489188505,
+    "real_minus_baseline_macro_f1_diff_ci": [
+      0.005627813000449773,
+      0.12228727636162584
+    ],
+    "real_minus_baseline_excludes_zero": true
+  }
+}

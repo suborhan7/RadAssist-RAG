@@ -1,0 +1,84 @@
+{
+  "findings": {
+    "n": 100,
+    "micro_f1": 0.387434554973822,
+    "micro_f1_ci": [
+      0.2887672969843983,
+      0.48914175724637676
+    ],
+    "macro_f1": 0.03858185610010428,
+    "macro_f1_ci": [
+      0.03125000000000001,
+      0.04500978473581214
+    ],
+    "per_label_f1": {
+      "Enlarged Cardiomediastinum": 0.0,
+      "Cardiomegaly": 0.0,
+      "Lung Opacity": 0.0,
+      "Lung Lesion": 0.0,
+      "Edema": 0.0,
+      "Consolidation": 0.0,
+      "Pneumonia": 0.0,
+      "Atelectasis": 0.0,
+      "Pneumothorax": 0.0,
+      "Pleural Effusion": 0.0,
+      "Pleural Other": 0.0,
+      "Fracture": 0.0,
+      "Support Devices": 0.0,
+      "No Finding": 0.5401459854014599
+    },
+    "random_baseline_micro_f1": 0.387434554973822,
+    "random_baseline_macro_f1": 0.03858185610010428,
+    "random_baseline_macro_f1_ci": [
+      0.03122803008998876,
+      0.04567541302235179
+    ],
+    "real_minus_baseline_macro_f1_diff": 0.0,
+    "real_minus_baseline_macro_f1_diff_ci": [
+      -0.00966898510538073,
+      0.009702940737423497
+    ],
+    "real_minus_baseline_excludes_zero": false
+  },
+  "impression": {
+    "n": 100,
+    "micro_f1": 0.6732673267326733,
+    "micro_f1_ci": [
+      0.5713940648723258,
+      0.7716309976277322
+    ],
+    "macro_f1": 0.05782312925170068,
+    "macro_f1_ci": [
+      0.053009883198562445,
+      0.06214689265536723
+    ],
+    "per_label_f1": {
+      "Enlarged Cardiomediastinum": 0.0,
+      "Cardiomegaly": 0.0,
+      "Lung Opacity": 0.0,
+      "Lung Lesion": 0.0,
+      "Edema": 0.0,
+      "Consolidation": 0.0,
+      "Pneumonia": 0.0,
+      "Atelectasis": 0.0,
+      "Pneumothorax": 0.0,
+      "Pleural Effusion": 0.0,
+      "Pleural Other": 0.0,
+      "Fracture": 0.0,
+      "Support Devices": 0.0,
+      "No Finding": 0.8095238095238095
+    },
+    "random_baseline_micro_f1": 0.6732673267326733,
+    "random_baseline_macro_f1": 0.05782312925170068,
+    "random_baseline_macro_f1_ci": [
+      0.053009883198562445,
+      0.06214689265536723
+    ],
+    "real_minus_baseline_macro_f1_diff": 0.0,
+    "real_minus_baseline_macro_f1_diff_ci": [
+      -0.006179397848820636,
+      0.006082259365693431
+    ],
+    "real_minus_baseline_excludes_zero": false
+  }
+}

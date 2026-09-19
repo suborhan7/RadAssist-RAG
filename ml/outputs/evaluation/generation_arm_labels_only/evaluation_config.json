@@ -1,0 +1,38 @@
+{
+  "phase": 21,
+  "arm": "labels_only",
+  "evidence_mode_reported_by_backend": "labels_only",
+  "evaluation_date": "2026-09-19T10:52:41.765062+00:00",
+  "sample_size": 100,
+  "sample_source": "477 real eligible test-split cases (frontal + real findings + real impression)",
+  "sample_seed": 42,
+  "completed": 100,
+  "failed": 0,
+  "generation_settings": {
+    "model": "llama3:8b",
+    "temperature": 0.0,
+    "seed": 42,
+    "keep_alive": "30m",
+    "timeout_seconds": 120,
+    "content_retry_count": 2,
+    "transport_retry_count": 1,
+    "top_p": "not set by this system -- Ollama default applied",
+    "repeat_penalty": "not set by this system -- Ollama default applied",
+    "max_tokens": "not set by this system -- Ollama default applied",
+    "ollama_base_url": "http://localhost:11434",
+    "ollama_version": "0.34.2"
+  },
+  "declared_projection": "PA",
+  "declared_projection_note": "harness constant, not per-case dataset truth; IU records only Frontal/Lateral. Admission-gate only -- the route discards the returned value, so it reaches neither retrieval nor the prompt.",
+  "ground_truth_fields": [
+    "findings",
+    "impression"
+  ],
+  "metrics_tier1": [
+    "bleu",
+    "rouge_l",
+    "meteor"
+  ],
+  "git_commit_ml": "221d275464ffbc4f5b05c5166daaeed8036d761c",
+  "git_commit_backend": "221d275464ffbc4f5b05c5166daaeed8036d761c"
+}

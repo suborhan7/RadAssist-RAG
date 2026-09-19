@@ -1,0 +1,147 @@
+{
+  "primary_endpoint": {
+    "definition": "CheXbert macro-F1 on impression, full minus labels_only, paired bootstrap 95% CI excluding zero in the positive direction",
+    "pre_registered": "Phase 21 \u00a76.3, before any run"
+  },
+  "n_shared_cases": 100,
+  "n_boot": 2000,
+  "seed": 42,
+  "contrasts": {
+    "full_minus_labels_only": {
+      "findings_rouge_l": {
+        "n": 100,
+        "mean_upper": 0.24746889610875844,
+        "mean_lower": 0.14531865624644286,
+        "mean_difference": 0.10215023986231563,
+        "ci_95": [
+          0.08342066140649235,
+          0.12035189079082152
+        ],
+        "excludes_zero": true
+      },
+      "findings_meteor": {
+        "n": 100,
+        "mean_upper": 0.3569768326745328,
+        "mean_lower": 0.11474519185697009,
+        "mean_difference": 0.24223164081756277,
+        "ci_95": [
+          0.21867427720543936,
+          0.2663976828656276
+        ],
+        "excludes_zero": true
+      },
+      "findings_chexbert_macro_f1": {
+        "n": 100,
+        "macro_f1_upper": 0.15390087853323148,
+        "macro_f1_lower": 0.1271581359816654,
+        "mean_difference": 0.026742742551566084,
+        "ci_95": [
+          -0.03501787692677824,
+          0.1010186786533716
+        ],
+        "excludes_zero": false
+      },
+      "impression_rouge_l": {
+        "n": 100,
+        "mean_upper": 0.29421347972588635,
+        "mean_lower": 0.03725550930274188,
+        "mean_difference": 0.2569579704231445,
+        "ci_95": [
+          0.20357823425508204,
+          0.3130158957645665
+        ],
+        "excludes_zero": true
+      },
+      "impression_meteor": {
+        "n": 100,
+        "mean_upper": 0.3431329779644257,
+        "mean_lower": 0.10432120176331589,
+        "mean_difference": 0.23881177620110974,
+        "ci_95": [
+          0.1841371073050416,
+          0.2949491787816947
+        ],
+        "excludes_zero": true
+      },
+      "impression_chexbert_macro_f1": {
+        "n": 100,
+        "macro_f1_upper": 0.1388773228467885,
+        "macro_f1_lower": 0.15858170606372046,
+        "mean_difference": -0.019704383216931964,
+        "ci_95": [
+          -0.06214181182036442,
+          0.03343834762144501
+        ],
+        "excludes_zero": false
+      }
+    },
+    "full_minus_empty": {
+      "findings_rouge_l": {
+        "n": 100,
+        "mean_upper": 0.24746889610875844,
+        "mean_lower": 0.09300077508660269,
+        "mean_difference": 0.15446812102215574,
+        "ci_95": [
+          0.13673083677992787,
+          0.17078226439676827
+        ],
+        "excludes_zero": true
+      },
+      "findings_meteor": {
+        "n": 100,
+        "mean_upper": 0.3569768326745328,
+        "mean_lower": 0.043088229938520045,
+        "mean_difference": 0.31388860273601277,
+        "ci_95": [
+          0.28972005445311216,
+          0.3382159649646586
+        ],
+        "excludes_zero": true
+      },
+      "findings_chexbert_macro_f1": {
+        "n": 100,
+        "macro_f1_upper": 0.15390087853323148,
+        "macro_f1_lower": 0.03858185610010428,
+        "mean_difference": 0.1153190224331272,
+        "ci_95": [
+          0.051701345431789746,
+          0.17478671483130184
+        ],
+        "excludes_zero": true
+      },
+      "impression_rouge_l": {
+        "n": 100,
+        "mean_upper": 0.29421347972588635,
+        "mean_lower": 0.1539130933628885,
+        "mean_difference": 0.14030038636299788,
+        "ci_95": [
+          0.09179610685732871,
+          0.18937639817208743
+        ],
+        "excludes_zero": true
+      },
+      "impression_meteor": {
+        "n": 100,
+        "mean_upper": 0.3431329779644257,
+        "mean_lower": 0.09413526302362747,
+        "mean_difference": 0.24899771494079811,
+        "ci_95": [
+          0.1998600007282664,
+          0.29775280244368985
+        ],
+        "excludes_zero": true
+      },
+      "impression_chexbert_macro_f1": {
+        "n": 100,
+        "macro_f1_upper": 0.1388773228467885,
+        "macro_f1_lower": 0.05782312925170068,
+        "mean_difference": 0.08105419359508781,
+        "ci_95": [
+          0.029925647884354836,
+          0.12130505842788701
+        ],
+        "excludes_zero": true
+      }
+    }
+  }
+}

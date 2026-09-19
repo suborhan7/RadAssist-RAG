@@ -1,0 +1,20 @@
+{
+  "arms": [
+    "full",
+    "labels_only",
+    "empty"
+  ],
+  "attempted": {
+    "full": 100,
+    "labels_only": 100,
+    "empty": 100
+  },
+  "completed": {
+    "full": 100,
+    "labels_only": 100,
+    "empty": 100
+  },
+  "shared_by_all_arms": 100,
+  "retrieval_mismatches": [],
+  "problems": []
+}
