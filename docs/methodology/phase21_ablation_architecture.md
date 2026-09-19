@@ -395,6 +395,28 @@ All other contrasts (C−A, and every ROUGE-L/METEOR contrast on both fields) ar
 
 **If the primary endpoint does not clear:** it is reported as a negative result, in full, consistent with this project's treatment of the Tier 2 BERTScore outcome. No alternative metric, field, or contrast is promoted to primary after the fact.
 
+### 6.3.1 Pre-registered extension to the full eligible pool — decided 2026-09-19
+
+**Recorded before the extension was run, and after the n=100 result was known. Both of those facts are stated here deliberately, because the second is what makes the first necessary.**
+
+The n=100 primary endpoint did not clear: CheXbert macro-F1 on `impression`, Arm C minus Arm B, **−0.0197, 95% CI [−0.0621, +0.0334]**. That interval is 0.0955 wide and contains zero, values favouring Arm B, and values favouring Arm C. It does not distinguish "there is no effect" from "there is an effect this design could not resolve at n=100".
+
+The primary endpoint is therefore **extended to the full 477-case eligible pool**, for the same reason and by the same precedent as Phase 20's extension: the interval is too wide to support either conclusion, and the eligible pool already exists and is already purity-verified.
+
+**Trigger.** CI width, not the direction of the result. This is falsifiable rather than decorative: the same extension would have been recorded had the point estimate been +0.0197 with the same width, and it would **not** have been recorded had the n=100 interval excluded zero in either direction. An interval containing both the null and a meaningful effect is uninformative regardless of which side its point estimate falls on.
+
+**What does not change.** The metric, the field, the contrast, the direction, the decision rule, the bootstrap configuration (2,000 resamples, seed 42, percentile CI), and the pairing. §6.3's text stands as written. No alternative metric, field or contrast is promoted, and no new endpoint is introduced.
+
+**What is reported.** Both results, always, in the thesis:
+
+1. **The n=100 pre-registered result is reported regardless of what the extension shows.** It is not superseded, footnoted away, or replaced. If the extension clears and n=100 did not, both appear, with the extension explicitly labelled as the larger-n follow-up and n=100 as the pre-registered primary.
+2. The extension is reported as an **extension**, with this subsection cited as the record that it was fixed in advance of the run.
+3. If the extension also fails to clear, that is the result, reported in full per §6.3's existing clause.
+
+**Scope.** Arms C and B are extended to the full pool, because the primary endpoint is C−B and it is the only contrast this decision concerns. **Arm A stays at n=100.** Arm A is a floor, not the headline (§2.4), and the C−A contrast is already secondary and exploratory; extending it would add compute and further intervals to a family §6.3 exists to keep small, in service of a question no one is relying on. Consequence, stated in advance: after the extension, C−A remains an n=100 contrast and **must not be reported on the same case set as the extended C−B**. The two are not comparable and are not presented as though they were.
+
+**Arm A's n=100 result is not weakened by staying at n=100.** Its finding (§ diagnostic, 2026-09-19) is that Arm A emits one byte-identical string across all 100 cases. That is a degeneracy observation, not an estimate needing a tighter interval.
+
 ### 6.4 Failure-rate parity check
 
 Generation failure count and rate are recorded per arm. If rates differ by more than 2 percentage points between any two arms, the cause is investigated and reported before between-arm quality differences are interpreted — differential attrition is a selection effect, not noise.

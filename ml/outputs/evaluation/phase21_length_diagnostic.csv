@@ -1,0 +1,7 @@
+arm,field,gen_mean_tokens,gen_median_tokens,ref_mean_tokens,ref_median_tokens,gen_over_ref_mean
+full,findings,50.3,44.5,31.68,30.0,1.587752525252525
+labels_only,findings,16.19,11.0,31.68,30.0,0.5110479797979799
+empty,findings,9.0,9.0,31.68,30.0,0.2840909090909091
+full,impression,12.05,8.0,7.96,5.0,1.5138190954773871
+labels_only,impression,11.47,5.0,7.96,5.0,1.440954773869347
+empty,impression,9.0,9.0,7.96,5.0,1.1306532663316582
