@@ -11345,3 +11345,119 @@ appear together.
 Phase 20 conclusions that do not depend on evidence ordering are unaffected and
 remain citable: the BLEU-unsuitability finding, the single-root-cause diagnosis of
 the 17/477 generation failures, and the CheXbert random-baseline validity finding.
+
+---
+
+## CI Width Does Not Extrapolate as 1/√n for Macro-Averaged Metrics — 2026-09-19 — COMPLETE
+
+### Context
+
+Phase 21's pre-registered primary endpoint (CheXbert macro-F1 on `impression`,
+Arm C minus Arm B) did not clear at n=100: **−0.0197, 95% CI [−0.0621,
++0.0334]**. The interval was 0.0955 wide and contained zero, values favouring
+Arm B, and values favouring Arm C — it could not distinguish a null from an
+underpowered miss. §6.3.1 recorded a decision to extend to the full 477-case
+eligible pool, explicitly triggered by **CI width, not by the direction of the
+result**, and recorded before the extension ran.
+
+While recording that decision, §6.7 also recorded a projection: extending from
+100 to 477 would narrow the interval by ≈√4.77 ≈ 2.2×, to roughly
+[−0.042, +0.002]. That projection was written down in advance precisely so it
+could be checked. It was wrong.
+
+### Implementation & Validation
+
+Both arms were re-run at the full pool with the backend restarted per arm,
+477/477 completed, zero failures, and the arm verified against the live backend
+before generation in each case. The integrity gate passed: 477 shared cases,
+477 retrieved-uid comparisons, zero mismatches.
+
+Measured:
+
+| | Diff | 95% CI | Width |
+|---|---|---|---|
+| n=100 | −0.0197 | [−0.0621, +0.0334] | 0.0955 |
+| n=477 | +0.0256 | [−0.0198, +0.0710] | **0.0908** |
+
+**A 4.77× increase in sample size produced a 5% reduction in interval width.**
+The projected 2.2× narrowing did not occur, and the primary endpoint did not
+clear at the extended sample either.
+
+**This is not a mis-estimate to be corrected. It is a property of the metric
+class, and it was diagnosed rather than assumed:**
+
+1. **1/√n describes the standard error of a mean over exchangeable per-case
+   values.** Tier 1 metrics are exactly that — ROUGE-L and METEOR are per-case
+   scores averaged over cases — and Phase 20 verified the scaling empirically
+   on them. Macro-F1 is not that object. There is no per-case macro-F1; it is
+   corpus-level, which is why `contrast_arms.py` recomputes it inside every
+   bootstrap replicate rather than averaging stored per-case values.
+2. **Its variance is dominated by the lowest-support conditions.** A condition
+   with 5 reference positives has an F1 that swings violently under resampling,
+   and macro-averaging weights it identically to a condition with 322.
+3. **Growing n admits new noisy conditions instead of stabilising existing
+   ones.** At n=100, 10 of the 14 conditions on `impression` contributed
+   exactly zero to macro-F1 — 4 because no reference case carried them at all,
+   and 6 because neither arm produced a correct prediction on their few support
+   cases. At n=477 only 5 contribute zero, and **every** condition now has
+   reference support. Five previously-silent conditions began contributing
+   (Lung Lesion, Pleural Other, Edema, Pneumonia, Atelectasis), each entering at
+   low support — at its noisiest. The extra cases bought precision on
+   established conditions and simultaneously purchased five new variance
+   sources, and the effects largely cancelled.
+
+Corroborating evidence from the same runs: the Tier 1 contrasts, which *are*
+case-level means, narrowed as expected. `findings` ROUGE-L went from
+[0.0834, 0.1204] (width 0.0370) at n=100 to [0.0832, 0.1012] (width 0.0180) at
+n=477 — a 2.06× narrowing against √4.77 = 2.18 predicted. **The rule held
+exactly where it applies and failed exactly where it does not**, which is the
+strongest available evidence that the mechanism above is the right one and not
+a post-hoc story.
+
+### Scope
+
+**This invalidates width extrapolation for macro-averaged metrics generally,
+not only for this instance.** Any power or sample-size argument of the form
+"n× more cases will narrow this macro-F1 interval by √n" is unsound whenever the
+denominator includes low- or zero-support classes, because the class composition
+is itself a function of n.
+
+Standing consequence: sample-size reasoning for any future macro-averaged
+endpoint in this project must be done by **resampling the actual label matrices
+at the candidate n**, not by extrapolating an observed width. No such
+extrapolation may be cited as justification without that simulation. The rule
+remains valid, and remains used, for Tier 1 case-level means.
+
+### Related: the two results are not the same estimand
+
+Recorded in full as §6.11 of the Phase 21 architecture. In short: the n=100 and
+n=477 macro-F1 figures average over denominators with different live
+composition (4 live conditions vs 9, and at n=477 every condition has reference
+support whereas at n=100 four had none). Both results are reported; neither is a
+replication or a correction of the other; the sign change (−0.0197 → +0.0256) is
+attributed to composition, not to a changed effect; and no pooled or averaged
+figure is produced.
+
+### How to Write This in Your Thesis
+
+> The ablation's primary endpoint was extended from 100 to 477 cases on a
+> pre-registered, width-triggered rule. The extension did not narrow the
+> confidence interval as the customary 1/√n heuristic predicts: a 4.77-fold
+> increase in sample size reduced interval width by 5%, against a predicted
+> factor of 2.2. The cause is structural rather than incidental. Macro-averaged
+> F1 is a corpus-level statistic whose variance is dominated by its
+> lowest-support classes, and whose class composition is itself a function of
+> sample size — at n=100, ten of fourteen conditions contributed no variance at
+> all (four absent from the references entirely, six never predicted
+> correctly), whereas at n=477 only five did and every condition had reference
+> support, so the larger sample simultaneously purchased precision on
+> established conditions and introduced five new low-support, high-variance
+> ones. In the same experiment,
+> the case-level Tier 1 metrics narrowed by 2.06×, closely matching the
+> predicted 2.18×. The heuristic therefore held precisely where its assumptions
+> are satisfied and failed precisely where they are not. The practical
+> consequence, adopted as a standing rule, is that sample-size planning for
+> macro-averaged endpoints must proceed by resampling the label matrices at the
+> candidate sample size rather than by extrapolating an observed width.
+
+**COMPLETE**

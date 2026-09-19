@@ -506,6 +506,42 @@ The multiplier is a positive constant applied identically to both arms, so every
 
 This is the same invariance §6.2.1 already established for BERTScore baseline rescaling, and it is declined for the same reason: a transformation that cannot change a conclusion is not a tiebreaker, and reporting one that enlarges the numbers while adding no information invites exactly the misreading it cannot support. The per-label table in §6.7 already carries everything this would show, with the support counts visible instead of divided away.
 
+### 6.10 CI width does not extrapolate as 1/sqrt(n) for macro-averaged metrics — methodological finding
+
+**This is a finding about the metric class, recorded as such. It is not an erratum for a bad guess, although it was discovered by making one.**
+
+§6.7 projected that extending the primary endpoint from n=100 to n=477 would narrow the interval by ≈√4.77 ≈ 2.2×. Measured:
+
+| | Diff | 95% CI | Width |
+|---|---|---|---|
+| n=100 | −0.0197 | [−0.0621, +0.0334] | 0.0955 |
+| n=477 | +0.0256 | [−0.0198, +0.0710] | **0.0908** |
+
+**A 4.77× increase in sample size bought a 5% reduction in width.** The projection was wrong by roughly a factor of two, and wrong in the quantity that the §6.3.1 extension decision was justified on.
+
+**Mechanism.** The 1/√n rule describes the standard error of a **mean over exchangeable per-case values**. Tier 1 metrics are exactly that — ROUGE-L and METEOR are per-case scores averaged across cases — and Phase 20 verified the scaling empirically there. Macro-averaged F1 is not that object:
+
+1. **It is corpus-level, not case-level.** There is no per-case macro-F1 to average, which is why `contrast_arms.py` recomputes it inside every bootstrap replicate. Its variance comes from per-condition tp/fp/fn counts, not from a sum of independent per-case terms.
+2. **Its variance is dominated by the lowest-support conditions.** A condition with 5 reference positives has an F1 that swings violently under resampling, and macro-averaging gives it exactly the same 1/14 weight as a condition with 322.
+3. **Growing n admits new noisy conditions rather than stabilising the existing ones.** At n=100, 10 of the 14 conditions contributed exactly zero to macro-F1 on `impression` — 4 because no reference case carried them at all, and 6 because neither arm ever produced a correct prediction on their handful of support cases. At n=477 only 5 contribute zero, and **every** condition now has reference support. Five previously-silent conditions began contributing (Lung Lesion, Pleural Other, Edema, Pneumonia, Atelectasis), each entering at low support — that is, at its noisiest. The added cases bought precision on the established conditions and simultaneously purchased five new variance sources. The two effects substantially cancelled.
+
+**Scope of the finding. This invalidates width extrapolation for macro-averaged metrics generally, not only for this instance.** Any power or sample-size argument of the form "n× more cases will narrow this macro-F1 interval by √n" is unsound on a metric whose denominator includes low- or zero-support classes, because the class composition is itself a function of n. The rule remains valid for the Tier 1 case-level means where Phase 20 verified it.
+
+**Consequence for this project.** Sample-size reasoning for any future macro-averaged endpoint must be done by resampling the actual label matrices at candidate n, not by extrapolating an observed width. No such extrapolation may be cited as a justification without that simulation.
+
+### 6.11 n=100 and n=477 macro-F1 are not the same estimand — reporting rule
+
+Recorded 2026-09-19, with both results in hand, because the rule concerns how they are *presented* and would be unverifiable if written later.
+
+The two macro-F1 figures average over a 14-condition denominator whose **live composition differs**: on `impression`, 10 of 14 conditions contribute exactly zero at n=100 against 5 at n=477. The composition of that zero set also differs in kind — at n=100, 4 conditions had no reference support at all and 6 had support but no correct prediction in either arm; at n=477, **every condition has reference support** and the 5 zeros are all of the second kind. The n=477 figure therefore averages nine live conditions and the n=100 figure four. **These are different estimands wearing the same name**, and the following rule governs every appearance of them:
+
+1. **Both results appear.** Neither is dropped, relegated to a footnote, or presented as superseded.
+2. **Neither is framed as a replication of the other.** n=477 does not replicate n=100 and does not fail to; it measures a differently-composed average. The word "replication" is not used of this pair.
+3. **Neither is framed as a correction of the other.** The n=100 result is not an error that n=477 fixed. Both are correct measurements of what they measured.
+4. **The sign change (−0.0197 → +0.0256) is attributed to denominator composition, not to a changed effect.** At n=100 the gap was dominated by Cardiomegaly on 5 support cases (−0.0238 of a −0.0197 total); at n=477 Cardiomegaly contributes −0.0016 of 25 support cases, while Lung Lesion (+0.0107) and Pleural Other (+0.0102) — both structurally zero at n=100 — supply most of the positive total. The composition changed; there is no evidence the underlying system behaviour did.
+5. **No combined, pooled, averaged or meta-analytic figure is produced.** Averaging two differently-composed macro-averages would create a number that measures nothing.
+6. Neither result cleared the pre-registered decision rule, so this rule determines presentation only — it does not adjudicate a conflict, because there is no conflict to adjudicate.
+
 ## 7. Latency characterisation (RQ3)
 
 ### 7.1 Instrumentation
