@@ -80,6 +80,18 @@ REPORT_FIELDS = (
 )
 GROUND_TRUTH_FIELDS = ("findings", "impression")  # Decision 2 -- the only two with real ground truth
 
+# POST /retrieve requires a declared projection (Input Admission A14-A17). It is
+# a HARNESS CONSTANT, not a per-case fact: the IU metadata records only
+# "Frontal"/"Lateral" (projections_available) and never distinguishes PA from
+# AP, so there is no per-case ground truth to send. "PA" is the standard frontal
+# chest projection and is declared uniformly for every case in every arm.
+#
+# It cannot bias the ablation: the route calls check_declared_projection() purely
+# for its raise and DISCARDS the returned value, so the declaration gates
+# admission only -- it never reaches retrieval, the context builder, or the
+# prompt. Identical across arms by construction.
+DECLARED_PROJECTION = "PA"
+
 
 @dataclass
 class CaseResult:
@@ -89,6 +101,13 @@ class CaseResult:
     generated: dict = field(default_factory=dict)      # all 7 fields, Decision 10
     ground_truth: dict = field(default_factory=dict)   # findings/impression only
     metrics: dict = field(default_factory=dict)         # {field: {bleu, rouge_l, meteor}}
+    # Retrieval is UPSTREAM of the evidence-mode branch: all three arms call
+    # the same /retrieve and only differ in how the result is rendered into
+    # the prompt. Identical uid sets across arms is therefore a prediction,
+    # and predictions get checked. Recorded per case so a violation is
+    # detectable after the fact instead of assumed away.
+    retrieved_uids: tuple = field(default_factory=tuple)
+    top1_similarity: float | None = None
 
 
 def _rouge_scorer() -> rouge_scorer.RougeScorer:
@@ -157,6 +176,9 @@ def run_one_case(session: requests.Session, api_url: str, row: pd.Series, data_r
         "impression": str(row["impression_clean"]),
     }
 
+    retrieved_uids: tuple = ()
+    top1_similarity: float | None = None
+
     raw_path = data_root / str(row["raw_image_path"]).replace("\\", "/")
     if not raw_path.is_file():
         return CaseResult(
@@ -169,7 +191,11 @@ def run_one_case(session: requests.Session, api_url: str, row: pd.Series, data_r
             retrieve_response = session.post(
                 f"{api_url}/retrieve",
                 files={"file": (raw_path.name, fh, "image/png")},
-                data={"top_k": "5", "min_similarity": "0.0"},
+                data={
+                    "top_k": "5",
+                    "min_similarity": "0.0",
+                    "declared_projection": DECLARED_PROJECTION,
+                },
                 timeout=120,
             )
         if retrieve_response.status_code != 200:
@@ -178,7 +204,10 @@ def run_one_case(session: requests.Session, api_url: str, row: pd.Series, data_r
                 reason=f"POST /retrieve returned {retrieve_response.status_code}: {retrieve_response.text[:500]}",
                 ground_truth=ground_truth,
             )
-        session_id = retrieve_response.json()["session_id"]
+        retrieve_payload = retrieve_response.json()
+        session_id = retrieve_payload["session_id"]
+        retrieved_uids = tuple(str(c["study_uid"]) for c in retrieve_payload["retrieved_cases"])
+        top1_similarity = retrieve_payload.get("top1_similarity")
 
         generate_response = session.post(
             f"{api_url}/generate-report",
@@ -194,12 +223,13 @@ def run_one_case(session: requests.Session, api_url: str, row: pd.Series, data_r
             return CaseResult(
                 study_uid=study_uid, status="generation_failed",
                 reason=f"POST /generate-report returned {generate_response.status_code}: {generate_response.text[:500]}",
-                ground_truth=ground_truth,
+                ground_truth=ground_truth, retrieved_uids=retrieved_uids, top1_similarity=top1_similarity,
             )
     except requests.RequestException as exc:
         return CaseResult(
             study_uid=study_uid, status="generation_failed",
             reason=f"transport error: {exc}", ground_truth=ground_truth,
+            retrieved_uids=retrieved_uids, top1_similarity=top1_similarity,
         )
 
     content = generate_response.json()["formatted_report"]["content"]
@@ -214,6 +244,7 @@ def run_one_case(session: requests.Session, api_url: str, row: pd.Series, data_r
     return CaseResult(
         study_uid=study_uid, status="completed",
         generated=generated, ground_truth=ground_truth, metrics=metrics,
+        retrieved_uids=retrieved_uids, top1_similarity=top1_similarity,
     )
 
 
@@ -386,6 +417,8 @@ def main() -> None:
             "study_uid": result.study_uid,
             "status": result.status,
             "reason": result.reason,
+            "retrieved_uids": "|".join(result.retrieved_uids),
+            "top1_similarity": result.top1_similarity,
             **{
                 f"{f}_{m}": result.metrics.get(f, {}).get(m)
                 for f in GROUND_TRUTH_FIELDS for m in ("bleu", "rouge_l", "meteor")
@@ -423,6 +456,14 @@ def main() -> None:
         "completed": total_completed,
         "failed": total_failed,
         "generation_settings": get_real_generation_settings(args.api_url),
+        # Recorded because it is a harness-supplied constant standing in for a
+        # field the dataset does not carry -- see DECLARED_PROJECTION.
+        "declared_projection": DECLARED_PROJECTION,
+        "declared_projection_note": (
+            "harness constant, not per-case dataset truth; IU records only "
+            "Frontal/Lateral. Admission-gate only -- the route discards the "
+            "returned value, so it reaches neither retrieval nor the prompt."
+        ),
         "ground_truth_fields": list(GROUND_TRUTH_FIELDS),
         "metrics_tier1": ["bleu", "rouge_l", "meteor"],
         "git_commit_ml": _git_commit_hash(data_root),
